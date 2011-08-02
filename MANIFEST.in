@@ -1,0 +1,1 @@
+recursive-include minpower/tests *.py *.csv

@@ -1,0 +1,14 @@
+bidding.pyc
+config.pyc
+optimization.pyc
+results.pyc
+commonscripts.pyc
+get_data.pyc
+powersystems.pyc
+schedule.pyc
+solve.pyc
+__init__.pyc
+gurobi.log
+cplex.log
+clone0.log
+clone1.log

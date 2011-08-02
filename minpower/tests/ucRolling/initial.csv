@@ -1,0 +1,4 @@
+name,P,status,hours in status
+base,1000,1,24
+peaker,1000,1,24
+wind,300,1,1

@@ -1,0 +1,3 @@
+"name","bus","cost curve equation"
+"cheap","Tacoma","200 + 5 P + .3 P^2"
+"expensive","Seattle","300 + 10 P + .25 P^2"

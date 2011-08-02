@@ -1,0 +1,4 @@
+name,cost curve equation,P max,P min,must run
+unitone,510 + 7.2 P + .00142 P^2,600,150,1
+unittwo,310 + 7.8 P + .00194 P^2,400,100,1
+unitthree,78 + 7.9 P + .00482 P ^2 ,200,50,1

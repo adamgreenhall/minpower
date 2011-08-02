@@ -1,0 +1,3 @@
+name,type,P max,cost curve equation
+cheap,coal,100,200 + 5 * P + .3 P^2
+expensive,natural gas,100,300 + 10 P + .25 P^2 + .005 P^3

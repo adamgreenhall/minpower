@@ -1,0 +1,4 @@
+name,type,schedule filename,Pmin
+cheap,coal,,10
+expensive,natural gas,,10
+Wild Horse,wind,wildHorse.csv,0

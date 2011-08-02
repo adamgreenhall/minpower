@@ -1,0 +1,21 @@
+{% extends "basic/layout.html" %}
+{% block relbar1 %}{% endblock %}
+
+{% block document %}
+{{ super() }}
+<!--<div class="related">
+  <ul>
+    {% if next %}
+    <li class="right"><a href="{{ next.link|e }}">{{ next.title }}</a> »
+    {% endif %}
+    {% if prev %}
+    <li>« <a href="{{ prev.link|e }}">{{ prev.title }}</a>
+    {% endif %}
+  </ul>
+</div>-->
+{% endblock %}
+{% block relbar2 %}{% endblock %}
+{% block footer %}{% endblock %}
+<!--<div style="margin-top:10ex; font-size:60%; margin:auto; width:20%; color=Gray;">Copyright <a href="about.html">Adam Greenhall and contributors</a></div>-->
+
+

@@ -1,8 +1,13 @@
 # minpower's setup script
-# build using
-# python setup.py sdist bdist_wininst
 
-# need to install python-dev package to build windows installer
+#build using:
+#python setup.py sdist
+
+#udpate pypi using:
+#python setup.py register
+#python setup.py sdist upload
+
+
 from distutils.core import setup
 setup(
     name = "minpower",
@@ -11,8 +16,8 @@ setup(
     description = "power systems optimization made beautiful",
     author = "Adam Greenhall",
     author_email = "minpower@adamgreenhall.com",
-    url = "http://adamgreenhall/minpower",
-    download_url = "http://adamgreenhall/minpower/minpower-0.0.1.tgz",
+    url = "http://minpowertoolkit.com/",
+    download_url = "http://minpowertoolkit.com/minpower-0.0.1.tgz",
     keywords = ["power systems","optimization",""],
     classifiers = [    
         "Development Status :: 3 - Alpha",
@@ -31,13 +36,14 @@ setup(
 power systems tools made beautiful
 -----------------------------------------
 
-*. Solves :abbr:`ED (Economic Dispatch)`, :abbr:`OPF (Optimal Power Flow)`, and :abbr:`UC (Unit Commitment)` problems.
-*. Problems can be defined in simple spreadsheets. 
-*. Visualizations for the answers. 
-*. Many `solvers <http://adamgreenhall.com/minpower/solvers>`_ supported.
+* Solves ED, OPF, and UC problems.
+* Problems can be defined in simple spreadsheets. 
+* Visualizations for the answers. 
+* Many solvers supported.
 
-*. `Full documentation and tutorials<http://adamgreenhall.com/minpower>`_
-*. Actively developed on `GitHub <http://github.com/adamgreenhall/minpower>`_.
+
+* `Full documentation and tutorials <http://minpowertoolkit.com>`_
+* `Actively developed <http://github.com/adamgreenhall/minpower>`_
 
 """
 )

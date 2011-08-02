@@ -1,0 +1,3 @@
+name,     P, schedule filename
+small,     , small-changing-load.csv
+baseload, 0,

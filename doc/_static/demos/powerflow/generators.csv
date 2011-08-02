@@ -1,0 +1,4 @@
+name,      bus,     cost curve equation
+cheap,     Tacoma,  5P + .01P^2
+mid grade, Olympia, 7P + .01P^2
+expensive, Seattle, 10P + .01P^2

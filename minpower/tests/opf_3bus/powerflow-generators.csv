@@ -1,0 +1,4 @@
+generator name, u,    P,       IC
+cheap,          True,  0.667,   5.013334
+mid grade,      True, 57.6667,  8.153334
+expensive,      True, 41.6667, 10.833334

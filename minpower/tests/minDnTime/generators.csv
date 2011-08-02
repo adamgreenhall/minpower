@@ -1,0 +1,4 @@
+name,kind,cost curve equation,min down time,P max,P min
+expensive,natural gas,61P,0,100,10
+middle,nuclear,60P,2,100,10
+cheap,coal,45P,0,100,0

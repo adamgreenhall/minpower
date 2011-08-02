@@ -1,0 +1,3 @@
+"name","cost curve equation","ramp rate max"
+"expensive","50P+.1P^2","1000"
+"cheap","45P+.1P^2","20"

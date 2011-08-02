@@ -1,0 +1,186 @@
+"""
+Short, commonly used scripts. 
+Many of them are one liners.
+"""
+
+import os
+import csv, zipfile
+import itertools,operator
+import datetime
+from dateutil import parser
+
+###### matrix stuff #######
+def getColumn(matrix,colNum): return [row[colNum] for row in matrix]#equiv to matrix(:,j)
+def elementwiseMultiply(La,Lb): return map(operator.mul, La,Lb)
+def elementwiseAdd(La,Lb): return map(operator.add, La,Lb)
+def transpose(listoflists): return map(None,*listoflists)
+def flatten(listoflists):
+    '''Flatten one level of nesting'''
+    return list(itertools.chain.from_iterable(listoflists))
+def unflatten(flatlist,levels):
+    '''Turn a flat list into a nested list, with a specified number of lists per nesting level.
+    Excess elements are silently ignored.
+        
+    >>> unflatten(range(12),[2,2,3])
+    [[[0, 1, 2], [3, 4, 5]], [[6, 7, 8], [9, 10, 11]]]
+    '''
+    def nestgenerator(flatlist,levels):
+        if levels:
+            it = nestgenerator(flatlist,levels[1:])
+            while 1: yield list(itertools.islice(it,levels[0]))
+        else:
+            for d in flatlist: yield d        
+    return nestgenerator(flatlist,levels).next()
+def unique(seq): 
+    # order preserving, <http://bit.ly/pyUnique>
+    U = []
+    [U.append(i) for i in seq if not U.count(i)]
+    return U
+def within(x, val=0, eps=1e-3): return (val-eps) <= x <= (val+eps)
+
+def frange(start, stop, step=1.0):
+    """Like range(), but returns list of floats instead
+    All numbers are generated on-demand using generators
+    """
+
+    cur = float(start)
+    while cur < stop:
+        yield cur
+        cur += step
+def colormap(numcolors,colormapName='gist_rainbow'):
+    import matplotlib
+    cm = matplotlib.cm.get_cmap(colormapName)
+    return [cm(1.*i/numcolors) for i in range(numcolors)]                
+##### csv stuff #####
+def csvColumn(filenm,fieldNm):
+    '''get a single column of csv data'''
+    data,fields=readCSV(filenm)
+    try: num=fields.index(fieldNm) #column number to return
+    except ValueError or IndexError: num=indexCaseSpaceInsensitive(fields,fieldNm) #try again with case and space insensitive        
+    return getColumn(data,num)
+
+def readCSV(filenm,validFields='all'):
+    """
+    Read data from a csv into a list of lists. 
+    Does parsing of each cell with :func:`csvDataConvert`.
+    Field order doesn't matter. If validFields is not 'all' and
+    a field is not in validFields, its data will be excluded from 
+    the output data.
+        
+    :param filenm: name of the csv file to read
+    :param validFields: list of valid field names (case and space insensitive)
+    
+    :returns: data, a list of lists
+    :returns: fieldsChecked, a list of fields 
+    """
+    csvfile = open(filenm)
+    try: dialect = csv.Sniffer().sniff(csvfile.read(4048))
+    except: 
+        print 'problem with reading: ',filenm
+        raise 
+    csvfile.seek(0)
+    reader = csv.reader(csvfile, dialect)
+    def csvDataConvert(inData, repForBlankStrings=None, checkForNumbers=True):
+        outData=[]
+        for row in inData:
+            newRow=[]
+            for entry in row:
+                entry=entry.strip()
+                if entry.strip()=='': newRow.append( repForBlankStrings )
+                elif checkForNumbers: newRow.append( stringToNumberConversion(entry) )
+                else: newRow.append(entry)
+            outData.append(newRow)
+        return outData
+    
+    data=csvDataConvert(zip(*reader))
+    csvfile.close()
+    
+    try: data=transpose(data) #return data in r,c index order 
+    except TypeError:
+        print 'data for {file} is length: {n}'.format(file=filenm,n=len(data))
+        print 'file is {n}B'.format(n=os.path.getsize(filenm))
+        raise
+    fields=data.pop(0) #fields are the first row of csv
+    
+    if validFields=='all': return data,fields
+    else: #ensure that each field is in validFields
+        
+        fieldsChecked=list(fields[:])
+        for i,field in enumerate(fields): 
+            if field in validFields: continue
+            else: 
+                fieldSimple=drop_case_spaces(field)
+                if fieldSimple in validFields: fieldsChecked[fieldsChecked.index(field)]=fieldSimple #compare without considering case or spaces
+                elif fieldSimple is not None: print 'Ignored "{f}" as not a valid input field for {nm}. '.format(f=field,nm=filenm)
+        
+        return data,fieldsChecked    
+
+def writeCSV(fields,data,filename):
+    with open(filename, 'w+') as f:
+        writer = csv.writer(f)
+        writer.writerow(fields)
+        writer.writerows(data)
+        
+#################### string stuff ##################
+def stringToNumberConversion(s):
+    try: return int(s)
+    except ValueError: 
+        try: return float(s)
+        except ValueError: return s
+def indexCaseSpaceInsensitive(L,s): return map(drop_case_spaces,L).index( drop_case_spaces(s) )
+def drop_case_spaces(s): 
+    '''get rid of spaces in a string and make lower case. will also work with list of strings'''
+    try: return s.lower().replace(' ','')
+    except AttributeError: 
+        if s is None: return None
+        elif isinstance(s, list): return map(drop_case_spaces,s)
+
+def toPercent(val,digits=0): return '{p:.{d}%}'.format(p=val,d=digits)            
+##################### file stuff ###########################
+def splitFilename(fullPathFilenm):
+    '''split a filename into its directory, filename, and extension'''
+    (dirNm,fullFilenm)=os.path.split(fullPathFilenm)
+    (fileNm,extNm)=os.path.splitext(fullFilenm)
+    return dirNm, fileNm, extNm
+def joindir(dir,file): return os.path.join(dir, file)
+            
+################### time stuff ###########################
+def parseTime(str,formatter=None): 
+    if formatter is None: return parser.parse(str)
+    else: return parser.parse(str,**formatter)
+def getTimeFormat(str):
+    formatter=dict()
+    t=parseTime(str)
+    if t == parseTime(str,dict(dayfirst=True)): formatter['dayfirst']=True
+    if t == parseTime(str,dict(yearfirst=True)): formatter['yearfirst']=True
+    return formatter
+def hours(t): 
+    try:  return t.days*24.0 + t.seconds/3600.0 #t is a datetime object
+    except AttributeError: return datetime.timedelta(hours=t) #t is a number
+
+
+####################### class stuff #######################
+def getattrL(L,attribute='name'):
+    '''get the attribute of each class instance in a list'''
+    return [getattr(item,attribute) for item in L]
+def getclass_inlist(L,values,attribute='name'):
+    if isinstance(values,str): values=[values]
+    attrL=getattrL(L,attribute)
+    try: indL=[attrL.index(value) for value in values]
+    except ValueError:
+        print attrL
+        raise
+    if len(indL)==1: return L[indL[0]]
+    else: return [L[ind] for ind in indL]
+
+####################### dict stuff ########################
+def subset(D, subsetL):
+    '''subset of dictionary'''
+    subsetLcopy=subsetL
+    for k,key in enumerate(subsetL): #ensure that subset doesn't contain any keys not in D already
+         if key not in D: subsetLcopy.pop(k)
+    return dict(zip(subsetL, map(D.get, subsetLcopy)))
+def subsetexcept(D,exceptL):
+    '''dictionary without exceptions list'''
+    for e in exceptL: D.pop(e)
+    return D

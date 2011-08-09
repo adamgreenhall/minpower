@@ -32,14 +32,17 @@ In this mathematical formulation generators are indexed by :math:`g`. :math:`P_g
 For :abbr:`DCOPF (De-Coupled Optimal Power Flow)`, the real power flow on a line :math:`P_{ij} = \frac{1}{X_{ij}} \left( \theta_i-\theta_j \right)` depends linearly on the voltage angles of the buses it connects (:math:`\theta_{i}`, :math:`\theta_{j}`) and its own reactance :math:`X_{ij}`. Bus angles are the difference in voltage angle between the bus and the :abbr:`reference bus (known as the swing or slack bus)` which has angle :math:`0\degree`. 
 
 
+
+
+
 The basics
 -------------
 
 Let's say you have made a folder called ``mypowerflow`` and put :ref:`the information <powerflow-inputs-example>`
 about your problem in the folder. Then if you run the script::
     
-    import minpower
-    minpower.solve.problem('mypowerflow/')
+    from minpower import solve
+    solve.problem('mypowerflow/')
 
 :abbr:`OPF (Optimal Power Flow)` is difficult to visualize (please `send suggestions <mailto:minpower@adamgreenhall.com>`_), but here is what **minpower** creates:
 

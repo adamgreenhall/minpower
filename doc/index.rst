@@ -11,14 +11,13 @@ with other :doc:`researchers<researchers>` and to make learning easier for :doc:
 
 Solving problems is as easy as two lines of script::
 
-    import minpower
-    minpower.solve.problem('mycommitment/')
+    from minpower import solve
+    solve.problem('mycommitment/')
 
 **minpower** creates great visualizations too, like this one for a :doc:`UC problem <unit-commitment>`:
     
-    ..  image:: ./_static/demos/commitment.png
+    ..  image:: ./_static/commitment_demo.png
         :width: 500 px
-
 
 
 

@@ -51,8 +51,8 @@ Using `Gurobi <http://gurobi.com>`_ or `GLPK <http://www.gnu.org/software/glpk/>
 
 If your are using `CPLEX <http://www.ibm.com/software/integration/optimization/cplex-optimizer>`_, we need to test that all the solver-to-Python hooks are working correctly. This can be a sticking point. Run the following script to make sure everything is working::
     
-    import minpower
-    minpower.tests.solvers.testall()
+    from minpower.tests import solvers
+    solvers.testall()
 
 Do you see ``solved problem, status: Optimal`` after each of the solvers you installed? 
 

@@ -100,7 +100,7 @@ class Generator(object):
         heatratestring=None,fuelcost=1,
         startupcost=0,shutdowncost=0,
         mustrun=False,
-        name=None,index=None,bus=None):
+        name='',index=None,bus=None):
         
         vars(self).update(locals()) #load in inputs
         if index is None: index=hash(self)        
@@ -165,7 +165,7 @@ class Generator(object):
                 self.u[time]=True
                 self.startup[time]=False
                 self.shutdown[time]=False
-            
+                
     def plotCostCurve(self,P=None,filename=None): self.costModel.plot(P,filename)
     def setInitialCondition(self,time=None, P=None, u=True, hoursinstatus=100):
         if P is None: P=(self.Pmax-self.Pmin)/2 #set default power as median output

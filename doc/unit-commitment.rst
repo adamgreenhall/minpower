@@ -10,6 +10,8 @@ Unit Commitment
     data-input
 
 
+
+
 The problem
 ------------
 
@@ -39,8 +41,8 @@ The basics
 Let's say you have made a folder called ``mycommitment`` and put :ref:`the information <commitment-inputs-example>`
 about your problem in the folder. Then if you run the script::
     
-    import minpower
-    minpower.solve.directory('mycommitment/')
+    from minpower import solve
+    solve.directory('mycommitment/')
 
 You get a plot:
 

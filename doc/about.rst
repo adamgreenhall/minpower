@@ -13,7 +13,8 @@ Authors and Collaborators
 ---------------------------
 
 
-..  image::  ./_static/images/adam.jpg
+
+..  image::  ./_static/adam.jpg
     :target: http://adamgreenhall.com
     :width: 80 px
     :align: left
@@ -26,7 +27,7 @@ Authors and Collaborators
     on demand response and for teaching students at `U. of Washington <http://ee.washington.edu>`_.
 
 .. comment
-    ..  image:: ./_static/images/sandia.gif
+    ..  image:: ./_static/sandia.gif
         :target: https://software.sandia.gov/trac/coopr
         :width: 80 px
         :align: left
@@ -40,7 +41,7 @@ Authors and Collaborators
 Development
 ------------
 
-..  image:: ./_static/images/github.jpg
+..  image:: ./_static/github.jpg
     :target: http://github.com/adamgreenhall/minpower
     :alt: github logo
     :width: 80 px

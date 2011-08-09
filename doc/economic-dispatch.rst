@@ -26,14 +26,16 @@ In this mathematical formulation generators are indexed by :math:`g`. :math:`P_g
 * each generator must be within its real power limits and 
 * total power generated must equal the power consumed by the load.
 
+
+
 The basics
 -----------
 
 Let's say you have made a folder called ``mydispatch`` and put :ref:`the information <dispatch-inputs-example>`
 about your problem in the folder. Then if you run the script::
     
-    import minpower
-    minpower.solve.problem('mydispatch/')
+    from minpower import solve
+    solve.problem('mydispatch/')
 
 you get a plot:
 

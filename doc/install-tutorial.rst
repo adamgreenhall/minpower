@@ -64,6 +64,14 @@ CPLEX solver-to-Python hooks
 
     ..  note:: Different Linux systems may have a different name for the ``.bashrc`` file. Your CPLEX root directory (in the case above ``/usr/ilog/CPLEX_Studio_AcademicResearch122/cplex/``) will probably be different.
 
+.. comment: may need to add in hooks for Gurobi by modifying 
+    
+    /usr/local/lib/python2.7/dist-packages/PuLP-1.4.8-py2.7.egg/pulp.cfg.linux
+    change the gurobi path line to:    
+    GurobiPath = /usr/local/gurobi/gurobi401/linux64/lib/python2.5
+
+
+
 Getting minpower
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -86,8 +94,8 @@ Using `Gurobi <http://gurobi.com>`_ or `GLPK <http://www.gnu.org/software/glpk/>
 
 If your are using `CPLEX <http://www.ibm.com/software/integration/optimization/cplex-optimizer>`_, we need to test that all the solver-to-Python hooks are working correctly. This can be a sticking point. Run the following script to make sure everything is working::
     
-    import minpower
-    minpower.tests.solvers.testall()
+    from minpower.tests import solvers
+    solvers.testall()
 
 which executes the code below:
 

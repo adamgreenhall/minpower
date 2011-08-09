@@ -7,7 +7,7 @@ vizualization.
 import os,sys,types,logging
 from collections import OrderedDict
 
-from commonscripts import flatten,getColumn,transpose,elementwiseAdd, getattrL,hours,within,subset,writeCSV,colormap,joindir
+from commonscripts import flatten,getColumn,transpose,elementwiseAdd, getattrL,hours,within,subset,writeCSV,joindir
 from schedule import Timelist
 from optimization import value,dual
 
@@ -311,9 +311,10 @@ class Solution_UC(Solution):
         if withPrices:        
             axesPrice = plot.axes([figLeft,.75,figWidth,.2],sharex=ax)
             plt=axesPrice.step(T[1:]+[times.End],prices+[prices[-1]],  where='post') #start from 1 past initial time
-            axesPrice.set_ylabel('price\n[$/h]',ha='center',**bigFont)
+            axesPrice.set_ylabel('price\n[$/MWh]',ha='center',**bigFont)
             axesPrice.yaxis.set_label_coords(**yLabel_pos)
             plot.setp(axesPrice.get_xticklabels(), visible=False)
+            plot.ylim((.9*min(prices),1.1*max(prices)))
             axesPrice.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(5))
             
         ax.xaxis_date()
@@ -387,14 +388,15 @@ class Solution_UC(Solution):
         if withPrices:        
             axesPrice = plot.axes([figLeft,.75,figWidth,.2],sharex=ax)
             plt=axesPrice.step(T[1:]+[times.End],prices+[prices[-1]],  where='post') #start from 1 past initial time
-            axesPrice.set_ylabel('price\n$/h',ha='center',**bigFont)
+            axesPrice.set_ylabel('price\n$/MWh',ha='center',**bigFont)
             axesPrice.yaxis.set_label_coords(**yLabel_pos)
             plot.setp(axesPrice.get_xticklabels(), visible=False)
+            plot.ylim((.9*min(prices),1.1*max(prices)))
             axesPrice.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(5))
             
         ax.xaxis_date()
         plottedL=loadsPlotted[::-1]+gensPlotted[::-1]
-        ax.legend(plottedL, yLabels[::-1])#,loc='upper left')
+        ax.legend(plottedL, yLabels[::-1],loc='lower right')
         
         for label in ax.get_xticklabels():
             label.set_ha('right')
@@ -443,3 +445,7 @@ class Solution_multistageUC(Solution_UC):
     def info_status(self):
         if self.solved: print('{stat} in total of {time:0.4f} sec'.format(stat=self.status,time=self.solveTime))
         else: print(self.solveStatus)
+
+def colormap(numcolors,colormapName='gist_rainbow',mincolor=0):
+    cm = matplotlib.cm.get_cmap(colormapName)
+    return [cm(1.*i/numcolors) for i in range(mincolor,numcolors+mincolor)]      

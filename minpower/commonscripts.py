@@ -47,10 +47,7 @@ def frange(start, stop, step=1.0):
     while cur < stop:
         yield cur
         cur += step
-def colormap(numcolors,colormapName='gist_rainbow'):
-    import matplotlib
-    cm = matplotlib.cm.get_cmap(colormapName)
-    return [cm(1.*i/numcolors) for i in range(numcolors)]                
+          
 ##### csv stuff #####
 def csvColumn(filenm,fieldNm):
     '''get a single column of csv data'''

@@ -3,27 +3,30 @@ An optimization command library.
 Currently uses pulp but is transitioning to using coopr.
 """
 
-from config import optimization_package
+#from config import optimization_package
+optimization_package='coopr'
 
 if optimization_package=='pulp':
     import pulp
 elif optimization_package=='coopr':
     import coopr.pyomo as pyomo
-    from coopr.opt.base import solver as cooprsolver
+    try: from coopr.opt.base import solvers as cooprsolver #for coopr version>3.0.4362
+    except ImportError:
+        #previous versions of coopr
+        from coopr.opt.base import solver as cooprsolver
 else: raise ImportError('optimization library must be coopr or pulp.')
 import logging
-
 
 
 if optimization_package=='coopr':
     class Problem(object):
         '''an optimization problem/model based on pyomo'''
         def __init__(self):
-            self.model=pyomo.AbstractModel()
-        
-        def addObjective(self,expression,kind=pyomo.minimize):
+            self.model=pyomo.ConcreteModel()
+            self.solved=False
+        def addObjective(self,expression,sense=pyomo.minimize):
             '''add an objective to the problem'''
-            self.model.objective=pyomo.Objective(rule=expression,sense=kind)
+            self.model.objective=pyomo.Objective(rule=expression,sense=sense)
         def addConstraints(self,constraintsD):
             '''add a dictionary of constraints (keyed by name) to the problem'''
             try: 
@@ -34,10 +37,12 @@ if optimization_package=='coopr':
         def addConstraint(self,name,expression):
             '''add a single constraint to the problem'''
             setattr(self.model, name, pyomo.Constraint(name=name,rule=expression))
-        def addVar(self,name,kind='Reals',low=-float('inf'),high=float('inf')):
+        def addVar(self,var):
             '''add a single variable to the problem'''
-            #TODO: what kinds are acceptable (how to get Binary)
-            setattr(self.model, name, pyomo.Var(name=name,bounds=(low,high) ))#,domain=kind))
+            try: setattr(self.model, var.name, var)
+            except AttributeError:
+                print var
+                raise
 
         def solve(self,solver='cplex'):
             ''' solve the optimization problem. 
@@ -48,26 +53,64 @@ if optimization_package=='coopr':
             opt = cooprsolver.SolverFactory(solver)
             results = opt.solve(instance, suffixes=['.*'])
             instance.update_results(results)
+            logging.info('Problem solved.')
+            self.solved=True
+            
+            ##trying to debug why this isn't working. conclusions so far:
+            ## - constraints are not displayed when using GLPK
+            ## - power balance constraints have no dual values with CPLEX
+            
+            #print [con for con in results.solution(0).constraint]
+            #print results.solution(0).constraint['powerBalance_i0t00']
+            #raise ValueError
+            
+            
             self.results=results
-            return results
+            self.solution=results.solution(0)
+            self.objective = self.solution.objective['objective']['Value']
+            self.constraints = self.solution.constraint
+            
+            return 
+        def dual(self,constraintname):
+            if constraintname not in [nm for nm in self.constraints]: 
+                print type(self.constraints)
+                print [nm for nm in self.constraints]
+                raise AttributeError('constraint name not found in problem constraints')
+            return self.constraints[constraintname].dual
+
         def __getattr__(self,name):
             try: return getattr(self.model,name)
             except AttributeError:
-                raise AttributeError('the model has no variable/constraint/... named "{n}"'.format(n=name))
-            
-    def value(name,result):
+                msg='the model has no variable/constraint/attribute named "{n}"'.format(n=name)
+                raise AttributeError(msg)
+
+    def value(var,solution=None):
         '''value of an optimization variable'''
-        var=result.solution.variable[name]
-        return var.Value
-    def dual(name, result):
+        #var=result.solution.variable[name]
+        if solution is None: return var
+        
+        try: return solution.Variable[var.name]['Value']
+        except AttributeError:
+            if type(var)==pyomo.base.expr._SumExpression: print 'sum expression'
+            print dir(var)
+            var.display()
+            print var.as_numeric()
+            print solution.Variable[var.name]
+            raise
+    def dual(constraint):
         '''dual value of an optimization constraint'''
-        cons=result.solution.constraint[name]
-        try: return cons.dual
-        except AttributeError: return None #not active constraint
+        try: return constraint.dual
+        except AttributeError: return 0
+        #return solution.Constraint[constraint.name]['Dual']
 
     def sumVars(variables): return sum(variables)
-    def newProblem(*args,**kwargs): return Problem_coopr()
-    def solve(problem,solver,verbose): return problem.solve(solver,verbose)
+    def newProblem(): return Problem()
+    def newVar(name='',kind='Continuous',low=-1000000,high=1000000):
+        '''create an optimization variable'''
+        
+        kindmap = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean)
+        return pyomo.Var(name=name,bounds=(low,high),domain=kindmap[kind])
+    def solve(problem,solver='cplex'): return problem.solve(solver)
 
 elif optimization_package=='pulp':
     class Problem(pulp.LpProblem):

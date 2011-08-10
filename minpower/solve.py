@@ -46,7 +46,7 @@ def problem(datadir='./tests/uc/',
         problemsL,stageTimes=create_problem_multistage(buses,lines,times)
         solution=results.makeMultistageSolution(problemsL=problemsL,times=times,stageTimes=stageTimes,buses=buses,lines=lines,datadir=datadir)
 
-    logging.info('displaying solution')
+    
     if outputs['shell']: solution.show()
     if outputs['csv']: solution.saveCSV()
     if outputs['vizualization']: solution.vizualization()
@@ -67,27 +67,29 @@ def create_problem(buses,lines,times, filename=None):
     Bmatrix=powersystems.Network(buses,lines).Bmatrix
     prob=optimization.newProblem()
     costs=[]
+    problemvars=[]
     
     for bus in buses:
         if len(buses)>1: bus.add_timevars(times)
         
         for gen in bus.generators:
-            gen.add_timevars(times)
+            problemvars.extend(gen.add_timevars(times))
             prob.addConstraints(gen.constraints(times))
             for time in times: costs.append(gen.cost(time))
 
         for load in bus.loads:
-            load.add_timevars(times)
+            problemvars.extend(load.add_timevars(times))
             prob.addConstraints(load.constraints(times))
             for time in times: costs.append(-1*load.benifit(time))
             
     for line in lines:
-        line.add_timevars(times)
+        problemvars.extend(line.add_timevars(times))
         prob.addConstraints(line.constraints(times,buses))
                     
     for bus in buses:
         prob.addConstraints(bus.constraints(times,Bmatrix,buses))
-        
+    
+    for v in problemvars: prob.addVar(v)
     prob.addObjective( optimization.sumVars(costs) )
     
     if filename is not None: prob.write(filename)
@@ -127,9 +129,11 @@ def create_problem_multistage(buses,lines,times,intervalHrs=1.0,stageHrs=24):
                     del gen.finalstatus
                 except AttributeError: pass #first stage of problem already has initial time definied
 
-    def get_finalconditions(buses,times):
+    def get_finalconditions(buses,times,lastproblem):
         for bus in buses:
-            for gen in bus.generators: gen.finalstatus=gen.getstatus(t=times[-1],times=times)
+            for gen in bus.generators:
+                gen.update_vars(times, lastproblem.solution)
+                gen.finalstatus=gen.getstatus(t=times[-1],times=times)
 
     for t_stage in stageTimes:
         logging.info('Stage from {s} to {e}'.format(s=t_stage[0].Start, e=t_stage[-1].End))
@@ -139,9 +143,9 @@ def create_problem_multistage(buses,lines,times,intervalHrs=1.0,stageHrs=24):
         logging.info('setup in {t:0.1f}s'.format(t=systemtime.time()-timeit0))
         optimization.solve(stageproblem)
         logging.info('solved in {t:0.1f}s'.format(t=systemtime.time()-timeit0))
-        if stageproblem.status==1:
+        if True: #stageproblem.status==1: #ADD - fix for coopr
             problemsL.append(stageproblem)
-            finalcondition=get_finalconditions(buses,t_stage)
+            finalcondition=get_finalconditions(buses,t_stage,stageproblem)
         else: 
             stageproblem.write('infeasible-problem.lp')
             raise optimization.OptimizationError('Infeasible problem - writing to .lp file for examination.')

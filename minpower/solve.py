@@ -46,7 +46,7 @@ def problem(datadir='./tests/uc/',
         problemsL,stageTimes=create_problem_multistage(buses,lines,times)
         solution=results.makeMultistageSolution(problemsL=problemsL,times=times,stageTimes=stageTimes,buses=buses,lines=lines,datadir=datadir)
 
-    
+    logging.info('displaying solution')
     if outputs['shell']: solution.show()
     if outputs['csv']: solution.saveCSV()
     if outputs['vizualization']: solution.vizualization()

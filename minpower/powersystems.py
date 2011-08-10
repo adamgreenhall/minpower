@@ -169,7 +169,7 @@ class Generator(object):
     def plotCostCurve(self,P=None,filename=None): self.costModel.plot(P,filename)
     def setInitialCondition(self,time=None, P=None, u=True, hoursinstatus=100):
         if P is None: P=(self.Pmax-self.Pmin)/2 #set default power as median output
-        self.u[time]=u
+        self.u[time]= (u==1)
         self.power[time]=P*u  #note: this eliminates ambiguity of off status with power non-zero output
         self.initialStatusHours = hoursinstatus
         self.startup[time]= True if self.initialStatusHours==0 and self.u[time] else False
@@ -236,7 +236,7 @@ class Generator_nonControllable(Generator):
         fuelcost=1,costcurvestring='0',
         mustrun=False,
         Pmin=0,Pmax=None,
-        name=None,index=None,bus=None,**kwargs):
+        name=None,index=None,bus=None,kind=None,**kwargs):
         vars(self).update(locals()) #load in inputs
         if Pmax is None: self.Pmax = self.schedule.maxvalue
         self.buildCostModel()

@@ -5,8 +5,7 @@ Defines models for power systems concepts:
 """
 import bidding
 from optimization import newVar,value,sumVars
-#from schedule import *
-from commonscripts import hours,subset,subsetexcept,drop_case_spaces,getattrL
+from commonscripts import hours,subset,subsetexcept,drop_case_spaces,getattrL,flatten
 import config
 import logging
 
@@ -131,7 +130,7 @@ class Generator(object):
         return self.bid[time].output()
     def truecost(self,time):
         '''exact cost of real power production at time (based on exact bid polynomial).'''
-        return value(self.u[time])*self.bid[time].trueOutput(self.P(time))
+        return self.bid[time].trueOutput(self.P(time))
     def incrementalcost(self,time): 
         '''change in cost with change in power at time (based on exact bid polynomial).'''
         return self.bid[time].incOutput(self.P(time)) if value(self.u[time]) else None
@@ -151,25 +150,43 @@ class Generator(object):
         '''set up dicts for time-varying optimization variables
         (power,u,startup,shutdown,bid)
         '''
+        
+        allvars=[]
         commitment_problem= len(times)>1
         for time in times:    
             iden=self.iden(time)
             self.power[time]=newVar(name='P_'+iden,low=self.Pmin,high=self.Pmax)
             self.bid[time]=bidding.Bid(model=self.costModel,iden=self.iden(time))
             
+            allvars.extend([self.power[time]])
+            allvars.extend(flatten(self.bid[time].getvars()))
             if commitment_problem: #UC problem
                 self.u[time]=newVar(name='u_'+iden,kind='Binary')
                 self.startup[time] =newVar(name='su_'+iden,kind='Binary')
                 self.shutdown[time]=newVar(name='sd_'+iden,kind='Binary')
+                allvars.extend([self.u[time],self.startup[time],self.shutdown[time]])
             else: #ED or OPF problem - no commitments
                 self.u[time]=True
                 self.startup[time]=False
                 self.shutdown[time]=False
-                
+        return allvars
+    
+    def update_vars(self,times,solution):
+        commitment_problem= len(times)>1
+        for time in times:
+            self.power[time] = value(self.power[time],solution)
+            self.bid[time].update_vars(solution)
+            if commitment_problem: #UC problem
+                self.u[time]=value(self.u[time],solution)
+                self.startup[time] =value(self.startup[time],solution)
+                self.shutdown[time]=value(self.shutdown[time],solution)
+            
+        
+        
     def plotCostCurve(self,P=None,filename=None): self.costModel.plot(P,filename)
     def setInitialCondition(self,time=None, P=None, u=True, hoursinstatus=100):
         if P is None: P=(self.Pmax-self.Pmin)/2 #set default power as median output
-        self.u[time]= (u==1)
+        self.u[time]=u
         self.power[time]=P*u  #note: this eliminates ambiguity of off status with power non-zero output
         self.initialStatusHours = hoursinstatus
         self.startup[time]= True if self.initialStatusHours==0 and self.u[time] else False
@@ -236,7 +253,7 @@ class Generator_nonControllable(Generator):
         fuelcost=1,costcurvestring='0',
         mustrun=False,
         Pmin=0,Pmax=None,
-        name=None,index=None,bus=None,kind=None,**kwargs):
+        name=None,index=None,bus=None,**kwargs):
         vars(self).update(locals()) #load in inputs
         if Pmax is None: self.Pmax = self.schedule.maxvalue
         self.buildCostModel()
@@ -247,9 +264,10 @@ class Generator_nonControllable(Generator):
         if P is None: P=self.schedule.getEnergy(self.schedule.times[0]) #set default power as first scheduled power output
         self.schedule.P[time]=P
     def getstatus(self,t,times): return dict()
-    def add_timevars(self,times): return
+    def add_timevars(self,times): return []
+    def update_vars(self,times=None,solution=None): return
     def cost(self,time): return self.operatingcost(time)
-    def operatingcost(self,time): return self.fuelcost*self.costModel.trueOutput( self.P(time) )
+    def operatingcost(self,time,sln=None): return self.fuelcost*self.costModel.trueOutput( self.P(time) )
     def truecost(self,time): return self.cost(time)
     def incrementalcost(self,time): return self.fuelcost*self.costModel.incOutput(self.P(time))
     def constraints(self,times): return #no constraints
@@ -323,7 +341,8 @@ class Bus(object):
         for t in times:
             iden=self.iden(t)
             if nBus>1 and self.isSwing: constraints['swingBus '+iden] = self.angle[t]==0 #swing bus has angle=0
-            constraints['powerBalance '+iden] = powerBalance(self,t,Bmatrix,buses)==0 #power balance must be zero
+            logging.debug('added a power balance constraint')
+            constraints['powerBalance_'+iden] = powerBalance(self,t,Bmatrix,buses)==0 #power balance must be zero
         return constraints
 
 class Load(object):
@@ -344,7 +363,7 @@ class Load(object):
     def __int__(self): return self.index
     def iden(self,t):     return str(self)+str(t)
     def benifit(self,time=None): return 0
-    def add_timevars(self,times=None): return
+    def add_timevars(self,times=None): return []
     def constraints(self,*args): return #no constraints
     
 class Load_Fixed(Load):

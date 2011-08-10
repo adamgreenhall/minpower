@@ -81,7 +81,6 @@ def setup_initialcond(filename,generators,times):
     
     try: data,fields=readCSV(filename,validFields)
     except IOError: 
-        #no initial conditions file, use defaults
         data,fields=[],[]
         logging.warning('No generation initial conditions file found. Setting to defaults.')
         for gen in generators: gen.setInitialCondition(time=initialTime)
@@ -93,11 +92,7 @@ def setup_initialcond(filename,generators,times):
         raise
     
     
-    
-    #set all gens to off (in case some are not listed in initial file)
-    for gen in generators: gen.setInitialCondition(time=initialTime,P=0,u=False)
-    
-    #for each row in initial file, find gen (by name), add initial condifion
+    #add info to generators
     genNames=[g.name for g in generators]
     nameCol = attributes.index('name')
     for row in data:
@@ -185,14 +180,12 @@ def setup_times(file_gens,file_loads,datadir):
     
     if len(genScheds)==0 and len(loadScheds)==0:
         #this is a ED or OPF problem - only one time
-        times=schedule.create_single_time()
+        times=schedule.Timelist([schedule.Time(Start='0:00',index=0)])
         return times
 
 
-    for filename in loadScheds:
-        if filename!='': timestrL_loads.append( getTimeCol(filename) )
-    for filename in genScheds:
-        if filename!='': timestrL_gens.append( getTimeCol(filename) )
+    for filename in loadScheds: timestrL_loads.append( getTimeCol(filename) )
+    for filename in genScheds:  timestrL_gens.append( getTimeCol(filename) )
     nT_loads=[len(L) for L in timestrL_loads]
     nT_gens =[len(L) for L in timestrL_gens]
     
@@ -208,12 +201,8 @@ def setup_times(file_gens,file_loads,datadir):
     
     #check for missing data problems by checking length
     nT=len(times)
-    if any(n!=nT if n else False for n in nT_loads): 
-        msg='a load has schedule with inconsistent times. load schedule lengths={L} and there are {t} times.'.format(L=len(nT_loads),t=nT)
-        raise ValueError(msg)
-    if any(n!=nT if n else False for n in nT_gens): 
-        msg='a generator has schedule with inconsistent times. gen schedule lengths={L} and there are {t} times.'.format(L=len(nT_gens),t=nT)
-        raise ValueError(msg)
+    if any(n!=nT if n else False for n in nT_loads ): raise ValueError('a load has schedule with inconsistent times. load schedule lengths={L} and there are {t} times.'.format(L=nT_loads,t=nT))
+    if any(n!=nT if n else False for n in nT_gens  ): raise ValueError('a generator has schedule with inconsistent times. gen schedule lengths={L} and there are {t} times.'.format(L=nT_gens,t=nT))
     return times
     
     

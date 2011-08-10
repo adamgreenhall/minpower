@@ -23,7 +23,7 @@ class Bid(object):
 
         #add time variables
         self.segmentsActive,self.fractionsBP=self.model.addTimeVars(self.iden)
-    def output(self): return self.model.output(self.fractionsBP)
+    def output(self,solution=None): return self.model.output(self.fractionsBP,solution)
     def trueOutput(self,input): return self.model.trueOutput(input)
     def incOutput(self,input):  return self.model.incOutput(input)
     def plotDeriv(self,**kwargs): return self.model.plotDeriv(**kwargs)
@@ -40,7 +40,11 @@ class Bid(object):
             inputVar=inputVar,
             status=status,
             iden=self.iden)
-
+    def getvars(self):
+        return [self.segmentsActive,self.fractionsBP]
+    def update_vars(self,solution):
+        self.segmentsActive = [ value(s, solution) for s in self.segmentsActive]
+        self.fractionsBP =    [value(f, solution) for f in self.fractionsBP]
     def __str__(self): return 'bid {i}'.format(i=self.iden)
 
 class PWLmodel(object):
@@ -120,7 +124,8 @@ class PWLmodel(object):
             name='midSegment {iden} b{bnum}'.format(iden=iden,bnum=b)
             constraints[name] =                ( F[b] <= sumVars([S[b-1],S[b]]) )
         return constraints
-    def output(self,F): return sumVars( elementwiseMultiply(F,self.bpOutputs) )
+    def output(self,F,solution=None): 
+        return sum( [ value(Fval,solution)*self.bpOutputs[f] for f,Fval in enumerate(F)] )
     def trueOutput(self,input): return polyval( self.polyCurve,         value(input) )
     def incOutput(self,input):  return polyval( polyder(self.polyCurve),value(input) )
     def texrepresentation(self,digits=3):

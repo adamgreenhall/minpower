@@ -212,11 +212,3 @@ def parse_timestrings(timestringsL):
     """
     fmt=getTimeFormat(timestringsL[0])
     return [dateutil.parser.parse(str,**fmt) for str in timestringsL]
-
-
-def create_single_time():
-    """
-    Create a  simple schedule -- only one time interval --
-    for an ED or OPF problem.
-    """
-    return Timelist( [Time(Start='0:00',index=0)] )

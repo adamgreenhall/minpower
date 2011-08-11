@@ -50,11 +50,12 @@ class Solution(object):
         for gen in self.generators: gen.update_vars(times, problem.solution)
             
         self.objective  =float(value(problem.objective))
-        #self.activeConstraints = sum([dual(c)!=0 for nm,c in problem.constraints.items()])
+        
         print 'objective=',self.objective
-        print 'in results constraints are:'
-        print [c for c in self.constraints]
         print problem.dual('powerBalance_i0t01')
+        raise NotImplementedError
+        
+        #self.activeConstraints = sum([dual(c)!=0 for nm,c in problem.constraints.items()])
         self.totalConstraints = len(problem.constraints)
         self.calcCosts()
         self.calcPrices()

@@ -39,10 +39,8 @@ if optimization_package=='coopr':
             setattr(self.model, name, pyomo.Constraint(name=name,rule=expression))
         def addVar(self,var):
             '''add a single variable to the problem'''
-            try: setattr(self.model, var.name, var)
-            except AttributeError:
-                print var
-                raise
+            setattr(self.model, var.name, var)
+
 
         def solve(self,solver='cplex'):
             ''' solve the optimization problem. 
@@ -52,31 +50,39 @@ if optimization_package=='coopr':
             instance=self.model.create()
             opt = cooprsolver.SolverFactory(solver)
             results = opt.solve(instance, suffixes=['.*'])
+            
+            if not str(results.solver[0]['Termination condition'])=='optimal':
+                msg='problem not solved. Solver terminated with status: "{}"'.format(results.solver[0]['Termination condition'])
+                raise OptimizationError(msg)
+            else:
+                self.solved=True
+                logging.info('Problem solved.')
+            
             instance.update_results(results)
-            logging.info('Problem solved.')
-            self.solved=True
-            
-            ##trying to debug why this isn't working. conclusions so far:
-            ## - constraints are not displayed when using GLPK
-            ## - power balance constraints have no dual values with CPLEX
-            
-            #print [con for con in results.solution(0).constraint]
-            #print results.solution(0).constraint['powerBalance_i0t00']
-            #raise ValueError
-            
-            
-            self.results=results
             self.solution=results.solution(0)
-            self.objective = self.solution.objective['objective']['Value']
+
+            if solver=='glpk':
+                self.objective = self.solution.objective['objective']['Value']
+            else: 
+                try: self.objective = self.solution.objective['__default_objective__']['Value']
+                except AttributeError: 
+                    logging.warning('could not get objective value from solver.')
+                    self.objective=0
             self.constraints = self.solution.constraint
-            
+            self.constraintnames = [c[4:len(c)-1] for c in self.constraints]
+            self.constraintnames_full = [c for c in self.constraints]
             return 
         def dual(self,constraintname):
-            if constraintname not in [nm for nm in self.constraints]: 
-                print type(self.constraints)
-                print [nm for nm in self.constraints]
+            if constraintname not in self.constraintnames: 
                 raise AttributeError('constraint name not found in problem constraints')
-            return self.constraints[constraintname].dual
+            idx=self.constraintnames.index(constraintname)
+            fullname=self.constraintnames_full[idx]
+            try: return self.constraints[fullname]['Dual']
+            except AttributeError:
+                print 'getting dual for "{}"'.format(fullname)
+                print self.constraints
+                print self.constraints[fullname]
+                raise
 
         def __getattr__(self,name):
             try: return getattr(self.model,name)

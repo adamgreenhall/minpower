@@ -147,6 +147,9 @@ class PWLmodel(object):
         if texstr[0]=='+': texstr=texstr[1:]
         return texstr
 
+#ADD linear model for bids
+    
+
 def parsePolynomial(s):
     """
     Parse a string into a numpy polynomial object.

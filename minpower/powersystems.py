@@ -102,7 +102,7 @@ class Generator(object):
         name='',index=None,bus=None):
         
         vars(self).update(locals()) #load in inputs
-        if index is None: index=hash(self)        
+        if index is None: self.index=hash(self)        
         if self.rampratemin is None: self.rampratemin = -1*self.rampratemax
         
         self.buildCostModel()

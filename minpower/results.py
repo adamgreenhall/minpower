@@ -331,7 +331,7 @@ class Solution_UC(Solution):
             else: pass
         
         #show prices
-        if withPrices:        
+        if withPrices and any(prices):        
             axesPrice = plot.axes([figLeft,.75,figWidth,.2],sharex=ax)
             plt=axesPrice.step(T[1:]+[times.End],prices+[prices[-1]],  where='post') #start from 1 past initial time
             axesPrice.set_ylabel('price\n[$/MWh]',ha='center',**bigFont)

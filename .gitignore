@@ -8,7 +8,7 @@ MANIFEST
 doc/publish.py
 doc/Makefile
 doc/_build/*
-
+addons/*.py
 
 # Compiled source #
 ###################

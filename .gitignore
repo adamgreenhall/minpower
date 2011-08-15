@@ -11,7 +11,7 @@ doc/_build/*
 addons/*.py
 *commitment.csv
 *dispatch.csv
-*power-flow.csv
+*powerflow-*.csv
 
 # Compiled source #
 ###################

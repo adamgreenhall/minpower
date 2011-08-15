@@ -51,7 +51,7 @@ def makeGenerator(kind='generic',**kwargs):
     
     
     kind,kwargs=parse_args(kind,**kwargs)    
-    if kind=='wind' or not kwargs['isControllable']: 
+    if kind=='wind' or not kwargs['isControllable'] or kwargs.get('schedule',None): 
         classname=Generator_nonControllable
     else: classname=Generator
     kwargs.pop('isControllable')

@@ -235,13 +235,13 @@ class Solution_UC(Solution):
         fields.append('prices'); data.append([self.buses[0].price[t] for t in times])
         for gen in self.generators: 
             if gen.isControllable:
-                fields.append('status: '+str(gen.name));
+                fields.append('status: '+str(gen.name))
                 data.append([value(gen.u[t]) for t in times])
-            fields.append('power: '+str(gen.name));
+            fields.append('power: '+str(gen.name))
             data.append([value(gen.P(t)) for t in times])
-        #for load in self.loads:
-        #    fields.append(str(load.name)+' power');
-        #    data.append([value(load.P(t)) for t in times])
+        for load in self.loads:
+            fields.append('power: '+str(load.name))
+            data.append([value(load.P(t)) for t in times])
             
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))
         
@@ -320,7 +320,7 @@ class Solution_UC(Solution):
         convert_to_GW=True if max(stackBottom)>20000 else False
         
         for d,load in enumerate(loads):
-            color='.8'
+            color='.8' #gray
             if load.kind in ['shifting','bidding']:
                 Pd=[value(load.P(t)) for t in times]
                 stackBottom=elementwiseAdd([-1*P for P in Pd],stackBottom)

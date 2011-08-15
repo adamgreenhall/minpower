@@ -9,6 +9,9 @@ doc/publish.py
 doc/Makefile
 doc/_build/*
 addons/*.py
+*commitment.csv
+*dispatch.csv
+*power-flow.csv
 
 # Compiled source #
 ###################

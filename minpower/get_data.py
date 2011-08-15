@@ -7,6 +7,7 @@ from the information found in the data.
 
 import powersystems
 import schedule
+from addons import * 
 from commonscripts import readCSV,csvColumn,flatten,unique,drop_case_spaces,getattrL, joindir
 
 import os,sys,logging
@@ -54,16 +55,16 @@ def parsedir(datadir='./tests/uc/',
     times=setup_times(file_gens,file_loads,datadir)
     
     #add loads
-    loads=build_class_list(file_loads,classname=powersystems.makeLoad,field_attr_map=fields_loads,times=times)
+    loads=build_class_list(file_loads,model=powersystems.makeLoad,field_attr_map=fields_loads,times=times)
     
     #add gens
-    generators=build_class_list(file_gens,classname=powersystems.makeGenerator,field_attr_map=fields_gens,times=times)
+    generators=build_class_list(file_gens,model=powersystems.makeGenerator,field_attr_map=fields_gens,times=times)
     
     #add initial conditions
     generators=setup_initialcond(file_init,generators,times)
     
     #add lines
-    try: lines=build_class_list(file_lines,classname=powersystems.Line,field_attr_map=fields_lines)
+    try: lines=build_class_list(file_lines,model=powersystems.Line,field_attr_map=fields_lines)
     except IOError: lines=[]
     
     #create buses list    
@@ -110,7 +111,7 @@ def setup_initialcond(filename,generators,times):
         
     return generators
 
-def build_class_list(filename,classname,field_attr_map,times=None):
+def build_class_list(filename,model,field_attr_map,times=None):
     """
     Create list of class instances from data in a spreadsheet.
     
@@ -122,7 +123,7 @@ def build_class_list(filename,classname,field_attr_map,times=None):
     
     :returns: a list of class objects
     """
-        
+    field_attr_map.update({'model':'model','modelschedule':'modelschedule'}) #add a model override
     dirname=os.path.dirname(filename)
     classL=[]
     validFields=field_attr_map.keys()
@@ -132,17 +133,31 @@ def build_class_list(filename,classname,field_attr_map,times=None):
         raise KeyError('Field "{f}" is not in list'.format(f=f)+
             'of valid fields (case insensitive): {V}.'.format(V=validFields))
     
+    def getmodel(default,name,inputs):
+        model=default
+        newmodel=inputs.pop(name,None)
+        if newmodel is None:
+            return model
+        else:
+            modname,classname=newmodel.split('.')
+            return getattr(globals()[modname],classname)
+    
+    
     index=0
     for row in data:
         inputs=dict()
         for c,elem in enumerate(row): 
             if row[c] is None: continue
-            elif attributes[c]=='schedulefilename':
-                schedulefilename=joindir(dirname,row[c])
-                inputs['schedule']=schedule.Schedule(schedulefilename,times)
             else: inputs[attributes[c]]= row[c]
         else:
-            classL.append( classname(index=index, **inputs) )
+            model_local         =getmodel(model,'model',inputs)
+            model_schedule_local=getmodel(schedule.Schedule,'modelschedule',inputs)
+
+            schedulefilename=inputs.pop('schedulefilename',None)
+            if schedulefilename is not None:
+                inputs['schedule']=model_schedule_local(joindir(dirname,schedulefilename),times)
+            
+            classL.append( model_local(index=index, **inputs) )
             index+=1
     return classL
 

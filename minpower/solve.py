@@ -38,8 +38,8 @@ def problem(datadir='./tests/uc/',
     buses,lines,times=get_data.parsedir(datadir)
 
     if times.spanhrs<=24:
-        problemfile=joindir(datadir,'problem-formulation.lp') if outputs['problemfile'] else None
-        problem=create_problem(buses,lines,times,problemfile)
+        problem=create_problem(buses,lines,times)
+        if outputs['problemfile']: prob.write(joindir(datadir,'problem-formulation.lp'))
         optimization.solve(problem,solver)
         solution=results.makeSolution(times=times,lines=lines,buses=buses,problem=problem,datadir=datadir)
     else: #split into multi-stage problem
@@ -52,7 +52,7 @@ def problem(datadir='./tests/uc/',
     if outputs['vizualization']: solution.vizualization()
     return solution
 
-def create_problem(buses,lines,times, filename=None):
+def create_problem(buses,lines,times):
     """
         Create a power systems optimization problem.
         
@@ -90,7 +90,6 @@ def create_problem(buses,lines,times, filename=None):
         
     prob.addObjective( optimization.sumVars(costs) )
     
-    if filename is not None: prob.write(filename)
     return prob
 
 

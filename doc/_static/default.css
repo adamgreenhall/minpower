@@ -96,7 +96,10 @@ h1, h2, h3, h4, h5, h6
 a
   { text-decoration: none; border-bottom-width: 1px; border-bottom-style: dashed; }
 
-a img{text-decoration:none; border-bottom-style: none}
+a img, a:link img {border-bottom: 0px solid #FFFFFF;
+}
+
+div.image-reference a img{border-bottom: 0px}
 
 pre, div.admonition
   { margin: 1em -40px; padding: 1em 40px; }

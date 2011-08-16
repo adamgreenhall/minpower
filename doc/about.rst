@@ -1,7 +1,7 @@
 About minpower
 ================
 
-**minpower** is an :ref:`open source<license>` toolkit for :doc:`students<students>` and :doc:`researchers<researchers>` in power systems. It is designed to make working with :doc:`ED <economic-dispatch>`, :doc:`OPF <optimal-power-flow>`, and :doc:`UC <unit-commitment>` problems :doc:`easy and beautiful<why-minpower>`. The goal is to foster :doc:`collaboration<collaborate>` with other :doc:`researchers<researchers>` and to make learning easier for :doc:`students<students>`.
+**minpower** is an :ref:`open source<license>` toolkit for :doc:`students<students>` and :doc:`researchers<researchers>` in power systems. It is designed to make working with :doc:`ED <economic-dispatch>`, :doc:`OPF <optimal-power-flow>`, and :doc:`UC <unit-commitment>` problems :doc:`simple and beautiful<why-minpower>`. The goal is to foster :doc:`collaboration<collaborate>` with other :doc:`researchers<researchers>` and to make learning easier for :doc:`students<students>`.
 
 
 **minpower** is currently :ref:`under development <development>`.

@@ -1,6 +1,7 @@
 Documentation
 =================================
 
+
 This is a listing of all of **minpower**'s modules, which are roughly organized by content. Note the ``[source]`` link next to each module/function - this provides a quick way to see the source code. Because Python code is so readable this will often answer your question. Use the tree and search box on the sidebar liberally. 
 
 What :abbr:`inputs (field names)` are allowed for spreadsheets? How do these relate to the code? See the :doc:`guide on how to specify your problem in spreadsheets <data-input>`. 
@@ -96,10 +97,10 @@ What :abbr:`inputs (field names)` are allowed for spreadsheets? How do these rel
 
 The tests module contains a directory structure full of test cases as well as a few test scripts.
 
-:mod:`tests.all`
--------------------
+:mod:`tests.testall`
+---------------------
 
-.. automodule:: tests.all
+.. automodule:: tests.testall
     :members:
     :undoc-members:    
     
@@ -109,3 +110,8 @@ The tests module contains a directory structure full of test cases as well as a 
     :members:
     :undoc-members:    
 
+===============================
+:mod:`addons`
+===============================
+
+The addons module contains a directory where you can place your own modules.

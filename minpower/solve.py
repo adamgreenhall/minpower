@@ -39,7 +39,7 @@ def problem(datadir='./tests/uc/',
 
     if times.spanhrs<=24:
         problem=create_problem(buses,lines,times)
-        if outputs['problemfile']: prob.write(joindir(datadir,'problem-formulation.lp'))
+        if outputs['problemfile']: problem.write(joindir(datadir,'problem-formulation.lp'))
         optimization.solve(problem,solver)
         solution=results.makeSolution(times=times,lines=lines,buses=buses,problem=problem,datadir=datadir)
     else: #split into multi-stage problem

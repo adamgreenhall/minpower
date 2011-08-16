@@ -40,6 +40,7 @@ class Time(object):
         rangeLenHrs = hours(self.End-self.Start)
         return [self.Start + hours(t) for t in frange(0,rangeLenHrs,intervalStepHrs)]
     def __sub__(self, other): return self.End-other.Start
+    def __add__(self, other): return self.Start+other
     def __str__(self): 
         try: return 't{ind:02d}'.format(ind=self.index)    
         except ValueError: return 't_{ind}'.format(ind=self.index) #index is str    

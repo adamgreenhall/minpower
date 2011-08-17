@@ -379,19 +379,27 @@ class Solution_multistageUC(Solution_UC):
         vars(self).update(locals())
         self.times=Timelist(flatten([list(tL) for tL in stageTimes]))
         self.times.setInitial(stageTimes[0].initialTime)
-        if all([p.status==1 for p in problemsL]): 
-            self.status = p.statusText()
-            self.solved = 1
-        self.objective = float(value(sum([p.objective for p in problemsL])))
-        self.solveTime = sum([p.solutionTime for p in problemsL])
-        constraints = dict()
-        for p in problemsL: constraints.update(p.constraints)
-        self.activeConstraints = sum([dual(c)!=0 for nm,c in constraints.items()])
-        self.totalConstraints = len(constraints)
+        #if all([p.status==1 for p in problemsL]): 
+        #    self.status = p.statusText()
+        #    self.status = 1
+        self.solved = True
+        self.status = 'optimal'
+        
+        self.objective = float(value(sum([p['objective'] for p in problemsL])))
+        self.solveTime = sum([p['solve-time'] for p in problemsL])
+        #constraints = dict()
+        #for p in problemsL: constraints.update(p.constraints)
+        #self.activeConstraints = sum([dual(c)!=0 for nm,c in constraints.items()])
+        #self.totalConstraints = len(constraints)
         self.generators=flatten( [[gen for gen in bus.generators] for bus in buses] )
         self.loads     =flatten( [[ld  for ld   in bus.loads]     for bus in buses] )
         self.calcCosts()
-        self.calcPrices(constraints)        
+        self.calcPrices()        
+    def calcPrices(self):    
+        for n,problem in enumerate(self.problemsL):
+            for t in self.stageTimes[n]:
+                for bus in self.buses:
+                    bus.price[t] = problem[t]['price_'+bus.iden(t)]
     def show(self):
         self.info_status()
         if not self.solved: return

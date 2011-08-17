@@ -7,23 +7,16 @@
   _gaq.push(['_setAccount', 'UA-24659622-2']);
   _gaq.push(['_trackPageview']);
 </script>
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
 {% endblock %}
 
 {% block relbar1 %}{% endblock %}
 {% block relbar2 %}{% endblock %}
+{% block sidebar2 %}{{ super()  }}{% endblock %}
 
 {% block document %}
 {{ super() }}
-<!--<div class="related">
-  <ul>
-    {% if next %}
-    <li class="right"><a href="{{ next.link|e }}">{{ next.title }}</a> »
-    {% endif %}
-    {% if prev %}
-    <li>« <a href="{{ prev.link|e }}">{{ prev.title }}</a>
-    {% endif %}
-  </ul>
-</div>-->
+<div class="plusone"><g:plusone></g:plusone></div>
 {% endblock %}
 
 {% block footer %}
@@ -33,9 +26,7 @@
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
   })();
-
 </script>
-<!--<div style="margin-top:10ex; font-size:60%; margin:auto; width:20%; color=Gray;">Copyright <a href="about.html">Adam Greenhall and contributors</a></div>-->
 {% endblock %}
 
 

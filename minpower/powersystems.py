@@ -4,7 +4,7 @@ Defines models for power systems concepts:
 :class:`~powersystems.Line`, and :class:`~powersystems.Load`.
 """
 import bidding
-from optimization import newVar,value,sumVars
+from optimization import newVar,value,sumVars,dual
 #from schedule import *
 from commonscripts import hours,subset,subsetexcept,drop_case_spaces,getattrL
 import config
@@ -123,6 +123,9 @@ class Generator(object):
     def P(self,time=None): 
         '''real power output at time'''
         return self.power[time]
+    def status(self,time): 
+        '''on/off status at time'''
+        return self.u[time]
     def cost(self,time): 
         '''total cost at time (operating + startup + shutdown)'''
         return self.operatingcost(time)+self.startupcost*self.startup[time]+self.shutdowncost*self.shutdown[time]
@@ -243,6 +246,7 @@ class Generator_nonControllable(Generator):
         self.isControllable=False
         
     def P(self,time): return self.schedule.getEnergy(time)
+    def status(self,time): return True
     def setInitialCondition(self,time=None, P=None, u=None, hoursinstatus=None):
         if P is None: P=self.schedule.getEnergy(self.schedule.times[0]) #set default power as first scheduled power output
         self.schedule.P[time]=P
@@ -323,9 +327,10 @@ class Bus(object):
         for t in times:
             iden=self.iden(t)
             if nBus>1 and self.isSwing: constraints['swingBus '+iden] = self.angle[t]==0 #swing bus has angle=0
-            constraints['powerBalance '+iden] = powerBalance(self,t,Bmatrix,buses)==0 #power balance must be zero
+            constraints['powerBalance_'+iden] = powerBalance(self,t,Bmatrix,buses)==0 #power balance must be zero
         return constraints
-
+    def getprice(self,constraints,time):
+        return dual(constraints['powerBalance_'+self.iden(time)])
 class Load(object):
     """
     Describes a power system load (demand).

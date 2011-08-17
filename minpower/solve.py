@@ -4,6 +4,7 @@ Power systems optimization problem solver
 """
 
 import sys,os,logging
+import time as systemtime
 
 import optimization
 import get_data
@@ -12,7 +13,7 @@ import results
 import config
 from commonscripts import joindir
 
-    
+  
 def _setup_logging(fn):
     ''' set up the logging to report on the status'''
     logging.basicConfig( level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -43,10 +44,10 @@ def problem(datadir='./tests/uc/',
         optimization.solve(problem,solver)
         solution=results.makeSolution(times=times,lines=lines,buses=buses,problem=problem,datadir=datadir)
     else: #split into multi-stage problem
-        problemsL,stageTimes=create_problem_multistage(buses,lines,times)
+        problemsL,stageTimes=create_problem_multistage(buses,lines,times,datadir)
         solution=results.makeMultistageSolution(problemsL=problemsL,times=times,stageTimes=stageTimes,buses=buses,lines=lines,datadir=datadir)
 
-    
+    logging.info('displaying solution')
     if outputs['shell']: solution.show()
     if outputs['csv']: solution.saveCSV()
     if outputs['vizualization']: solution.vizualization()
@@ -67,29 +68,27 @@ def create_problem(buses,lines,times):
     Bmatrix=powersystems.Network(buses,lines).Bmatrix
     prob=optimization.newProblem()
     costs=[]
-    problemvars=[]
     
     for bus in buses:
         if len(buses)>1: bus.add_timevars(times)
         
         for gen in bus.generators:
-            problemvars.extend(gen.add_timevars(times))
+            gen.add_timevars(times)
             prob.addConstraints(gen.constraints(times))
             for time in times: costs.append(gen.cost(time))
 
         for load in bus.loads:
-            problemvars.extend(load.add_timevars(times))
+            load.add_timevars(times)
             prob.addConstraints(load.constraints(times))
             for time in times: costs.append(-1*load.benifit(time))
             
     for line in lines:
-        problemvars.extend(line.add_timevars(times))
+        line.add_timevars(times)
         prob.addConstraints(line.constraints(times,buses))
                     
     for bus in buses:
         prob.addConstraints(bus.constraints(times,Bmatrix,buses))
-    
-    for v in problemvars: prob.addVar(v)
+        
     prob.addObjective( optimization.sumVars(costs) )
     
     return prob
@@ -98,7 +97,7 @@ def create_problem(buses,lines,times):
 
 
 
-def create_problem_multistage(buses,lines,times,intervalHrs=1.0,stageHrs=24):
+def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1.0,stageHrs=24):
     """
     Create a multi-stage power systems optimization problem.
     Each stage will be one optimization run. A stage's final
@@ -116,9 +115,15 @@ def create_problem_multistage(buses,lines,times,intervalHrs=1.0,stageHrs=24):
     :returns: a list of :class:`~schedule.Timelist` objects (one per stage)
     
     """
-    import time as systemtime
+    
+    import yaml
+    
     stageTimes=times.subdivide(hrsperdivision=stageHrs,hrsinterval=intervalHrs)
     problemsL=[]
+    
+    solutiondir=joindir(datadir,'stage-solutions/')
+    if not os.path.isdir(solutiondir): os.mkdir(solutiondir)
+        
     
     def set_initialconditions(buses,initTime):
         for bus in buses:
@@ -128,23 +133,49 @@ def create_problem_multistage(buses,lines,times,intervalHrs=1.0,stageHrs=24):
                     del gen.finalstatus
                 except AttributeError: pass #first stage of problem already has initial time definied
 
-    def get_finalconditions(buses,times,lastproblem):
+    def get_finalconditions(buses,times):
         for bus in buses:
-            for gen in bus.generators:
-                gen.update_vars(times, lastproblem.solution)
-                gen.finalstatus=gen.getstatus(t=times[-1],times=times)
+            for gen in bus.generators: gen.finalstatus=gen.getstatus(t=times[-1],times=times)
+
+    def savestage(problem,buses,lines,times,solutiondir):
+        value=optimization.value
+        #problemfile='stage {}.data'.format(times[0].Start.strftime('%Y-%m-%d %H-%M'))
+        #problemfile=joindir(solutiondir,problemfile)
+        
+        
+        solution=dict()
+        solution['objective']=float(value(problem.objective))
+        solution['solve-time']=problem.solutionTime
+        solution['status'] = (problem.status,problem.statusText)
+        for t in times:
+            #save price,power output, status
+            sln=dict()
+            for bus in buses:
+                sln['price_'+bus.iden(t)]=bus.getprice(problem.constraints,t)
+                #for gen in bus.generators:
+                    #sln['power_'+gen.iden(t)]=value(gen.P(t))
+                    #sln['status_'+gen.iden(t)]= value(gen.status(t)) ==1
+                #for ld in bus.loads: sln['power_'+ld.iden(t)]=value(ld.P(t))
+            #for line in lines: sln['power_'+line.iden(t)]=value(line.P[t])
+                
+            solution[t]=sln
+        #else:
+        #    with open(problemfile,'w+') as file: yaml.dump(solution,file)
+        
+        return solution
 
     for t_stage in stageTimes:
-        logging.info('Stage from {s} to {e}'.format(s=t_stage[0].Start, e=t_stage[-1].End))
+        logging.info('Stage starting at {}'.format(t_stage[0].Start))
         timeit0= systemtime.time()
         set_initialconditions(buses,t_stage.initialTime)
         stageproblem=create_problem(buses,lines,t_stage)
-        logging.info('setup in {t:0.1f}s'.format(t=systemtime.time()-timeit0))
+        #logging.info('setup in {t:0.1f}s'.format(t=systemtime.time()-timeit0))
         optimization.solve(stageproblem)
-        logging.info('solved in {t:0.1f}s'.format(t=systemtime.time()-timeit0))
-        if True: #stageproblem.status==1: #ADD - fix for coopr
-            problemsL.append(stageproblem)
-            finalcondition=get_finalconditions(buses,t_stage,stageproblem)
+        #logging.info('solved in {t:0.1f}s'.format(t=systemtime.time()-timeit0))
+        if stageproblem.status==1:
+            stageproblemsln=savestage(stageproblem,buses,lines,t_stage,solutiondir)
+            problemsL.append(stageproblemsln)
+            finalcondition=get_finalconditions(buses,t_stage)
         else: 
             stageproblem.write('infeasible-problem.lp')
             raise optimization.OptimizationError('Infeasible problem - writing to .lp file for examination.')

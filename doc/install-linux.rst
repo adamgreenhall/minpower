@@ -34,7 +34,7 @@ Gurobi
 
 If you are using Gurobi, the PuLP configuration may need to be modified::
 
-    sudo gedit /usr/local/lib/python2.7/dist-packages/PuLP-1.4.8-py2.7.egg/pulp.cfg.linux
+    sudo gedit /usr/local/lib/python2.7/dist-packages/PuLP-1.4.8-py2.7.egg/pulp/pulp.cfg.linux
     
 and change the gurobi path line to:    
     

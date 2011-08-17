@@ -2,6 +2,8 @@ Installation
 ============
 
 
+
+
 Honestly, installation can be a pain - *Windows and CPLEX are the toughest* - but it is worth it. 
 The initial time investment will pay off quickly. 
 

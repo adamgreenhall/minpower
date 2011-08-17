@@ -115,9 +115,7 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1.0,stageHrs
     :returns: a list of :class:`~schedule.Timelist` objects (one per stage)
     
     """
-    
-    import yaml
-    
+        
     stageTimes=times.subdivide(hrsperdivision=stageHrs,hrsinterval=intervalHrs)
     problemsL=[]
     
@@ -137,30 +135,17 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1.0,stageHrs
         for bus in buses:
             for gen in bus.generators: gen.finalstatus=gen.getstatus(t=times[-1],times=times)
 
-    def savestage(problem,buses,lines,times,solutiondir):
-        value=optimization.value
-        #problemfile='stage {}.data'.format(times[0].Start.strftime('%Y-%m-%d %H-%M'))
-        #problemfile=joindir(solutiondir,problemfile)
-        
+    def savestage(problem,buses,times):        
         
         solution=dict()
-        solution['objective']=float(value(problem.objective))
+        solution['objective']=float(optimization.value(problem.objective))
         solution['solve-time']=problem.solutionTime
-        solution['status'] = (problem.status,problem.statusText)
+        solution['status'] = (problem.status,problem.statusText() )
         for t in times:
-            #save price,power output, status
+            #save price
             sln=dict()
-            for bus in buses:
-                sln['price_'+bus.iden(t)]=bus.getprice(problem.constraints,t)
-                #for gen in bus.generators:
-                    #sln['power_'+gen.iden(t)]=value(gen.P(t))
-                    #sln['status_'+gen.iden(t)]= value(gen.status(t)) ==1
-                #for ld in bus.loads: sln['power_'+ld.iden(t)]=value(ld.P(t))
-            #for line in lines: sln['power_'+line.iden(t)]=value(line.P[t])
-                
+            for bus in buses: sln['price_'+bus.iden(t)]=bus.getprice(problem.constraints,t)
             solution[t]=sln
-        #else:
-        #    with open(problemfile,'w+') as file: yaml.dump(solution,file)
         
         return solution
 
@@ -169,12 +154,10 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1.0,stageHrs
         timeit0= systemtime.time()
         set_initialconditions(buses,t_stage.initialTime)
         stageproblem=create_problem(buses,lines,t_stage)
-        #logging.info('setup in {t:0.1f}s'.format(t=systemtime.time()-timeit0))
         optimization.solve(stageproblem)
-        #logging.info('solved in {t:0.1f}s'.format(t=systemtime.time()-timeit0))
         if stageproblem.status==1:
-            stageproblemsln=savestage(stageproblem,buses,lines,t_stage,solutiondir)
-            problemsL.append(stageproblemsln)
+            stage_sln=savestage(stageproblem,buses,t_stage)
+            problemsL.append(stage_sln)
             finalcondition=get_finalconditions(buses,t_stage)
         else: 
             stageproblem.write('infeasible-problem.lp')

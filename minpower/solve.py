@@ -146,7 +146,8 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1.0,stageHrs
             sln=dict()
             for bus in buses: sln['price_'+bus.iden(t)]=bus.getprice(problem.constraints,t)
             solution[t]=sln
-        
+            #could also take steps here to further reduce memory by setting variables to their value (instead of pulp object)
+            
         return solution
 
     for t_stage in stageTimes:

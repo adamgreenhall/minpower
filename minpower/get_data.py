@@ -151,7 +151,7 @@ def build_class_list(filename,model,field_attr_map,times=None):
             else: inputs[attributes[c]]= row[c]
         else:
             model_local         =getmodel(model,'model',inputs)
-            model_schedule_local=getmodel(schedule.Schedule,'modelschedule',inputs)
+            model_schedule_local=getmodel(schedule.makeSchedule,'modelschedule',inputs)
 
             schedulefilename=inputs.pop('schedulefilename',None)
             if schedulefilename is not None:

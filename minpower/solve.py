@@ -97,7 +97,7 @@ def create_problem(buses,lines,times):
 
 
 
-def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1.0,stageHrs=24):
+def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1,stageHrs=24):
     """
     Create a multi-stage power systems optimization problem.
     Each stage will be one optimization run. A stage's final
@@ -116,12 +116,11 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1.0,stageHrs
     
     """
         
+    if not intervalHrs: intervalHrs=times.intervalhrs
+        
     stageTimes=times.subdivide(hrsperdivision=stageHrs,hrsinterval=intervalHrs)
     problemsL=[]
-    
-    solutiondir=joindir(datadir,'stage-solutions/')
-    if not os.path.isdir(solutiondir): os.mkdir(solutiondir)
-        
+
     
     def set_initialconditions(buses,initTime):
         for bus in buses:
@@ -150,11 +149,12 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1.0,stageHrs
             
         return solution
 
+
     for t_stage in stageTimes:
         logging.info('Stage starting at {}'.format(t_stage[0].Start))
-        timeit0= systemtime.time()
         set_initialconditions(buses,t_stage.initialTime)
         stageproblem=create_problem(buses,lines,t_stage)
+        
         optimization.solve(stageproblem)
         if stageproblem.status==1:
             stage_sln=savestage(stageproblem,buses,t_stage)

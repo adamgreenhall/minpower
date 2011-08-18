@@ -166,12 +166,12 @@ elif optimization_package=='pulp':
         '''value of an optimization variable'''
         try: return pulp.value(variable)
         except AttributeError: return variable
-    def dual(constraint):    
+    def dual(constraint,default=None):    
         '''dual value of an optimization constraint'''
         try: return constraint.pi
         except AttributeError:
             logging.warning('Duals information not supported by GLPK.')
-            return None
+            return default
 
     def sumVars(variables): 
         '''sums a list of optimization variables'''

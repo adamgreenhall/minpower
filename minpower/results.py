@@ -175,7 +175,7 @@ class Solution_ED(Solution):
             
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))        
 class Solution_OPF(Solution): 
-    def vizualization(self): 
+    def vizualization(self,filename='powerflow.png'): 
         if not self.solved: return
         import networkx as nx
         buses,lines,t=self.buses,self.lines,self.times[0]
@@ -200,7 +200,7 @@ class Solution_OPF(Solution):
         nx.draw_networkx_edges(G,edge_color='0.6',pos=pos,width=Plines,alpha=0.5)
         nx.draw_networkx_edges(G,edgelist=atLimLines,edge_color='r',pos=pos,width=Plines,alpha=0.5)
                 
-        self.savevisualization(filename='powerflow.png')
+        self.savevisualization(filename)
     def saveCSV(self,filename='powerflow'): 
         t=self.times[0]
         generators,loads,lines=self.generators,self.loads,self.lines
@@ -245,7 +245,7 @@ class Solution_UC(Solution):
             
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))
         
-    def vizualization(self,withPrices=True,filename='commitment.png'):
+    def vizualization(self,filename='commitment.png',withPrices=True):
         if not self.solved: return
         if len(self.generators)<5: fewunits=True
         else: fewunits=False
@@ -327,7 +327,8 @@ class Solution_UC(Solution):
                 plt=ax.bar(T[1:],Pd,bottom=stackBottom,alpha=.5,color=color,edgecolor=color,width=barWidth,hatch="/")
                 loadsPlotted.append(plt[0])
                 yLabels.append(load.name)
-                colors.append(color)
+                if fewunits: colors.append(color)
+                else: colors[load.kind] = color
             else: pass
         
         #show prices

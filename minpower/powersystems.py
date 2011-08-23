@@ -260,7 +260,7 @@ class Generator_nonControllable(Generator):
     def P(self,time): return self.schedule.getEnergy(time)
     def status(self,time): return True
     def setInitialCondition(self,time=None, P=None, u=None, hoursinstatus=None):
-        if P is None: P=self.schedule.getEnergy(self.schedule.times[0]) #set default power as first scheduled power output
+        if P is None: P=self.schedule.getEnergy(time) #set default power as first scheduled power output
         self.schedule.P[time]=P
     def getstatus(self,t,times): return dict()
     def add_timevars(self,times): return
@@ -364,8 +364,11 @@ class Load(object):
     def iden(self,t):     return str(self)+str(t)
     def benifit(self,time=None): return (self.P(time) - self.schedule.getEnergy(time))*config.cost_loadshedding
     def shed(self,time): return self.schedule.getEnergy(time)- value(self.P(time))
-    def add_timevars(self,times=None):
-        for t in times: self.dispatched_power[t]=newVar('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
+    def add_timevars(self,times=None,shedding_allowed=False):
+        if shedding_allowed: 
+            for t in times: self.dispatched_power[t]=newVar('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
+        else:
+            for t in times: self.dispatched_power[t]=self.schedule.getEnergy(t)
     def fix_timevars(self,times=None):
         for t in times: self.dispatched_power[t]=value(self.dispatched_power[t])
     def constraints(self,*args): return #no constraints

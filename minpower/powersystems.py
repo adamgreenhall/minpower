@@ -115,14 +115,14 @@ class Generator(object):
         self._makeEmpties()
         self.isControllable=True
     def buildCostModel(self):
-        ''' create a cost model for bidding with :class:`~bidding.PWLmodel` '''
+        ''' create a cost model for bidding with :meth:`~bidding.makeModel` '''
         if getattr(self,'heatratestring',None) is not None: 
             costinputs=dict(polyText=self.heatratestring,multiplier=self.fuelcost)
             self.costcurvestring=None
         else: 
             costinputs=dict(polyText=self.costcurvestring)
             self.fuelcost=1
-        self.costModel=bidding.PWLmodel(minInput=self.Pmin, maxInput=self.Pmax,inputNm='Pg',outputNm='C',**costinputs)
+        self.costModel=bidding.makeModel(minInput=self.Pmin, maxInput=self.Pmax,inputNm='Pg',outputNm='C',**costinputs)
     def _makeEmpties(self): self.u,self.power,self.bid,self.startup,self.shutdown=dict(),dict(),dict(),dict(),dict()
         
     def P(self,time=None): 
@@ -136,7 +136,7 @@ class Generator(object):
         return self.operatingcost(time)+self.startupcost*self.startup[time]+self.shutdowncost*self.shutdown[time]
     def operatingcost(self,time): 
         '''cost of real power production at time (based on bid model approximation).'''
-        return self.bid[time].output()
+        return self.bid[time].output(self.P(time))
     def truecost(self,time):
         '''exact cost of real power production at time (based on exact bid polynomial).'''
         return self.bid[time].trueOutput(self.P(time))
@@ -426,8 +426,14 @@ class Load_Fixed(Load):
         vars(self).update(locals()) #load in inputs
         self.Pfixed = self.P
         del self.P
-    def P(self,time=None): return self.Pfixed
-    
+        self.dispatched_power = dict()
+    def P(self,time=None): return self.dispatched_power[time]
+    def add_timevars(self,times=None,shedding_allowed=False):
+        if shedding_allowed: 
+            for t in times: self.dispatched_power[t]=newVar('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
+        else:
+            for t in times: self.dispatched_power[t]=self.Pfixed    
+    def benifit(self,time=None): return (self.P(time) - self.Pfixed)*config.cost_loadshedding
     
 class Network(object):
     """

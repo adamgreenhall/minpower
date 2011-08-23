@@ -11,7 +11,7 @@ import get_data
 import powersystems
 import results
 import config
-from commonscripts import joindir
+from commonscripts import joindir,flatten
 
   
 def _setup_logging(fn):
@@ -97,7 +97,7 @@ def create_problem(buses,lines,times):
 
 
 
-def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1,stageHrs=24):
+def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHrs=24,writeproblem=False):
     """
     Create a multi-stage power systems optimization problem.
     Each stage will be one optimization run. A stage's final
@@ -140,12 +140,25 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1,stageHrs=2
         solution['objective']=float(optimization.value(problem.objective))
         solution['solve-time']=problem.solutionTime
         solution['status'] = (problem.status,problem.statusText() )
+        solution['fuelcost_generation']=sum(flatten(flatten([[[optimization.value(gen.operatingcost(t)) for t in times] for gen in bus.generators] for bus in buses]) ))
+        solution['truecost_generation']=sum(flatten(flatten([[[optimization.value(gen.truecost(t))      for t in times] for gen in bus.generators] for bus in buses]) ))
+
+        
         for t in times:
             #save price
             sln=dict()
-            for bus in buses: sln['price_'+bus.iden(t)]=bus.getprice(problem.constraints,t)
+            for bus in buses: 
+                sln['price_'+bus.iden(t)]=bus.getprice(problem.constraints,t)
+                #reduce memory by setting variables to their value (instead of pulp object)
+                #there is still a whole bunch of duplication going on here for Time objects - clean this up?
+                if t==times[0]:
+                    for gen in bus.generators: gen.fix_timevars(times)
+                    for load in bus.loads: load.fix_timevars(times)
+                for load in bus.loads:
+                    if load.shed(t): logging.warning('Load shedding of {} MWh occured at {}.'.format(load.shed(t),str(t.Start)))
+            
             solution[t]=sln
-            #could also take steps here to further reduce memory by setting variables to their value (instead of pulp object)
+            
             
         return solution
 
@@ -154,12 +167,14 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1,stageHrs=2
         logging.info('Stage starting at {}'.format(t_stage[0].Start))
         set_initialconditions(buses,t_stage.initialTime)
         stageproblem=create_problem(buses,lines,t_stage)
+        if writeproblem: stageproblem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
         
         optimization.solve(stageproblem)
         if stageproblem.status==1:
+            finalcondition=get_finalconditions(buses,t_stage)
             stage_sln=savestage(stageproblem,buses,t_stage)
             problemsL.append(stage_sln)
-            finalcondition=get_finalconditions(buses,t_stage)
+            
         else: 
             stageproblem.write('infeasible-problem.lp')
             raise optimization.OptimizationError('Infeasible problem - writing to .lp file for examination.')

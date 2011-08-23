@@ -110,7 +110,7 @@ elif optimization_package=='pulp':
             else:
                 msg='Couldnt find the solver "{}"'.format(solver)
                 raise OptimizationError(msg)
-        except pulp.solvers.PulpSolverError:            
+        except pulp.solvers.PulpSolverError:
             problem.status=0
         if problem.status:
             logging.info('{stat} in {time:0.4f} sec'.format(

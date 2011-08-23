@@ -142,7 +142,7 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
         solution['status'] = (problem.status,problem.statusText() )
         solution['fuelcost_generation']=sum(flatten(flatten([[[optimization.value(gen.operatingcost(t)) for t in times] for gen in bus.generators] for bus in buses]) ))
         solution['truecost_generation']=sum(flatten(flatten([[[optimization.value(gen.truecost(t))      for t in times] for gen in bus.generators] for bus in buses]) ))
-
+        solution['load_shed']=0
         
         for t in times:
             #save price
@@ -155,7 +155,10 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
                     for gen in bus.generators: gen.fix_timevars(times)
                     for load in bus.loads: load.fix_timevars(times)
                 for load in bus.loads:
-                    if load.shed(t): logging.warning('Load shedding of {} MWh occured at {}.'.format(load.shed(t),str(t.Start)))
+                    shed=load.shed(t)
+                    if shed: 
+                        logging.warning('Load shedding of {} MWh occured at {}.'.format(shed,str(t.Start)))
+                        solution['load_shed']+=shed
             
             solution[t]=sln
             
@@ -174,12 +177,15 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
             #redo stage, with shedding allowed
             logging.warning('Stage infeasible, re-runnning with load shedding.')
             stageproblem=create_problem(buses,lines,t_stage,load_shedding_allowed=True)
+            optimization.solve(stageproblem)
+            
         if stageproblem.status==1:
             finalcondition=get_finalconditions(buses,t_stage)
             stage_sln=savestage(stageproblem,buses,t_stage)
             problemsL.append(stage_sln)
             
         else: 
+            print stageproblem.status,stageproblem.statusText()
             stageproblem.write('infeasible-problem.lp')
             msg='Infeasible problem - writing to .lp file for examination.'
             raise optimization.OptimizationError(msg)

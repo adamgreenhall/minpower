@@ -97,7 +97,7 @@ def create_problem(buses,lines,times):
 
 
 
-def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1,stageHrs=24):
+def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1,stageHrs=24,writeproblem=False):
     """
     Create a multi-stage power systems optimization problem.
     Each stage will be one optimization run. A stage's final
@@ -154,6 +154,7 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1,stageHrs=2
         logging.info('Stage starting at {}'.format(t_stage[0].Start))
         set_initialconditions(buses,t_stage.initialTime)
         stageproblem=create_problem(buses,lines,t_stage)
+        if writeproblem: stageproblem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
         
         optimization.solve(stageproblem)
         if stageproblem.status==1:

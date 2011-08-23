@@ -173,6 +173,7 @@ elif optimization_package=='pulp':
                 raise OptimizationError(msg)
         except pulp.solvers.PulpSolverError:
             problem.status=0
+            out=None
         if problem.status:
             logging.info('{stat} in {time:0.4f} sec'.format(
                 stat=problem.statusText(),

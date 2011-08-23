@@ -64,7 +64,7 @@ generator_defaults=dict(
     )
 
 
-cost_loadshedding = 100000 #$/MWh
+cost_loadshedding = 100000000 #$/MWh
 
 default_num_breakpoints=10
 

@@ -53,7 +53,7 @@ def problem(datadir='./tests/uc/',
     if outputs['vizualization']: solution.vizualization()
     return solution
 
-def create_problem(buses,lines,times):
+def create_problem(buses,lines,times,load_shedding_allowed=False):
     """
         Create a power systems optimization problem.
         
@@ -78,7 +78,7 @@ def create_problem(buses,lines,times):
             for time in times: costs.append(gen.cost(time))
 
         for load in bus.loads:
-            load.add_timevars(times)
+            load.add_timevars(times,shedding_allowed=load_shedding_allowed)
             prob.addConstraints(load.constraints(times))
             for time in times: costs.append(-1*load.benifit(time))
             
@@ -170,6 +170,10 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
         if writeproblem: stageproblem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
         
         optimization.solve(stageproblem)
+        if stageproblem.status!=1: 
+            #redo stage, with shedding allowed
+            logging.warning('Stage infeasible, re-runnning with load shedding.')
+            stageproblem=create_problem(buses,lines,t_stage,load_shedding_allowed=True)
         if stageproblem.status==1:
             finalcondition=get_finalconditions(buses,t_stage)
             stage_sln=savestage(stageproblem,buses,t_stage)
@@ -177,7 +181,8 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
             
         else: 
             stageproblem.write('infeasible-problem.lp')
-            raise optimization.OptimizationError('Infeasible problem - writing to .lp file for examination.')
+            msg='Infeasible problem - writing to .lp file for examination.'
+            raise optimization.OptimizationError(msg)
     return problemsL,stageTimes
 
 if __name__ == "__main__": 

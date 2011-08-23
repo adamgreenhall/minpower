@@ -163,6 +163,7 @@ elif optimization_package=='pulp':
     def solve(problem,solver='cplex'):
         '''solve the optimization problem'''
         logging.info('Solving with {s} ... '.format(s=solver))
+<<<<<<< HEAD
         try:
             if   solver.lower()=='cplex':  out=problem.solve(pulp.CPLEX_CMD(msg=0)),
             elif solver.lower()=='glpk':   out=problem.solve(pulp.GLPK_CMD(msg=0)),
@@ -174,11 +175,25 @@ elif optimization_package=='pulp':
         except pulp.solvers.PulpSolverError:
             problem.status=0
             out=None
+=======
+
+        if   solver.lower()=='cplex':  out=problem.solve(pulp.CPLEX_CMD(msg=0)),
+        elif solver.lower()=='glpk':   out=problem.solve(pulp.GLPK_CMD(msg=0)),
+        elif solver.lower()=='gurobi': out=problem.solve(pulp.GUROBI(msg=0))
+        elif solver.lower()=='coin':   out=problem.solve(pulp.COINMP_DLL(msg=0))
+        else:
+            msg='Couldnt find the solver "{}"'.format(solver)
+            raise OptimizationError(msg)
+>>>>>>> prep. for merge. added coin solver to optimization. added write problem option to solve.
         if problem.status:
             logging.info('{stat} in {time:0.4f} sec'.format(
                 stat=problem.statusText(),
                 time=problem.solutionTime))
+<<<<<<< HEAD
         #else: logging.warning(problem.statusText())
+=======
+        else: logging.warning(problem.statusText())
+>>>>>>> prep. for merge. added coin solver to optimization. added write problem option to solve.
         return out
     def value(variable):
         '''value of an optimization variable'''

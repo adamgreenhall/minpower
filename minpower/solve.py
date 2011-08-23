@@ -97,7 +97,11 @@ def create_problem(buses,lines,times,load_shedding_allowed=False):
 
 
 
+<<<<<<< HEAD
 def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHrs=24,writeproblem=False):
+=======
+def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1,stageHrs=24,writeproblem=False):
+>>>>>>> prep. for merge. added coin solver to optimization. added write problem option to solve.
     """
     Create a multi-stage power systems optimization problem.
     Each stage will be one optimization run. A stage's final

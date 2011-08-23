@@ -393,6 +393,11 @@ class Solution_multistageUC(Solution_UC):
         self.loads     =flatten( [[ld  for ld   in bus.loads]     for bus in buses] )
         self.calcCosts()
         self.calcPrices()        
+    def calcCosts(self):
+        self.fuelcost_generation=float(sum( [p['fuelcost_generation'] for p in self.problemsL] ))
+        self.truecost_generation=float(sum( [p['truecost_generation'] for p in self.problemsL] ))
+        try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
+        except ZeroDivisionError: self.costerror=0       
     def calcPrices(self):    
         for n,problem in enumerate(self.problemsL):
             for t in self.stageTimes[n]:

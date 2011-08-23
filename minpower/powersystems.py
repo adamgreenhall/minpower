@@ -168,7 +168,13 @@ class Generator(object):
                 self.u[time]=True
                 self.startup[time]=False
                 self.shutdown[time]=False
-                
+    def fix_timevars(self,times):
+        for time in times:
+            self.power[time]   =value(self.power[time])
+            self.u[time]       =value(self.u[time]) ==1
+            self.startup[time] =value(self.startup[time])==1
+            self.shutdown[time]=value(self.shutdown[time])==1
+        else: self.bid={} #wipe bid info - no longer needed
     def plotCostCurve(self,P=None,filename=None): self.costModel.plot(P,filename)
     def setInitialCondition(self,time=None, P=None, u=True, hoursinstatus=100):
         if P is None: P=(self.Pmax-self.Pmin)/2 #set default power as median output
@@ -194,11 +200,11 @@ class Generator(object):
             #initial up down time
             def roundoff(n):
                 if type(n) is float: 
-                    if n!=int(n): raise ValueError('min up downtimes must be integer hours'.format(n=n,nr=round(n)))
+                    if n!=int(n): raise ValueError('min up downtimes must be integer hours, not {}'.format(n))
                     n=int(n)
                 return n
-            if minUpHoursRemainingInit>0: constraintsD['minuptime_'+iden]= 0==sumVars([(1-self.u[times[t]]) for t in range(0,roundoff(minUpHoursRemainingInit))])
-            if minDnHoursRemainingInit>0: constraintsD['mindowntime_'+iden]= 0==sumVars([self.u[times[t]] for t in range(0,roundoff(minDnHoursRemainingInit))])
+            if minUpHoursRemainingInit>0: constraintsD['minuptime_'+iden]= 0==sumVars([(1-self.u[times[t]]) for t in range(0,roundoff(minUpHoursRemainingInit/times.intervalhrs))])
+            if minDnHoursRemainingInit>0: constraintsD['mindowntime_'+iden]= 0==sumVars([self.u[times[t]] for t in range(0,roundoff(minDnHoursRemainingInit/times.intervalhrs))])
             #initial start up / shut down
             constraintsD['statusChange_'+iden]= self.startup[times[0]]-self.shutdown[times[0]] == self.u[times[0]] - self.u[tInitial]
             #initial ramp rate
@@ -222,6 +228,7 @@ class Generator(object):
                 constraintsD['statusConstant_'+iden]=       self.startup[time]+self.shutdown[time] <= 1
                 if t>0: constraintsD['statusChange_'+iden]= self.startup[time]-self.shutdown[time] == self.u[time] - self.u[times[t-1]]
                 #up/down time minimums 
+                #need to check this for sub-hourly commitment
                 if relativedelta(time.Start, startTime).hours > minUpHoursRemainingInit:
                     constraintsD['minuptime_'+iden]= 1 >= self.startup[time]  + sumVars([self.shutdown[times[s]] for s in range(t,min(tEndIndex,t+self.minuptime))])
                 if relativedelta(time.Start, startTime).hours > minDnHoursRemainingInit:                
@@ -257,6 +264,7 @@ class Generator_nonControllable(Generator):
         self.schedule.P[time]=P
     def getstatus(self,t,times): return dict()
     def add_timevars(self,times): return
+    def fix_timevars(self,times=None): return
     def cost(self,time): return self.operatingcost(time)
     def operatingcost(self,time): return self.fuelcost*self.costModel.trueOutput( self.P(time) )
     def truecost(self,time): return self.cost(time)
@@ -349,12 +357,17 @@ class Load(object):
     """
     def __init__(self,kind='varying',name=None,index=None,bus=None,schedule=None):
         vars(self).update(locals()) #load in inputs
-    def P(self,time=None): return self.schedule.getEnergy(time)
+        self.dispatched_power = dict()
+    def P(self,time=None): return self.dispatched_power[time] #self.schedule.getEnergy(time)
     def __str__(self): return 'd{ind}'.format(ind=self.index)    
     def __int__(self): return self.index
     def iden(self,t):     return str(self)+str(t)
-    def benifit(self,time=None): return 0
-    def add_timevars(self,times=None): return
+    def benifit(self,time=None): return (self.P(time) - self.schedule.getEnergy(time))*config.cost_loadshedding
+    def shed(self,time): return self.schedule.getEnergy(time)- value(self.P(time))
+    def add_timevars(self,times=None):
+        for t in times: self.dispatched_power[t]=newVar('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
+    def fix_timevars(self,times=None):
+        for t in times: self.dispatched_power[t]=value(self.dispatched_power[t])
     def constraints(self,*args): return #no constraints
     
 class Load_Fixed(Load):
@@ -370,7 +383,8 @@ class Load_Fixed(Load):
         self.Pfixed = self.P
         del self.P
     def P(self,time=None): return self.Pfixed
-
+    
+    
 class Network(object):
     """
     Creates and contains the admittance matrix (B)

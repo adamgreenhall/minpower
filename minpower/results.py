@@ -7,9 +7,10 @@ vizualization.
 import os,sys,types,logging
 from collections import OrderedDict
 
-from commonscripts import flatten,getColumn,transpose,elementwiseAdd, getattrL,hours,within,subset,writeCSV,joindir
+from commonscripts import flatten,getColumn,transpose,elementwiseAdd, getattrL,hours,within,subset,writeCSV,joindir,replace_all
 from schedule import Timelist
 from optimization import value,dual
+import config
 
 import matplotlib
 import matplotlib.pyplot as plot
@@ -332,14 +333,16 @@ class Solution_UC(Solution):
             else: pass
         
         #show prices
-        if withPrices and any(prices):        
+        if withPrices and any(prices):
+            prices=replace_all(prices, config.cost_loadshedding, None)
             axesPrice = plot.axes([figLeft,.75,figWidth,.2],sharex=ax)
             plt=axesPrice.step(T[1:]+[times.End],prices+[prices[-1]],  where='post') #start from 1 past initial time
             axesPrice.set_ylabel('price\n[$/MWh]',ha='center',**bigFont)
             axesPrice.yaxis.set_label_coords(**yLabel_pos)
             plot.setp(axesPrice.get_xticklabels(), visible=False)
             #format the price axis nicely
-            plot.ylim((.9*min(prices),1.1*max(prices)))
+            prices_wo_none=[p for p in prices if p is not None]
+            plot.ylim((.9*min(prices_wo_none),1.1*max(prices_wo_none)))
             axesPrice.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(5))
             
         ax.xaxis_date()
@@ -393,6 +396,12 @@ class Solution_multistageUC(Solution_UC):
         self.loads     =flatten( [[ld  for ld   in bus.loads]     for bus in buses] )
         self.calcCosts()
         self.calcPrices()        
+    def calcCosts(self):
+        self.fuelcost_generation=float(sum( [p['fuelcost_generation'] for p in self.problemsL] ))
+        self.truecost_generation=float(sum( [p['truecost_generation'] for p in self.problemsL] ))
+        self.load_shed=float(sum( [p['load_shed'] for p in self.problemsL] ))
+        try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
+        except ZeroDivisionError: self.costerror=0       
     def calcPrices(self):    
         for n,problem in enumerate(self.problemsL):
             for t in self.stageTimes[n]:
@@ -402,7 +411,11 @@ class Solution_multistageUC(Solution_UC):
         self.info_status()
         if not self.solved: return
         self.info_cost()
+        self.info_shedding()
         self.vizualization()
+    def info_shedding(self):
+        if self.load_shed:
+            print 'total load shed={}MW'.format(self.load_shed)
     def info_status(self):
         if self.solved: print('{stat} in total of {time:0.4f} sec'.format(stat=self.status,time=self.solveTime))
         else: print(self.solveStatus)

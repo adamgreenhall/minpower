@@ -11,7 +11,7 @@ import get_data
 import powersystems
 import results
 import config
-from commonscripts import joindir
+from commonscripts import joindir,flatten
 
   
 def _setup_logging(fn):
@@ -53,7 +53,7 @@ def problem(datadir='./tests/uc/',
     if outputs['vizualization']: solution.vizualization()
     return solution
 
-def create_problem(buses,lines,times):
+def create_problem(buses,lines,times,load_shedding_allowed=False):
     """
         Create a power systems optimization problem.
         
@@ -78,7 +78,7 @@ def create_problem(buses,lines,times):
             for time in times: costs.append(gen.cost(time))
 
         for load in bus.loads:
-            load.add_timevars(times)
+            load.add_timevars(times,shedding_allowed=load_shedding_allowed)
             prob.addConstraints(load.constraints(times))
             for time in times: costs.append(-1*load.benifit(time))
             
@@ -97,7 +97,8 @@ def create_problem(buses,lines,times):
 
 
 
-def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1,stageHrs=24,writeproblem=False):
+
+def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHrs=24,writeproblem=False):
     """
     Create a multi-stage power systems optimization problem.
     Each stage will be one optimization run. A stage's final
@@ -140,12 +141,28 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1,stageHrs=2
         solution['objective']=float(optimization.value(problem.objective))
         solution['solve-time']=problem.solutionTime
         solution['status'] = (problem.status,problem.statusText() )
+        solution['fuelcost_generation']=sum(flatten(flatten([[[optimization.value(gen.operatingcost(t)) for t in times] for gen in bus.generators] for bus in buses]) ))
+        solution['truecost_generation']=sum(flatten(flatten([[[optimization.value(gen.truecost(t))      for t in times] for gen in bus.generators] for bus in buses]) ))
+        solution['load_shed']=0
+        
         for t in times:
             #save price
             sln=dict()
-            for bus in buses: sln['price_'+bus.iden(t)]=bus.getprice(problem.constraints,t)
+            for bus in buses: 
+                sln['price_'+bus.iden(t)]=bus.getprice(problem.constraints,t)
+                #reduce memory by setting variables to their value (instead of pulp object)
+                #there is still a whole bunch of duplication going on here for Time objects - clean this up?
+                if t==times[0]:
+                    for gen in bus.generators: gen.fix_timevars(times)
+                    for load in bus.loads: load.fix_timevars(times)
+                for load in bus.loads:
+                    shed=load.shed(t)
+                    if shed: 
+                        logging.warning('Load shedding of {} MWh occured at {}.'.format(shed,str(t.Start)))
+                        solution['load_shed']+=shed
+            
             solution[t]=sln
-            #could also take steps here to further reduce memory by setting variables to their value (instead of pulp object)
+            
             
         return solution
 
@@ -157,13 +174,22 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=1,stageHrs=2
         if writeproblem: stageproblem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
         
         optimization.solve(stageproblem)
+        if stageproblem.status!=1: 
+            #redo stage, with shedding allowed
+            logging.warning('Stage infeasible, re-runnning with load shedding.')
+            stageproblem=create_problem(buses,lines,t_stage,load_shedding_allowed=True)
+            optimization.solve(stageproblem)
+            
         if stageproblem.status==1:
+            finalcondition=get_finalconditions(buses,t_stage)
             stage_sln=savestage(stageproblem,buses,t_stage)
             problemsL.append(stage_sln)
-            finalcondition=get_finalconditions(buses,t_stage)
+            
         else: 
+            print stageproblem.status,stageproblem.statusText()
             stageproblem.write('infeasible-problem.lp')
-            raise optimization.OptimizationError('Infeasible problem - writing to .lp file for examination.')
+            msg='Infeasible problem - writing to .lp file for examination.'
+            raise optimization.OptimizationError(msg)
     return problemsL,stageTimes
 
 if __name__ == "__main__": 

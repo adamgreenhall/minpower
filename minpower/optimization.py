@@ -102,19 +102,24 @@ elif optimization_package=='pulp':
     def solve(problem,solver='cplex'):
         '''solve the optimization problem'''
         logging.info('Solving with {s} ... '.format(s=solver))
+        try:
+            if   solver.lower()=='cplex':  out=problem.solve(pulp.CPLEX_CMD(msg=0)),
+            elif solver.lower()=='glpk':   out=problem.solve(pulp.GLPK_CMD(msg=0)),
+            elif solver.lower()=='gurobi': out=problem.solve(pulp.GUROBI(msg=0))
+            elif solver.lower()=='coin':   out=problem.solve(pulp.COINMP_DLL(msg=0))
+            else:
+                msg='Couldnt find the solver "{}"'.format(solver)
+                raise OptimizationError(msg)
+        except pulp.solvers.PulpSolverError:
+            problem.status=0
+            out=None
 
-        if   solver.lower()=='cplex':  out=problem.solve(pulp.CPLEX_CMD(msg=0)),
-        elif solver.lower()=='glpk':   out=problem.solve(pulp.GLPK_CMD(msg=0)),
-        elif solver.lower()=='gurobi': out=problem.solve(pulp.GUROBI(msg=0))
-        elif solver.lower()=='coin':   out=problem.solve(pulp.COINMP_DLL(msg=0))
-        else:
-            msg='Couldnt find the solver "{}"'.format(solver)
-            raise OptimizationError(msg)
         if problem.status:
             logging.info('{stat} in {time:0.4f} sec'.format(
                 stat=problem.statusText(),
                 time=problem.solutionTime))
-        else: logging.warning(problem.statusText())
+        #else: logging.warning(problem.statusText())
+
         return out
     def value(variable):
         '''value of an optimization variable'''

@@ -4,7 +4,7 @@ Power systems optimization problem solver
 """
 
 import sys,os,logging
-import time as systemtime
+from datetime import datetime as wallclocktime
 
 import optimization
 import get_data
@@ -97,7 +97,7 @@ def create_problem(buses,lines,times,load_shedding_allowed=False):
 
 
 
-def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHrs=24,writeproblem=False):
+def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHrs=24,writeproblem=False, showclock=True):
     """
     Create a multi-stage power systems optimization problem.
     Each stage will be one optimization run. A stage's final
@@ -134,40 +134,9 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
         for bus in buses:
             for gen in bus.generators: gen.finalstatus=gen.getstatus(t=times[-1],times=times)
 
-    def savestage(problem,buses,times):        
-        
-        solution=dict()
-        solution['objective']=float(optimization.value(problem.objective))
-        solution['solve-time']=problem.solutionTime
-        solution['status'] = (problem.status,problem.statusText() )
-        solution['fuelcost_generation']=sum(flatten(flatten([[[optimization.value(gen.operatingcost(t)) for t in times] for gen in bus.generators] for bus in buses]) ))
-        solution['truecost_generation']=sum(flatten(flatten([[[optimization.value(gen.truecost(t))      for t in times] for gen in bus.generators] for bus in buses]) ))
-        solution['load_shed']=0
-        
-        for t in times:
-            #save price
-            sln=dict()
-            for bus in buses: 
-                sln['price_'+bus.iden(t)]=bus.getprice(problem.constraints,t)
-                #reduce memory by setting variables to their value (instead of pulp object)
-                #there is still a whole bunch of duplication going on here for Time objects - clean this up?
-                if t==times[0]:
-                    for gen in bus.generators: gen.fix_timevars(times)
-                    for load in bus.loads: load.fix_timevars(times)
-                for load in bus.loads:
-                    shed=load.shed(t)
-                    if shed: 
-                        logging.warning('Load shedding of {} MWh occured at {}.'.format(shed,str(t.Start)))
-                        solution['load_shed']+=shed
-            
-            solution[t]=sln
-            
-            
-        return solution
-
 
     for t_stage in stageTimes:
-        logging.info('Stage starting at {}'.format(t_stage[0].Start))
+        logging.info('Stage starting at {} {}'.format(t_stage[0].Start, 'time={}'.format(wallclocktime.now()) if showclock else ''))
         set_initialconditions(buses,t_stage.initialTime)
         stageproblem=create_problem(buses,lines,t_stage)
         if writeproblem: stageproblem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
@@ -180,13 +149,14 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
             optimization.solve(stageproblem)
             
         if stageproblem.status==1:
-            finalcondition=get_finalconditions(buses,t_stage)
-            stage_sln=savestage(stageproblem,buses,t_stage)
+            get_finalconditions(buses,t_stage)
+            stage_sln=results.get_stage_solution(stageproblem,buses,t_stage)
             problemsL.append(stage_sln)
             
         else: 
             print stageproblem.status,stageproblem.statusText()
             stageproblem.write('infeasible-problem.lp')
+            results.write_last_stage_status(buses,t_stage)
             msg='Infeasible problem - writing to .lp file for examination.'
             raise optimization.OptimizationError(msg)
     return problemsL,stageTimes

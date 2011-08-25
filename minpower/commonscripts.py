@@ -94,6 +94,7 @@ def readCSV(filenm,validFields='all'):
                 if entry.strip()=='': newRow.append( repForBlankStrings )
                 elif checkForNumbers: newRow.append( stringToNumberConversion(entry) )
                 else: newRow.append(entry)
+            #if not all(e=='' for e in newRow): 
             outData.append(newRow)
         return outData
     

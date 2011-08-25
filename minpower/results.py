@@ -420,6 +420,43 @@ class Solution_multistageUC(Solution_UC):
         if self.solved: print('{stat} in total of {time:0.4f} sec'.format(stat=self.status,time=self.solveTime))
         else: print(self.solveStatus)
 
+def get_stage_solution(problem,buses,times):
+        solution=dict()
+        solution['objective']=float(value(problem.objective))
+        solution['solve-time']=problem.solutionTime
+        solution['status'] = ( problem.status,problem.statusText() )
+        solution['fuelcost_generation']=sum(flatten(flatten([[[value(gen.operatingcost(t)) for t in times] for gen in bus.generators] for bus in buses]) ))
+        solution['truecost_generation']=sum(flatten(flatten([[[value(gen.truecost(t))      for t in times] for gen in bus.generators] for bus in buses]) ))
+        solution['load_shed']=0
+        
+        for t in times:
+            sln=dict()
+            for bus in buses: 
+                sln['price_'+bus.iden(t)]=bus.getprice(problem.constraints,t)
+                #reduce memory by setting variables to their value (instead of pulp object)
+                if t==times[0]:
+                    for gen in bus.generators: gen.fix_timevars(times)
+                    for load in bus.loads: load.fix_timevars(times)
+                for load in bus.loads:
+                    shed=load.shed(t)
+                    if shed: 
+                        logging.warning('Load shedding of {} MWh occured at {}.'.format(shed,str(t.Start)))
+                        solution['load_shed']+=shed
+            
+            solution[t]=sln
+        return solution
+def write_last_stage_status(buses,stagetimes):
+    t=stagetimes.initialTime
+    logging.warning('saving stage status for its initial time: {}'.format(t.Start))
+    generators = buses[0].generators
+    
+    fields,data=[],[]
+    fields.append('generator name');  data.append(getattrL(generators,'name'))
+    fields.append('u');  data.append([value(g.u[t]) for g in generators])
+    fields.append('P');  data.append([value(g.P(t)) for g in generators])
+    fields.append('hours in status');  data.append([value(g.initialStatusHours) for g in generators])
+    writeCSV(fields,transpose(data),filename='stagestatus{}.csv'.format(t.End))          
+
 def colormap(numcolors,colormapName='gist_rainbow',mincolor=0):
     cm = matplotlib.cm.get_cmap(colormapName)
     return [cm(1.*i/numcolors) for i in range(mincolor,numcolors+mincolor)]      

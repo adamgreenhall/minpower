@@ -51,9 +51,6 @@ class Solution(object):
             
         self.objective  =float(value(problem.objective))
         
-        print 'objective=',self.objective
-        print problem.dual('powerBalance_i0t01')
-        raise NotImplementedError
         
         #self.activeConstraints = sum([dual(c)!=0 for nm,c in problem.constraints.items()])
         self.totalConstraints = len(problem.constraints)

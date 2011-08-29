@@ -92,7 +92,7 @@ def create_problem(buses,lines,times, filename=None):
     for v in problemvars: prob.addVar(v)
     prob.addObjective( optimization.sumVars(costs) )
     
-    if filename is not None: prob.write(filename)
+#   if filename is not None: prob.write(filename)
     return prob
 
 

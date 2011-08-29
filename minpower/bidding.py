@@ -3,7 +3,7 @@ from optimization import *
 from config import default_num_breakpoints
 
 from scipy import linspace, polyval, polyder, interp, poly1d
-from pylab import plot,show,savefig,xlabel,ylabel
+#from pylab import plot,show,savefig,xlabel,ylabel
 import re
 import logging
 

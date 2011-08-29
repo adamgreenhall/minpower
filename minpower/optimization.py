@@ -49,7 +49,7 @@ if optimization_package=='coopr':
             logging.info('Solving with {s} ... '.format(s=solver))
             instance=self.model.create()
             opt = cooprsolver.SolverFactory(solver)
-            results = opt.solve(instance, suffixes=['.*'])
+            results = opt.solve(instance, suffixes=['.*'],keepFiles=True)
             
             if not str(results.solver[0]['Termination condition'])=='optimal':
                 msg='problem not solved. Solver terminated with status: "{}"'.format(results.solver[0]['Termination condition'])

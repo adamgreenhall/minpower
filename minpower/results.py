@@ -431,6 +431,7 @@ def get_stage_solution(problem,buses,times):
         solution['objective']=float(value(problem.objective))
         solution['solve-time']=problem.solutionTime
         solution['status'] = ( problem.status,problem.statusText() )
+        solution['stagecost']               =sum(flatten(flatten([[[value(gen.cost(t)) for t in times] for gen in bus.generators] for bus in buses]) ))
         solution['fuelcost_generation']=sum(flatten(flatten([[[value(gen.operatingcost(t)) for t in times] for gen in bus.generators] for bus in buses]) ))
         solution['truecost_generation']=sum(flatten(flatten([[[value(gen.truecost(t))      for t in times] for gen in bus.generators] for bus in buses]) ))
         solution['load_shed']=0

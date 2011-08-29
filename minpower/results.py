@@ -47,7 +47,13 @@ class Solution(object):
             return
         
         self.objective  =float(value(problem.objective))
+<<<<<<< HEAD
         self.activeConstraints = sum([dual(c)!=0 for nm,c in problem.constraints.items()])
+=======
+        
+        
+        #self.activeConstraints = sum([dual(c)!=0 for nm,c in problem.constraints.items()])
+>>>>>>> debugging solution constraint problem
         self.totalConstraints = len(problem.constraints)
         self.calcCosts()
         self.calcPrices(problem.constraints)

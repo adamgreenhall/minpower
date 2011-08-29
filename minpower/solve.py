@@ -91,6 +91,10 @@ def create_problem(buses,lines,times,load_shedding_allowed=False):
         
     prob.addObjective( optimization.sumVars(costs) )
     
+<<<<<<< HEAD
+=======
+#   if filename is not None: prob.write(filename)
+>>>>>>> debugging solution constraint problem
     return prob
 
 

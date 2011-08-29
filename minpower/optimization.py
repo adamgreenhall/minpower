@@ -67,6 +67,7 @@ if optimization_package=='coopr':
             instance.update_results(results)
             self.solution=results.solution(0)
 
+            print 'solution is:', results.solution
             if solver=='glpk':
                 self.objective = self.solution.objective['objective']['Value']
             else: 
@@ -74,13 +75,22 @@ if optimization_package=='coopr':
                 except AttributeError: 
                     logging.warning('could not get objective value from solver.')
                     self.objective=0
+            
+
             self.constraints = self.solution.constraint
+            print 'there are {} constraints in the solution'.format(len(self.solution.constraint))
             self.constraintnames = [c[4:len(c)-1] for c in self.constraints]
             self.constraintnames_full = [c for c in self.constraints]
+        
+            print 'objective=',self.objective
+            print self.dual('c_e_powerBalance_i0t01')
+            raise NotImplementedError
+            
             return 
         def dual(self,constraintname):
             if constraintname not in self.constraintnames: 
-                raise AttributeError('constraint name not found in problem constraints')
+                msg='constraint name not found in problem constraints: {}'.format(self.constraintnames)
+                raise AttributeError(msg)
             idx=self.constraintnames.index(constraintname)
             fullname=self.constraintnames_full[idx]
             try: return self.constraints[fullname]['Dual']

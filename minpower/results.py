@@ -5,15 +5,15 @@ vizualization.
 """
 	
 import os,sys,types,logging
-from collections import OrderedDict
+#from collections import OrderedDict
 
 from commonscripts import flatten,getColumn,transpose,elementwiseAdd, getattrL,hours,within,subset,writeCSV,joindir,replace_all
 from schedule import Timelist
 from optimization import value,dual
 import config
 
-import matplotlib
-import matplotlib.pyplot as plot
+#import matplotlib
+#import matplotlib.pyplot as plot
 
 def classifyProblem(times=None,lines=None):
     if not lines and len(times)==1: kind='ED'

@@ -61,7 +61,7 @@ if optimization_package=='coopr':
             instance.update_results(results)
         
             def resolvefixvariables(instance,solution):
-                for varname in solution.Variable: solution.Variable[varname]['fixed']=True
+                for varname in solution.Variable: getattr(instance,varname).fixed=True
                 results= opt.solve(instance, suffixes=['.*'])
                 instance.update_results(results)
                 return results
@@ -86,13 +86,13 @@ if optimization_package=='coopr':
             self.constraintnames_full = [c for c in self.constraints]
         
             print 'objective=',self.objective
-            print self.dual('c_e_powerBalance_i0t01')
+            print self.dual('powerBalance_i0t01')
             raise NotImplementedError
             
             return 
         def dual(self,constraintname):
             if constraintname not in self.constraintnames: 
-                msg='constraint name not found in problem constraints: {}'.format(self.constraintnames)
+                msg='constraint name not found in problem constraints.'
                 raise AttributeError(msg)
             idx=self.constraintnames.index(constraintname)
             fullname=self.constraintnames_full[idx]

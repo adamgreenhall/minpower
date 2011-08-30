@@ -82,7 +82,6 @@ if optimization_package=='coopr':
                     logging.warning('could not get objective value from solver.')
                     self.objective=0
             
-
             self.constraints = instance.active_components(pyomo.Constraint)
             self.variables = instance.active_components(pyomo.Var)
             
@@ -93,6 +92,7 @@ if optimization_package=='coopr':
             return 
         def dual(self,constraintname,index=None):
             return self.constraints[constraintname][index].dual
+
         def __getattr__(self,name):
             try: return getattr(self.model,name)
             except AttributeError:

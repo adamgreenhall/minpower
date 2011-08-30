@@ -1,7 +1,6 @@
 Solver Choices
 ===============
 
-
 `GLPK <http://www.gnu.org/s/glpk>`_
 -------------------------------------
 
@@ -20,9 +19,10 @@ Solver Choices
 `CPLEX <http://www.ibm.com/software/integration/optimization/cplex-optimizer>`_
 --------------------------------------------------------------------------------
 
-* free with academic license
+* free with `academic license <http://www-01.ibm.com/software/websphere/products/optimization/academic-initiative/>`_
 * difficult to install
 * industry standard for large problems
+
 
 
 

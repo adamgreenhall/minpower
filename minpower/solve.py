@@ -4,15 +4,16 @@ Power systems optimization problem solver
 """
 
 import sys,os,logging
+from datetime import datetime as wallclocktime
 
 import optimization
 import get_data
 import powersystems
 import results
 import config
-from commonscripts import joindir
+from commonscripts import joindir,flatten
 
-    
+  
 def _setup_logging(fn):
     ''' set up the logging to report on the status'''
     logging.basicConfig( level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -38,12 +39,12 @@ def problem(datadir='./tests/uc/',
     buses,lines,times=get_data.parsedir(datadir)
 
     if times.spanhrs<=24:
-        problemfile=joindir(datadir,'problem-formulation.lp') if outputs['problemfile'] else None
-        problem=create_problem(buses,lines,times,problemfile)
+        problem=create_problem(buses,lines,times)
+        if outputs['problemfile']: problem.write(joindir(datadir,'problem-formulation.lp'))
         optimization.solve(problem,solver)
         solution=results.makeSolution(times=times,lines=lines,buses=buses,problem=problem,datadir=datadir)
     else: #split into multi-stage problem
-        problemsL,stageTimes=create_problem_multistage(buses,lines,times)
+        problemsL,stageTimes=create_problem_multistage(buses,lines,times,datadir)
         solution=results.makeMultistageSolution(problemsL=problemsL,times=times,stageTimes=stageTimes,buses=buses,lines=lines,datadir=datadir)
 
     
@@ -52,7 +53,7 @@ def problem(datadir='./tests/uc/',
     if outputs['vizualization']: solution.vizualization()
     return solution
 
-def create_problem(buses,lines,times, filename=None):
+def create_problem(buses,lines,times,load_shedding_allowed=False):
     """
         Create a power systems optimization problem.
         
@@ -78,7 +79,7 @@ def create_problem(buses,lines,times, filename=None):
             for time in times: costs.append(gen.cost(time))
 
         for load in bus.loads:
-            problemvars.extend(load.add_timevars(times))
+            load.add_timevars(times,shedding_allowed=load_shedding_allowed)
             prob.addConstraints(load.constraints(times))
             for time in times: costs.append(-1*load.benifit(time))
             
@@ -92,14 +93,14 @@ def create_problem(buses,lines,times, filename=None):
     for v in problemvars: prob.addVar(v)
     prob.addObjective( optimization.sumVars(costs) )
     
-#   if filename is not None: prob.write(filename)
     return prob
 
 
 
 
 
-def create_problem_multistage(buses,lines,times,intervalHrs=1.0,stageHrs=24):
+
+def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHrs=24,writeproblem=False, showclock=True):
     """
     Create a multi-stage power systems optimization problem.
     Each stage will be one optimization run. A stage's final
@@ -117,9 +118,12 @@ def create_problem_multistage(buses,lines,times,intervalHrs=1.0,stageHrs=24):
     :returns: a list of :class:`~schedule.Timelist` objects (one per stage)
     
     """
-    import time as systemtime
+        
+    if not intervalHrs: intervalHrs=times.intervalhrs
+        
     stageTimes=times.subdivide(hrsperdivision=stageHrs,hrsinterval=intervalHrs)
     problemsL=[]
+
     
     def set_initialconditions(buses,initTime):
         for bus in buses:
@@ -135,20 +139,31 @@ def create_problem_multistage(buses,lines,times,intervalHrs=1.0,stageHrs=24):
                 gen.update_vars(times, lastproblem)
                 gen.finalstatus=gen.getstatus(t=times[-1],times=times)
 
+
     for t_stage in stageTimes:
-        logging.info('Stage from {s} to {e}'.format(s=t_stage[0].Start, e=t_stage[-1].End))
-        timeit0= systemtime.time()
+        logging.info('Stage starting at {} {}'.format(t_stage[0].Start, 'time={}'.format(wallclocktime.now()) if showclock else ''))
         set_initialconditions(buses,t_stage.initialTime)
         stageproblem=create_problem(buses,lines,t_stage)
-        logging.info('setup in {t:0.1f}s'.format(t=systemtime.time()-timeit0))
+        if writeproblem: stageproblem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
+        
         optimization.solve(stageproblem)
-        logging.info('solved in {t:0.1f}s'.format(t=systemtime.time()-timeit0))
-        if True: #stageproblem.status==1: #ADD - fix for coopr
-            problemsL.append(stageproblem)
-            finalcondition=get_finalconditions(buses,t_stage,stageproblem)
+        if stageproblem.status!=1: 
+            #redo stage, with shedding allowed
+            logging.warning('Stage infeasible, re-runnning with load shedding.')
+            stageproblem=create_problem(buses,lines,t_stage,load_shedding_allowed=True)
+            optimization.solve(stageproblem)
+            
+        if stageproblem.status==1:
+            get_finalconditions(buses,t_stage)
+            stage_sln=results.get_stage_solution(stageproblem,buses,t_stage)
+            problemsL.append(stage_sln)
+            
         else: 
+            print stageproblem.status,stageproblem.statusText()
             stageproblem.write('infeasible-problem.lp')
-            raise optimization.OptimizationError('Infeasible problem - writing to .lp file for examination.')
+            results.write_last_stage_status(buses,t_stage)
+            msg='Infeasible problem - writing to .lp file for examination.'
+            raise optimization.OptimizationError(msg)
     return problemsL,stageTimes
 
 if __name__ == "__main__": 

@@ -3,7 +3,7 @@ from optimization import *
 from config import default_num_breakpoints
 
 from scipy import linspace, polyval, polyder, interp, poly1d
-#from pylab import plot,show,savefig,xlabel,ylabel
+from pylab import plot,show,savefig,xlabel,ylabel
 import re
 import logging
 
@@ -22,8 +22,8 @@ class Bid(object):
         vars(self).update(locals())
 
         #add time variables
-        self.segmentsActive,self.fractionsBP=self.model.addTimeVars(self.iden)
-    def output(self,solution=None): return self.model.output(self.fractionsBP,solution)
+        self.segmentsActive,self.fractionsBP=self.model.add_timevars(self.iden)
+    def output(self,inputVar): return self.model.output(self.fractionsBP,inputVar)
     def trueOutput(self,input): return self.model.trueOutput(input)
     def incOutput(self,input):  return self.model.incOutput(input)
     def plotDeriv(self,**kwargs): return self.model.plotDeriv(**kwargs)
@@ -47,6 +47,16 @@ class Bid(object):
         self.fractionsBP =    [value(f, solution) for f in self.fractionsBP]
     def __str__(self): return 'bid {i}'.format(i=self.iden)
 
+
+def makeModel(polyText,multiplier=1, **kwargs):
+    polyCurve=multiplier * parsePolynomial(polyText)
+    if isLinear(polyCurve):
+        return LinearModel(polyText,multiplier,**kwargs)
+    else:
+        return PWLmodel(polyText,multiplier,**kwargs)
+    
+        
+    
 class PWLmodel(object):
     """
     Describes a piecewise linear model of a polynomial curve.
@@ -65,11 +75,10 @@ class PWLmodel(object):
         polyText='2+10P+0.1P^2',multiplier=1,
         minInput=0,maxInput=10000,
         numBreakpoints=default_num_breakpoints,
-        name='',iden='',inputNm='x',outputNm='y'):
+        inputNm='x',outputNm='y'):
                 
         vars(self).update(locals()) #set the input vars above to be part of class
         self.polyCurve=multiplier * parsePolynomial(polyText) #parse curve
-        def isLinear(P): return True if P.order<=1 else False #check if a linear polynomial
         if isLinear(self.polyCurve): self.numBreakpoints=2 #linear models only need 2 breakpoints
         inDiscrete=linspace(self.minInput, self.maxInput, 1e6) #fine discretization of the curve
         outDiscrete=polyval(self.polyCurve,inDiscrete)
@@ -95,7 +104,7 @@ class PWLmodel(object):
         if P is not None: plot(P,polyval(deriv,P), 'o', c=linePlotted.get_color(), markersize=8, linewidth=2, alpha=0.7)
         return linePlotted
                 
-    def addTimeVars(self,iden):
+    def add_timevars(self,iden):
         S=[] #S: segment of cost curve is active
         F=[] #F: breakpoint weighting fraction
         for segNum,seg in enumerate(self.segments):  S.append(newVar(kind='Binary', name='{iden}_s{segNum}'.format(segNum=segNum,iden=iden))) 
@@ -124,8 +133,7 @@ class PWLmodel(object):
             name='midSegment {iden} b{bnum}'.format(iden=iden,bnum=b)
             constraints[name] =                ( F[b] <= sumVars([S[b-1],S[b]]) )
         return constraints
-    def output(self,F,solution=None): 
-        return sum( [ value(Fval,solution)*self.bpOutputs[f] for f,Fval in enumerate(F)] )
+    def output(self,F,inputVar=None): return sumVars( elementwiseMultiply(F,self.bpOutputs) )
     def trueOutput(self,input): return polyval( self.polyCurve,         value(input) )
     def incOutput(self,input):  return polyval( polyder(self.polyCurve),value(input) )
     def texrepresentation(self,digits=3):
@@ -147,6 +155,26 @@ class PWLmodel(object):
         if texstr[0]=='+': texstr=texstr[1:]
         return texstr
 
+#ADD linear model for bids
+class LinearModel(PWLmodel):
+    def __init__(self,
+        polyText='2+10P+0.1P^2',multiplier=1,
+        minInput=0,maxInput=10000,
+        numBreakpoints=None,
+        inputNm='x',outputNm='y'):
+        
+        self.polyCurve = multiplier * parsePolynomial(polyText)
+        self.minInput=minInput
+        self.maxInput=maxInput
+        
+    def add_timevars(self,iden): return [],[]
+    def constraints(self,S,F,inputVar,status,iden): return dict()
+    def output(self,F,inputVar): return polyval( self.polyCurve,inputVar )    
+    
+    
+def isLinear(P):
+    """Check if a polynomial object is linear using its order attribute."""
+    return True if P.order<=1 else False 
 def parsePolynomial(s):
     """
     Parse a string into a numpy polynomial object.

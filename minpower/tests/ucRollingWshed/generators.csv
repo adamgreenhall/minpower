@@ -1,0 +1,4 @@
+name,kind,costcurveequation,Pmin,Pmax,min up time, min down time, ramp rate max,schedule filename
+base,coal,30P,0,3000,0,4,3000,
+peaker,natural gas,50P,0,2500,0,0,2500,
+wind,wind,0,, , , , ,ireland_wind_fewdays.csv

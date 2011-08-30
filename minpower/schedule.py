@@ -40,6 +40,7 @@ class Time(object):
         rangeLenHrs = hours(self.End-self.Start)
         return [self.Start + hours(t) for t in frange(0,rangeLenHrs,intervalStepHrs)]
     def __sub__(self, other): return self.End-other.Start
+    def __add__(self, other): return self.Start+other
     def __str__(self): 
         try: return 't{ind:02d}'.format(ind=self.index)    
         except ValueError: return 't_{ind}'.format(ind=self.index) #index is str    
@@ -139,7 +140,7 @@ class Timelist(object):
         return newtimesL
         
         
-def setUpSchedule(filename,times):
+def makeSchedule(filename,times):
     """
     Read time and power information from spreadsheet file.
     """
@@ -151,7 +152,7 @@ def setUpSchedule(filename,times):
     data,fields=readCSV(filename,validFields)
     attributes=[mapFieldsToAttributes[drop_case_spaces(f)] for f in fields]
     data_power=transpose(data)[attributes.index('P')] 
-    return dict(zip(times,data_power))
+    return Schedule(times,data_power)
     
 class Schedule(object):
     """
@@ -165,14 +166,22 @@ class Schedule(object):
     use :meth:`~schedule.setUpSchedule` to read information from 
     spreadsheet file.
     """
-    def __init__(self,filename=None,times=None,P=None):
-        if P and times and not filename: self.P=dict(zip(times,P))
-        else: self.P=setUpSchedule(filename,times)
-        self.times=times
+    def __init__(self,times=None,P=None):
+        self.P=dict(zip(times,P))
         self.interval=times.interval
         self.intervalhrs = times.intervalhrs
         self.maxvalue=max(self.P.values())
-
+    def __imul__(self,multiplier):
+        """
+        Multiplies each power value in schedule by a multiplier.        
+        Usage: schedule*=.9 
+        would give a schedule with 90% of the power.
+        """
+        for t,p in self.P.iteritems():
+            self.P[t]=p*multiplier
+        return self
+    def __repr__(self):
+        return sorted([(str(t.Start),p) for t,p in self.P.iteritems()])    
     def getEnergy(self,timeperiod):
         """
         get the amount of energy in a time period 
@@ -192,17 +201,17 @@ class Schedule(object):
         >>> s.getEnergy(tLarger)
         310.0
         """
-        
+        times=self.P.keys()
         try: return self.P[timeperiod]
         except KeyError:
             if timeperiod.interval>self.interval: 
                 #energy of time is sum all energy in times within
                 tstarts=timeperiod.Range(self.interval)
-                period_Times=getclass_inlist(self.times,tstarts,attribute='Start')
-                return sum([self.getEnergy(t)*self.intervalhrs for t in period_Times])
+                period_Times=getclass_inlist(times,tstarts,attribute='Start')
+                return sum([self.getEnergy(t) for t in period_Times]) *self.intervalhrs
             elif timeperiod.interval==self.interval:
-                t=getattrL(self.times,'Start').index(timeperiod.Start)
-                return self.getEnergy(self.times[t])
+                t=getattrL(times,'Start').index(timeperiod.Start)
+                return self.getEnergy(times[t])
             else: raise
 
 def parse_timestrings(timestringsL):

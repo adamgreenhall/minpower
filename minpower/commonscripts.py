@@ -47,7 +47,15 @@ def frange(start, stop, step=1.0):
     while cur < stop:
         yield cur
         cur += step
-          
+
+def replace_all(seq, obj, replacement):
+    def with_index(seq):
+        for i in xrange(len(seq)): yield i, seq[i]
+
+    for i, elem in with_index(seq):
+        if elem == obj: seq[i] = replacement
+    return seq
+    
 ##### csv stuff #####
 def csvColumn(filenm,fieldNm):
     '''get a single column of csv data'''
@@ -86,6 +94,7 @@ def readCSV(filenm,validFields='all'):
                 if entry.strip()=='': newRow.append( repForBlankStrings )
                 elif checkForNumbers: newRow.append( stringToNumberConversion(entry) )
                 else: newRow.append(entry)
+            #if not all(e=='' for e in newRow): 
             outData.append(newRow)
         return outData
     

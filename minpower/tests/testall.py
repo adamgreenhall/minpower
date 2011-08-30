@@ -1,6 +1,6 @@
 """ 
 Testing for minpower development. 
-Runs solve.main() on all directories in ./tests
+Runs solve.problem() on all directories in ./tests
 These tests include ED,OPF,UC tests designed to ensure that
 inputs parse correctly, constraints are active, 
 and vizualizations and solution output work.
@@ -10,7 +10,7 @@ to the minpower code you will break something here.
 Just fix it before you push your change.
 """
 
-import sys,os,glob,traceback
+import sys,os,glob,traceback,logging
 from minpower import solve
 from minpower.commonscripts import joindir,splitFilename
 def wipeTestSlate(dir):
@@ -19,7 +19,8 @@ def wipeTestSlate(dir):
         for f in glob.glob(joindir(dir,pat)): os.remove(f)
 def hasPyscript(dir): return glob.glob(joindir(dir,'*.py'))
 
-def main():
+def main(solver='cplex'):
+    logging.basicConfig(level=logging.CRITICAL, format='%(levelname)s: %(message)s')
     dirNm=splitFilename(__file__)[0]
     excludeL=['coding','doctesting','ucRollingYear']
     for fileNm in os.listdir(dirNm):
@@ -36,7 +37,7 @@ def main():
             os.system('python {s}'.format(s=hasPyscript(testDir)[0]))
         else:
             try: 
-                solve.problem(datadir=testDir)
+                solve.problem(datadir=testDir,solver=solver)
                 sys.stdout = sys.__stdout__ #switch back to standard outputting
                 fError.close()
                 os.remove(joindir(testDir,'error.txt'))

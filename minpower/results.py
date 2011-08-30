@@ -7,9 +7,10 @@ vizualization.
 import os,sys,types,logging
 #from collections import OrderedDict
 
-from commonscripts import flatten,getColumn,transpose,elementwiseAdd, getattrL,hours,within,subset,writeCSV,joindir
+from commonscripts import flatten,getColumn,transpose,elementwiseAdd, getattrL,hours,within,subset,writeCSV,joindir,replace_all
 from schedule import Timelist
 from optimization import value,dual
+import config
 
 import matplotlib
 import matplotlib.pyplot as plot
@@ -186,7 +187,7 @@ class Solution_ED(Solution):
             
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))        
 class Solution_OPF(Solution): 
-    def vizualization(self): 
+    def vizualization(self,filename='powerflow.png'): 
         if not self.solved: return
         import networkx as nx
         buses,lines,t=self.buses,self.lines,self.times[0]
@@ -211,7 +212,7 @@ class Solution_OPF(Solution):
         nx.draw_networkx_edges(G,edge_color='0.6',pos=pos,width=Plines,alpha=0.5)
         nx.draw_networkx_edges(G,edgelist=atLimLines,edge_color='r',pos=pos,width=Plines,alpha=0.5)
                 
-        self.savevisualization(filename='powerflow.png')
+        self.savevisualization(filename)
     def saveCSV(self,filename='powerflow'): 
         t=self.times[0]
         generators,loads,lines=self.generators,self.loads,self.lines
@@ -246,17 +247,17 @@ class Solution_UC(Solution):
         fields.append('prices'); data.append([self.buses[0].price[t] for t in times])
         for gen in self.generators: 
             if gen.isControllable:
-                fields.append('status: '+str(gen.name));
+                fields.append('status: '+str(gen.name))
                 data.append([value(gen.u[t]) for t in times])
-            fields.append('power: '+str(gen.name));
+            fields.append('power: '+str(gen.name))
             data.append([value(gen.P(t)) for t in times])
-        #for load in self.loads:
-        #    fields.append(str(load.name)+' power');
-        #    data.append([value(load.P(t)) for t in times])
+        for load in self.loads:
+            fields.append('power: '+str(load.name))
+            data.append([value(load.P(t)) for t in times])
             
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))
         
-    def vizualization(self,**kwargs):
+    def vizualization(self,filename='commitment.png',withPrices=True):
         if not self.solved: return
         if len(self.generators)<5: 
             self.vizualization_fewunits(**kwargs)
@@ -386,23 +387,28 @@ class Solution_UC(Solution):
             yLabels.append(gen.name)
         else: stackBottom=stackBottom[1:] #loads don't have initial time info
         for d,load in enumerate(loads):
-            color='.8'
+            color='.8' #gray
             if load.kind in ['shifting','bidding']:
                 Pd=[value(load.P(t)) for t in times]
                 stackBottom=elementwiseAdd([-1*P for P in Pd],stackBottom)
                 plt=ax.bar(T[1:],Pd,bottom=stackBottom,alpha=.5,color=color,edgecolor=color,width=barWidth,hatch="/")
                 loadsPlotted.append(plt[0])
                 yLabels.append(load.name)
-                colors.append(color)
+                if fewunits: colors.append(color)
+                else: colors[load.kind] = color
             else: pass
         
-        if withPrices:        
+        #show prices
+        if withPrices and any(prices):
+            prices=replace_all(prices, config.cost_loadshedding, None)
             axesPrice = plot.axes([figLeft,.75,figWidth,.2],sharex=ax)
             plt=axesPrice.step(T[1:]+[times.End],prices+[prices[-1]],  where='post') #start from 1 past initial time
             axesPrice.set_ylabel('price\n$/MWh',ha='center',**bigFont)
             axesPrice.yaxis.set_label_coords(**yLabel_pos)
             plot.setp(axesPrice.get_xticklabels(), visible=False)
-            plot.ylim((.9*min(prices),1.1*max(prices)))
+            #format the price axis nicely
+            prices_wo_none=[p for p in prices if p is not None]
+            plot.ylim((.9*min(prices_wo_none),1.1*max(prices_wo_none)))
             axesPrice.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(5))
             
         ax.xaxis_date()
@@ -451,14 +457,66 @@ class Solution_multistageUC(Solution_UC):
         self.loads     =flatten( [[ld  for ld   in bus.loads]     for bus in buses] )
         self.calcCosts()
         self.calcPrices()        
+    def calcCosts(self):
+        self.fuelcost_generation=float(sum( [p['fuelcost_generation'] for p in self.problemsL] ))
+        self.truecost_generation=float(sum( [p['truecost_generation'] for p in self.problemsL] ))
+        self.load_shed=float(sum( [p['load_shed'] for p in self.problemsL] ))
+        try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
+        except ZeroDivisionError: self.costerror=0       
+    def calcPrices(self):    
+        for n,problem in enumerate(self.problemsL):
+            for t in self.stageTimes[n]:
+                for bus in self.buses:
+                    bus.price[t] = problem[t]['price_'+bus.iden(t)]
     def show(self):
         #self.info_status()
         if not self.solved: return
         self.info_cost()
+        self.info_shedding()
         self.vizualization()
+    def info_shedding(self):
+        if self.load_shed:
+            print 'total load shed={}MW'.format(self.load_shed)
     def info_status(self):
         if self.solved: print('{stat} in total of {time:0.4f} sec'.format(stat=self.status,time=self.solveTime))
         else: print(self.solveStatus)
+
+def get_stage_solution(problem,buses,times):
+        solution=dict()
+        solution['objective']=float(value(problem.objective))
+        solution['solve-time']=problem.solutionTime
+        solution['status'] = ( problem.status,problem.statusText() )
+        solution['fuelcost_generation']=sum(flatten(flatten([[[value(gen.operatingcost(t)) for t in times] for gen in bus.generators] for bus in buses]) ))
+        solution['truecost_generation']=sum(flatten(flatten([[[value(gen.truecost(t))      for t in times] for gen in bus.generators] for bus in buses]) ))
+        solution['load_shed']=0
+        
+        for t in times:
+            sln=dict()
+            for bus in buses: 
+                sln['price_'+bus.iden(t)]=bus.getprice(problem.constraints,t)
+                #reduce memory by setting variables to their value (instead of pulp object)
+                if t==times[0]:
+                    for gen in bus.generators: gen.fix_timevars(times)
+                    for load in bus.loads: load.fix_timevars(times)
+                for load in bus.loads:
+                    shed=load.shed(t)
+                    if shed: 
+                        logging.warning('Load shedding of {} MWh occured at {}.'.format(shed,str(t.Start)))
+                        solution['load_shed']+=shed
+            
+            solution[t]=sln
+        return solution
+def write_last_stage_status(buses,stagetimes):
+    t=stagetimes.initialTime
+    logging.warning('saving stage status for its initial time: {}'.format(t.Start))
+    generators = buses[0].generators
+    
+    fields,data=[],[]
+    fields.append('generator name');  data.append(getattrL(generators,'name'))
+    fields.append('u');  data.append([value(g.u[t]) for g in generators])
+    fields.append('P');  data.append([value(g.P(t)) for g in generators])
+    fields.append('hours in status');  data.append([value(g.initialStatusHours) for g in generators])
+    writeCSV(fields,transpose(data),filename='stagestatus{}.csv'.format(t.End))          
 
 def colormap(numcolors,colormapName='gist_rainbow',mincolor=0):
     cm = matplotlib.cm.get_cmap(colormapName)

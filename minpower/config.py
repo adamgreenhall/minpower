@@ -64,7 +64,9 @@ generator_defaults=dict(
     )
 
 
-default_num_breakpoints=25
+cost_loadshedding = 100000000 #$/MWh
+
+default_num_breakpoints=10
 
 optimization_package='pulp'
 

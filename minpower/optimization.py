@@ -1,5 +1,5 @@
 """
-An optimization command library. 
+An optimization command library.
 Currently uses pulp but is transitioning to using coopr.
 """
 
@@ -29,11 +29,11 @@ if optimization_package=='coopr':
             self.model.objective=pyomo.Objective(rule=expression,sense=sense)
         def addConstraints(self,constraintsD):
             '''add a dictionary of constraints (keyed by name) to the problem'''
-            try: 
+            try:
                 for name,val in constraintsD.iteritems(): self.addConstraint(name,val)
-            except AttributeError: 
+            except AttributeError:
                 if constraintsD is None: pass
-                else: raise AttributeError('addConstraints takes a dictionary of constraints argument')        
+                else: raise AttributeError('addConstraints takes a dictionary of constraints argument')
         def addConstraint(self,name,expression):
             '''add a single constraint to the problem'''
             setattr(self.model, name, pyomo.Constraint(name=name,rule=expression))
@@ -43,9 +43,9 @@ if optimization_package=='coopr':
 
 
         def solve(self,solver='cplex'):
-            ''' solve the optimization problem. 
+            ''' solve the optimization problem.
                 valid solvers are {cplex,gurobi,glpk}'''
-            
+
             logging.info('Solving with {s} ... '.format(s=solver))
             instance=self.model.create()
             opt = cooprsolver.SolverFactory(solver)
@@ -137,7 +137,7 @@ if optimization_package=='coopr':
 elif optimization_package=='pulp':
     class Problem(pulp.LpProblem):
         '''an optimization problem'''
-        
+
         def addObjective(self,expression,name='objective'):
             '''add an objective to the problem'''
             self+=expression,name
@@ -147,49 +147,57 @@ elif optimization_package=='pulp':
             return newVar(*args,**kwargs)
         def addConstraints(self, constraintsD):
             '''add a dictionary of constraints (keyed by name) to the problem'''
-            try: 
+            try:
                 for name,val in constraintsD.iteritems(): self=addConstraint(self,val,name)
-            except AttributeError: 
+            except AttributeError:
                 if constraintsD is None: pass
                 else: raise AttributeError('addConstraints takes a dictionary of constraints argument')
-        
+
         def write(self,filename):
             '''write the problem to a human-readable file'''
             self.writeLP(filename)
-        def statusText(self): 
+        def statusText(self):
             '''solution status of the problem'''
             return pulp.LpStatus[self.status]
         def save(self,filename='problem.dat'):
             from yaml import dump
             with open(filename, 'w+') as file: dump(self, file)
-        
+
 
     def solve(problem,solver='cplex'):
         '''solve the optimization problem'''
         logging.info('Solving with {s} ... '.format(s=solver))
-        
-        if   solver.lower()=='cplex':  out=problem.solve(pulp.CPLEX_CMD(msg=0)),
-        elif solver.lower()=='glpk':   out=problem.solve(pulp.GLPK(msg=0)),
-        elif solver.lower()=='gurobi': out=problem.solve(pulp.GUROBI(msg=0))
-        
-        if problem.status: 
+        try:
+            if   solver.lower()=='cplex':  out=problem.solve(pulp.CPLEX_CMD(msg=0)),
+            elif solver.lower()=='glpk':   out=problem.solve(pulp.GLPK_CMD(msg=0)),
+            elif solver.lower()=='gurobi': out=problem.solve(pulp.GUROBI(msg=0))
+            elif solver.lower()=='coin':   out=problem.solve(pulp.COINMP_DLL(msg=0))
+            else:
+                msg='Couldnt find the solver "{}"'.format(solver)
+                raise OptimizationError(msg)
+        except pulp.solvers.PulpSolverError:
+            problem.status=0
+            out=None
+
+        if problem.status:
             logging.info('{stat} in {time:0.4f} sec'.format(
                 stat=problem.statusText(),
-                time=problem.solutionTime)) 
-        else: logging.warning(problem.statusText())
+                time=problem.solutionTime))
+        #else: logging.warning(problem.statusText())
+
         return out
     def value(variable):
         '''value of an optimization variable'''
         try: return pulp.value(variable)
         except AttributeError: return variable
-    def dual(constraint):    
+    def dual(constraint,default=None):
         '''dual value of an optimization constraint'''
         try: return constraint.pi
         except AttributeError:
             logging.warning('Duals information not supported by GLPK.')
-            return None
+            return default
 
-    def sumVars(variables): 
+    def sumVars(variables):
         '''sums a list of optimization variables'''
         return pulp.lpSum(variables)
     def newProblem(name='problem',kind=pulp.LpMinimize):

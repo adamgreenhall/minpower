@@ -5,8 +5,9 @@ power systems tools made beautiful
 :doc:`students<students>` and :doc:`researchers<researchers>` in power systems.
 It is designed to make working with :doc:`ED <economic-dispatch>`,
 :doc:`OPF <optimal-power-flow>`, and :doc:`UC <unit-commitment>` problems
-:doc:`easy and beautiful<why-minpower>`. The goal is to foster :doc:`collaboration<collaborate>`
+:doc:`simple and beautiful<why-minpower>`. The goal is to foster :doc:`collaboration<collaborate>`
 with other :doc:`researchers<researchers>` and to make learning easier for :doc:`students<students>`.
+
 
 
 Solving problems is as easy as two lines of script::
@@ -21,9 +22,9 @@ Solving problems is as easy as two lines of script::
 
 
 
-
 .. toctree::
     :hidden:
+    :maxdepth: 3
     
     why-minpower
     install

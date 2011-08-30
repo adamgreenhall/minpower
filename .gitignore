@@ -8,7 +8,10 @@ MANIFEST
 doc/publish.py
 doc/Makefile
 doc/_build/*
-
+addons/*.py
+*commitment.csv
+*dispatch.csv
+*powerflow-*.csv
 
 # Compiled source #
 ###################

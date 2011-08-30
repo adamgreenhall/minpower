@@ -96,10 +96,10 @@ What :abbr:`inputs (field names)` are allowed for spreadsheets? How do these rel
 
 The tests module contains a directory structure full of test cases as well as a few test scripts.
 
-:mod:`tests.all`
--------------------
+:mod:`tests.testall`
+---------------------
 
-.. automodule:: tests.all
+.. automodule:: tests.testall
     :members:
     :undoc-members:    
     
@@ -109,3 +109,8 @@ The tests module contains a directory structure full of test cases as well as a 
     :members:
     :undoc-members:    
 
+===============================
+:mod:`addons`
+===============================
+
+The addons module contains a directory where you can place your own modules.

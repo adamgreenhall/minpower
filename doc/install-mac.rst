@@ -1,42 +1,37 @@
-Linux Installation
+Mac Installation
 ==========================
 
-These are the get-**minpower**-working-as-fast-as-possible install instructions for Linux, written for Ubuntu.
 
+Add packages
+-------------
 
-Run::
+If you already use Python, see the required package list in :doc:`install-python-packages`.
+
+If you are starting from scratch with Python, we are going to need Python and several :abbr:`packages (Think add-ons. In Python terms minpower is a package.)`.
+
+* install `ActivePython <http://activestate.com/activepython/downloads>`_
+* open a command prompt and install the **minpower**-required :doc:`install-python-packages` by typing::
     
-    sudo apt-get install python-pip python-numpy python-matplotlib glpk
-    sudo pip install pulp coopr networkx minpower
-
-
-Two commands and **you are up and running!** Check out the resources :doc:`students` or :doc:`researchers`.
-
-
-Or continue on to add a research-grade solver.
+        pypm install minpower pulp coopr numpy matplotlib networkx
 
 Add solvers
 -------------
 
+    * `GLPK <http://www.arnab-deka.com/posts/2010/02/installing-glpk-on-a-mac/>`_
     * `Gurobi <http://gurobi.com/doc/45/quickstart>`_
     * `CPLEX <http://www.ibm.com/software/integration/optimization/cplex-optimizer>`_ (tutorial coming soon)
 
 
-.. _solver-to-python-linux:
+.. _solver-to-python-mac:
 
 solver-to-Python hooks
 -----------------------
 
-
-
 Gurobi
 ^^^^^^^
 
-If you are using Gurobi, the PuLP configuration may need to be modified::
-
-    sudo gedit /usr/local/lib/python2.7/dist-packages/PuLP-1.4.8-py2.7.egg/pulp/pulp.cfg.linux
-    
-and change the gurobi path line to:    
+If you are using Gurobi, you may need to alter the PuLP configuration (in ``/Library/Frameworks/Python.framework/Versions/2.7/dist-packages/PuLP-1.4.8-py2.7.egg/pulp.cfg.linux``)
+and change the gurobi path line to the location of your gurobi executable. E.g.:
     
     GurobiPath = /usr/local/gurobi/gurobi401/linux64/lib/python2.5
 

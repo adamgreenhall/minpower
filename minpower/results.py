@@ -12,8 +12,8 @@ from schedule import Timelist
 from optimization import value,dual
 import config
 
-#import matplotlib
-#import matplotlib.pyplot as plot
+import matplotlib
+import matplotlib.pyplot as plot
 
 def classifyProblem(times=None,lines=None):
     if not lines and len(times)==1: kind='ED'
@@ -46,6 +46,11 @@ class Solution(object):
             logging.error('Problem solve was not completed. Status {s}.'.format(s=self.status))
             return
         
+<<<<<<< HEAD
+=======
+        for gen in self.generators: gen.update_vars(times, problem)
+            
+>>>>>>> added matplotlib back in
         self.objective  =float(value(problem.objective))
 <<<<<<< HEAD
         self.activeConstraints = sum([dual(c)!=0 for nm,c in problem.constraints.items()])

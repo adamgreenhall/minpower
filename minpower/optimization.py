@@ -85,7 +85,6 @@ if optimization_package=='coopr':
                     
             self.solution=results.solution(0)
 
-            print 'solution is:', results.solution
             if solver=='glpk':
                 self.objective = self.solution.objective['objective']['Value']
             else: 
@@ -96,6 +95,7 @@ if optimization_package=='coopr':
             
 
             self.constraints = instance.active_components(pyomo.Constraint)
+<<<<<<< HEAD
             #print 'there are {} constraints in the solution'.format(len(self.solution.constraint))
             #self.constraintnames = [c[4:len(c)-1] for c in self.constraints]
             #self.constraintnames_full = [c for c in self.constraints]
@@ -128,6 +128,17 @@ if optimization_package=='coopr':
                 print self.constraints[fullname]
                 raise
 
+=======
+            self.variables = instance.active_components(pyomo.Var)
+            
+            #print self.constraints['powerBalance_i0t01'][None].dual
+            #print self.dual('powerBalance_i0t01')
+            #raise NotImplementedError
+            
+            return 
+        def dual(self,constraintname,index=None):
+            return self.constraints[constraintname][index].dual
+>>>>>>> duals now working. variable value structure changed for coopr.
         def __getattr__(self,name):
             try: return getattr(self.model,name)
             except AttributeError:
@@ -135,23 +146,34 @@ if optimization_package=='coopr':
                 msg='the model has no variable/constraint/attribute named "{n}"'.format(n=name)
                 raise AttributeError(msg)
 
+<<<<<<< HEAD
     def value(var,solution=None):
 =======
                 raise AttributeError('the model has no variable/constraint/... named "{n}"'.format(n=name))
 
     def value(name,result):
 >>>>>>> tiny stuff
+=======
+    def value(var,problem=None):
+>>>>>>> duals now working. variable value structure changed for coopr.
         '''value of an optimization variable'''
         #var=result.solution.variable[name]
-        if solution is None: return var
+        if problem is None: return var
         
-        try: return solution.Variable[var.name]['Value']
+        varname=var.name
+        try: return problem.variables[varname].value
+        except KeyError:
+            print 'variables are {}'.format([v for v in problem.variable])
+            raise
         except AttributeError:
-            if type(var)==pyomo.base.expr._SumExpression: print 'sum expression'
-            print dir(var)
-            var.display()
-            print var.as_numeric()
-            print solution.Variable[var.name]
+            if type(varname)==pyomo.base.expr._SumExpression: print 'sum expression'
+            #print dir(var)
+            #var.display()
+            #print var.as_numeric()
+            print varname
+            print problem.variables
+            #print problem.variable[varname]
+            #print problem.Variable[varname].value
             raise
     def dual(constraint):
         '''dual value of an optimization constraint'''

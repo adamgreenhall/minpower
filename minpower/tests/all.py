@@ -36,7 +36,7 @@ def main():
             os.system('python {s}'.format(s=hasPyscript(testDir)[0]))
         else:
             try: 
-                solve.main(datadir=testDir)
+                solve.problem(datadir=testDir)
                 sys.stdout = sys.__stdout__ #switch back to standard outputting
                 fError.close()
                 os.remove(joindir(testDir,'error.txt'))

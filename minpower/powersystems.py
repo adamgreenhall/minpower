@@ -185,15 +185,15 @@ class Generator(object):
 <<<<<<< HEAD
         return allvars
     
-    def update_vars(self,times,solution):
+    def update_vars(self,times,problem):
         commitment_problem= len(times)>1
         for time in times:
-            self.power[time] = value(self.power[time],solution)
-            self.bid[time].update_vars(solution)
+            self.power[time] = value(self.power[time],problem)
+            self.bid[time].update_vars(problem)
             if commitment_problem: #UC problem
-                self.u[time]=value(self.u[time],solution)
-                self.startup[time] =value(self.startup[time],solution)
-                self.shutdown[time]=value(self.shutdown[time],solution)
+                self.u[time]=value(self.u[time],problem)
+                self.startup[time] =value(self.startup[time],problem)
+                self.shutdown[time]=value(self.shutdown[time],problem)
             
         
         

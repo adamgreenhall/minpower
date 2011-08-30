@@ -144,8 +144,14 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
 
     def get_finalconditions(buses,times):
         for bus in buses:
+<<<<<<< HEAD
             for gen in bus.generators: gen.finalstatus=gen.getstatus(t=times[-1],times=times)
 
+=======
+            for gen in bus.generators:
+                gen.update_vars(times, lastproblem)
+                gen.finalstatus=gen.getstatus(t=times[-1],times=times)
+>>>>>>> update_vars changed to just require problem (variables are embbeded in problem instead of solution)
 
     for t_stage in stageTimes:
         logging.info('Stage starting at {} {}'.format(t_stage[0].Start, 'time={}'.format(wallclocktime.now()) if showclock else ''))

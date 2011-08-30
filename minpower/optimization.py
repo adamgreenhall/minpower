@@ -55,7 +55,7 @@ if optimization_package=='coopr':
             logging.info('Solving with {s} ... '.format(s=solver))
             instance=self.model.create()
             opt = cooprsolver.SolverFactory(solver)
-            results = opt.solve(instance, suffixes=['.*'],keepFiles=True)
+            results = opt.solve(instance, suffixes=['.*'])#,keepFiles=True)
             
             if not str(results.solver[0]['Termination condition'])=='optimal':
                 msg='problem not solved. Solver terminated with status: "{}"'.format(results.solver[0]['Termination condition'])
@@ -65,6 +65,15 @@ if optimization_package=='coopr':
                 logging.info('Problem solved.')
             
             instance.update_results(results)
+        
+            def resolvefixvariables(instance,solution):
+                for varname in solution.Variable: solution.Variable[varname]['fixed']=True
+                results= opt.solve(instance, suffixes=['.*'])
+                instance.update_results(results)
+                return results
+                
+            results = resolvefixvariables(instance,results.solution(0))
+                    
             self.solution=results.solution(0)
 
             print 'solution is:', results.solution

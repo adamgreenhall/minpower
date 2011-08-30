@@ -132,7 +132,7 @@ def create_problem_multistage(buses,lines,times,intervalHrs=1.0,stageHrs=24):
     def get_finalconditions(buses,times,lastproblem):
         for bus in buses:
             for gen in bus.generators:
-                gen.update_vars(times, lastproblem.solution)
+                gen.update_vars(times, lastproblem)
                 gen.finalstatus=gen.getstatus(t=times[-1],times=times)
 
     for t_stage in stageTimes:

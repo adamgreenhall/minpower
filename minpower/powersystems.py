@@ -139,7 +139,11 @@ class Generator(object):
         return self.bid[time].output(self.P(time))
     def truecost(self,time):
         '''exact cost of real power production at time (based on exact bid polynomial).'''
+<<<<<<< HEAD
         return self.bid[time].trueOutput(self.P(time))
+=======
+        return value(self.u[time])*self.costModel.trueOutput(self.P(time))
+>>>>>>> switched true cost reporting over from bid to cost model
     def incrementalcost(self,time): 
         '''change in cost with change in power at time (based on exact bid polynomial).'''
         return self.bid[time].incOutput(self.P(time)) if value(self.u[time]) else None
@@ -298,7 +302,11 @@ class Generator_nonControllable(Generator):
     def fix_timevars(self,times=None): return
 >>>>>>> added load shedding to insure feasibility
     def cost(self,time): return self.operatingcost(time)
+<<<<<<< HEAD
     def operatingcost(self,time,sln=None): return self.fuelcost*self.costModel.trueOutput( self.P(time) )
+=======
+    def operatingcost(self,time): return self.costModel.trueOutput( self.P(time) )
+>>>>>>> switched true cost reporting over from bid to cost model
     def truecost(self,time): return self.cost(time)
     def incrementalcost(self,time): return self.fuelcost*self.costModel.incOutput(self.P(time))
     def constraints(self,times): return #no constraints

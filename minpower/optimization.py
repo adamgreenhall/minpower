@@ -58,15 +58,19 @@ if optimization_package=='coopr':
                 self.solved=True
                 logging.info('Problem solved.')
             
-            instance.update_results(results)
+            instance.load(results)
         
-            def resolvefixvariables(instance,solution):
-                for varname in solution.Variable: solution.Variable[varname]['fixed']=True
+            def resolvefixvariables(model,instance,solution):
+                active_vars= instance.active_components(pyomo.Var)
+                for name,var in active_vars.iteritems():
+                    if isinstance(var.domain, pyomo.base.IntegerSet): var.fixed=True
+                    if isinstance(var.domain, pyomo.base.BooleanSet): var.fixed=True
+                instance.preprocess()
                 results= opt.solve(instance, suffixes=['.*'])
-                instance.update_results(results)
+                instance.load(results)
                 return results
                 
-            results = resolvefixvariables(instance,results.solution(0))
+            results = resolvefixvariables(self.model,instance,results.solution(0))
                     
             self.solution=results.solution(0)
 
@@ -80,13 +84,19 @@ if optimization_package=='coopr':
                     self.objective=0
             
 
-            self.constraints = self.solution.constraint
-            print 'there are {} constraints in the solution'.format(len(self.solution.constraint))
-            self.constraintnames = [c[4:len(c)-1] for c in self.constraints]
-            self.constraintnames_full = [c for c in self.constraints]
+            self.constraints = instance.active_components(pyomo.Constraint)
+            #print 'there are {} constraints in the solution'.format(len(self.solution.constraint))
+            #self.constraintnames = [c[4:len(c)-1] for c in self.constraints]
+            #self.constraintnames_full = [c for c in self.constraints]
         
             print 'objective=',self.objective
-            print self.dual('c_e_powerBalance_i0t01')
+            for nm,const in self.constraints.iteritems():
+                print nm
+                print type(const)
+                for c in const: print const[c].dual
+
+            #print self.constraints['powerBalance_i0t01']['Dual']
+            #print self.dual('powerBalance_i0t01')
             raise NotImplementedError
             
             return 

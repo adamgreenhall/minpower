@@ -37,7 +37,11 @@ def main(solver='cplex'):
             os.system('python {s}'.format(s=hasPyscript(testDir)[0]))
         else:
             try: 
+<<<<<<< HEAD:minpower/tests/testall.py
                 solve.problem(datadir=testDir,solver=solver)
+=======
+                solve.problem(datadir=testDir)
+>>>>>>> changed call to solve.problem:minpower/tests/all.py
                 sys.stdout = sys.__stdout__ #switch back to standard outputting
                 fError.close()
                 os.remove(joindir(testDir,'error.txt'))

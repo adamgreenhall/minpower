@@ -11,8 +11,8 @@ from commonscripts import flatten,getColumn,transpose,elementwiseAdd, getattrL,h
 from schedule import Timelist
 from optimization import value,dual
 
-#import matplotlib
-#import matplotlib.pyplot as plot
+import matplotlib
+import matplotlib.pyplot as plot
 
 def classifyProblem(times=None,lines=None):
     if not lines and len(times)==1: kind='ED'
@@ -47,7 +47,7 @@ class Solution(object):
             logging.error('Problem solve was not completed. Status {s}.'.format(s=self.status))
             return
         
-        for gen in self.generators: gen.update_vars(times, problem.solution)
+        for gen in self.generators: gen.update_vars(times, problem)
             
         self.objective  =float(value(problem.objective))
         

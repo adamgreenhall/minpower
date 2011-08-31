@@ -9,7 +9,7 @@ from collections import OrderedDict
 
 from commonscripts import flatten,getColumn,transpose,elementwiseAdd, getattrL,hours,within,subset,writeCSV,joindir,replace_all
 from schedule import Timelist
-from optimization import value,dual
+from optimization import value
 import config
 
 import matplotlib
@@ -43,6 +43,8 @@ class Solution(object):
         self.solved        =problem.status==1
         for g in self.generators: g.update_vars(times,problem)
         for l in self.loads: l.update_vars(times,problem)
+        for b in self.buses: b.update_vars(times,problem)
+        for l in self.lines: l.update_vars(times,problem)
         
         if not self.solved: 
             logging.error('Problem solve was not completed. Status {s}.'.format(s=self.status))
@@ -105,19 +107,17 @@ class Solution(object):
         print ' line info:'
         print '  connecting=', zip(getattrL(self.lines,'From'),getattrL(self.lines,'To'))            
         print '  Pk =', [value(line.P[t]) for line in self.lines]
-        
-        try: duals=[dual(self.constraints['lineLimitHi_'+line.iden(t)])+dual(self.constraints['lineLimitLow_'+line.iden(t)]) for line in self.lines]
-        except TypeError: duals=None #from duals not supported
-        print '  mu=', duals
+        print '  mu=', [line.price[t] for line in self.lines]
     def calcCosts(self):
         self.fuelcost_generation=float(sum( flatten([[value(gen.operatingcost(t)) for t in self.times] for gen in self.generators]) ))
         self.truecost_generation=float(sum( flatten([[gen.truecost(t) for t in self.times] for gen in self.generators]) ))
         try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
         except ZeroDivisionError: self.costerror=0
     def calcPrices(self,problem):
-        for bus in self.buses:
-            for t in self.times:    
-                bus.price[t] = bus.getprice(t,problem)
+        for t in self.times:    
+            for bus in self.buses:  bus.price[t] = bus.getprice(t,problem)
+            for line in self.lines: line.price[t] = line.getprice(t,problem)
+    
     def info_cost(self):
         print 'objective cost=',self.objective
         print 'linearized fuelcost of generation=',self.fuelcost_generation
@@ -220,8 +220,7 @@ class Solution_OPF(Solution):
         fields.append('to');  data.append(getattrL(lines,'To'))
         fields.append('power'); data.append([value(line.P[t]) for line in lines])
         
-        congestionprices= [line.price(t) for line in self.lines]
-        fields.append('congestion shadow price'); data.append(congestionprices)
+        fields.append('congestion shadow price'); data.append([line.price[t] for line in self.lines])
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename+'-lines.csv'))        
     
     def info_price(self,t): pass #built into bus info
@@ -425,7 +424,7 @@ def get_stage_solution(problem,buses,times):
     solution=dict()
     solution['objective']=float(value(problem.objective))
     solution['solve-time']=problem.solutionTime
-    solution['status'] = ( problem.status,problem.statusText() )
+    solution['status'] = ( problem.status,problem.statusText )
     solution['fuelcost_generation']=sum(flatten(flatten([[[value(gen.operatingcost(t)) for t in times] for gen in bus.generators] for bus in buses]) ))
     solution['truecost_generation']=sum(flatten(flatten([[[value(gen.truecost(t))      for t in times] for gen in bus.generators] for bus in buses]) ))
     solution['load_shed']=0
@@ -433,7 +432,7 @@ def get_stage_solution(problem,buses,times):
     for t in times:
         sln=dict()
         for bus in buses: 
-            sln['price_'+bus.iden(t)]=bus.getprice(problem.constraints,t)
+            sln['price_'+bus.iden(t)]=bus.getprice(t,problem)
             #reduce memory by setting variables to their value (instead of pulp object)
             if t==times[0]:
                 for gen in bus.generators: gen.fix_timevars(times)

@@ -22,7 +22,7 @@ def _setup_logging(fn):
 @_setup_logging
 def problem(datadir='./tests/uc/',
     outputs=dict(
-        shell=True,problemfile=True,
+        shell=True,problemfile=False,
         vizualization=True,csv=True),
     solver=config.optimization_solver):
     

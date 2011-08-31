@@ -1,11 +1,11 @@
 """
-Solution models, output, and display for power system
-optimization problems. Matplotlib and networkx are used for
-vizualization.
-"""
-	
+    Solution models, output, and display for power system
+    optimization problems. Matplotlib and networkx are used for
+    vizualization.
+    """
+
 import os,sys,types,logging
-#from collections import OrderedDict
+from collections import OrderedDict
 
 from commonscripts import flatten,getColumn,transpose,elementwiseAdd, getattrL,hours,within,subset,writeCSV,joindir,replace_all
 from schedule import Timelist
@@ -31,7 +31,7 @@ def makeSolution(lines=None,times=None,**kwargs):
 def makeMultistageSolution(lines,**kwargs):
     if lines: raise NotImplementedError('no visualization for multistage SCUC yet')
     return Solution_multistageUC(**kwargs)
-    
+
 class Solution(object):
     def __init__(self,problem,buses,lines,times,datadir):
         vars(self).update(subset(locals(),['buses','lines','times','datadir']))
@@ -39,13 +39,21 @@ class Solution(object):
         self.loads     =flatten( [[ld  for ld   in bus.loads]     for bus in buses] )
         self.constraints= problem.constraints
         self.solveTime  =problem.solutionTime
+<<<<<<< HEAD
         self.status     =problem.statusText()
         self.solved        =problem.status==1
+=======
+        self.status     =problem.statusText
+        self.solved        =problem.status==1
+        for g in self.generators: g.update_vars(times,problem)
+        for l in self.loads: l.update_vars(times,problem)
+>>>>>>> duals and variables now working with coopr. tests are still failing.
         
         if not self.solved: 
             logging.error('Problem solve was not completed. Status {s}.'.format(s=self.status))
             return
         
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
         for gen in self.generators: gen.update_vars(times, problem)
@@ -62,6 +70,13 @@ class Solution(object):
         self.totalConstraints = len(problem.constraints)
         self.calcCosts()
         self.calcPrices(problem.constraints)
+=======
+        self.objective  =float(value(problem.objective))
+        self.activeConstraints = sum([problem.dual(nm)!=0 for nm,c in problem.constraints.iteritems()])
+        self.totalConstraints = len(problem.constraints)
+        self.calcCosts()
+        self.calcPrices(problem)
+>>>>>>> duals and variables now working with coopr. tests are still failing.
     def show(self):
         if not self.solved: return
         print '\nSolution information:\n----------------------'
@@ -73,13 +88,13 @@ class Solution(object):
             self.info_buses(t)
             self.info_lines(t)
         self.info_cost()               
-
+    
     def savevisualization(self,filename=None):
         if not self.solved: return
         if filename is None: plot.show()
         else: plot.savefig(joindir(self.datadir,filename),bbox_inches='tight')
         plot.close()
-
+    
     def info_status(self):
         if self.solved: print('{stat} in {time:0.4f} sec'.format(stat=self.status,time=self.solveTime))
         else: print(self.solveStatus)
@@ -123,23 +138,30 @@ class Solution(object):
         self.truecost_generation=float(sum( flatten([[gen.truecost(t) for t in self.times] for gen in self.generators]) ))
         try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
         except ZeroDivisionError: self.costerror=0
+<<<<<<< HEAD
     def calcPrices(self,constraints):
         for bus in self.buses:
             for t in self.times:    
                 bus.price[t] = dual(constraints['powerBalance_'+bus.iden(t)])        
+=======
+    def calcPrices(self,problem):
+        for bus in self.buses:
+            for t in self.times:    
+                bus.price[t] = bus.getprice(t,problem)
+>>>>>>> duals and variables now working with coopr. tests are still failing.
     def info_cost(self):
         print 'objective cost=',self.objective
         print 'linearized fuelcost of generation=',self.fuelcost_generation
         print 'non-linearized cost of generation=',self.truecost_generation
         print 'percentage difference\t\t={diff:.2%}'.format(diff=self.costerror)
 
-    
+
 class Solution_ED(Solution):
     def __init__(self,**kwargs):
         super( Solution_ED, self ).__init__(**kwargs)    
         #for ED problem there is just one price
         self.price=self.buses[0].price[self.times[0]]
-        
+    
     def info_lines(self,t): pass
     def info_buses(self,t): pass
     def vizualization(self):
@@ -168,7 +190,7 @@ class Solution_ED(Solution):
         if loadsPlotted:
             legendLoads=plot.legend(loadsPlotted, loadNames, fancybox=True,title='Loads:',loc='upper left')
             plot.gca().add_artist(legendGens) #add first legend to the axes manually bcs multiple legends get overwritten
-
+        
         plot.xlabel('P [MWh]')
         plot.ylabel('Marginal Cost/Benifit [$/MWh]')
         plot.ylim(ymin=0)        
@@ -178,13 +200,13 @@ class Solution_ED(Solution):
         if not self.solved: return
         t=self.times[0]
         generators,loads=self.generators,self.loads
-            
+        
         fields,data=[],[]
         fields.append('generator name');  data.append(getattrL(generators,'name'))
         fields.append('u');  data.append([value(g.u[t]) for g in generators])
         fields.append('P');  data.append([value(g.P(t)) for g in generators])
         fields.append('IC');  data.append([g.incrementalcost(t) for g in generators])
-            
+        
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))        
 class Solution_OPF(Solution): 
     def vizualization(self,filename='powerflow.png'): 
@@ -206,17 +228,17 @@ class Solution_OPF(Solution):
         nx.draw(G,node_color=Pinj,pos=pos,node_size=1500,alpha=.7,cmap=plot.cm.RdYlBu,fontsize=30)
         cb=plot.colorbar(shrink=.8)
         cb.set_label('injected power [MW]',fontsize=15)
-            
+        
         Plines=[edata['P'] for f,t,edata in G.edges(data=True) if 'P' in edata]
         atLimLines=[(f,t) for f,t,edata in G.edges(data=True) if within(edata['P'],val=edata['Plim'],eps=1e-3) ]
         nx.draw_networkx_edges(G,edge_color='0.6',pos=pos,width=Plines,alpha=0.5)
         nx.draw_networkx_edges(G,edgelist=atLimLines,edge_color='r',pos=pos,width=Plines,alpha=0.5)
-                
+        
         self.savevisualization(filename)
     def saveCSV(self,filename='powerflow'): 
         t=self.times[0]
         generators,loads,lines=self.generators,self.loads,self.lines
-            
+        
         fields,data=[],[]
         fields.append('generator name');  data.append(getattrL(generators,'name'))
         fields.append('u');  data.append([value(g.u[t]) for g in generators])
@@ -228,10 +250,9 @@ class Solution_OPF(Solution):
         fields.append('from');  data.append(getattrL(lines,'From'))
         fields.append('to');  data.append(getattrL(lines,'To'))
         fields.append('power'); data.append([value(line.P[t]) for line in lines])
-
-        try: duals=[dual(self.constraints['lineLimitHi_'+line.iden(t)])+dual(self.constraints['lineLimitLow_'+line.iden(t)]) for line in self.lines]
-        except TypeError: duals=['not supported']*len(lines) #from duals not supported
-        fields.append('congestion shadow price'); data.append(duals)
+        
+        congestionprices= [line.price(t) for line in self.lines]
+        fields.append('congestion shadow price'); data.append(congestionprices)
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename+'-lines.csv'))        
     
     def info_price(self,t): pass #built into bus info
@@ -241,7 +262,7 @@ class Solution_UC(Solution):
     def saveCSV(self,filename='commitment.csv'): 
         if not self.solved: return
         times=self.times
-            
+        
         fields,data=[],[]
         fields.append('times');  data.append([t.Start for t in times])
         fields.append('prices'); data.append([self.buses[0].price[t] for t in times])
@@ -254,17 +275,24 @@ class Solution_UC(Solution):
         for load in self.loads:
             fields.append('power: '+str(load.name))
             data.append([value(load.P(t)) for t in times])
-            
-        writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))
         
+        writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))
+    
     def vizualization(self,filename='commitment.png',withPrices=True):
         if not self.solved: return
         if len(self.generators)<5: fewunits=True
         else: fewunits=False
+<<<<<<< HEAD
     
         times,generators,loads=self.times,self.generators,self.loads
         prices=[self.buses[0].price[t] for t in self.times]
 
+=======
+        
+        times,generators,loads=self.times,self.generators,self.loads
+        prices=[self.buses[0].price[t] for t in self.times]
+        
+>>>>>>> duals and variables now working with coopr. tests are still failing.
         bigFont={'fontsize':15}
         figWidth=.85; figLeft=(1-figWidth)/2
         yLabel_pos={'x':-0.09,'y':0.5}
@@ -294,7 +322,11 @@ class Solution_UC(Solution):
             #add to list of gens plotted
             gensPlotted.append(plt[0])
             return gensPlotted,stackBottom
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> duals and variables now working with coopr. tests are still failing.
         if not fewunits:
             #group generators by kind
             allkinds=['nuclear','coal','naturalgas','wind','other']
@@ -306,11 +338,16 @@ class Solution_UC(Solution):
                     genbykind[kind]=[value(gen.P(t)) for t in times.wInitial]
                 else:
                     genbykind[kind]=elementwiseAdd([value(gen.P(t)) for t in times.wInitial],genbykind[kind])
+<<<<<<< HEAD
 
+=======
+            
+>>>>>>> duals and variables now working with coopr. tests are still failing.
             for kind,Pgen in genbykind.iteritems():
                 if Pgen is None: continue
                 gensPlotted,stackBottom=addtostackplot(ax,T,Pgen,colors[kind], gensPlotted,stackBottom)
                 yLabels.append(kind)
+<<<<<<< HEAD
         
         else: 
             #show all generators individually 
@@ -331,6 +368,28 @@ class Solution_UC(Solution):
         
         convert_to_GW=True if max(stackBottom)>20000 else False
         
+=======
+        
+        else: 
+            #show all generators individually 
+            #sort generators by merit order by 1.committed hrs (and then by 2. energy)
+            generators=sorted(generators,reverse=True,
+                              key=lambda gen: 
+                              ( sum(value(gen.u[t]) if hasattr(gen,'u') else 0 for t in times), #committed hrs
+                               sum(value(gen.P(t)) for t in times) #energy
+                               ))
+            colors=colormap(len(generators),colormapName='Blues')
+            for g,gen in enumerate(generators):
+                Pgen=[value(gen.P(t)) for t in times.wInitial]
+                gensPlotted,stackBottom=addtostackplot(ax,T,Pgen,colors[g], gensPlotted,stackBottom)
+                yLabels.append(gen.name)      
+        
+        #show demand response loads
+        stackBottom=stackBottom[1:] #loads don't have initial time info
+        
+        convert_to_GW=True if max(stackBottom)>20000 else False
+        
+>>>>>>> duals and variables now working with coopr. tests are still failing.
         for d,load in enumerate(loads):
             color='.8' #gray
             if load.kind in ['shifting','bidding']:
@@ -355,7 +414,7 @@ class Solution_UC(Solution):
             prices_wo_none=[p for p in prices if p is not None]
             plot.ylim((.9*min(prices_wo_none),1.1*max(prices_wo_none)))
             axesPrice.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(5))
-            
+        
         ax.xaxis_date()
         plottedL=loadsPlotted[::-1]+gensPlotted[::-1]
         ax.legend(plottedL, yLabels[::-1],loc='lower right')
@@ -373,7 +432,7 @@ class Solution_UC(Solution):
             elif times.spanhrs<48:
                 ax.xaxis.set_major_locator(matplotlib.dates.HourLocator())
                 ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M'))
-            #otherwise use defaults
+        #otherwise use defaults
         #else: leave the xaxis for interactive zooming  
         
         #format the power axis nicely
@@ -432,6 +491,7 @@ class Solution_multistageUC(Solution_UC):
         else: print(self.solveStatus)
 
 def get_stage_solution(problem,buses,times):
+<<<<<<< HEAD
         solution=dict()
         solution['objective']=float(value(problem.objective))
         solution['solve-time']=problem.solutionTime
@@ -457,6 +517,32 @@ def get_stage_solution(problem,buses,times):
             
             solution[t]=sln
         return solution
+=======
+    solution=dict()
+    solution['objective']=float(value(problem.objective))
+    solution['solve-time']=problem.solutionTime
+    solution['status'] = ( problem.status,problem.statusText() )
+    solution['fuelcost_generation']=sum(flatten(flatten([[[value(gen.operatingcost(t)) for t in times] for gen in bus.generators] for bus in buses]) ))
+    solution['truecost_generation']=sum(flatten(flatten([[[value(gen.truecost(t))      for t in times] for gen in bus.generators] for bus in buses]) ))
+    solution['load_shed']=0
+    
+    for t in times:
+        sln=dict()
+        for bus in buses: 
+            sln['price_'+bus.iden(t)]=bus.getprice(problem.constraints,t)
+            #reduce memory by setting variables to their value (instead of pulp object)
+            if t==times[0]:
+                for gen in bus.generators: gen.fix_timevars(times)
+                for load in bus.loads: load.fix_timevars(times)
+            for load in bus.loads:
+                shed=load.shed(t)
+                if shed: 
+                    logging.warning('Load shedding of {} MWh occured at {}.'.format(shed,str(t.Start)))
+                    solution['load_shed']+=shed
+        
+        solution[t]=sln
+    return solution
+>>>>>>> duals and variables now working with coopr. tests are still failing.
 def write_last_stage_status(buses,stagetimes):
     t=stagetimes.initialTime
     logging.warning('saving stage status for its initial time: {}'.format(t.Start))

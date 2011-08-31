@@ -16,7 +16,7 @@ elif optimization_package=='coopr':
         from coopr.opt.base import solver as cooprsolver
 else: raise ImportError('optimization library must be coopr or pulp.')
 import logging
-
+import config
 
 if optimization_package=='coopr':
     class Problem(object):
@@ -57,6 +57,11 @@ if optimization_package=='coopr':
             else:
                 self.solved=True
                 logging.info('Problem solved.')
+            
+            #need to fix this up for coopr
+            self.solutionTime = 0
+            self.statusText = 'optimal' #results.Solver['termination']
+            self.status = self.statusText == 'optimal'
             
             instance.load(results)
         
@@ -101,29 +106,20 @@ if optimization_package=='coopr':
 
     def value(var,problem=None):
         '''value of an optimization variable'''
-        #var=result.solution.variable[name]
         if problem is None: return var
         
-        varname=var.name
+        try: varname=var.name
+        except AttributeError: 
+            return var #just a number
+        
         try: return problem.variables[varname].value
-        except KeyError:
-            print 'variables are {}'.format([v for v in problem.variable])
-            raise
         except AttributeError:
-            if type(varname)==pyomo.base.expr._SumExpression: print 'sum expression'
-            #print dir(var)
-            #var.display()
-            #print var.as_numeric()
             print varname
-            print problem.variables
-            #print problem.variable[varname]
-            #print problem.Variable[varname].value
             raise
-    def dual(constraint):
+    def dual(constraintname,problem):
         '''dual value of an optimization constraint'''
-        try: return constraint.dual
+        try: return problem.dual(constraintname)
         except AttributeError: return 0
-        #return solution.Constraint[constraint.name]['Dual']
 
     def sumVars(variables): return sum(variables)
     def newProblem(): return Problem()
@@ -132,7 +128,7 @@ if optimization_package=='coopr':
         
         kindmap = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean)
         return pyomo.Var(name=name,bounds=(low,high),domain=kindmap[kind])
-    def solve(problem,solver='cplex'): return problem.solve(solver)
+    def solve(problem,solver=config.optimization_solver): return problem.solve(solver)
 
 elif optimization_package=='pulp':
     class Problem(pulp.LpProblem):

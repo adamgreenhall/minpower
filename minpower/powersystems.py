@@ -6,7 +6,7 @@ Defines models for power systems concepts:
 import bidding
 from optimization import newVar,value,sumVars,dual
 #from schedule import *
-from commonscripts import hours,subset,subsetexcept,drop_case_spaces,getattrL
+from commonscripts import hours,subset,subsetexcept,drop_case_spaces,getattrL,flatten
 import config
 import logging
 
@@ -283,8 +283,7 @@ class Generator_nonControllable(Generator):
         self.schedule.P[time]=P
     def getstatus(self,t,times): return dict()
     def add_timevars(self,times): return []
-    def update_vars(self,times=None,solution=None): return
-    def add_timevars(self,times): return
+    def update_vars(self,times=None,problem=None): return
     def fix_timevars(self,times=None): return
     def cost(self,time): return self.operatingcost(time)
     def operatingcost(self,time): return self.costModel.trueOutput( self.P(time) )
@@ -312,6 +311,8 @@ class Line(object):
         for time in times: 
             self.P[time]=newVar(name='P_'+self.iden(time))
         return self.P
+    def update_vars(self,times,problem):
+        for time in times: self.P[time]=value(self.P[time],problem)
     def constraints(self,times,buses):
         '''create the constraints for a line over all times'''
         constraints=dict()
@@ -327,7 +328,9 @@ class Line(object):
     def __str__(self): return 'k{ind}'.format(ind=self.index)
     def __int__(self): return self.index
     def iden(self,t): return str(self)+str(t)
-    
+    def getprice(self,time,problem):
+        #get congestion price on line
+        return problem.dual('lineLimitHi_'+self.iden(time))+problem.dual('lineLimitLow_'+self.iden(time))    
 class Bus(object):
     """
     Describes a bus (usually a substation where one or more
@@ -341,7 +344,10 @@ class Bus(object):
         self.generators,self.loads=[],[]
         self.angle,self.price=dict(),dict()
     def add_timevars(self,times):
-        for time in times: self.addTimeElement(time=time,angle=newVar(name='angle_'+self.iden(time)))        
+        for time in times: self.addTimeElement(time=time,angle=newVar(name='angle_'+self.iden(time)))
+    def update_vars(self,times,problem):
+        for time in times: self.angle[time]=value(self.angle[time],problem)
+
     def addTimeElement(self,time=None,angle=None): self.angle[time]=angle
     def __str__(self):     return 'i{ind}'.format(ind=self.index)    
     def __int__(self):    return self.index
@@ -363,8 +369,8 @@ class Bus(object):
             if nBus>1 and self.isSwing: constraints['swingBus '+iden] = self.angle[t]==0 #swing bus has angle=0
             constraints['powerBalance_'+iden] = powerBalance(self,t,Bmatrix,buses)==0 #power balance must be zero
         return constraints
-    def getprice(self,constraints,time):
-        return dual(constraints['powerBalance_'+self.iden(time)])
+    def getprice(self,time,problem):
+        return problem.dual('powerBalance_'+self.iden(time))
 class Load(object):
     """
     Describes a power system load (demand).
@@ -390,6 +396,9 @@ class Load(object):
             for t in times: self.dispatched_power[t]=newVar('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
         else:
             for t in times: self.dispatched_power[t]=self.schedule.getEnergy(t)
+    def update_vars(self,times,problem):
+        for t in times: self.dispatched_power[t]=value(self.dispatched_power[t],problem)
+
     def fix_timevars(self,times=None):
         for t in times: self.dispatched_power[t]=value(self.dispatched_power[t])
     def constraints(self,*args): return #no constraints
@@ -412,7 +421,7 @@ class Load_Fixed(Load):
         if shedding_allowed: 
             for t in times: self.dispatched_power[t]=newVar('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
         else:
-            for t in times: self.dispatched_power[t]=self.Pfixed    
+            for t in times: self.dispatched_power[t]=self.Pfixed
     def benifit(self,time=None): return (self.P(time) - self.Pfixed)*config.cost_loadshedding
     
 class Network(object):

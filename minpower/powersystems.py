@@ -5,6 +5,7 @@ Defines models for power systems concepts:
 """
 import bidding
 <<<<<<< HEAD
+<<<<<<< HEAD
 from optimization import newVar,value,sumVars
 from commonscripts import hours,subset,subsetexcept,drop_case_spaces,getattrL,flatten
 =======
@@ -14,6 +15,9 @@ from optimization import newVar,value,sumVars,dual
 from commonscripts import hours,subset,subsetexcept,drop_case_spaces,getattrL
 >>>>>>> added status method for Generator() and getprice for bus().
 =======
+=======
+from optimization import newVar,value,sumVars
+>>>>>>> working coopr and pulp mix
 from commonscripts import hours,subset,subsetexcept,drop_case_spaces,getattrL,flatten
 >>>>>>> duals and variables now working with coopr. tests are still failing.
 import config
@@ -334,11 +338,11 @@ class Line(object):
     def __init__(self,name='',index=None,From=None,To=None,X=0.05,Pmax=9999,Pmin=None,**kwargs):
         vars(self).update(locals()) #load in inputs
         if self.Pmin is None: self.Pmin=-self.Pmax #reset default to be -Pmax
-        self.P=dict()
+        self.P,self.price=dict(),dict()
     def add_timevars(self,times):
         for time in times: 
             self.P[time]=newVar(name='P_'+self.iden(time))
-        return self.P
+        return self.P.values()
     def update_vars(self,times,problem):
         for time in times: self.P[time]=value(self.P[time],problem)
     def constraints(self,times,buses):
@@ -349,8 +353,8 @@ class Line(object):
             busNames=getattrL(buses,'name')
             iFrom,iTo=busNames.index(self.From),busNames.index(self.To)
             constraints['lineFlow '+iden]=     self.P[t] == (1/self.X) * sumVars([ buses[iFrom].angle[t],-1*buses[iTo].angle[t] ])
-            constraints['lineLimitHi '+iden]=  self.P[t]<=self.Pmax
-            constraints['lineLimitLow '+iden]= self.Pmin<=self.P[t]
+            constraints['lineLimitHi_'+iden]=  self.P[t]<=self.Pmax
+            constraints['lineLimitLow_'+iden]= self.Pmin<=self.P[t]
         return constraints
     
     def __str__(self): return 'k{ind}'.format(ind=self.index)
@@ -372,11 +376,11 @@ class Bus(object):
         self.generators,self.loads=[],[]
         self.angle,self.price=dict(),dict()
     def add_timevars(self,times):
-        for time in times: self.addTimeElement(time=time,angle=newVar(name='angle_'+self.iden(time)))
+        for time in times: self.angle[time]=newVar(name='angle_'+self.iden(time))
+        return self.angle.values()
     def update_vars(self,times,problem):
         for time in times: self.angle[time]=value(self.angle[time],problem)
 
-    def addTimeElement(self,time=None,angle=None): self.angle[time]=angle
     def __str__(self):     return 'i{ind}'.format(ind=self.index)    
     def __int__(self):    return self.index
     def iden(self,t):        return str(self)+str(t)
@@ -432,6 +436,8 @@ class Load(object):
             for t in times: self.dispatched_power[t]=newVar('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
         else:
             for t in times: self.dispatched_power[t]=self.schedule.getEnergy(t)
+        return self.dispatched_power.values()
+    
     def update_vars(self,times,problem):
         for t in times: self.dispatched_power[t]=value(self.dispatched_power[t],problem)
 
@@ -457,8 +463,11 @@ class Load_Fixed(Load):
     def add_timevars(self,times=None,shedding_allowed=False):
         if shedding_allowed: 
             for t in times: self.dispatched_power[t]=newVar('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
+            return self.dispatched_power.values()
         else:
             for t in times: self.dispatched_power[t]=self.Pfixed
+            return []
+        
     def benifit(self,time=None): return (self.P(time) - self.Pfixed)*config.cost_loadshedding
     
 class Network(object):

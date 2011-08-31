@@ -3,8 +3,7 @@ An optimization command library.
 Currently uses pulp but is transitioning to using coopr.
 """
 
-#from config import optimization_package
-optimization_package='coopr'
+from config import optimization_package
 
 if optimization_package=='pulp':
     import pulp
@@ -33,22 +32,26 @@ if optimization_package=='coopr':
 >>>>>>> tiny stuff
             '''add an objective to the problem'''
             self.model.objective=pyomo.Objective(rule=expression,sense=sense)
+        def addVar(self,var):
+            '''add a single variable to the problem'''
+            try: setattr(self.model, var.name, var)
+            except AttributeError: pass #just a number, don't add to vars
         def addConstraints(self,constraintsD):
             '''add a dictionary of constraints (keyed by name) to the problem'''
             try:
-                for name,val in constraintsD.iteritems(): self.addConstraint(name,val)
+                for name,expression in constraintsD.iteritems(): self.addConstraint(name,expression)
             except AttributeError:
                 if constraintsD is None: pass
                 else: raise AttributeError('addConstraints takes a dictionary of constraints argument')
         def addConstraint(self,name,expression):
             '''add a single constraint to the problem'''
             setattr(self.model, name, pyomo.Constraint(name=name,rule=expression))
-        def addVar(self,var):
-            '''add a single variable to the problem'''
-            setattr(self.model, var.name, var)
+        def dual(self,constraintname,index=None):
+            '''dual value of an optimization constraint'''
+            return self.constraints[constraintname][index].dual
 
 
-        def solve(self,solver='cplex'):
+        def solve(self,solver=config.optimization_solver):
             ''' solve the optimization problem.
                 valid solvers are {cplex,gurobi,glpk}'''
 
@@ -56,47 +59,60 @@ if optimization_package=='coopr':
             instance=self.model.create()
             opt = cooprsolver.SolverFactory(solver)
             results = opt.solve(instance, suffixes=['.*'])#,keepFiles=True)
-            
-            if not str(results.solver[0]['Termination condition'])=='optimal':
-                msg='problem not solved. Solver terminated with status: "{}"'.format(results.solver[0]['Termination condition'])
-                raise OptimizationError(msg)
+
+            self.statusText = str(results.solver[0]['Termination condition'])
+            if not self.statusText =='optimal':
+                logging.warning('problem not solved. Solver terminated with status: "{}"'.format(self.statusText))
+                self.status=False
             else:
-                self.solved=True
+                self.status=True
                 logging.info('Problem solved.')
-            
+
             #need to fix this up for coopr
             self.solutionTime = 0
-            self.statusText = 'optimal' #results.Solver['termination']
-            self.status = self.statusText == 'optimal'
-            
+
             instance.load(results)
+<<<<<<< HEAD
         
 <<<<<<< HEAD
             def resolvefixvariables(instance,solution):
                 for varname in solution.Variable: getattr(instance,varname).fixed=True
 =======
             def resolvefixvariables(model,instance,solution):
+=======
+
+
+            def resolvefixvariables(model,instance):
+>>>>>>> working coopr and pulp mix
                 active_vars= instance.active_components(pyomo.Var)
                 for name,var in active_vars.iteritems():
                     if isinstance(var.domain, pyomo.base.IntegerSet): var.fixed=True
                     if isinstance(var.domain, pyomo.base.BooleanSet): var.fixed=True
                 instance.preprocess()
+<<<<<<< HEAD
 >>>>>>> working dual resolve. with glpk! need to formulate into the methods.
                 results= opt.solve(instance, suffixes=['.*'])
+=======
+                try: results= opt.solve(instance, suffixes=['.*'])
+                except RuntimeError:
+                    print 'coopr raised an error in solving. re-trying, with debugging.'
+                    results= opt.solve(instance, suffixes=['.*'],keepFiles=True)    
+>>>>>>> working coopr and pulp mix
                 instance.load(results)
                 return results
-                
-            results = resolvefixvariables(self.model,instance,results.solution(0))
-                    
-            self.solution=results.solution(0)
+
+            results = resolvefixvariables(self.model,instance)
+
+            solution=results.solution(0)
 
             if solver=='glpk':
-                self.objective = self.solution.objective['objective']['Value']
+                self.objective = solution.objective['objective']['Value']
             else: 
-                try: self.objective = self.solution.objective['__default_objective__']['Value']
+                try: self.objective = solution.objective['__default_objective__']['Value']
                 except AttributeError: 
-                    logging.warning('could not get objective value from solver.')
+                    logging.error('could not get objective value from solver.')
                     self.objective=0
+<<<<<<< HEAD
             
 
             self.constraints = instance.active_components(pyomo.Constraint)
@@ -144,6 +160,14 @@ if optimization_package=='coopr':
         def dual(self,constraintname,index=None):
             return self.constraints[constraintname][index].dual
 >>>>>>> duals now working. variable value structure changed for coopr.
+=======
+
+            self.constraints = instance.active_components(pyomo.Constraint)
+            self.variables =  instance.active_components(pyomo.Var)
+
+            return 
+
+>>>>>>> working coopr and pulp mix
         def __getattr__(self,name):
             try: return getattr(self.model,name)
             except AttributeError:
@@ -151,6 +175,7 @@ if optimization_package=='coopr':
                 msg='the model has no variable/constraint/attribute named "{n}"'.format(n=name)
                 raise AttributeError(msg)
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     def value(var,solution=None):
 =======
@@ -161,30 +186,26 @@ if optimization_package=='coopr':
 =======
     def value(var,problem=None):
 >>>>>>> duals now working. variable value structure changed for coopr.
+=======
+    def value(variable,problem=None):
+>>>>>>> working coopr and pulp mix
         '''value of an optimization variable'''
-        if problem is None: return var
-        
-        try: varname=var.name
-        except AttributeError: 
-            return var #just a number
-        
-        try: return problem.variables[varname].value
-        except AttributeError:
-            print varname
-            raise
-    def dual(constraintname,problem):
-        '''dual value of an optimization constraint'''
-        try: return problem.dual(constraintname)
-        except AttributeError: return 0
+        if problem is None: return variable #just a number
+
+        try: varname=variable.name
+        except AttributeError: return variable #just a number
+
+        return problem.variables[varname].value
 
     def sumVars(variables): return sum(variables)
     def newProblem(): return Problem()
     def newVar(name='',kind='Continuous',low=-1000000,high=1000000):
         '''create an optimization variable'''
-        
-        kindmap = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean)
+
+        kindmap = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyomo.Boolean)
         return pyomo.Var(name=name,bounds=(low,high),domain=kindmap[kind])
     def solve(problem,solver=config.optimization_solver): return problem.solve(solver)
+
 
 elif optimization_package=='pulp':
     class Problem(pulp.LpProblem):
@@ -193,29 +214,34 @@ elif optimization_package=='pulp':
         def addObjective(self,expression,name='objective'):
             '''add an objective to the problem'''
             self+=expression,name
-        def newVar(self,*args,**kwargs):
-            #low=-float('inf'),high=float('inf')):
-            '''create an optimization variable'''
-            return newVar(*args,**kwargs)
+        def addVar(self,var):
+            #no need to add variables to the model for puLP
+            pass
         def addConstraints(self, constraintsD):
             '''add a dictionary of constraints (keyed by name) to the problem'''
             try:
-                for name,val in constraintsD.iteritems(): self=addConstraint(self,val,name)
+                for name,expression in constraintsD.iteritems(): self.addConstraint(expression,name)
             except AttributeError:
                 if constraintsD is None: pass
                 else: raise AttributeError('addConstraints takes a dictionary of constraints argument')
+            
+        def dual(self,constraintname,default=0):
+            '''dual value of an optimization constraint'''
+            constraint=self.constraints[constraintname]
+            try: return constraint.pi
+            except AttributeError:
+                logging.debug('Duals information not supported by GLPK.')
+                return default
 
         def write(self,filename):
             '''write the problem to a human-readable file'''
             self.writeLP(filename)
-        def statusText(self):
-            '''solution status of the problem'''
-            return pulp.LpStatus[self.status]
         def save(self,filename='problem.dat'):
             from yaml import dump
             with open(filename, 'w+') as file: dump(self, file)
 
 
+<<<<<<< HEAD
     def solve(problem,solver='cplex'):
         '''solve the optimization problem'''
         logging.info('Solving with {s} ... '.format(s=solver))
@@ -252,15 +278,12 @@ elif optimization_package=='pulp':
 >>>>>>> prep. for merge. added coin solver to optimization. added write problem option to solve.
         return out
     def value(variable):
+=======
+    def value(variable,problem=None):
+>>>>>>> working coopr and pulp mix
         '''value of an optimization variable'''
         try: return pulp.value(variable)
         except AttributeError: return variable
-    def dual(constraint,default=None):
-        '''dual value of an optimization constraint'''
-        try: return constraint.pi
-        except AttributeError:
-            logging.warning('Duals information not supported by GLPK.')
-            return default
 
     def sumVars(variables):
         '''sums a list of optimization variables'''
@@ -268,15 +291,35 @@ elif optimization_package=='pulp':
     def newProblem(name='problem',kind=pulp.LpMinimize):
         '''create a new problem'''
         return Problem(name=name,sense=kind)
-    def addConstraint(problem,expression,name=''):
-        '''add a single constraint to the problem'''
-        problem+=expression,name
-        return problem
     def newVar(name='',kind='Continuous',low=-1000000,high=1000000):
         '''create an optimization variable'''
         #note that if binary variable, pulp will reset the bounds to (0,1)
         #note that if using glpk, bounds of -inf and inf produces error
         return pulp.LpVariable(name=name,cat=kind,lowBound=low,upBound=high)
+
+    def solve(problem,solver=config.optimization_solver):
+        '''solve the optimization problem'''
+        logging.info('Solving with {s} ... '.format(s=solver))
+        solvermap = dict(
+            glpk=pulp.GLPK_CMD,
+            cplex=pulp.CPLEX_CMD,
+            gurobi=pulp.GUROBI,
+            coin=pulp.pulp.COINMP_DLL,
+            )
+
+        try: out=problem.solve(solvermap[solver.lower()](msg=0))
+        except pulp.solvers.PulpSolverError:
+            problem.status=0
+            out=None
+
+        problem.statusText=pulp.LpStatus[problem.status]
+        if problem.status:
+            logging.info('{stat} in {time:0.4f} sec'.format(
+                stat=problem.statusText,
+                time=problem.solutionTime))
+        #else: logging.warning(problem.statusText())
+
+        return out
 
 class OptimizationError(Exception):
     def __init__(self, ivalue):

@@ -78,7 +78,7 @@ def create_problem(buses,lines,times,load_shedding_allowed=False):
             for time in times: costs.append(gen.cost(time))
 
         for load in bus.loads:
-            load.add_timevars(times,shedding_allowed=load_shedding_allowed)
+            problemvars.extend(load.add_timevars(times,shedding_allowed=load_shedding_allowed))
             prob.addConstraints(load.constraints(times))
             for time in times: costs.append(-1*load.benifit(time))
             
@@ -87,6 +87,7 @@ def create_problem(buses,lines,times,load_shedding_allowed=False):
         prob.addConstraints(line.constraints(times,buses))
                     
     for bus in buses:
+        problemvars.extend(bus.add_timevars(times))
         prob.addConstraints(bus.constraints(times,Bmatrix,buses))
         
     prob.addObjective( optimization.sumVars(costs) )
@@ -167,7 +168,7 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
             optimization.solve(stageproblem)
             
         if stageproblem.status==1:
-            get_finalconditions(buses,t_stage)
+            get_finalconditions(buses,t_stage,stageproblem)
             stage_sln=results.get_stage_solution(stageproblem,buses,t_stage)
             problemsL.append(stage_sln)
             

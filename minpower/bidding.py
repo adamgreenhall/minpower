@@ -3,7 +3,16 @@ from optimization import *
 from config import default_num_breakpoints
 
 from scipy import linspace, polyval, polyder, interp, poly1d
+<<<<<<< HEAD
 #from pylab import plot,show,savefig,xlabel,ylabel
+=======
+
+import matplotlib
+#from sys import platform as osname
+#if osname=='darwin': matplotlib.use('macosx') #avoid popups when using matploblib to savefig on MacOSX
+from pylab import plot,show,savefig,xlabel,ylabel
+
+>>>>>>> working coopr and pulp mix
 import re
 import logging
 
@@ -129,7 +138,15 @@ class PWLmodel(object):
         :returns: a dictionary of constraints
         """
         constraints=dict()
+        #coopr doesnt understand constraint==True
+        try: status = (status if not status==True else 1.0 ) 
+        except ValueError: status=status #need this hack for resolve
         constraints['oneActiveSegment '+iden]= ( sumVars(S)== status )
+        #print type(sumVars(S))
+        #print [s for s in S]
+        #print status
+        #barf
+        
         constraints['fractionSums '+iden] =    ( sumVars(F) == status )
         constraints['computeInput '+iden] =    ( inputVar == sumVars( elementwiseMultiply(F,self.bpInputs) ) )
         constraints['firstSegment '+iden]    = ( F[0]<=S[0] )

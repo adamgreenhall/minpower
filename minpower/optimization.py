@@ -37,6 +37,7 @@ if optimization_package=='coopr':
             '''add a single variable to the problem'''
             try: setattr(self.model, var.name, var)
             except AttributeError: pass #just a number, don't add to vars
+
         def addConstraints(self,constraintsD):
             '''add a dictionary of constraints (keyed by name) to the problem'''
             try:
@@ -113,7 +114,8 @@ if optimization_package=='coopr':
             results = resolvefixvariables(self.model,instance)
 
             solution=results.solution(0)
-
+            
+            #need to fix this to depend on result, not solution object
             if solver=='glpk':
                 self.objective = solution.objective['objective']['Value']
             else: 

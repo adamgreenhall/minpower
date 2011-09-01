@@ -182,7 +182,44 @@ class PWLmodel(object):
         if texstr[0]=='+': texstr=texstr[1:]
         return texstr
 
-#ADD linear model for bids
+
+class betterPWLmodel(object):
+    def __init__(self,
+        polyText='2+10P+0.1P^2',multiplier=1,
+        minInput=0,maxInput=10000,
+        numBreakpoints=default_num_breakpoints,
+        inputNm='x',outputNm='y'):
+        
+        def linear_equation(x,m,b): return m*x+b
+        def make_lineareq(x1,y1,x2,y2):
+            m=(y2-y1)/(x2-y1)
+            b=y1-x1*m
+            return lambda x: linear_equation(x,m,b)
+        
+        vars(self).update(locals()) #set the input vars above to be part of class
+        self.polyCurve=multiplier * parsePolynomial(polyText) #parse curve
+        inDiscrete=linspace(self.minInput, self.maxInput, 1e6) #fine discretization of the curve
+        outDiscrete=polyval(self.polyCurve,inDiscrete)
+        self.bpInputs = linspace(self.minInput, self.maxInput, self.numBreakpoints) #interpolation to get pwl breakpoints
+        self.bpOutputs= interp(self.bpInputs,inDiscrete,outDiscrete)
+        self.segment_lines=[]
+        for b,x1 in enumerate(self.bpInputs[:-1]):
+            x2,y2=self.bpInputs[b+1],self.bpOutputs[b+1]
+            y1=self.bpOutputs[b]
+            self.segment_lines.append(make_lineareq(x1,y1,x2,y2))
+        
+    def add_timevars(self,iden):
+        self.cost = newVar(name='bidCost_'+self.iden, low=min(self.bpOutputs), high=max(self.bpOutputs))
+    def constraints(self,iden,inputVar,**kwargs):
+        constraints=dict()
+        
+        for b,line in enumerate(self.segment_lines): 
+            constraints['cost_linearized_{}_b{}'.format(self.iden,b)]= self.cost >= line(inputVar)
+        return constraints
+    def output(self,F=None,inputVar=None): return self.cost
+    def trueOutput(self,input): return polyval( self.polyCurve,         value(input) )
+    def incOutput(self,input):  return polyval( polyder(self.polyCurve),value(input) )
+    
 class LinearModel(PWLmodel):
     def __init__(self,
         polyText='2+10P+0.1P^2',multiplier=1,

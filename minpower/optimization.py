@@ -9,6 +9,7 @@ if optimization_package=='pulp':
     import pulp
 elif optimization_package=='coopr':
     import coopr.pyomo as pyomo
+    from pyutilib.misc import Options as cooprOptions
     try: from coopr.opt.base import solvers as cooprsolver #for coopr version>3.0.4362
     except ImportError:
         #previous versions of coopr
@@ -51,9 +52,13 @@ if optimization_package=='coopr':
 
             logging.info('Solving with {s} ... '.format(s=solver))
             instance=self.model.create()
+            
+            #alternately you can supposedly set options, quiet doesnt appear to be working.
+            #options=cooprOptions(quiet=True,solver=solver)
+            #results, opt=pyomo.scripting.util.apply_optimizer(options, instance)
+                        
             opt = cooprsolver.SolverFactory(solver)
             results = opt.solve(instance)#, suffixes=['dual'])#,keepFiles=True)
-
             self.statusText = str(results.solver[0]['Termination condition'])
             if not self.statusText =='optimal':
                 logging.warning('problem not solved. Solver terminated with status: "{}"'.format(self.statusText))

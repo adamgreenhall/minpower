@@ -1,4 +1,4 @@
-from commonscripts import elementwiseMultiply,subset
+from commonscripts import elementwiseMultiply,subset,flatten
 from optimization import *
 from config import default_num_breakpoints
 
@@ -55,7 +55,7 @@ class Bid(object):
             status=status,
             iden=self.iden)
     def getvars(self):
-        return [self.segmentsActive,self.fractionsBP]
+        return flatten([self.segmentsActive,self.fractionsBP])
     def update_vars(self,solution):
         self.segmentsActive = [ value(s, solution) for s in self.segmentsActive]
         self.fractionsBP =    [value(f, solution) for f in self.fractionsBP]
@@ -67,7 +67,7 @@ def makeModel(polyText,multiplier=1, **kwargs):
     if isLinear(polyCurve):
         return LinearModel(polyText,multiplier,**kwargs)
     else:
-        return PWLmodel(polyText,multiplier,**kwargs)
+        return betterPWLmodel(polyText,multiplier,**kwargs)
     
         
     
@@ -142,10 +142,6 @@ class PWLmodel(object):
         try: status = (status if not status==True else 1.0 ) 
         except ValueError: status=status #need this hack for resolve
         constraints['oneActiveSegment '+iden]= ( sumVars(S)== status )
-        #print type(sumVars(S))
-        #print [s for s in S]
-        #print status
-        #barf
         
         constraints['fractionSums '+iden] =    ( sumVars(F) == status )
         constraints['computeInput '+iden] =    ( inputVar == sumVars( elementwiseMultiply(F,self.bpInputs) ) )
@@ -183,7 +179,7 @@ class PWLmodel(object):
         return texstr
 
 
-class betterPWLmodel(object):
+class betterPWLmodel(PWLmodel):
     def __init__(self,
         polyText='2+10P+0.1P^2',multiplier=1,
         minInput=0,maxInput=10000,
@@ -209,12 +205,16 @@ class betterPWLmodel(object):
             self.segment_lines.append(make_lineareq(x1,y1,x2,y2))
         
     def add_timevars(self,iden):
-        self.cost = newVar(name='bidCost_'+self.iden, low=min(self.bpOutputs), high=max(self.bpOutputs))
+        self.cost = newVar(name='bidCost_'+iden,high=float(max(self.bpOutputs)))
+        return [self.cost],[]
     def constraints(self,iden,inputVar,**kwargs):
         constraints=dict()
-        
         for b,line in enumerate(self.segment_lines): 
-            constraints['cost_linearized_{}_b{}'.format(self.iden,b)]= self.cost >= line(inputVar)
+            constraints['cost_linearized_{}_b{}'.format(iden,b)]= self.cost >= line(inputVar)
+            #print type(line(inputVar))
+            #print line(5)
+            #raise
+
         return constraints
     def output(self,F=None,inputVar=None): return self.cost
     def trueOutput(self,input): return polyval( self.polyCurve,         value(input) )

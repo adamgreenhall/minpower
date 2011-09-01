@@ -180,7 +180,7 @@ class Generator(object):
             self.bid[time]=bidding.Bid(model=self.costModel,iden=self.iden(time))
             
             allvars.extend([self.power[time]])
-            allvars.extend(flatten(self.bid[time].getvars()))
+            allvars.extend(self.bid[time].getvars())
             if commitment_problem: #UC problem
                 self.u[time]=newVar(name='u_'+iden,kind='Binary')
                 self.startup[time] =newVar(name='su_'+iden,kind='Binary')

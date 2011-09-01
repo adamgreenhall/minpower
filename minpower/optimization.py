@@ -58,7 +58,7 @@ if optimization_package=='coopr':
             logging.info('Solving with {s} ... '.format(s=solver))
             instance=self.model.create()
             opt = cooprsolver.SolverFactory(solver)
-            results = opt.solve(instance, suffixes=['.*'])#,keepFiles=True)
+            results = opt.solve(instance)#, suffixes=['dual'])#,keepFiles=True)
 
             self.statusText = str(results.solver[0]['Termination condition'])
             if not self.statusText =='optimal':
@@ -90,10 +90,14 @@ if optimization_package=='coopr':
                     if isinstance(var.domain, pyomo.base.BooleanSet): var.fixed=True
                 instance.preprocess()
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> working dual resolve. with glpk! need to formulate into the methods.
                 results= opt.solve(instance, suffixes=['.*'])
 =======
                 try: results= opt.solve(instance, suffixes=['.*'])
+=======
+                try: results= opt.solve(instance, suffixes=['dual'])
+>>>>>>> just return duals on resolve (no slack info)
                 except RuntimeError:
                     print 'coopr raised an error in solving. re-trying, with debugging.'
                     results= opt.solve(instance, suffixes=['.*'],keepFiles=True)    

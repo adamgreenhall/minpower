@@ -90,12 +90,15 @@ if optimization_package=='coopr':
                 instance.preprocess()
                 try: results= opt.solve(instance, suffixes=['dual'])
                 except RuntimeError:
-                    print 'coopr raised an error in solving. re-trying, with debugging.'
+                    logging.error('coopr raised an error in solving. keep the files for debugging.')
                     results= opt.solve(instance, suffixes=['.*'],keepFiles=True)    
                 instance.load(results)
                 return instance,results
 
-            instance,results = resolvefixvariables(instance,results)
+            try: instance,results = resolvefixvariables(instance,results)
+            except RuntimeError:
+                logging.error('in re-solving for the duals. the duals will be set to default value.')
+                
                     
             self.objective = results.Solution.objective['objective'].value #instance.active_components(pyomo.Objective)['objective']
             self.constraints = instance.active_components(pyomo.Constraint)

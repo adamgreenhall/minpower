@@ -70,7 +70,7 @@ if optimization_package=='coopr':
             #results, opt=pyomo.scripting.util.apply_optimizer(options, instance)
                         
             opt = cooprsolver.SolverFactory(solver)
-            results = opt.solve(instance)#, suffixes=['dual'])#,keepFiles=True)
+            results = opt.solve(instance,suffixes=['dual'])#, suffixes=['dual'])#,keepFiles=True)
             self.statusText = str(results.solver[0]['Termination condition'])
             if not self.statusText =='optimal':
                 logging.warning('problem not solved. Solver terminated with status: "{}"'.format(self.statusText))
@@ -80,9 +80,10 @@ if optimization_package=='coopr':
                 logging.info('Problem solved.')
 
             #need to fix this up for coopr
-            self.solutionTime = 0
+            self.solutionTime =0 #results.Solver[0]['Wallclock time']
 
             instance.load(results)
+<<<<<<< HEAD
 <<<<<<< HEAD
         
 <<<<<<< HEAD
@@ -95,10 +96,21 @@ if optimization_package=='coopr':
 
             def resolvefixvariables(model,instance):
 >>>>>>> working coopr and pulp mix
+=======
+            
+
+            
+            def resolvefixvariables(instance,results):
+>>>>>>> clean up coopr solve()
                 active_vars= instance.active_components(pyomo.Var)
+                need_to_resolve=False
                 for name,var in active_vars.iteritems():
-                    if isinstance(var.domain, pyomo.base.IntegerSet): var.fixed=True
-                    if isinstance(var.domain, pyomo.base.BooleanSet): var.fixed=True
+                    if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet):
+                        var.fixed=True
+                        need_to_resolve=True
+                
+                if not need_to_resolve: return instance,results
+                logging.info('resolving fixed MIP for duals')
                 instance.preprocess()
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -114,8 +126,9 @@ if optimization_package=='coopr':
                     results= opt.solve(instance, suffixes=['.*'],keepFiles=True)    
 >>>>>>> working coopr and pulp mix
                 instance.load(results)
-                return results
+                return instance,results
 
+<<<<<<< HEAD
             results = resolvefixvariables(self.model,instance)
 
             solution=results.solution(0)
@@ -177,9 +190,14 @@ if optimization_package=='coopr':
             return self.constraints[constraintname][index].dual
 >>>>>>> duals now working. variable value structure changed for coopr.
 =======
+=======
+            instance,results = resolvefixvariables(instance,results)
+>>>>>>> clean up coopr solve()
 
+                    
+            self.objective = results.Solution.objective['objective'].value #instance.active_components(pyomo.Objective)['objective']
             self.constraints = instance.active_components(pyomo.Constraint)
-            self.variables =  instance.active_components(pyomo.Var)
+            self.variables =   instance.active_components(pyomo.Var)
 
             return 
 

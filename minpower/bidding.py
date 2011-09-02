@@ -174,7 +174,7 @@ class betterPWLmodel(PWLmodel):
         
         def linear_equation(x,m,b): return m*x+b
         def make_lineareq(x1,y1,x2,y2):
-            m=(y2-y1)/(x2-y1)
+            m=(y2-y1)/(x2-x1)
             b=y1-x1*m
             return lambda x: linear_equation(x,m,b)
         
@@ -189,7 +189,7 @@ class betterPWLmodel(PWLmodel):
             x2,y2=self.bpInputs[b+1],self.bpOutputs[b+1]
             y1=self.bpOutputs[b]
             self.segment_lines.append(make_lineareq(x1,y1,x2,y2))
-        
+
     def add_timevars(self,iden):
         self.cost = newVar(name='bidCost_'+iden,high=float(max(self.bpOutputs)))
         return [self.cost],[]
@@ -205,7 +205,20 @@ class betterPWLmodel(PWLmodel):
     def output(self,F=None,inputVar=None): return self.cost
     def trueOutput(self,input): return polyval( self.polyCurve,         value(input) )
     def incOutput(self,input):  return polyval( polyder(self.polyCurve),value(input) )
-    
+    def plot(self,P=None,filename=None,showPW=True):
+        inDiscrete=linspace(self.minInput, self.maxInput, 1e6)
+        outDiscrete=polyval(self.polyCurve,inDiscrete)
+        if showPW: 
+            x=linspace(self.minInput, self.maxInput, 1e6)
+            for line in self.segment_lines: plot(x,line(x),'k--') #show piecewise linearization
+        plot(inDiscrete,outDiscrete,'-')                      #show continuous curve
+        xlabel(self.inputNm)
+        ylabel(self.outputNm)
+        if P is not None: plot(P,polyval(self.polyCurve,P), 'o', c=linePlotted.get_color(), markersize=8, linewidth=2, alpha=0.7) 
+        if filename is not None: savefig(filename)
+        else: show()
+        return
+
 class LinearModel(PWLmodel):
     def __init__(self,
         polyText='2+10P+0.1P^2',multiplier=1,

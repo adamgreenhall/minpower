@@ -78,10 +78,12 @@ if optimization_package=='coopr':
             else:
                 self.status=True
                 logging.info('Problem solved.')
-
+            
+                    
+            if not self.status: return
             #need to fix this up for coopr
             self.solutionTime =0 #results.Solver[0]['Wallclock time']
-
+            
             instance.load(results)
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -110,7 +112,7 @@ if optimization_package=='coopr':
                         need_to_resolve=True
                 
                 if not need_to_resolve: return instance,results
-                logging.info('resolving fixed MIP for duals')
+                logging.info('resolving fixed-integer LP for duals')
                 instance.preprocess()
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -192,8 +194,11 @@ if optimization_package=='coopr':
 =======
 =======
             instance,results = resolvefixvariables(instance,results)
+<<<<<<< HEAD
 >>>>>>> clean up coopr solve()
 
+=======
+>>>>>>> dont try to do fixed resolve for infeasible solution
                     
             self.objective = results.Solution.objective['objective'].value #instance.active_components(pyomo.Objective)['objective']
             self.constraints = instance.active_components(pyomo.Constraint)

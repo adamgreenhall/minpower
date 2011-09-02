@@ -20,11 +20,8 @@ def _setup_logging(fn):
     return fn
     
 @_setup_logging
-def problem(datadir='./tests/uc/',
-    outputs=dict(
-        shell=True,problemfile=False,
-        vizualization=True,csv=True),
-    solver=config.optimization_solver):
+def problem(datadir='./tests/uc/',shell=True,problemfile=False,
+        vizualization=True,csv=True,solver=config.optimization_solver):
     
     """ Solve a optimization problem in a directory.
         Problem type is determined from the data.
@@ -40,17 +37,24 @@ def problem(datadir='./tests/uc/',
 
     if times.spanhrs<=24:
         problem=create_problem(buses,lines,times)
-        if outputs['problemfile']: problem.write(joindir(datadir,'problem-formulation.lp'))
+        if problemfile: problem.write(joindir(datadir,'problem-formulation.lp'))
         optimization.solve(problem,solver)
         solution=results.makeSolution(times=times,lines=lines,buses=buses,problem=problem,datadir=datadir)
     else: #split into multi-stage problem
         problemsL,stageTimes=create_problem_multistage(buses,lines,times,datadir)
         solution=results.makeMultistageSolution(problemsL=problemsL,times=times,stageTimes=stageTimes,buses=buses,lines=lines,datadir=datadir)
 
+<<<<<<< HEAD
     logging.info('displaying solution')
     if outputs['shell']: solution.show()
     if outputs['csv']: solution.saveCSV()
     if outputs['vizualization']: solution.vizualization()
+=======
+    
+    if shell: solution.show()
+    if csv: solution.saveCSV()
+    if vizualization: solution.vizualization()
+>>>>>>> option handling now flat input instead of dict
     return solution
 
 def create_problem(buses,lines,times,load_shedding_allowed=False):

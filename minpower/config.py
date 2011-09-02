@@ -68,6 +68,6 @@ cost_loadshedding = 100000000 #$/MWh
 
 default_num_breakpoints=5
 
-optimization_package='coopr'
+optimization_package='coopr' #'pulp'
 
 optimization_solver='glpk'

@@ -124,12 +124,13 @@ if optimization_package=='coopr':
                 try: results= opt.solve(instance, suffixes=['dual'])
 >>>>>>> just return duals on resolve (no slack info)
                 except RuntimeError:
-                    print 'coopr raised an error in solving. re-trying, with debugging.'
+                    logging.error('coopr raised an error in solving. keep the files for debugging.')
                     results= opt.solve(instance, suffixes=['.*'],keepFiles=True)    
 >>>>>>> working coopr and pulp mix
                 instance.load(results)
                 return instance,results
 
+<<<<<<< HEAD
 <<<<<<< HEAD
             results = resolvefixvariables(self.model,instance)
 
@@ -199,6 +200,12 @@ if optimization_package=='coopr':
 
 =======
 >>>>>>> dont try to do fixed resolve for infeasible solution
+=======
+            try: instance,results = resolvefixvariables(instance,results)
+            except RuntimeError:
+                logging.error('in re-solving for the duals. the duals will be set to default value.')
+                
+>>>>>>> if glpk re-solve breaks, just finish without the duals
                     
             self.objective = results.Solution.objective['objective'].value #instance.active_components(pyomo.Objective)['objective']
             self.constraints = instance.active_components(pyomo.Constraint)

@@ -59,7 +59,7 @@ if optimization_package=='coopr':
             #results, opt=pyomo.scripting.util.apply_optimizer(options, instance)
                         
             opt = cooprsolver.SolverFactory(solver)
-            results = opt.solve(instance)#, suffixes=['dual'])#,keepFiles=True)
+            results = opt.solve(instance,suffixes=['dual'])#, suffixes=['dual'])#,keepFiles=True)
             self.statusText = str(results.solver[0]['Termination condition'])
             if not self.statusText =='optimal':
                 logging.warning('problem not solved. Solver terminated with status: "{}"'.format(self.statusText))
@@ -69,39 +69,36 @@ if optimization_package=='coopr':
                 logging.info('Problem solved.')
 
             #need to fix this up for coopr
-            self.solutionTime = 0
+            self.solutionTime =0 #results.Solver[0]['Wallclock time']
 
             instance.load(results)
+            
 
-
-            def resolvefixvariables(model,instance):
+            
+            def resolvefixvariables(instance,results):
                 active_vars= instance.active_components(pyomo.Var)
+                need_to_resolve=False
                 for name,var in active_vars.iteritems():
-                    if isinstance(var.domain, pyomo.base.IntegerSet): var.fixed=True
-                    if isinstance(var.domain, pyomo.base.BooleanSet): var.fixed=True
+                    if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet):
+                        var.fixed=True
+                        need_to_resolve=True
+                
+                if not need_to_resolve: return instance,results
+                logging.info('resolving fixed MIP for duals')
                 instance.preprocess()
                 try: results= opt.solve(instance, suffixes=['dual'])
                 except RuntimeError:
                     print 'coopr raised an error in solving. re-trying, with debugging.'
                     results= opt.solve(instance, suffixes=['.*'],keepFiles=True)    
                 instance.load(results)
-                return results
+                return instance,results
 
-            results = resolvefixvariables(self.model,instance)
+            instance,results = resolvefixvariables(instance,results)
 
-            solution=results.solution(0)
-            
-            #need to fix this to depend on result, not solution object
-            if solver=='glpk':
-                self.objective = solution.objective['objective']['Value']
-            else: 
-                try: self.objective = solution.objective['__default_objective__']['Value']
-                except AttributeError: 
-                    logging.error('could not get objective value from solver.')
-                    self.objective=0
-
+                    
+            self.objective = results.Solution.objective['objective'].value #instance.active_components(pyomo.Objective)['objective']
             self.constraints = instance.active_components(pyomo.Constraint)
-            self.variables =  instance.active_components(pyomo.Var)
+            self.variables =   instance.active_components(pyomo.Var)
 
             return 
 

@@ -1,4 +1,4 @@
-from commonscripts import elementwiseMultiply,subset
+from commonscripts import elementwiseMultiply,subset,flatten
 from optimization import *
 from config import default_num_breakpoints
 
@@ -46,7 +46,7 @@ class Bid(object):
             status=status,
             iden=self.iden)
     def getvars(self):
-        return [self.segmentsActive,self.fractionsBP]
+        return flatten([self.segmentsActive,self.fractionsBP])
     def update_vars(self,solution):
         self.segmentsActive = [ value(s, solution) for s in self.segmentsActive]
         self.fractionsBP =    [value(f, solution) for f in self.fractionsBP]
@@ -58,7 +58,7 @@ def makeModel(polyText,multiplier=1, **kwargs):
     if isLinear(polyCurve):
         return LinearModel(polyText,multiplier,**kwargs)
     else:
-        return PWLmodel(polyText,multiplier,**kwargs)
+        return betterPWLmodel(polyText,multiplier,**kwargs)
     
         
     
@@ -133,10 +133,6 @@ class PWLmodel(object):
         try: status = (status if not status==True else 1.0 ) 
         except ValueError: status=status #need this hack for resolve
         constraints['oneActiveSegment '+iden]= ( sumVars(S)== status )
-        #print type(sumVars(S))
-        #print [s for s in S]
-        #print status
-        #barf
         
         constraints['fractionSums '+iden] =    ( sumVars(F) == status )
         constraints['computeInput '+iden] =    ( inputVar == sumVars( elementwiseMultiply(F,self.bpInputs) ) )
@@ -168,7 +164,61 @@ class PWLmodel(object):
         if texstr[0]=='+': texstr=texstr[1:]
         return texstr
 
-#ADD linear model for bids
+
+class betterPWLmodel(PWLmodel):
+    def __init__(self,
+        polyText='2+10P+0.1P^2',multiplier=1,
+        minInput=0,maxInput=10000,
+        numBreakpoints=default_num_breakpoints,
+        inputNm='x',outputNm='y'):
+        
+        def linear_equation(x,m,b): return m*x+b
+        def make_lineareq(x1,y1,x2,y2):
+            m=(y2-y1)/(x2-x1)
+            b=y1-x1*m
+            return lambda x: linear_equation(x,m,b)
+        
+        vars(self).update(locals()) #set the input vars above to be part of class
+        self.polyCurve=multiplier * parsePolynomial(polyText) #parse curve
+        inDiscrete=linspace(self.minInput, self.maxInput, 1e6) #fine discretization of the curve
+        outDiscrete=polyval(self.polyCurve,inDiscrete)
+        self.bpInputs = linspace(self.minInput, self.maxInput, self.numBreakpoints) #interpolation to get pwl breakpoints
+        self.bpOutputs= interp(self.bpInputs,inDiscrete,outDiscrete)
+        self.segment_lines=[]
+        for b,x1 in enumerate(self.bpInputs[:-1]):
+            x2,y2=self.bpInputs[b+1],self.bpOutputs[b+1]
+            y1=self.bpOutputs[b]
+            self.segment_lines.append(make_lineareq(x1,y1,x2,y2))
+
+    def add_timevars(self,iden):
+        self.cost = newVar(name='bidCost_'+iden,high=float(max(self.bpOutputs)))
+        return [self.cost],[]
+    def constraints(self,iden,inputVar,**kwargs):
+        constraints=dict()
+        for b,line in enumerate(self.segment_lines): 
+            constraints['cost_linearized_{}_b{}'.format(iden,b)]= self.cost >= line(inputVar)
+            #print type(line(inputVar))
+            #print line(5)
+            #raise
+
+        return constraints
+    def output(self,F=None,inputVar=None): return self.cost
+    def trueOutput(self,input): return polyval( self.polyCurve,         value(input) )
+    def incOutput(self,input):  return polyval( polyder(self.polyCurve),value(input) )
+    def plot(self,P=None,filename=None,showPW=True):
+        inDiscrete=linspace(self.minInput, self.maxInput, 1e6)
+        outDiscrete=polyval(self.polyCurve,inDiscrete)
+        if showPW: 
+            x=linspace(self.minInput, self.maxInput, 1e6)
+            for line in self.segment_lines: plot(x,line(x),'k--') #show piecewise linearization
+        plot(inDiscrete,outDiscrete,'-')                      #show continuous curve
+        xlabel(self.inputNm)
+        ylabel(self.outputNm)
+        if P is not None: plot(P,polyval(self.polyCurve,P), 'o', c=linePlotted.get_color(), markersize=8, linewidth=2, alpha=0.7) 
+        if filename is not None: savefig(filename)
+        else: show()
+        return
+
 class LinearModel(PWLmodel):
     def __init__(self,
         polyText='2+10P+0.1P^2',multiplier=1,

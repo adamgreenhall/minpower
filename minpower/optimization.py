@@ -25,12 +25,13 @@ if optimization_package=='coopr':
             self.model=pyomo.ConcreteModel()
             self.solved=False
         def addObjective(self,expression,sense=pyomo.minimize):
-            '''add an objective to the problem'''
-            self.model.objective=pyomo.Objective(rule=expression,sense=sense)
+            '''add an objective to the problem'''            
+            self.model.objective=pyomo.Objective(name='objective',rule=expression,sense=sense)
         def addVar(self,var):
             '''add a single variable to the problem'''
             try: setattr(self.model, var.name, var)
             except AttributeError: pass #just a number, don't add to vars
+
         def addConstraints(self,constraintsD):
             '''add a dictionary of constraints (keyed by name) to the problem'''
             try:
@@ -89,7 +90,8 @@ if optimization_package=='coopr':
             results = resolvefixvariables(self.model,instance)
 
             solution=results.solution(0)
-
+            
+            #need to fix this to depend on result, not solution object
             if solver=='glpk':
                 self.objective = solution.objective['objective']['Value']
             else: 

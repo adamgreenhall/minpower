@@ -319,7 +319,7 @@ class Line(object):
             iden = self.iden(t)
             busNames=getattrL(buses,'name')
             iFrom,iTo=busNames.index(self.From),busNames.index(self.To)
-            constraints['lineFlow '+iden]=     self.P[t] == (1/self.X) * sumVars([ buses[iFrom].angle[t],-1*buses[iTo].angle[t] ])
+            constraints['lineFlow_'+iden]=     self.P[t] == (1/self.X) * sumVars([ buses[iFrom].angle[t],-1*buses[iTo].angle[t] ])
             constraints['lineLimitHi_'+iden]=  self.P[t]<=self.Pmax
             constraints['lineLimitLow_'+iden]= self.Pmin<=self.P[t]
         return constraints
@@ -329,7 +329,7 @@ class Line(object):
     def iden(self,t): return str(self)+str(t)
     def getprice(self,time,problem):
         #get congestion price on line
-        return problem.dual('lineLimitHi_'+self.iden(time))+problem.dual('lineLimitLow_'+self.iden(time))    
+        return problem.dual('lineFlow_'+self.iden(time)) #problem.dual('lineLimitHi_'+self.iden(time))+problem.dual('lineLimitLow_'+self.iden(time))    
 class Bus(object):
     """
     Describes a bus (usually a substation where one or more

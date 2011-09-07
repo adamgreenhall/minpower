@@ -202,9 +202,8 @@ class Generator(object):
                 self.u[time]=value(self.u[time],problem)
                 self.startup[time] =value(self.startup[time],problem)
                 self.shutdown[time]=value(self.shutdown[time],problem)
-            
         
-        
+<<<<<<< HEAD
 =======
     def fix_timevars(self,times):
         for time in times:
@@ -214,6 +213,13 @@ class Generator(object):
             self.shutdown[time]=value(self.shutdown[time])==1
         else: self.bid={} #wipe bid info - no longer needed
 >>>>>>> added load shedding to insure feasibility
+=======
+            
+    def fix_vars(self,times,problem):
+        self.update_vars(times,problem)
+        self.bid={} #wipe bid info - no longer needed
+
+>>>>>>> changed fix_timevars to fix_vars in Generator(). fixed reporting on load shedding.
     def plotCostCurve(self,P=None,filename=None): self.costModel.plot(P,filename)
     def setInitialCondition(self,time=None, P=None, u=True, hoursinstatus=100):
         if P is None: P=(self.Pmax-self.Pmin)/2 #set default power as median output
@@ -441,9 +447,12 @@ class Load(object):
     def update_vars(self,times,problem):
         for t in times: self.dispatched_power[t]=value(self.dispatched_power[t],problem)
 
+<<<<<<< HEAD
     def fix_timevars(self,times=None):
         for t in times: self.dispatched_power[t]=value(self.dispatched_power[t])
 >>>>>>> added load shedding to insure feasibility
+=======
+>>>>>>> changed fix_timevars to fix_vars in Generator(). fixed reporting on load shedding.
     def constraints(self,*args): return #no constraints
     
 class Load_Fixed(Load):

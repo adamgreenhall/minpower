@@ -76,11 +76,11 @@ if optimization_package=='coopr':
                 )
             current_log_level = logging.getLogger().getEffectiveLevel()      
                         
-            def cooprsolve(instance,opt=None):
+            def cooprsolve(instance,opt=None,suffixes=['dual'],keepFiles=False):
                 logging.getLogger().setLevel(logging.WARNING)
                 if opt is None: opt = cooprsolver.SolverFactory(solver)
                 start = time.time()
-                results= opt.solve(instance,suffixes=['dual'])#,keepFiles=True)
+                results= opt.solve(instance,suffixes,keepFiles)
                 #results,opt=cooprUtil.apply_optimizer(options,instance)
                 elapsed = (time.time() - start)
                 logging.getLogger().setLevel(current_log_level)
@@ -153,8 +153,12 @@ if optimization_package=='coopr':
 >>>>>>> better logging w. coopr, solve time, solver calls. changed line dual to be its flow constraint. better logging level for testall.
                 except RuntimeError:
                     logging.error('coopr raised an error in solving. keep the files for debugging.')
+<<<<<<< HEAD
                     results= opt.solve(instance, suffixes=['.*'],keepFiles=True)    
 >>>>>>> working coopr and pulp mix
+=======
+                    results= cooprsolve(instance, keepFiles=True)    
+>>>>>>> changed fix_timevars to fix_vars in Generator(). fixed reporting on load shedding.
                 instance.load(results)
                 return instance,results
 

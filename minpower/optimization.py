@@ -10,12 +10,13 @@ if optimization_package=='pulp':
 elif optimization_package=='coopr':
     import coopr.pyomo as pyomo
     from pyutilib.misc import Options as cooprOptions
+    import coopr.pyomo.scripting.util as cooprUtil
     try: from coopr.opt.base import solvers as cooprsolver #for coopr version>3.0.4362
     except ImportError:
         #previous versions of coopr
         from coopr.opt.base import solver as cooprsolver
 else: raise ImportError('optimization library must be coopr or pulp.')
-import logging
+import logging,time
 import config
 
 if optimization_package=='coopr':
@@ -62,27 +63,48 @@ if optimization_package=='coopr':
             ''' solve the optimization problem.
                 valid solvers are {cplex,gurobi,glpk}'''
 
-            logging.info('Solving with {s} ... '.format(s=solver))
-            instance=self.model.create()
             
             #alternately you can supposedly set options, quiet doesnt appear to be working.
-            #options=cooprOptions(quiet=True,solver=solver)
-            #results, opt=pyomo.scripting.util.apply_optimizer(options, instance)
+            options=cooprOptions(
+                quiet=True,
+                solver=solver,
+                #suffix='dual',
+                #solver_suffix='dual',
+                #keepFiles=True,
+                #solver_options=['change problem fixed'],
+                suffixes=['dual'],
+                )
+            current_log_level = logging.getLogger().getEffectiveLevel()      
                         
-            opt = cooprsolver.SolverFactory(solver)
-            results = opt.solve(instance,suffixes=['dual'])#, suffixes=['dual'])#,keepFiles=True)
+            def cooprsolve(instance,opt=None):
+                logging.getLogger().setLevel(logging.WARNING)
+                if opt is None: opt = cooprsolver.SolverFactory(solver)
+                start = time.time()
+                results= opt.solve(instance,suffixes=['dual']) #,keepFiles=True)
+                #results,opt=cooprUtil.apply_optimizer(options,instance)
+                elapsed = (time.time() - start)
+                logging.getLogger().setLevel(current_log_level)
+                return results,elapsed
+            
+            
+            logging.info('Solving with {s} ... '.format(s=solver))
+            instance=self.model.create()
+                 
+            results,elapsed=cooprsolve(instance)
+            
             self.statusText = str(results.solver[0]['Termination condition'])
             if not self.statusText =='optimal':
                 logging.warning('problem not solved. Solver terminated with status: "{}"'.format(self.statusText))
                 self.status=False
             else:
                 self.status=True
-                logging.info('Problem solved.')
+                self.solutionTime =elapsed #results.Solver[0]['Wallclock time']
+                logging.info('Problem solved in {}s.'.format(self.solutionTime)) #('Problem solved.')
             
                     
             if not self.status: return
             #need to fix this up for coopr
-            self.solutionTime =0 #results.Solver[0]['Wallclock time']
+            
             
             instance.load(results)
 <<<<<<< HEAD
@@ -116,6 +138,7 @@ if optimization_package=='coopr':
                 instance.preprocess()
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> working dual resolve. with glpk! need to formulate into the methods.
                 results= opt.solve(instance, suffixes=['.*'])
 =======
@@ -123,6 +146,11 @@ if optimization_package=='coopr':
 =======
                 try: results= opt.solve(instance, suffixes=['dual'])
 >>>>>>> just return duals on resolve (no slack info)
+=======
+                try:
+                    results,elapsed=cooprsolve(instance)
+                    self.solutionTime+=elapsed
+>>>>>>> better logging w. coopr, solve time, solver calls. changed line dual to be its flow constraint. better logging level for testall.
                 except RuntimeError:
                     logging.error('coopr raised an error in solving. keep the files for debugging.')
                     results= opt.solve(instance, suffixes=['.*'],keepFiles=True)    
@@ -207,7 +235,10 @@ if optimization_package=='coopr':
                 
 >>>>>>> if glpk re-solve breaks, just finish without the duals
                     
-            self.objective = results.Solution.objective['objective'].value #instance.active_components(pyomo.Objective)['objective']
+            try: self.objective = results.Solution.objective['objective'].value #instance.active_components(pyomo.Objective)['objective']
+            except AttributeError:
+                self.objective = results.Solution.objective['__default_objective__'].value
+                
             self.constraints = instance.active_components(pyomo.Constraint)
             self.variables =   instance.active_components(pyomo.Var)
 

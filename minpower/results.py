@@ -477,7 +477,7 @@ class Solution_multistageUC(Solution_UC):
     def calcCosts(self):
         self.fuelcost_generation=float(sum( [p['fuelcost_generation'] for p in self.problemsL] ))
         self.truecost_generation=float(sum( [p['truecost_generation'] for p in self.problemsL] ))
-        self.load_shed=float(sum( [p['load_shed'] for p in self.problemsL] ))
+        self.load_shed=float(sum( [value(p['load_shed']) for p in self.problemsL] ))
         try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
         except ZeroDivisionError: self.costerror=0       
     def calcPrices(self):    

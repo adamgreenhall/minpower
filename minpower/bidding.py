@@ -99,7 +99,7 @@ class PWLmodel(object):
         self.bpInputs = linspace(self.minInput, self.maxInput, self.numBreakpoints) #interpolation to get pwl breakpoints
         self.bpOutputs= interp(self.bpInputs,inDiscrete,outDiscrete)
         self.segments=range(1,len(self.bpInputs))
-
+        
     def plot(self,P=None,filename=None,showPW=True):
         inDiscrete=linspace(self.minInput, self.maxInput, 1e6)
         outDiscrete=polyval(self.polyCurve,inDiscrete)
@@ -203,7 +203,7 @@ class betterPWLmodel(PWLmodel):
             x2,y2=self.bpInputs[b+1],self.bpOutputs[b+1]
             y1=self.bpOutputs[b]
             self.segment_lines.append(make_lineareq(x1,y1,x2,y2))
-
+        
     def add_timevars(self,iden):
         self.cost = newVar(name='bidCost_'+iden,high=float(max(self.bpOutputs)))
         return [self.cost],[]

@@ -65,11 +65,11 @@ if optimization_package=='coopr':
                 )
             current_log_level = logging.getLogger().getEffectiveLevel()      
                         
-            def cooprsolve(instance,opt=None):
+            def cooprsolve(instance,opt=None,suffixes=['dual'],keepFiles=False):
                 logging.getLogger().setLevel(logging.WARNING)
                 if opt is None: opt = cooprsolver.SolverFactory(solver)
                 start = time.time()
-                results= opt.solve(instance,suffixes=['dual'])#,keepFiles=True)
+                results= opt.solve(instance,suffixes,keepFiles)
                 #results,opt=cooprUtil.apply_optimizer(options,instance)
                 elapsed = (time.time() - start)
                 logging.getLogger().setLevel(current_log_level)
@@ -115,7 +115,7 @@ if optimization_package=='coopr':
                     self.solutionTime+=elapsed
                 except RuntimeError:
                     logging.error('coopr raised an error in solving. keep the files for debugging.')
-                    results= opt.solve(instance, suffixes=['.*'],keepFiles=True)    
+                    results= cooprsolve(instance, keepFiles=True)    
                 instance.load(results)
                 return instance,results
 

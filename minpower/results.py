@@ -429,15 +429,17 @@ def get_stage_solution(problem,buses,times):
     solution['fuelcost_generation']=sum(flatten(flatten([[[value(gen.operatingcost(t)) for t in times] for gen in bus.generators] for bus in buses]) ))
     solution['truecost_generation']=sum(flatten(flatten([[[value(gen.truecost(t))      for t in times] for gen in bus.generators] for bus in buses]) ))
     solution['load_shed']=0
+
+    #reduce memory by setting variables to their value (instead of pulp object)
+    for bus in buses:
+        for gen in bus.generators: gen.fix_vars(times,problem)
+        for load in bus.loads: load.update_vars(times,problem)
     
     for t in times:
         sln=dict()
         for bus in buses: 
             sln['price_'+bus.iden(t)]=bus.getprice(t,problem)
-            #reduce memory by setting variables to their value (instead of pulp object)
-            if t==times[0]:
-                for gen in bus.generators: gen.fix_timevars(times)
-                for load in bus.loads: load.fix_timevars(times)
+            
             for load in bus.loads:
                 shed=load.shed(t)
                 if shed: 

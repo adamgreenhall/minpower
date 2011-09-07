@@ -197,7 +197,7 @@ class betterPWLmodel(PWLmodel):
     def constraints(self,S,F,inputVar,status,iden):
         constraints=dict()
         for b,line in enumerate(self.segment_lines): 
-            constraints['cost_linearized_{}_b{}'.format(iden,b)]= self.cost >= status*line(inputVar)
+            constraints['cost_linearized_{}_b{}'.format(iden,b)]= self.cost >= line(inputVar)
             #print type(line(inputVar))
             #print line(5)
             #raise

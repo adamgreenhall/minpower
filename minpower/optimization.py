@@ -80,7 +80,7 @@ if optimization_package=='coopr':
                 logging.getLogger().setLevel(logging.WARNING)
                 if opt is None: opt = cooprsolver.SolverFactory(solver)
                 start = time.time()
-                results= opt.solve(instance,suffixes=['dual']) #,keepFiles=True)
+                results= opt.solve(instance,suffixes=['dual'])#,keepFiles=True)
                 #results,opt=cooprUtil.apply_optimizer(options,instance)
                 elapsed = (time.time() - start)
                 logging.getLogger().setLevel(current_log_level)

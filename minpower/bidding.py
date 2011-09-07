@@ -36,8 +36,13 @@ class Bid(object):
     def output(self,solution=None): return self.model.output(self.fractionsBP,solution)
 =======
         self.segmentsActive,self.fractionsBP=self.model.add_timevars(self.iden)
+<<<<<<< HEAD
     def output(self,inputVar): return self.model.output(self.fractionsBP,inputVar)
 >>>>>>> added linear bid model. much cleaner formulation.
+=======
+    def output(self,inputVar): 
+        return self.model.output(self.fractionsBP,inputVar)
+>>>>>>> add status to the new linearization constraints
     def trueOutput(self,input): return self.model.trueOutput(input)
     def incOutput(self,input):  return self.model.incOutput(input)
     def plotDeriv(self,**kwargs): return self.model.plotDeriv(**kwargs)
@@ -207,10 +212,10 @@ class betterPWLmodel(PWLmodel):
     def add_timevars(self,iden):
         self.cost = newVar(name='bidCost_'+iden,high=float(max(self.bpOutputs)))
         return [self.cost],[]
-    def constraints(self,iden,inputVar,**kwargs):
+    def constraints(self,S,F,inputVar,status,iden):
         constraints=dict()
         for b,line in enumerate(self.segment_lines): 
-            constraints['cost_linearized_{}_b{}'.format(iden,b)]= self.cost >= line(inputVar)
+            constraints['cost_linearized_{}_b{}'.format(iden,b)]= self.cost >= status*line(inputVar)
             #print type(line(inputVar))
             #print line(5)
             #raise

@@ -149,13 +149,13 @@ class Generator(object):
             if value(self.u[times.initialTime]) == status: h+=self.initialStatusHours
             return h
         
-    def add_timevars(self,times):
+    def add_timevars(self,times,dispatch_decommit_allowed=False):
         '''set up dicts for time-varying optimization variables
         (power,u,startup,shutdown,bid)
         '''
         
         allvars=[]
-        commitment_problem= len(times)>1
+        commitment_problem= len(times)>1 or dispatch_decommit_allowed
         for time in times:    
             iden=self.iden(time)
             self.power[time]=newVar(name='P_'+iden,low=self.Pmin,high=self.Pmax)
@@ -168,21 +168,21 @@ class Generator(object):
                 self.startup[time] =newVar(name='su_'+iden,kind='Binary')
                 self.shutdown[time]=newVar(name='sd_'+iden,kind='Binary')
                 allvars.extend([self.u[time],self.startup[time],self.shutdown[time]])
-            else: #ED or OPF problem - no commitments
+            else: #ED or OPF problem, no commitments
                 self.u[time]=True
                 self.startup[time]=False
                 self.shutdown[time]=False
         return allvars
     
     def update_vars(self,times,problem):
-        commitment_problem= len(times)>1
+        #commitment_problem= len(times)>1
         for time in times:
             self.power[time] = value(self.power[time],problem)
             self.bid[time].update_vars(problem)
-            if commitment_problem: #UC problem
-                self.u[time]=value(self.u[time],problem)
-                self.startup[time] =value(self.startup[time],problem)
-                self.shutdown[time]=value(self.shutdown[time],problem)
+            #if commitment_problem: #UC problem
+            self.u[time]=value(self.u[time],problem)
+            self.startup[time] =value(self.startup[time],problem)
+            self.shutdown[time]=value(self.shutdown[time],problem)
         
             
     def fix_vars(self,times,problem):
@@ -202,7 +202,9 @@ class Generator(object):
         '''create the optimization constraints for a generator over all times'''
         constraintsD=dict()
         
-        if len(times)>1:
+        commitment_problem= len(times)>1
+                
+        if commitment_problem:
             iden='{g}_init'.format(g=str(self))
             #initial time
             tInitial = times.initialTime
@@ -225,7 +227,10 @@ class Generator(object):
             constraintsD['rampingLimHi_'+iden]=                     self.P(times[0]) - self.P(tInitial) <= self.rampratemax
             constraintsD['rampingLimLo_'+iden]= self.rampratemin <=     self.P(times[0]) - self.P(tInitial)
         else: #fix status for ED,OPF problems
-            if not self.u[times[0]]==False: self.u[times[0]]=True
+            if self.u[times[0]].value is None: pass #variable because dispatch_decommit_allowed
+            elif self.u[times[0]]==False: pass #gen is off for dispatch period
+            else: self.u[times[0]]=True #fix status
+                
         
         for t,time in enumerate(times):
             iden=self.iden(time)

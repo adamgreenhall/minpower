@@ -92,6 +92,7 @@ class Timelist(object):
         else: self.initialTime = Time(Start=self.Start-self.interval, interval=self.interval)
         self.wInitial = tuple([self.initialTime] + list(self.times))
     def subdivide(self,hrsperdivision=24,hrsinterval=None):
+        ### add offset=0 to this
         """
         Subdivide a list of times into serval lists,  each list
         spanning `hrsperdivision` with intervals of `hrsinterval`.

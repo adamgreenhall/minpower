@@ -28,6 +28,7 @@ if optimization_package=='coopr':
         def addObjective(self,expression,sense=pyomo.minimize):
             '''add an objective to the problem'''            
             self.model.objective=pyomo.Objective(name='objective',rule=expression,sense=sense)
+        def addVariables(self,vars): [self.addVar(v) for v in vars]
         def addVar(self,var):
             '''add a single variable to the problem'''
             try: setattr(self.model, var.name, var)
@@ -66,10 +67,10 @@ if optimization_package=='coopr':
             current_log_level = logging.getLogger().getEffectiveLevel()      
                         
             def cooprsolve(instance,opt=None,suffixes=['dual'],keepFiles=False):
-                logging.getLogger().setLevel(logging.WARNING)
+                if not keepFiles: logging.getLogger().setLevel(logging.WARNING)
                 if opt is None: opt = cooprsolver.SolverFactory(solver)
                 start = time.time()
-                results= opt.solve(instance,suffixes,keepFiles)
+                results= opt.solve(instance,suffixes=suffixes,keepFiles=keepFiles)
                 #results,opt=cooprUtil.apply_optimizer(options,instance)
                 elapsed = (time.time() - start)
                 logging.getLogger().setLevel(current_log_level)

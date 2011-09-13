@@ -82,7 +82,12 @@ if optimization_package=='coopr':
                         
             def cooprsolve(instance,opt=None,suffixes=['dual'],keepFiles=False):
                 if not keepFiles: logging.getLogger().setLevel(logging.WARNING)
-                if opt is None: opt = cooprsolver.SolverFactory(solver)
+                if opt is None: 
+                    opt = cooprsolver.SolverFactory(solver)
+                    if opt is None: 
+                        msg='solver "{}" not found'.format(solver)
+                        raise OptimizationError(msg)
+                
                 start = time.time()
                 results= opt.solve(instance,suffixes=suffixes,keepFiles=keepFiles)
                 #results,opt=cooprUtil.apply_optimizer(options,instance)

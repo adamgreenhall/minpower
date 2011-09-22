@@ -3,6 +3,7 @@ Provide the defaults and data for other modules.
 Specifically, the :class:`~powersystems.Generator` defaults
 are provided by :data:`generator_defaults`.
 """
+import logging
 
 generator_kinds=[
     'generic',
@@ -71,3 +72,4 @@ default_num_breakpoints=10
 optimization_package='coopr' #'pulp'
 
 optimization_solver='glpk'
+logging_level= logging.DEBUG

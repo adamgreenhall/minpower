@@ -66,7 +66,7 @@ if optimization_package=='coopr':
                 )
             current_log_level = logging.getLogger().getEffectiveLevel()      
                         
-            def cooprsolve(instance,opt=None,suffixes=['dual'],keepFiles=False):
+            def cooprsolve(instance,opt=None,suffixes=['dual'],keepFiles=True):
                 if not keepFiles: logging.getLogger().setLevel(logging.WARNING)
                 if opt is None: 
                     opt = cooprsolver.SolverFactory(solver)
@@ -231,6 +231,7 @@ elif optimization_package=='pulp':
             out=None
 
         problem.statusText=pulp.LpStatus[problem.status]
+        #print logging.getLogger().getEffectiveLevel()
         if problem.status:
             logging.info('{stat} in {time:0.4f} sec'.format(
                 stat=problem.statusText,

@@ -16,13 +16,14 @@ from commonscripts import joindir,flatten
   
 def _setup_logging(fn):
     ''' set up the logging to report on the status'''
-    logging.basicConfig( level=logging.INFO, format='%(levelname)s: %(message)s')
+    logging.basicConfig( level=config.logging_level, format='%(levelname)s: %(message)s')
     return fn
     
 @_setup_logging
 def problem(datadir='./tests/uc/',shell=True,problemfile=False,
         vizualization=True,csv=True,solver=config.optimization_solver):
-    
+    print logging.getLogger().getEffectiveLevel()
+    print config.logging_level
     """ Solve a optimization problem in a directory.
         Problem type is determined from the data.
             

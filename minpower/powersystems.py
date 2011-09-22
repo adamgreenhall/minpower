@@ -258,9 +258,12 @@ class Generator(object):
             constraintsD['rampingLimHi_'+iden]=                     self.P(times[0]) - self.P(tInitial) <= self.rampratemax
             constraintsD['rampingLimLo_'+iden]= self.rampratemin <=     self.P(times[0]) - self.P(tInitial)
         else: #fix status for ED,OPF problems
-            if self.u[times[0]].value is None: pass #variable because dispatch_decommit_allowed
-            elif self.u[times[0]]==False: pass #gen is off for dispatch period
-            else: self.u[times[0]]=True #fix status
+            if self.u[times[0]] in (True, False):
+                pass #gen status has vahas dispatch period
+            elif self.u[times[0]].value is None: 
+                pass #variable because dispatch_decommit_allowed
+            else: 
+                raise TypeError
                 
         
         for t,time in enumerate(times):

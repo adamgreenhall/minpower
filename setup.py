@@ -24,7 +24,14 @@ setup(
         'scripts/minpower',
         ],
     
-    
+    install_requires=[
+        'pulp',
+        'coopr',
+        'numpy',
+        'matplotlib',
+        'networkx',
+        'python-dateutil',
+        ],
     
     classifiers = [    
         "Development Status :: 3 - Alpha",

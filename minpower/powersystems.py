@@ -259,7 +259,7 @@ class Generator(object):
             constraintsD['rampingLimLo_'+iden]= self.rampratemin <=     self.P(times[0]) - self.P(tInitial)
         else: #fix status for ED,OPF problems
             if self.u[times[0]] in (True, False):
-                pass #gen status has vahas dispatch period
+                pass #gen status fixed for dispatch period
             elif self.u[times[0]].value is None: 
                 pass #variable because dispatch_decommit_allowed
             else: 

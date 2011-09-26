@@ -72,4 +72,4 @@ default_num_breakpoints=5
 optimization_package='coopr' #'pulp'
 
 optimization_solver='glpk'
-logging_level= logging.DEBUG
+logging_level= logging.INFO

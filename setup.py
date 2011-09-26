@@ -19,6 +19,13 @@ setup(
     url = "http://minpowertoolkit.com/",
     download_url = "http://minpowertoolkit.com/minpower-0.0.1.tgz",
     keywords = ["power systems","optimization",""],
+    
+    scripts= [
+        'scripts/minpower',
+        ],
+    
+    
+    
     classifiers = [    
         "Development Status :: 3 - Alpha",
         "Environment :: Other Environment",

@@ -22,8 +22,6 @@ def _setup_logging(fn):
 @_setup_logging
 def problem(datadir='./tests/uc/',shell=True,problemfile=False,
         vizualization=True,csv=True,solver=config.optimization_solver):
-    print logging.getLogger().getEffectiveLevel()
-    print config.logging_level
     """ Solve a optimization problem in a directory.
         Problem type is determined from the data.
             

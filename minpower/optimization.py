@@ -80,7 +80,7 @@ if optimization_package=='coopr':
                 )
             current_log_level = logging.getLogger().getEffectiveLevel()      
                         
-            def cooprsolve(instance,opt=None,suffixes=['dual'],keepFiles=True):
+            def cooprsolve(instance,opt=None,suffixes=['dual'],keepFiles=False):
                 if not keepFiles: logging.getLogger().setLevel(logging.WARNING)
                 if opt is None: 
                     opt = cooprsolver.SolverFactory(solver)

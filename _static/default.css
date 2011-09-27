@@ -1,0 +1,146 @@
+@import url("basic.css");
+
+
+/* Fonts*/
+@import
+url("http://fonts.googleapis.com/css?family=Ubuntu:r,i,b|Arvo|Cousine:r,i,b|Josefin+Slab:r,i,b|IM+Fell+Double+Pica|IM+Fell+Double+Pica+SC");
+
+body
+  { font-family: 'Ubuntu', sans-serif; font-size: 110%; line-height: 160%; }
+
+h1, h2, h3, h4, h5, h6
+  { font-family: 'Arvo', serif; font-weight: normal; }
+
+h1 { font-size: 180%; }
+h2 { font-size: 160%; }
+h3 { font-size: 140%; }
+
+pre, tt, tt.descname
+  { font-family: 'Cousine', monospace; font-size: medium; }
+
+pre
+  { line-height: 130%; }
+
+div.dictionary-entry dd
+  { font-style: italic; }
+
+a.reference.internal em
+  { font-style: normal; }
+
+div.sphinxsidebar a.current
+  { font-weight: bold; }
+
+div.sphinxsidebar a, a.headerlink, div.toctree-wrapper a, a.viewcode-link, a.viewcode-back
+  { text-decoration: none; border: none; }
+
+
+/* Colors
+ *********/
+
+body
+  { color: #404040; background: white; }
+
+h1, h2, h3, h4, h5, h6
+  { color: SteelBlue; }
+h2 a
+  { color: SteelBlue;}
+a
+  { color: SlateGray; border-color: DarkSlateGray; }
+
+a.viewcode-link
+  { color: LightSlateGray; }
+
+pre, div.admonition
+  { background: CornSilk;}
+
+pre
+  { border-color: SlateGray; }
+
+div.admonition
+  { border-color: ForestGreen;}
+
+div.admonition.warning
+  { border-color: FireBrick; }
+
+div.sphinxsidebar input
+  { border-color: DarkSlateGray; }
+
+dt:target, .highlighted
+  { background: #f2ffc4; }
+
+
+/* Positions, Sizes, &c.
+ ***********************/
+
+div.document
+  { margin: 0 auto; padding: 0 1em; max-width: 900px; position: relative; }
+
+div.body, div.related
+  { max-width: 630px; margin-right: 270px; }
+
+div.halfwidth
+  {max-width:500px; margin-bottom: 3ex;}
+
+div.sphinxsidebar
+  { position: absolute; right: 0; }
+
+div.sphinxsidebarwrapper
+  { position: fixed; max-width: 250px; top: 2em; bottom: 0; overflow: auto; }
+
+div.related
+  { margin-bottom: 100px; margin-top: 50px; }
+
+h1, h2, h3, h4, h5, h6
+  { margin-top: 2em; }
+
+a
+  { text-decoration: none; border-bottom-width: 1px; border-bottom-style: dashed; }
+
+a img, a:link img {border-bottom: 0px solid #FFFFFF;
+}
+
+a.image-reference {border-bottom-width: 0px}
+
+.plusone{margin-bottom: 4ex}
+
+pre, div.admonition
+  { margin: 1em -40px; padding: 1em 40px; }
+
+pre
+  { border-right-width: 3px; border-right-style: solid; }
+
+div.admonition
+  { border-top-width: 5px; border-top-style: solid; }
+
+div.admonition.warning
+  { border-top-width: 5px; border-top-style: solid; }
+
+div.admonition.note p.admonition-title
+  { display: none; }
+
+
+div.dictionary-entry dl
+  { text-align: center; }
+
+div.body p
+  { text-align: justify; }
+
+div.body ul
+  { list-style-type: circle; }
+
+div.sphinxsidebar ul
+  { padding-left: 0; }
+
+div.section > dl
+  { padding-top: 2em; }
+
+div.section h2 + dl
+  { padding-top: inherit; }
+
+dt:target
+  { margin-left: -10px; margin-right: -40px; padding-left: 10px; padding-right: 40px; }
+
+div.reference internal image-reference{}
+div.license{ font-family: "IM Fell Double Pica" serif; font-size: 60%; max-width:500px; margin-left:60px;}
+
+div.optimizationproblem{margin-bottom: 4ex; margin-left: 3em;}

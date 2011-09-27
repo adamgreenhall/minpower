@@ -134,11 +134,12 @@ class PWLmodel(object):
         """
         constraints=dict()
         status = variables['statusvar']
+        if status in (True,False): status=1 if status else 0 #convert bool to integer for coopr 
         inputVar = variables['inputvar']
         S = [variables['{iden}_s{segNum}'.format(segNum=s,iden=iden)] for s in range(len(self.segments))] 
         F = [variables['{iden}_f{bpNum}'.format(bpNum=f,iden=iden)] for f in range(len(self.bpInputs))]
 
-        constraints['oneActiveSegment '+iden]= ( sumVars(S)== status )        
+        constraints['oneActiveSegment '+iden]= ( sumVars(S)== status )
         constraints['fractionSums '+iden]    = ( sumVars(F) == status )
         constraints['computeInput '+iden]    = ( inputVar == sumVars( elementwiseMultiply(F,self.bpInputs) ) )
         constraints['firstSegment '+iden]    = ( F[0]<=S[0] )
@@ -247,7 +248,7 @@ def isLinear(P):
 def isConvex(P):
     #convexity is complicated: http://plus.maths.org/content/convexity
     #so for now: if all polynomial coefs are positive, call it convex
-    return True if all(coef>0 for coef in P.c) else False
+    return True if all(coef>=0 for coef in P.c) else False
     
 def parsePolynomial(s):
     """

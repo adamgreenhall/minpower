@@ -45,7 +45,7 @@ gh-pages: clean html
 	git checkout gh-pages
 	git rm -r .
 	git checkout HEAD -- .gitignore .nojekyll
-	cp -r doc/_build/html/* .
+	cp -r ./_build/html/* .
 	git add *.html
 	@echo 'Commit and push when ready or git reset --hard && git checkout master to revert'
 

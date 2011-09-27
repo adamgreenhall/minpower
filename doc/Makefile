@@ -12,7 +12,7 @@ PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest
+.PHONY: help clean html gh-pages dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -41,13 +41,12 @@ html:
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-gh-pages:
-	clean html
+gh-pages: clean html
 	git checkout gh-pages
 	git rm -r .
-	git checkout HEAD -- .gitignore README .nojekyll
-	cp -r _build/html/* .
-	git stage .
+	git checkout HEAD -- .gitignore .nojekyll
+	cp -r doc/_build/html/* .
+	git add *.html
 	@echo 'Commit and push when ready or git reset --hard && git checkout master to revert'
 
 dirhtml:

@@ -49,7 +49,8 @@ gh-pages: clean html
 	rm -r ../_sources #get rid of sources folder
 	rm ../objects.inv #get rid of objects inventory
 	git add ../*.html
-	git add ../_modules/\*.html #recursive add module html files
+	git add ../_modules/*.html #recursive add module html files
+	git add ../_modules/*/*.html # add module subdir html files
 	git commit -m 'publishing'
 	git push
 	@echo "to get back to work::: git checkout HEAD"

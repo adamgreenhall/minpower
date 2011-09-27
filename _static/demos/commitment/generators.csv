@@ -1,0 +1,3 @@
+name,      cost curve equation,min up time,P min,P max
+expensive, 150P,               2,          20,   500
+cheap,     45P,                0,          0,    100

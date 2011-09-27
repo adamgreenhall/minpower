@@ -1,0 +1,3 @@
+[submodule "source"]
+	path = source
+	url = git://github.com/adamgreenhall/minpower.git

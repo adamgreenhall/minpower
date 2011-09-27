@@ -41,14 +41,14 @@ html:
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-gh-pages: 
-        clean html
-        git checkout gh-pages
-        git rm -r .
-        git checkout HEAD -- .gitignore README .nojekyll
-        cp -r _build/html/* .
-        git stage .
-        @echo 'Commit and push when ready or git reset --hard && git checkout master to revert'
+gh-pages:
+	clean html
+	git checkout gh-pages
+	git rm -r .
+	git checkout HEAD -- .gitignore README .nojekyll
+	cp -r _build/html/* .
+	git stage .
+	@echo 'Commit and push when ready or git reset --hard && git checkout master to revert'
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml

@@ -44,10 +44,11 @@ html:
 gh-pages: clean html
 	git checkout gh-pages
 	git rm ../*.html
-	git checkout HEAD -- .gitignore .nojekyll
-	cp -r ./_build/html/* .
-	git add *.html
-	@echo 'Commit and push when ready or git reset --hard && git checkout master to revert'
+	git checkout HEAD -- ../.gitignore ../.nojekyll
+	cp -r ./_build/html/* ..
+	git add ../*.html
+	git add ../_modules/\*.html #recursive add module html files
+	@echo 'Commit and push when ready and git checkout master to get back to work'
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml

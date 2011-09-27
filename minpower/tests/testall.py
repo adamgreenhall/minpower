@@ -11,9 +11,9 @@ Just fix it before you push your change.
 """
 
 import sys,os,glob,traceback,logging
-
-from minpower import solve,config
+from minpower import config
 from minpower.commonscripts import joindir,splitFilename
+
 def wipeTestSlate(dir):
     patterns=['*.png','*.lp','commitment.csv','dispatch.csv','error.txt']
     for pat in patterns:
@@ -22,6 +22,8 @@ def hasPyscript(dir): return glob.glob(joindir(dir,'*.py'))
 
 def main(solver=config.optimization_solver):
     logging.basicConfig(level=logging.CRITICAL, format='%(levelname)s: %(message)s')
+    from minpower import solve
+    
     dirNm=splitFilename(__file__)[0]
     excludeL=['coding','doctesting','ucRollingYear']
     for fileNm in os.listdir(dirNm):

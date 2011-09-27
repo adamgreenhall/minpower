@@ -47,9 +47,8 @@
 :class:`~powersystems.Line`, and :class:`~powersystems.Load`.
 """
 import bidding
-from optimization import newVar,value,sumVars,dual
-#from schedule import *
-from commonscripts import hours,subset,subsetexcept,drop_case_spaces,getattrL
+from optimization import newVar,value,sumVars
+from commonscripts import hours,subset,subsetexcept,drop_case_spaces,getattrL,flatten
 import config
 import logging
 
@@ -174,7 +173,7 @@ class Generator(object):
 <div class="viewcode-block" id="Generator.cost"><a class="viewcode-back" href="../documentation.html#powersystems.Generator.cost">[docs]</a>        return self.operatingcost(time)+self.startupcost*self.startup[time]+self.shutdowncost*self.shutdown[time]
     def operatingcost(self,time): 
         '''cost of real power production at time (based on bid model approximation).'''</div>
-<div class="viewcode-block" id="Generator.operatingcost"><a class="viewcode-back" href="../documentation.html#powersystems.Generator.operatingcost">[docs]</a>        return self.bid[time].output(self.P(time))
+<div class="viewcode-block" id="Generator.operatingcost"><a class="viewcode-back" href="../documentation.html#powersystems.Generator.operatingcost">[docs]</a>        return self.bid[time].output()
     def truecost(self,time):
         '''exact cost of real power production at time (based on exact bid polynomial).'''</div>
 <div class="viewcode-block" id="Generator.truecost"><a class="viewcode-back" href="../documentation.html#powersystems.Generator.truecost">[docs]</a>        return value(self.u[time])*self.costModel.trueOutput(self.P(time))
@@ -193,35 +192,59 @@ class Generator(object):
             if value(self.u[times.initialTime]) == status: h+=self.initialStatusHours
             return h
         
-    def add_timevars(self,times):
+    def add_timevars(self,times,dispatch_decommit_allowed=False):
         '''set up dicts for time-varying optimization variables</div>
 <div class="viewcode-block" id="Generator.add_timevars"><a class="viewcode-back" href="../documentation.html#powersystems.Generator.add_timevars">[docs]</a>        (power,u,startup,shutdown,bid)
         '''
-        commitment_problem= len(times)&gt;1
+        
+        allvars=[]
+        commitment_problem= len(times)&gt;1 or dispatch_decommit_allowed
         for time in times:    
             iden=self.iden(time)
             self.power[time]=newVar(name='P_'+iden,low=self.Pmin,high=self.Pmax)
-            self.bid[time]=bidding.Bid(model=self.costModel,iden=self.iden(time))
+
             
             if commitment_problem: #UC problem
                 self.u[time]=newVar(name='u_'+iden,kind='Binary')
                 self.startup[time] =newVar(name='su_'+iden,kind='Binary')
                 self.shutdown[time]=newVar(name='sd_'+iden,kind='Binary')
-            else: #ED or OPF problem - no commitments
+                allvars.extend([self.u[time],self.startup[time],self.shutdown[time]])
+            else: #ED or OPF problem, no commitments
                 self.u[time]=True
                 self.startup[time]=False
                 self.shutdown[time]=False
-    def fix_timevars(self,times):
-        for time in times:</div>
-<div class="viewcode-block" id="Generator.fix_timevars"><a class="viewcode-back" href="../documentation.html#powersystems.Generator.fix_timevars">[docs]</a>            self.power[time]   =value(self.power[time])
-            self.u[time]       =value(self.u[time]) ==1
-            self.startup[time] =value(self.startup[time])==1
-            self.shutdown[time]=value(self.shutdown[time])==1
-        else: self.bid={} #wipe bid info - no longer needed
+
+            self.bid[time]=bidding.Bid(
+                model=self.costModel,
+                inputvar=self.power[time],
+                statusvar=self.u[time],
+                iden=self.iden(time)
+                )
+            allvars.extend([self.power[time]])
+            allvars.extend(self.bid[time].add_timevars())
+
+
+        return allvars
+    
+    def update_vars(self,times,problem):
+        #commitment_problem= len(times)&gt;1</div>
+<div class="viewcode-block" id="Generator.update_vars"><a class="viewcode-back" href="../documentation.html#powersystems.Generator.update_vars">[docs]</a>        for time in times:
+            self.power[time] = value(self.power[time],problem)
+            self.bid[time].update_vars(problem)
+            #if commitment_problem: #UC problem
+            self.u[time]=value(self.u[time],problem)
+            self.startup[time] =value(self.startup[time],problem)
+            self.shutdown[time]=value(self.shutdown[time],problem)
+        
+            
+    def fix_vars(self,times,problem):
+        self.update_vars(times,problem)</div>
+<div class="viewcode-block" id="Generator.fix_vars"><a class="viewcode-back" href="../documentation.html#powersystems.Generator.fix_vars">[docs]</a>        self.bid={} #wipe bid info - no longer needed
+
     def plotCostCurve(self,P=None,filename=None): self.costModel.plot(P,filename)
     def setInitialCondition(self,time=None, P=None, u=True, hoursinstatus=100):</div>
 <div class="viewcode-block" id="Generator.plotCostCurve"><a class="viewcode-back" href="../documentation.html#powersystems.Generator.plotCostCurve">[docs]</a>        if P is None: P=(self.Pmax-self.Pmin)/2 #set default power as median output</div>
-<div class="viewcode-block" id="Generator.setInitialCondition"><a class="viewcode-back" href="../documentation.html#powersystems.Generator.setInitialCondition">[docs]</a>        self.u[time]= (u==1)
+<div class="viewcode-block" id="Generator.setInitialCondition"><a class="viewcode-back" href="../documentation.html#powersystems.Generator.setInitialCondition">[docs]</a>        self.u[time]=u
         self.power[time]=P*u  #note: this eliminates ambiguity of off status with power non-zero output
         self.initialStatusHours = hoursinstatus
         self.startup[time]= True if self.initialStatusHours==0 and self.u[time] else False
@@ -231,7 +254,9 @@ class Generator(object):
         '''create the optimization constraints for a generator over all times'''</div>
 <div class="viewcode-block" id="Generator.constraints"><a class="viewcode-back" href="../documentation.html#powersystems.Generator.constraints">[docs]</a>        constraintsD=dict()
         
-        if len(times)&gt;1:
+        commitment_problem= len(times)&gt;1
+                
+        if commitment_problem:
             iden='{g}_init'.format(g=str(self))
             #initial time
             tInitial = times.initialTime
@@ -254,15 +279,20 @@ class Generator(object):
             constraintsD['rampingLimHi_'+iden]=                     self.P(times[0]) - self.P(tInitial) &lt;= self.rampratemax
             constraintsD['rampingLimLo_'+iden]= self.rampratemin &lt;=     self.P(times[0]) - self.P(tInitial)
         else: #fix status for ED,OPF problems
-            if not self.u[times[0]]==False: self.u[times[0]]=True
+            if self.u[times[0]] in (True, False):
+                pass #gen status fixed for dispatch period
+            elif self.u[times[0]].value is None: 
+                pass #variable because dispatch_decommit_allowed
+            else: 
+                raise TypeError
+                
         
         for t,time in enumerate(times):
             iden=self.iden(time)
             #must run
             if self.mustrun: self.u[time] = True #overwrite the variable with a true
             #bid constraints
-            bidConstraints=self.bid[time].constraints(inputVar=self.P(time),status=self.u[time])
-            constraintsD.update( bidConstraints )
+            constraintsD.update( self.bid[time].constraints() )
             #min/max power
             constraintsD['min-gen-power_'+iden]= self.P(time)&gt;=self.u[time]*self.Pmin
             constraintsD['max-gen-power_'+iden]= self.P(time)&lt;=self.u[time]*self.Pmax
@@ -294,7 +324,7 @@ class Generator_nonControllable(Generator):
         fuelcost=1,costcurvestring='0',
         mustrun=False,
         Pmin=0,Pmax=None,
-        name=None,index=None,bus=None,kind=None,**kwargs):
+        name=None,index=None,bus=None,**kwargs):
         vars(self).update(locals()) #load in inputs
         if Pmax is None: self.Pmax = self.schedule.maxvalue
         self.buildCostModel()
@@ -306,9 +336,10 @@ class Generator_nonControllable(Generator):
 <div class="viewcode-block" id="Generator_nonControllable.status"><a class="viewcode-back" href="../documentation.html#powersystems.Generator_nonControllable.status">[docs]</a>        if P is None: P=self.schedule.getEnergy(time) #set default power as first scheduled power output</div>
 <div class="viewcode-block" id="Generator_nonControllable.setInitialCondition"><a class="viewcode-back" href="../documentation.html#powersystems.Generator_nonControllable.setInitialCondition">[docs]</a>        self.schedule.P[time]=P
     def getstatus(self,t,times): return dict()
-    def add_timevars(self,times): return</div>
-<div class="viewcode-block" id="Generator_nonControllable.getstatus"><a class="viewcode-back" href="../documentation.html#powersystems.Generator_nonControllable.getstatus">[docs]</a>    def fix_timevars(self,times=None): return</div>
-<div class="viewcode-block" id="Generator_nonControllable.add_timevars"><a class="viewcode-back" href="../documentation.html#powersystems.Generator_nonControllable.add_timevars">[docs]</a>    def cost(self,time): return self.operatingcost(time)</div>
+    def add_timevars(self,times): return []</div>
+<div class="viewcode-block" id="Generator_nonControllable.getstatus"><a class="viewcode-back" href="../documentation.html#powersystems.Generator_nonControllable.getstatus">[docs]</a>    def update_vars(self,times=None,problem=None): return</div>
+<div class="viewcode-block" id="Generator_nonControllable.add_timevars"><a class="viewcode-back" href="../documentation.html#powersystems.Generator_nonControllable.add_timevars">[docs]</a>    def fix_timevars(self,times=None): return</div>
+<div class="viewcode-block" id="Generator_nonControllable.update_vars"><a class="viewcode-back" href="../documentation.html#powersystems.Generator_nonControllable.update_vars">[docs]</a>    def cost(self,time): return self.operatingcost(time)</div>
 <div class="viewcode-block" id="Generator_nonControllable.fix_timevars"><a class="viewcode-back" href="../documentation.html#powersystems.Generator_nonControllable.fix_timevars">[docs]</a>    def operatingcost(self,time): return self.costModel.trueOutput( self.P(time) )</div>
 <div class="viewcode-block" id="Generator_nonControllable.cost"><a class="viewcode-back" href="../documentation.html#powersystems.Generator_nonControllable.cost">[docs]</a>    def truecost(self,time): return self.cost(time)</div>
 <div class="viewcode-block" id="Generator_nonControllable.operatingcost"><a class="viewcode-back" href="../documentation.html#powersystems.Generator_nonControllable.operatingcost">[docs]</a>    def incrementalcost(self,time): return self.fuelcost*self.costModel.incOutput(self.P(time))</div>
@@ -329,28 +360,32 @@ class Generator_nonControllable(Generator):
     def __init__(self,name='',index=None,From=None,To=None,X=0.05,Pmax=9999,Pmin=None,**kwargs):
         vars(self).update(locals()) #load in inputs
         if self.Pmin is None: self.Pmin=-self.Pmax #reset default to be -Pmax
-        self.P=dict()
+        self.P,self.price=dict(),dict()
     def add_timevars(self,times):
         for time in times: 
 <div class="viewcode-block" id="Line.add_timevars"><a class="viewcode-back" href="../documentation.html#powersystems.Line.add_timevars">[docs]</a>            self.P[time]=newVar(name='P_'+self.iden(time))
-        return self.P
-    def constraints(self,times,buses):
+        return self.P.values()
+    def update_vars(self,times,problem):
+        for time in times: self.P[time]=value(self.P[time],problem)</div>
+<div class="viewcode-block" id="Line.update_vars"><a class="viewcode-back" href="../documentation.html#powersystems.Line.update_vars">[docs]</a>    def constraints(self,times,buses):
         '''create the constraints for a line over all times'''</div>
 <div class="viewcode-block" id="Line.constraints"><a class="viewcode-back" href="../documentation.html#powersystems.Line.constraints">[docs]</a>        constraints=dict()
         for t in times:
             iden = self.iden(t)
             busNames=getattrL(buses,'name')
             iFrom,iTo=busNames.index(self.From),busNames.index(self.To)
-            constraints['lineFlow '+iden]=     self.P[t] == (1/self.X) * sumVars([ buses[iFrom].angle[t],-1*buses[iTo].angle[t] ])
-            constraints['lineLimitHi '+iden]=  self.P[t]&lt;=self.Pmax
-            constraints['lineLimitLow '+iden]= self.Pmin&lt;=self.P[t]
+            constraints['lineFlow_'+iden]=     self.P[t] == (1/self.X) * sumVars([ buses[iFrom].angle[t],-1*buses[iTo].angle[t] ])
+            constraints['lineLimitHi_'+iden]=  self.P[t]&lt;=self.Pmax
+            constraints['lineLimitLow_'+iden]= self.Pmin&lt;=self.P[t]
         return constraints
     
     def __str__(self): return 'k{ind}'.format(ind=self.index)
     def __int__(self): return self.index</div>
     def iden(self,t): return str(self)+str(t)
-    
-<div class="viewcode-block" id="Line.iden"><a class="viewcode-back" href="../documentation.html#powersystems.Line.iden">[docs]</a>class Bus(object):
+    def getprice(self,time,problem):
+<div class="viewcode-block" id="Line.iden"><a class="viewcode-back" href="../documentation.html#powersystems.Line.iden">[docs]</a>        #get congestion price on line</div>
+<div class="viewcode-block" id="Line.getprice"><a class="viewcode-back" href="../documentation.html#powersystems.Line.getprice">[docs]</a>        return problem.dual('lineFlow_'+self.iden(time)) #problem.dual('lineLimitHi_'+self.iden(time))+problem.dual('lineLimitLow_'+self.iden(time))    
+class Bus(object):
     """</div></div>
 <div class="viewcode-block" id="Bus"><a class="viewcode-back" href="../documentation.html#powersystems.Bus">[docs]</a>    Describes a bus (usually a substation where one or more
     tranmission lines start/end).
@@ -363,10 +398,13 @@ class Generator_nonControllable(Generator):
         self.generators,self.loads=[],[]
         self.angle,self.price=dict(),dict()
     def add_timevars(self,times):
-        for time in times: self.addTimeElement(time=time,angle=newVar(name='angle_'+self.iden(time)))        
-<div class="viewcode-block" id="Bus.add_timevars"><a class="viewcode-back" href="../documentation.html#powersystems.Bus.add_timevars">[docs]</a>    def addTimeElement(self,time=None,angle=None): self.angle[time]=angle
-    def __str__(self):     return 'i{ind}'.format(ind=self.index)    </div>
-<div class="viewcode-block" id="Bus.addTimeElement"><a class="viewcode-back" href="../documentation.html#powersystems.Bus.addTimeElement">[docs]</a>    def __int__(self):    return self.index</div>
+        for time in times: self.angle[time]=newVar(name='angle_'+self.iden(time))
+<div class="viewcode-block" id="Bus.add_timevars"><a class="viewcode-back" href="../documentation.html#powersystems.Bus.add_timevars">[docs]</a>        return self.angle.values()
+    def update_vars(self,times,problem):
+        for time in times: self.angle[time]=value(self.angle[time],problem)</div>
+<div class="viewcode-block" id="Bus.update_vars"><a class="viewcode-back" href="../documentation.html#powersystems.Bus.update_vars">[docs]</a>
+    def __str__(self):     return 'i{ind}'.format(ind=self.index)    
+    def __int__(self):    return self.index</div>
     def iden(self,t):        return str(self)+str(t)
     def Pgen(self,t):   return sumVars([gen.P(t) for gen in self.generators])
 <div class="viewcode-block" id="Bus.iden"><a class="viewcode-back" href="../documentation.html#powersystems.Bus.iden">[docs]</a>    def Pload(self,t):  return sumVars([ ld.P(t) for ld in self.loads])</div>
@@ -385,8 +423,8 @@ class Generator_nonControllable(Generator):
             if nBus&gt;1 and self.isSwing: constraints['swingBus '+iden] = self.angle[t]==0 #swing bus has angle=0
             constraints['powerBalance_'+iden] = powerBalance(self,t,Bmatrix,buses)==0 #power balance must be zero
         return constraints
-    def getprice(self,constraints,time):
-        return dual(constraints['powerBalance_'+self.iden(time)])</div>
+    def getprice(self,time,problem):
+        return problem.dual('powerBalance_'+self.iden(time))</div>
 <div class="viewcode-block" id="Bus.getprice"><a class="viewcode-back" href="../documentation.html#powersystems.Bus.getprice">[docs]</a>class Load(object):
     """</div></div>
 <div class="viewcode-block" id="Load"><a class="viewcode-back" href="../documentation.html#powersystems.Load">[docs]</a>    Describes a power system load (demand).
@@ -412,9 +450,12 @@ class Generator_nonControllable(Generator):
 <div class="viewcode-block" id="Load.add_timevars"><a class="viewcode-back" href="../documentation.html#powersystems.Load.add_timevars">[docs]</a>            for t in times: self.dispatched_power[t]=newVar('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
         else:
             for t in times: self.dispatched_power[t]=self.schedule.getEnergy(t)
-    def fix_timevars(self,times=None):
-        for t in times: self.dispatched_power[t]=value(self.dispatched_power[t])</div>
-<div class="viewcode-block" id="Load.fix_timevars"><a class="viewcode-back" href="../documentation.html#powersystems.Load.fix_timevars">[docs]</a>    def constraints(self,*args): return #no constraints
+        return self.dispatched_power.values()
+    
+    def update_vars(self,times,problem):
+        for t in times: self.dispatched_power[t]=value(self.dispatched_power[t],problem)</div>
+<div class="viewcode-block" id="Load.update_vars"><a class="viewcode-back" href="../documentation.html#powersystems.Load.update_vars">[docs]</a>
+    def constraints(self,*args): return #no constraints
     </div>
 <div class="viewcode-block" id="Load.constraints"><a class="viewcode-back" href="../documentation.html#powersystems.Load.constraints">[docs]</a>class Load_Fixed(Load):
     """</div></div>
@@ -433,8 +474,11 @@ class Generator_nonControllable(Generator):
     def add_timevars(self,times=None,shedding_allowed=False):
 <div class="viewcode-block" id="Load_Fixed.P"><a class="viewcode-back" href="../documentation.html#powersystems.Load_Fixed.P">[docs]</a>        if shedding_allowed: </div>
 <div class="viewcode-block" id="Load_Fixed.add_timevars"><a class="viewcode-back" href="../documentation.html#powersystems.Load_Fixed.add_timevars">[docs]</a>            for t in times: self.dispatched_power[t]=newVar('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
+            return self.dispatched_power.values()
         else:
-            for t in times: self.dispatched_power[t]=self.Pfixed    
+            for t in times: self.dispatched_power[t]=self.Pfixed
+            return []
+        
     def benifit(self,time=None): return (self.P(time) - self.Pfixed)*config.cost_loadshedding
     </div>
 <div class="viewcode-block" id="Load_Fixed.benifit"><a class="viewcode-back" href="../documentation.html#powersystems.Load_Fixed.benifit">[docs]</a>class Network(object):

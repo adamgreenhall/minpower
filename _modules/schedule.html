@@ -135,8 +135,9 @@ class Timelist(object):
 <div class="viewcode-block" id="Timelist.setInitial"><a class="viewcode-back" href="../documentation.html#schedule.Timelist.setInitial">[docs]</a>        else: self.initialTime = Time(Start=self.Start-self.interval, interval=self.interval)
         self.wInitial = tuple([self.initialTime] + list(self.times))
     def subdivide(self,hrsperdivision=24,hrsinterval=None):
-        """</div>
-<div class="viewcode-block" id="Timelist.subdivide"><a class="viewcode-back" href="../documentation.html#schedule.Timelist.subdivide">[docs]</a>        Subdivide a list of times into serval lists,  each list
+        ### add offset=0 to this</div>
+<div class="viewcode-block" id="Timelist.subdivide"><a class="viewcode-back" href="../documentation.html#schedule.Timelist.subdivide">[docs]</a>        """
+        Subdivide a list of times into serval lists,  each list
         spanning `hrsperdivision` with intervals of `hrsinterval`.
         
         :param hoursperdivision: time span of each sub-list 
@@ -264,14 +265,6 @@ def parse_timestrings(timestringsL):
     """
     fmt=getTimeFormat(timestringsL[0])
     return [dateutil.parser.parse(str,**fmt) for str in timestringsL]
-
-
-def create_single_time():
-    """</div>
-<div class="viewcode-block" id="create_single_time"><a class="viewcode-back" href="../documentation.html#schedule.create_single_time">[docs]</a>    Create a  simple schedule -- only one time interval --
-    for an ED or OPF problem.
-    """
-    return Timelist( [Time(Start='0:00',index=0)] )
 </pre></div>
 
           </div>

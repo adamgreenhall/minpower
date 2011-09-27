@@ -42,7 +42,7 @@ def problem(datadir='./tests/uc/',shell=True,problemfile=False,
     else: #split into multi-stage problem
         problemsL,stageTimes=create_problem_multistage(buses,lines,times,datadir)
         solution=results.makeMultistageSolution(problemsL=problemsL,times=times,stageTimes=stageTimes,buses=buses,lines=lines,datadir=datadir)
-
+        logging.info('problem solved in {}'.format(solution.solveTime))
     
     if shell: solution.show()
     if csv: solution.saveCSV()
@@ -154,7 +154,6 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
             get_finalconditions(buses,t_stage,stageproblem)
             stage_sln=results.get_stage_solution(stageproblem,buses,t_stage)
             problemsL.append(stage_sln)
-            
         else: 
             print stageproblem.status,stageproblem.statusText()
             stageproblem.write('infeasible-problem.lp')

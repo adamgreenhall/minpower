@@ -130,7 +130,7 @@ class Generator(object):
         return self.operatingcost(time)+self.startupcost*self.startup[time]+self.shutdowncost*self.shutdown[time]
     def operatingcost(self,time): 
         '''cost of real power production at time (based on bid model approximation).'''
-        return self.bid[time].output(self.P(time))
+        return self.bid[time].output()
     def truecost(self,time):
         '''exact cost of real power production at time (based on exact bid polynomial).'''
         return value(self.u[time])*self.costModel.trueOutput(self.P(time))
@@ -159,10 +159,8 @@ class Generator(object):
         for time in times:    
             iden=self.iden(time)
             self.power[time]=newVar(name='P_'+iden,low=self.Pmin,high=self.Pmax)
-            self.bid[time]=bidding.Bid(model=self.costModel,iden=self.iden(time))
+
             
-            allvars.extend([self.power[time]])
-            allvars.extend(self.bid[time].getvars())
             if commitment_problem: #UC problem
                 self.u[time]=newVar(name='u_'+iden,kind='Binary')
                 self.startup[time] =newVar(name='su_'+iden,kind='Binary')
@@ -172,6 +170,17 @@ class Generator(object):
                 self.u[time]=True
                 self.startup[time]=False
                 self.shutdown[time]=False
+
+            self.bid[time]=bidding.Bid(
+                model=self.costModel,
+                inputvar=self.power[time],
+                statusvar=self.u[time],
+                iden=self.iden(time)
+                )
+            allvars.extend([self.power[time]])
+            allvars.extend(self.bid[time].add_timevars())
+
+
         return allvars
     
     def update_vars(self,times,problem):
@@ -240,8 +249,7 @@ class Generator(object):
             #must run
             if self.mustrun: self.u[time] = True #overwrite the variable with a true
             #bid constraints
-            bidConstraints=self.bid[time].constraints(inputVar=self.P(time),status=self.u[time])
-            constraintsD.update( bidConstraints )
+            constraintsD.update( self.bid[time].constraints() )
             #min/max power
             constraintsD['min-gen-power_'+iden]= self.P(time)>=self.u[time]*self.Pmin
             constraintsD['max-gen-power_'+iden]= self.P(time)<=self.u[time]*self.Pmax

@@ -22,14 +22,10 @@ class Bid(object):
       :class:`~bidding.PWLmodel` objects).
     :param iden: identifying string for the bidder
     """
-
-    def __init__(self,model,iden):
-        vars(self).update(locals())
-
-        #add time variables
-        self.segmentsActive,self.fractionsBP=self.model.add_timevars(self.iden)
-    def output(self,inputVar): 
-        return self.model.output(self.fractionsBP,inputVar)
+    def __init__(self,model,inputvar,iden,statusvar=True):
+        vars(self).update(locals())        
+    def output(self): 
+        return self.model.output(self.variables,self.iden)
     def trueOutput(self,input): return self.model.trueOutput(input)
     def incOutput(self,input):  return self.model.incOutput(input)
     def plotDeriv(self,**kwargs): return self.model.plotDeriv(**kwargs)
@@ -37,20 +33,23 @@ class Bid(object):
         plotted=self.model.plot(P,showPW=showPW)
         if filename is not None: savefig(filename)
         return plotted
-    def constraints(self,inputVar,status):
+    def constraints(self):
         '''Create the constraints for a bid by calling its 
         model.constraint() method.'''
         return self.model.constraints(
-            S=self.segmentsActive,
-            F=self.fractionsBP,
-            inputVar=inputVar,
-            status=status,
-            iden=self.iden)
-    def getvars(self):
-        return flatten([self.segmentsActive,self.fractionsBP])
+            variables=self.variables,
+            iden=self.iden
+            )
+    def add_timevars(self): 
+        self.variables=self.model.add_timevars(self.iden)
+        out=[var for nm,var in self.variables.iteritems()]
+        self.variables['inputvar']=self.inputvar
+        self.variables['statusvar']=self.statusvar
+        return out
+        
     def update_vars(self,solution):
-        self.segmentsActive = [ value(s, solution) for s in self.segmentsActive]
-        self.fractionsBP =    [value(f, solution) for f in self.fractionsBP]
+        for v in self.variables.iteritems():
+            v=value(v, solution)
     def __str__(self): return 'bid {i}'.format(i=self.iden)
 
 
@@ -58,8 +57,10 @@ def makeModel(polyText,multiplier=1, **kwargs):
     polyCurve=multiplier * parsePolynomial(polyText)
     if isLinear(polyCurve):
         return LinearModel(polyText,multiplier,**kwargs)
+    elif isConvex(polyCurve):
+        return convexPWLmodel(polyText,multiplier,**kwargs)
     else:
-        return betterPWLmodel(polyText,multiplier,**kwargs)
+        return PWLmodel(polyText,multiplier,**kwargs)
     
         
     
@@ -108,42 +109,47 @@ class PWLmodel(object):
         outDiscrete=polyval(deriv,inDiscrete)
         linePlotted, =plot(inDiscrete,outDiscrete,linestyle=linestyle)
         if P is not None: plot(P,polyval(deriv,P), 'o', c=linePlotted.get_color(), markersize=8, linewidth=2, alpha=0.7)
-        return linePlotted
-                
+        return linePlotted            
     def add_timevars(self,iden):
-        S=[] #S: segment of cost curve is active
-        F=[] #F: breakpoint weighting fraction
-        for segNum,seg in enumerate(self.segments):  S.append(newVar(kind='Binary', name='{iden}_s{segNum}'.format(segNum=segNum,iden=iden))) 
-        for bpNum,bp in enumerate(self.bpInputs):    F.append(newVar(low=0,high=1,  name='{iden}_f{bpNum}'.format( bpNum=bpNum,  iden=iden)))
-        return S,F
-    def constraints(self,S,F,inputVar,status,iden):
+        variables={}
+        #S: segment of cost curve is active
+        #F: breakpoint weighting fraction
+        for segNum,seg in enumerate(self.segments):  
+            name='{iden}_s{segNum}'.format(segNum=segNum,iden=iden)
+            variables[name] = newVar(kind='Binary', name=name)
+         
+        for bpNum,bp in enumerate(self.bpInputs):
+            name='{iden}_f{bpNum}'.format( bpNum=bpNum,  iden=iden)
+            variables[name] = newVar(low=0,high=1,  name=name)
+        return variables 
+    def constraints(self,variables,iden):
         """
         Create the constraints for a single time instance of 
           a piecewise linear model. 
           
-        :param S: list of segment status variables
-        :param F: list of breakpoint fraction variables
-        :param inputVar: variable specifying the bidder power
-        :param status: variable specifying whether bidder is committed
+        :param variables: a dictionary of the variables for the bid
         :param iden: identifying string for the bidder and time interval
         
         :returns: a dictionary of constraints
         """
         constraints=dict()
-        #coopr doesnt understand constraint==True
-        try: status = (status if not status==True else 1.0 ) 
-        except ValueError: status=status #need this hack for resolve
-        constraints['oneActiveSegment '+iden]= ( sumVars(S)== status )
-        
-        constraints['fractionSums '+iden] =    ( sumVars(F) == status )
-        constraints['computeInput '+iden] =    ( inputVar == sumVars( elementwiseMultiply(F,self.bpInputs) ) )
+        status = variables['statusvar']
+        inputVar = variables['inputvar']
+        S = [variables['{iden}_s{segNum}'.format(segNum=s,iden=iden)] for s in range(len(self.segments))] 
+        F = [variables['{iden}_f{bpNum}'.format(bpNum=f,iden=iden)] for f in range(len(self.bpInputs))]
+
+        constraints['oneActiveSegment '+iden]= ( sumVars(S)== status )        
+        constraints['fractionSums '+iden]    = ( sumVars(F) == status )
+        constraints['computeInput '+iden]    = ( inputVar == sumVars( elementwiseMultiply(F,self.bpInputs) ) )
         constraints['firstSegment '+iden]    = ( F[0]<=S[0] )
         constraints['lastSegment '+iden]     = ( F[-1]<=S[-1] )
         for b in range(1,self.numBreakpoints-1): 
             name='midSegment {iden} b{bnum}'.format(iden=iden,bnum=b)
-            constraints[name] =                ( F[b] <= sumVars([S[b-1],S[b]]) )
+            constraints[name]                = ( F[b] <= sumVars([S[b-1],S[b]]) )
         return constraints
-    def output(self,F,inputVar=None): return sumVars( elementwiseMultiply(F,self.bpOutputs) )
+    def output(self,variables,iden): 
+        F = [variables['{iden}_f{bpNum}'.format(bpNum=f,iden=iden)] for f in range(len(self.bpInputs))]
+        return sumVars( elementwiseMultiply(F,self.bpOutputs) )
     def trueOutput(self,input): return polyval( self.polyCurve,         value(input) )
     def incOutput(self,input):  return polyval( polyder(self.polyCurve),value(input) )
     def texrepresentation(self,digits=3):
@@ -166,7 +172,7 @@ class PWLmodel(object):
         return texstr
 
 
-class betterPWLmodel(PWLmodel):
+class convexPWLmodel(PWLmodel):
     def __init__(self,
         polyText='2+10P+0.1P^2',multiplier=1,
         minInput=0,maxInput=10000,
@@ -192,18 +198,17 @@ class betterPWLmodel(PWLmodel):
             self.segment_lines.append(make_lineareq(x1,y1,x2,y2))
         
     def add_timevars(self,iden):
-        self.cost = newVar(name='bidCost_'+iden,high=float(max(self.bpOutputs)))
-        return [self.cost],[]
-    def constraints(self,S,F,inputVar,status,iden):
+        variables={}
+        name = 'bidCost_'+iden
+        variables[name] = newVar(name=name,high=float(max(self.bpOutputs)))
+        return variables
+    def constraints(self,variables,iden):
         constraints=dict()
         for b,line in enumerate(self.segment_lines): 
-            constraints['cost_linearized_{}_b{}'.format(iden,b)]= self.cost >= line(inputVar)
-            #print type(line(inputVar))
-            #print line(5)
-            #raise
-
+            nm='cost_linearized_{}_b{}'.format(iden,b)
+            constraints[nm]= variables['bidCost_'+iden] >= line(variables['inputvar'])
         return constraints
-    def output(self,F=None,inputVar=None): return self.cost
+    def output(self,variables,iden): return variables['bidCost_'+iden]
     def trueOutput(self,input): return polyval( self.polyCurve,         value(input) )
     def incOutput(self,input):  return polyval( polyder(self.polyCurve),value(input) )
     def plot(self,P=None,filename=None,showPW=True):
@@ -231,14 +236,19 @@ class LinearModel(PWLmodel):
         self.minInput=minInput
         self.maxInput=maxInput
         
-    def add_timevars(self,iden): return [],[]
-    def constraints(self,S,F,inputVar,status,iden): return dict()
-    def output(self,F,inputVar): return polyval( self.polyCurve,inputVar )    
+    def add_timevars(self,iden): return dict()
+    def constraints(self,variables,iden): return dict()
+    def output(self,variables,iden): return polyval( self.polyCurve,variables['inputvar'] )    
     
     
 def isLinear(P):
     """Check if a polynomial object is linear using its order attribute."""
     return True if P.order<=1 else False 
+def isConvex(P):
+    #convexity is complicated: http://plus.maths.org/content/convexity
+    #so for now: if all polynomial coefs are positive, call it convex
+    return True if all(coef>0 for coef in P.c) else False
+    
 def parsePolynomial(s):
     """
     Parse a string into a numpy polynomial object.

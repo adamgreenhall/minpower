@@ -1,4 +1,5 @@
 h1. minpower 
+
 h2. power systems optimization made beautiful
 
 * Solves:

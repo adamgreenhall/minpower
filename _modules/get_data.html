@@ -1,0 +1,366 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>get_data &mdash; minpower</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="top" title="minpower" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for get_data</h1><pre>
+(:class:`~powersystems.Generator`, :class:`~powersystems.Line`, and :class:`~powersystems.Load`). 
+Create lists of :class:`~powersystems.Bus` and :class:`~powersystems.Line` instances
+from the information found in the data.
+"""
+
+import powersystems
+import schedule
+from addons import * 
+from commonscripts import readCSV,csvColumn,flatten,unique,drop_case_spaces,getattrL, joindir
+
+import os,sys,logging
+import dateutil
+import numpy as np
+
+fields_lines={'name':'name','to':'To','from':'From','pmax':'Pmax'}
+fields_gens={
+    'name':'name','type':'kind','kind':'kind','bus':'bus',
+    'pmin':'Pmin','pmax':'Pmax',
+    'rampratemin':'rampratemin','rampratemax':'rampratemax',
+    'minuptime':'minuptime','mindowntime':'mindowntime',
+    'costcurveequation':'costcurvestring', 
+    'heatrateequation':'heatratestring','fuelcost':'fuelcost',
+    'startupcost':'startupcost','shutdowncost':'shutdowncost',
+    'schedulefilename':'schedulefilename','mustrun':'mustrun'}
+fields_loads={'name':'name','bus':'bus','type':'kind','kind':'kind',
+            'p':'P','pd':'P', 'pmin':'Pmin','pmax':'Pmax',
+            'schedulefilename':'schedulefilename',
+            'bidequation':'costcurvestring','costcurveequation':'costcurvestring'}
+
+def parsedir(datadir='./tests/uc/',
+        file_gens='generators.csv',
+<div class="viewcode-block" id="parsedir"><a class="viewcode-back" href="../documentation.html#get_data.parsedir">[docs]</a>        file_loads='loads.csv',
+        file_lines='lines.csv',
+        file_init='initial.csv'):
+    """
+    Import data from spreadsheets and build lists of
+    :mod:`powersystems` classes.
+
+    :param datadir:      directory of data
+    :param file_gens:    spreadsheet of generator data
+    :param file_loads:   spreadsheet of load data
+    :param file_lines:   spreadsheet of line data (not required for ED,UC problems)
+    :param file_init:    spreadsheet of initial time generator data
+        (not required for ED,OPF problems. Defaults will be used
+        for UC problems if not specified.)
+    
+    :returns: buses, lines, times (lists of objects)
+    """
+    if not os.path.isdir(datadir): raise OSError('data directory "{d}" does not exist'.format(d=datadir) )
+    [file_gens,file_loads,file_lines,file_init]=[joindir(datadir,filename) for filename in (file_gens,file_loads,file_lines,file_init)]
+
+    #create times
+    times=setup_times(file_gens,file_loads,datadir)
+    
+    #add loads
+    loads=build_class_list(file_loads,model=powersystems.makeLoad,field_attr_map=fields_loads,times=times)
+    
+    #add gens
+    generators=build_class_list(file_gens,model=powersystems.makeGenerator,field_attr_map=fields_gens,times=times)
+    
+    #add initial conditions
+    generators=setup_initialcond(file_init,generators,times)
+    
+    #add lines
+    try: lines=build_class_list(file_lines,model=powersystems.Line,field_attr_map=fields_lines)
+    except IOError: lines=[]
+    
+    #create buses list    
+    buses=setup_buses(loads,generators)
+    
+    return buses,lines,times
+
+def setup_initialcond(filename,generators,times):
+    '''read initial conditions from spreadsheet and add information to each :class:`powersystems.Generator`.'''</div>
+<div class="viewcode-block" id="setup_initialcond"><a class="viewcode-back" href="../documentation.html#get_data.setup_initialcond">[docs]</a>    if len(times)&lt;=1: return generators #for UC,ED no need to set initial status
+    field_attr_map={'name':'name','status':'u','p':'P','hoursinstatus':'hoursinstatus'}
+    validFields=field_attr_map.keys()
+    
+    initialTime = times.initialTime
+    
+    try: data,fields=readCSV(filename,validFields)
+    except IOError: 
+        #no initial conditions file, use defaults
+        data,fields=[],[]
+        logging.warning('No generation initial conditions file found. Setting to defaults.')
+        for gen in generators: gen.setInitialCondition(time=initialTime)
+        return generators
+        
+    try: attributes=[field_attr_map[drop_case_spaces(f)] for f in fields]
+    except KeyError:
+        print 'Field "{f}" is not in valid fields (case insensitive): {V}.'.format(f=f,V=validFields)
+        raise
+    
+    
+    
+    #set all gens to off (in case some are not listed in initial file)
+    for gen in generators: gen.setInitialCondition(time=initialTime,P=0,u=False)
+    
+    #for each row in initial file, find gen (by name), add initial condifion
+    genNames=[g.name for g in generators]
+    nameCol = attributes.index('name')
+    for row in data:
+        inputs=dict()
+        for c,elem in enumerate(row): 
+            if c==nameCol: continue
+            elif row[c] is not None: inputs[attributes[c]]=row[c]
+        g=genNames.index(row[nameCol])
+        generators[g].setInitialCondition(time=initialTime,**inputs)
+        
+    return generators
+
+def build_class_list(filename,model,field_attr_map,times=None):
+    """</div>
+<div class="viewcode-block" id="build_class_list"><a class="viewcode-back" href="../documentation.html#get_data.build_class_list">[docs]</a>    Create list of class instances from data in a spreadsheet.
+    
+    :param filename: the spreadsheet file (currently just .csv)
+    :param classname: the :mod:`powersystems` class to map the data to
+    :param field_attr_map: the map from field name (the first row of the spreadsheet) to attribute (the class)
+    :param times: for :mod:`powersystems` classes which have schedule file information,
+        a master:class:`~schedule.Timelist` list to pass to :class:`~schedule.Schedule`
+    
+    :returns: a list of class objects
+    """
+    field_attr_map.update({'model':'model','modelschedule':'modelschedule'}) #add a model override
+    dirname=os.path.dirname(filename)
+    classL=[]
+    validFields=field_attr_map.keys()
+    data,fields=readCSV(filename,validFields)
+    try: attributes=[field_attr_map[drop_case_spaces(f)] for f in fields]
+    except KeyError:
+        raise KeyError('Field "{f}" is not in list'.format(f=f)+
+            'of valid fields (case insensitive): {V}.'.format(V=validFields))
+    
+    def getmodel(default,name,inputs):
+        model=default
+        newmodel=inputs.pop(name,None)
+        if newmodel is None:
+            return model
+        else:
+            modname,classname=newmodel.split('.')
+            return getattr(globals()[modname],classname)
+    
+    
+    index=0
+    for row in data:
+        inputs=dict()
+        for c,elem in enumerate(row): 
+            if row[c] is None: continue
+            else: inputs[attributes[c]]= row[c]
+        else:
+            model_local         =getmodel(model,'model',inputs)
+            model_schedule_local=getmodel(schedule.makeSchedule,'modelschedule',inputs)
+
+            schedulefilename=inputs.pop('schedulefilename',None)
+            if schedulefilename is not None:
+                inputs['schedule']=model_schedule_local(joindir(dirname,schedulefilename),times)
+            
+            classL.append( model_local(index=index, **inputs) )
+            index+=1
+    return classL
+
+def setup_times(file_gens,file_loads,datadir):
+    """ Create list of :class:`~schedule.Time` objects </div>
+<div class="viewcode-block" id="setup_times"><a class="viewcode-back" href="../documentation.html#get_data.setup_times">[docs]</a>        from the schedule files. If there are no schedule
+        files (as in ED,OPF), create just a single
+        :class:`~schedule.Time` instance.
+        
+        :param file_gens:    spreadsheet of generator data
+        :param file_loads:   spreadsheet of load data
+        :param datadir:      directory of data
+        
+        :returns: a :class:`~schedule.Timelist` object
+    """
+
+    def makeTimes(datetimeL):
+        '''convert list of datetime objects to Timelist() class'''
+        S=datetimeL[0]
+        I=datetimeL[1] - S #interval
+        E=datetimeL[-1] + I #one past the last time
+        times=schedule.Timelist(Start=S,End=E,interval=I)
+        times.setInitial()
+        return times
+
+    def getTimeCol(filename):
+        if filename is None: return []
+        try: return csvColumn(joindir(datadir,filename),'time')
+        except ValueError: return [] 
+
+
+    timestrL_loads=[]
+    timestrL_gens=[]
+    
+    schedField='schedulefilename'
+    try: loadScheds=csvColumn(file_loads,schedField)
+    except ValueError: loadScheds=[]
+    try: genScheds=csvColumn(file_gens,schedField)
+    except ValueError: genScheds=[]    
+    
+    if len(genScheds)==0 and len(loadScheds)==0:
+        #this is a ED or OPF problem - only one time
+        times=schedule.create_single_time()
+        return times
+
+
+    for filename in loadScheds:
+        if filename!='': timestrL_loads.append( getTimeCol(filename) )
+    for filename in genScheds:
+        if filename!='': timestrL_gens.append( getTimeCol(filename) )
+    nT_loads=[len(L) for L in timestrL_loads]
+    nT_gens =[len(L) for L in timestrL_gens]
+    
+    timestrL =flatten(timestrL_loads)+flatten(timestrL_gens)
+    timedateL=schedule.parse_timestrings(timestrL)
+    
+    if len(timestrL) == max(n for n in nT_loads+nT_gens): 
+        times=makeTimes(timedateL) #just one schedule
+    else: 
+        uniqueTimes=unique(timedateL)
+        #make times from unique list
+        times=makeTimes(uniqueTimes)
+        
+    #check for missing data problems by checking length
+    nT=len(times)
+    if any(n!=nT if n else False for n in nT_loads): 
+        msg='a load has schedule with inconsistent times. load schedule lengths={L} and there are {t} times.'.format(L=nT_loads,t=nT)
+        raise ValueError(msg)
+    if any(n!=nT if n else False for n in nT_gens): 
+        msg='a generator has schedule with inconsistent times. gen schedule lengths={L} and there are {t} times.'.format(L=nT_gens,t=nT)
+        raise ValueError(msg)
+    return times
+    
+    
+def setup_buses(loads,generators):
+    """Create list of :class:`powersystems.Bus` objects </div>
+<div class="viewcode-block" id="setup_buses"><a class="viewcode-back" href="../documentation.html#get_data.setup_buses">[docs]</a>        from the load and generator bus names. Otherwise
+        (as in ED,UC) create just one (system)
+        :class:`powersystems.Bus` instance.
+        
+        :param loads: a list of :class:`powersystems.Load` objects
+        :param generators: a list of :class:`powersystems.Generator` objects
+        :returns: a list of :class:`powersystems.Bus` objects
+    """
+    busNameL=[]
+    busNameL.extend(getattrL(generators,'bus'))
+    busNameL.extend(getattrL(loads,'bus'))
+    busNameL=unique(busNameL)
+    buses=[]
+    swingHasBeenSet=False
+    for b,busNm in enumerate(busNameL):
+        newBus=powersystems.Bus(name=busNm,index=b)
+        for gen in generators: 
+            if gen.bus==newBus.name: newBus.generators.append(gen) 
+            if not swingHasBeenSet: newBus.isSwing=swingHasBeenSet=True
+        for ld in loads: 
+            if ld.bus==newBus.name: newBus.loads.append(ld)             
+        buses.append(newBus)
+    return buses
+
+if __name__ == "__main__": 
+    if len(sys.argv)==1: parsedir()</div>
+    else: 
+        datadir=sys.argv[1]
+        parsedir(datadir=datadir)
+</pre>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why minpower?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../documentation.html">Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About minpower</a></li>
+</ul>
+
+<div class="plusone"><g:plusone></g:plusone></div>
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

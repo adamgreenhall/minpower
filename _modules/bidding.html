@@ -1,0 +1,327 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>bidding &mdash; minpower</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="top" title="minpower" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for bidding</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">config</span> <span class="kn">import</span> <span class="n">default_num_breakpoints</span>
+
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linspace</span><span class="p">,</span> <span class="n">polyval</span><span class="p">,</span> <span class="n">polyder</span><span class="p">,</span> <span class="n">interp</span><span class="p">,</span> <span class="n">poly1d</span>
+<span class="kn">from</span> <span class="nn">pylab</span> <span class="kn">import</span> <span class="n">plot</span><span class="p">,</span><span class="n">show</span><span class="p">,</span><span class="n">savefig</span><span class="p">,</span><span class="n">xlabel</span><span class="p">,</span><span class="n">ylabel</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="k">class</span> <span class="nc">Bid</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Bid"><a class="viewcode-back" href="../documentation.html#bidding.Bid">[docs]</a><span class="sd">    Descibes a bid as modeled by :attr:model. (Bids variables change</span>
+<span class="sd">      with time while :class:`~bidding.PWLmodel` objects do not store</span>
+<span class="sd">      time dependent information.)</span>
+<span class="sd">    </span>
+<span class="sd">    :param model: model for the bid (currently just supports</span>
+<span class="sd">      :class:`~bidding.PWLmodel` objects).</span>
+<span class="sd">    :param iden: identifying string for the bidder</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">model</span><span class="p">,</span><span class="n">iden</span><span class="p">):</span>
+        <span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span>
+
+        <span class="c">#add time variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">segmentsActive</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">fractionsBP</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add_timevars</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iden</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">inputVar</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fractionsBP</span><span class="p">,</span><span class="n">inputVar</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">trueOutput</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">input</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">trueOutput</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+<div class="viewcode-block" id="Bid.output"><a class="viewcode-back" href="../documentation.html#bidding.Bid.output">[docs]</a>    <span class="k">def</span> <span class="nf">incOutput</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">input</span><span class="p">):</span>  <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">incOutput</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Bid.trueOutput"><a class="viewcode-back" href="../documentation.html#bidding.Bid.trueOutput">[docs]</a>    <span class="k">def</span> <span class="nf">plotDeriv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">plotDeriv</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Bid.incOutput"><a class="viewcode-back" href="../documentation.html#bidding.Bid.incOutput">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">showPW</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span></div>
+<div class="viewcode-block" id="Bid.plotDeriv"><a class="viewcode-back" href="../documentation.html#bidding.Bid.plotDeriv">[docs]</a>        <span class="n">plotted</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="n">showPW</span><span class="o">=</span><span class="n">showPW</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Bid.plot"><a class="viewcode-back" href="../documentation.html#bidding.Bid.plot">[docs]</a>        <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">plotted</span>
+    <span class="k">def</span> <span class="nf">constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">inputVar</span><span class="p">,</span><span class="n">status</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Create the constraints for a bid by calling its </span></div>
+<div class="viewcode-block" id="Bid.constraints"><a class="viewcode-back" href="../documentation.html#bidding.Bid.constraints">[docs]</a><span class="sd">        model.constraint() method.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">constraints</span><span class="p">(</span>
+            <span class="n">S</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">segmentsActive</span><span class="p">,</span>
+            <span class="n">F</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fractionsBP</span><span class="p">,</span>
+            <span class="n">inputVar</span><span class="o">=</span><span class="n">inputVar</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">,</span>
+            <span class="n">iden</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">iden</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s">&#39;bid {i}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">iden</span><span class="p">)</span>
+</div>
+
+<span class="k">def</span> <span class="nf">makeModel</span><span class="p">(</span><span class="n">polyText</span><span class="p">,</span><span class="n">multiplier</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">polyCurve</span><span class="o">=</span><span class="n">multiplier</span> <span class="o">*</span> <span class="n">parsePolynomial</span><span class="p">(</span><span class="n">polyText</span><span class="p">)</span></div>
+<div class="viewcode-block" id="makeModel"><a class="viewcode-back" href="../documentation.html#bidding.makeModel">[docs]</a>    <span class="k">if</span> <span class="n">isLinear</span><span class="p">(</span><span class="n">polyCurve</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LinearModel</span><span class="p">(</span><span class="n">polyText</span><span class="p">,</span><span class="n">multiplier</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PWLmodel</span><span class="p">(</span><span class="n">polyText</span><span class="p">,</span><span class="n">multiplier</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+        
+    
+<span class="k">class</span> <span class="nc">PWLmodel</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span></div>
+<div class="viewcode-block" id="PWLmodel"><a class="viewcode-back" href="../documentation.html#bidding.PWLmodel">[docs]</a><span class="sd">    Describes a piecewise linear model of a polynomial curve.</span>
+<span class="sd">    </span>
+<span class="sd">    :param polyText: a string defining the polynomial </span>
+<span class="sd">      (see :meth:`~bidding.parsePolynomial` for more on parsing)</span>
+<span class="sd">    :param multiplier: an optional  multiplier (default is 1) for</span>
+<span class="sd">      the whole polynomial (used for converting heat rate</span>
+<span class="sd">      curves to cost curves)</span>
+<span class="sd">    :param numBreakpoints: number of breakpoints to use when linearizing</span>
+<span class="sd">      the polynomial (currently the default comes from :mod:`config`)</span>
+<span class="sd">    :param (min/max)Input: domain of polynomial to consider</span>
+<span class="sd">    :param (input/output)Nm: names of in/outputs (for plotting)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+        <span class="n">polyText</span><span class="o">=</span><span class="s">&#39;2+10P+0.1P^2&#39;</span><span class="p">,</span><span class="n">multiplier</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">minInput</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">maxInput</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+        <span class="n">numBreakpoints</span><span class="o">=</span><span class="n">default_num_breakpoints</span><span class="p">,</span>
+        <span class="n">inputNm</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">,</span><span class="n">outputNm</span><span class="o">=</span><span class="s">&#39;y&#39;</span><span class="p">):</span>
+                
+        <span class="nb">vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span> <span class="c">#set the input vars above to be part of class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">polyCurve</span><span class="o">=</span><span class="n">multiplier</span> <span class="o">*</span> <span class="n">parsePolynomial</span><span class="p">(</span><span class="n">polyText</span><span class="p">)</span> <span class="c">#parse curve</span>
+        <span class="k">if</span> <span class="n">isLinear</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">polyCurve</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">numBreakpoints</span><span class="o">=</span><span class="mi">2</span> <span class="c">#linear models only need 2 breakpoints</span>
+        <span class="n">inDiscrete</span><span class="o">=</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minInput</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxInput</span><span class="p">,</span> <span class="mf">1e6</span><span class="p">)</span> <span class="c">#fine discretization of the curve</span>
+        <span class="n">outDiscrete</span><span class="o">=</span><span class="n">polyval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">polyCurve</span><span class="p">,</span><span class="n">inDiscrete</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bpInputs</span> <span class="o">=</span> <span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minInput</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxInput</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">numBreakpoints</span><span class="p">)</span> <span class="c">#interpolation to get pwl breakpoints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bpOutputs</span><span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bpInputs</span><span class="p">,</span><span class="n">inDiscrete</span><span class="p">,</span><span class="n">outDiscrete</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bpInputs</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">showPW</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="n">inDiscrete</span><span class="o">=</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minInput</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxInput</span><span class="p">,</span> <span class="mf">1e6</span><span class="p">)</span>
+<div class="viewcode-block" id="PWLmodel.plot"><a class="viewcode-back" href="../documentation.html#bidding.PWLmodel.plot">[docs]</a>        <span class="n">outDiscrete</span><span class="o">=</span><span class="n">polyval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">polyCurve</span><span class="p">,</span><span class="n">inDiscrete</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">showPW</span><span class="p">:</span> <span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bpInputs</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bpOutputs</span><span class="p">,</span><span class="s">&#39;k.--&#39;</span><span class="p">)</span> <span class="c">#show piecewise linearization</span>
+        <span class="n">linePlotted</span><span class="p">,</span> <span class="o">=</span> <span class="n">plot</span><span class="p">(</span><span class="n">inDiscrete</span><span class="p">,</span><span class="n">outDiscrete</span><span class="p">,</span><span class="s">&#39;-&#39;</span><span class="p">)</span>                      <span class="c">#show continuous curve</span>
+        <span class="n">xlabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputNm</span><span class="p">)</span>
+        <span class="n">ylabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputNm</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">P</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">plot</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="n">polyval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">polyCurve</span><span class="p">,</span><span class="n">P</span><span class="p">),</span> <span class="s">&#39;o&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">linePlotted</span><span class="o">.</span><span class="n">get_color</span><span class="p">(),</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span> 
+        <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">linePlotted</span>
+    <span class="k">def</span> <span class="nf">plotDeriv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="s">&#39;-&#39;</span><span class="p">):</span>
+        <span class="n">deriv</span><span class="o">=</span><span class="n">polyder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">polyCurve</span><span class="p">)</span></div>
+<div class="viewcode-block" id="PWLmodel.plotDeriv"><a class="viewcode-back" href="../documentation.html#bidding.PWLmodel.plotDeriv">[docs]</a>        <span class="n">inDiscrete</span><span class="o">=</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minInput</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxInput</span><span class="p">,</span> <span class="mf">1e6</span><span class="p">)</span>
+        <span class="n">outDiscrete</span><span class="o">=</span><span class="n">polyval</span><span class="p">(</span><span class="n">deriv</span><span class="p">,</span><span class="n">inDiscrete</span><span class="p">)</span>
+        <span class="n">linePlotted</span><span class="p">,</span> <span class="o">=</span><span class="n">plot</span><span class="p">(</span><span class="n">inDiscrete</span><span class="p">,</span><span class="n">outDiscrete</span><span class="p">,</span><span class="n">linestyle</span><span class="o">=</span><span class="n">linestyle</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">P</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">plot</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="n">polyval</span><span class="p">(</span><span class="n">deriv</span><span class="p">,</span><span class="n">P</span><span class="p">),</span> <span class="s">&#39;o&#39;</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">linePlotted</span><span class="o">.</span><span class="n">get_color</span><span class="p">(),</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">linePlotted</span>
+                
+    <span class="k">def</span> <span class="nf">add_timevars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">iden</span><span class="p">):</span>
+        <span class="n">S</span><span class="o">=</span><span class="p">[]</span> <span class="c">#S: segment of cost curve is active</span></div>
+<div class="viewcode-block" id="PWLmodel.add_timevars"><a class="viewcode-back" href="../documentation.html#bidding.PWLmodel.add_timevars">[docs]</a>        <span class="n">F</span><span class="o">=</span><span class="p">[]</span> <span class="c">#F: breakpoint weighting fraction</span>
+        <span class="k">for</span> <span class="n">segNum</span><span class="p">,</span><span class="n">seg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">):</span>  <span class="n">S</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newVar</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s">&#39;Binary&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;{iden}_s{segNum}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">segNum</span><span class="o">=</span><span class="n">segNum</span><span class="p">,</span><span class="n">iden</span><span class="o">=</span><span class="n">iden</span><span class="p">)))</span> 
+        <span class="k">for</span> <span class="n">bpNum</span><span class="p">,</span><span class="n">bp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bpInputs</span><span class="p">):</span>    <span class="n">F</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newVar</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">high</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="n">name</span><span class="o">=</span><span class="s">&#39;{iden}_f{bpNum}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="n">bpNum</span><span class="o">=</span><span class="n">bpNum</span><span class="p">,</span>  <span class="n">iden</span><span class="o">=</span><span class="n">iden</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">S</span><span class="p">,</span><span class="n">F</span>
+    <span class="k">def</span> <span class="nf">constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">S</span><span class="p">,</span><span class="n">F</span><span class="p">,</span><span class="n">inputVar</span><span class="p">,</span><span class="n">status</span><span class="p">,</span><span class="n">iden</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span></div>
+<div class="viewcode-block" id="PWLmodel.constraints"><a class="viewcode-back" href="../documentation.html#bidding.PWLmodel.constraints">[docs]</a><span class="sd">        Create the constraints for a single time instance of </span>
+<span class="sd">          a piecewise linear model. </span>
+<span class="sd">          </span>
+<span class="sd">        :param S: list of segment status variables</span>
+<span class="sd">        :param F: list of breakpoint fraction variables</span>
+<span class="sd">        :param inputVar: variable specifying the bidder power</span>
+<span class="sd">        :param status: variable specifying whether bidder is committed</span>
+<span class="sd">        :param iden: identifying string for the bidder and time interval</span>
+<span class="sd">        </span>
+<span class="sd">        :returns: a dictionary of constraints</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">constraints</span><span class="o">=</span><span class="nb">dict</span><span class="p">()</span>
+        <span class="n">constraints</span><span class="p">[</span><span class="s">&#39;oneActiveSegment &#39;</span><span class="o">+</span><span class="n">iden</span><span class="p">]</span><span class="o">=</span> <span class="p">(</span> <span class="n">sumVars</span><span class="p">(</span><span class="n">S</span><span class="p">)</span><span class="o">==</span> <span class="n">status</span> <span class="p">)</span>
+        <span class="n">constraints</span><span class="p">[</span><span class="s">&#39;fractionSums &#39;</span><span class="o">+</span><span class="n">iden</span><span class="p">]</span> <span class="o">=</span>    <span class="p">(</span> <span class="n">sumVars</span><span class="p">(</span><span class="n">F</span><span class="p">)</span> <span class="o">==</span> <span class="n">status</span> <span class="p">)</span>
+        <span class="n">constraints</span><span class="p">[</span><span class="s">&#39;computeInput &#39;</span><span class="o">+</span><span class="n">iden</span><span class="p">]</span> <span class="o">=</span>    <span class="p">(</span> <span class="n">inputVar</span> <span class="o">==</span> <span class="n">sumVars</span><span class="p">(</span> <span class="n">elementwiseMultiply</span><span class="p">(</span><span class="n">F</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bpInputs</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="n">constraints</span><span class="p">[</span><span class="s">&#39;firstSegment &#39;</span><span class="o">+</span><span class="n">iden</span><span class="p">]</span>    <span class="o">=</span> <span class="p">(</span> <span class="n">F</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">)</span>
+        <span class="n">constraints</span><span class="p">[</span><span class="s">&#39;lastSegment &#39;</span><span class="o">+</span><span class="n">iden</span><span class="p">]</span>     <span class="o">=</span> <span class="p">(</span> <span class="n">F</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">S</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">numBreakpoints</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span> 
+            <span class="n">name</span><span class="o">=</span><span class="s">&#39;midSegment {iden} b{bnum}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">iden</span><span class="o">=</span><span class="n">iden</span><span class="p">,</span><span class="n">bnum</span><span class="o">=</span><span class="n">b</span><span class="p">)</span>
+            <span class="n">constraints</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span>                <span class="p">(</span> <span class="n">F</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">sumVars</span><span class="p">([</span><span class="n">S</span><span class="p">[</span><span class="n">b</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">S</span><span class="p">[</span><span class="n">b</span><span class="p">]])</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="n">constraints</span>
+    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">F</span><span class="p">,</span><span class="n">inputVar</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span> <span class="k">return</span> <span class="n">sumVars</span><span class="p">(</span> <span class="n">elementwiseMultiply</span><span class="p">(</span><span class="n">F</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">bpOutputs</span><span class="p">)</span> <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">trueOutput</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">input</span><span class="p">):</span> <span class="k">return</span> <span class="n">polyval</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">polyCurve</span><span class="p">,</span>         <span class="n">value</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span> <span class="p">)</span></div>
+<div class="viewcode-block" id="PWLmodel.output"><a class="viewcode-back" href="../documentation.html#bidding.PWLmodel.output">[docs]</a>    <span class="k">def</span> <span class="nf">incOutput</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">input</span><span class="p">):</span>  <span class="k">return</span> <span class="n">polyval</span><span class="p">(</span> <span class="n">polyder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">polyCurve</span><span class="p">),</span><span class="n">value</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span> <span class="p">)</span></div>
+<div class="viewcode-block" id="PWLmodel.trueOutput"><a class="viewcode-back" href="../documentation.html#bidding.PWLmodel.trueOutput">[docs]</a>    <span class="k">def</span> <span class="nf">texrepresentation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">digits</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span></div>
+<div class="viewcode-block" id="PWLmodel.incOutput"><a class="viewcode-back" href="../documentation.html#bidding.PWLmodel.incOutput">[docs]</a>        <span class="sd">&#39;&#39;&#39;</span></div>
+<div class="viewcode-block" id="PWLmodel.texrepresentation"><a class="viewcode-back" href="../documentation.html#bidding.PWLmodel.texrepresentation">[docs]</a><span class="sd">        Output polynomial to tex-style string.</span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; texrepresentation([ 7,  6, -5])</span>
+<span class="sd">        &#39;-5+6P+7P^2&#39;    </span>
+<span class="sd">        &#39;&#39;&#39;</span>        
+        <span class="n">texstr</span><span class="o">=</span><span class="s">&#39;&#39;</span>
+        <span class="n">exp</span><span class="o">=</span><span class="mi">0</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">polyCurve</span><span class="o">.</span><span class="n">c</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">round</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">digits</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">exp</span><span class="o">!=</span><span class="mi">0</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="n">addChar</span><span class="o">=</span><span class="s">&#39;+&#39;</span> <span class="k">if</span> <span class="n">n</span><span class="o">&gt;</span><span class="mi">0</span> <span class="k">else</span> <span class="s">&#39;&#39;</span>
+            <span class="k">if</span> <span class="n">exp</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span> <span class="n">texstr</span><span class="o">+=</span><span class="s">&#39;{pm}{n:0.{d}f}P^{exp}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pm</span><span class="o">=</span><span class="n">addChar</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span><span class="n">exp</span><span class="o">=</span><span class="n">exp</span><span class="p">,</span><span class="n">d</span><span class="o">=</span><span class="n">digits</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">exp</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="n">texstr</span><span class="o">+=</span><span class="s">&#39;{pm}{n:0.{d}f}P&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pm</span><span class="o">=</span><span class="n">addChar</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span><span class="n">d</span><span class="o">=</span><span class="n">digits</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">exp</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="n">texstr</span><span class="o">+=</span><span class="s">&#39;{pm}{n:0.{d}f}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pm</span><span class="o">=</span><span class="n">addChar</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span><span class="n">d</span><span class="o">=</span><span class="n">digits</span><span class="p">)</span>
+            <span class="n">exp</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">texstr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="s">&#39;+&#39;</span><span class="p">:</span> <span class="n">texstr</span><span class="o">=</span><span class="n">texstr</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">return</span> <span class="n">texstr</span>
+
+<span class="c">#ADD linear model for bids</span>
+<span class="k">class</span> <span class="nc">LinearModel</span><span class="p">(</span><span class="n">PWLmodel</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span></div></div>
+<div class="viewcode-block" id="LinearModel"><a class="viewcode-back" href="../documentation.html#bidding.LinearModel">[docs]</a>        <span class="n">polyText</span><span class="o">=</span><span class="s">&#39;2+10P+0.1P^2&#39;</span><span class="p">,</span><span class="n">multiplier</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">minInput</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">maxInput</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+        <span class="n">numBreakpoints</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">inputNm</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">,</span><span class="n">outputNm</span><span class="o">=</span><span class="s">&#39;y&#39;</span><span class="p">):</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">polyCurve</span> <span class="o">=</span> <span class="n">multiplier</span> <span class="o">*</span> <span class="n">parsePolynomial</span><span class="p">(</span><span class="n">polyText</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">minInput</span><span class="o">=</span><span class="n">minInput</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxInput</span><span class="o">=</span><span class="n">maxInput</span>
+        
+    <span class="k">def</span> <span class="nf">add_timevars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">iden</span><span class="p">):</span> <span class="k">return</span> <span class="p">[],[]</span>
+    <span class="k">def</span> <span class="nf">constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">S</span><span class="p">,</span><span class="n">F</span><span class="p">,</span><span class="n">inputVar</span><span class="p">,</span><span class="n">status</span><span class="p">,</span><span class="n">iden</span><span class="p">):</span> <span class="k">return</span> <span class="nb">dict</span><span class="p">()</span>
+<div class="viewcode-block" id="LinearModel.add_timevars"><a class="viewcode-back" href="../documentation.html#bidding.LinearModel.add_timevars">[docs]</a>    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">F</span><span class="p">,</span><span class="n">inputVar</span><span class="p">):</span> <span class="k">return</span> <span class="n">polyval</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">polyCurve</span><span class="p">,</span><span class="n">inputVar</span> <span class="p">)</span>    </div>
+<div class="viewcode-block" id="LinearModel.constraints"><a class="viewcode-back" href="../documentation.html#bidding.LinearModel.constraints">[docs]</a>    </div>
+<div class="viewcode-block" id="LinearModel.output"><a class="viewcode-back" href="../documentation.html#bidding.LinearModel.output">[docs]</a>    
+<span class="k">def</span> <span class="nf">isLinear</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if a polynomial object is linear using its order attribute.&quot;&quot;&quot;</span></div></div>
+<div class="viewcode-block" id="isLinear"><a class="viewcode-back" href="../documentation.html#bidding.isLinear">[docs]</a>    <span class="k">return</span> <span class="bp">True</span> <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">order</span><span class="o">&lt;=</span><span class="mi">1</span> <span class="k">else</span> <span class="bp">False</span> 
+<span class="k">def</span> <span class="nf">parsePolynomial</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span></div>
+<div class="viewcode-block" id="parsePolynomial"><a class="viewcode-back" href="../documentation.html#bidding.parsePolynomial">[docs]</a><span class="sd">    Parse a string into a numpy polynomial object.</span>
+<span class="sd">    Heavily adapted from `&lt;http://bit.ly/polynomialParse&gt;`_.</span>
+<span class="sd">    </span>
+<span class="sd">    Can handle simple polynomials (addition and subtraction):     </span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; parsePolynomial(&#39;7x^2 + 6x - 5&#39;)</span>
+<span class="sd">    poly1d([ 7,  6, -5])</span>
+<span class="sd">    </span>
+<span class="sd">    or with the explicit * multiplier:</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; parsePolynomial(&#39;7*P^2 + 6*P - 5&#39;)</span>
+<span class="sd">    poly1d([ 7,  6, -5])</span>
+<span class="sd">    </span>
+<span class="sd">    or even with the terms in some random order: </span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; parsePolynomial(&#39;6*P - 5 + 7*P^2&#39;)</span>
+<span class="sd">    poly1d([ 7,  6, -5])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">parse_n</span><span class="p">(</span><span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Parse the number part of a polynomial string term&#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">:</span> <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="nb">str</span> <span class="o">==</span> <span class="s">&#39;-&#39;</span><span class="p">:</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">elif</span> <span class="nb">str</span> <span class="o">==</span> <span class="s">&#39;+&#39;</span><span class="p">:</span> <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">parse_p</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="n">powerPattern</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Parse the power part of a polynomial string term&#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">:</span> <span class="k">return</span> <span class="mi">0</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">powerPattern</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="nb">str</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">res</span><span class="p">:</span> <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">)</span> <span class="c">#remove all whitespace from string</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">&#39;[a-zA-Z]+&#39;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> 
+    <span class="k">try</span><span class="p">:</span> <span class="n">varLetter</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="n">varLetter</span><span class="o">=</span><span class="s">&#39;P&#39;</span>
+    <span class="n">termPattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;([+-]?\d*\.?\d*)\**({var}?\^?\d?)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="o">=</span><span class="n">varLetter</span><span class="p">))</span>
+    <span class="n">powerPattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;{var}\^?(\d)?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="o">=</span><span class="n">varLetter</span><span class="p">))</span>
+    <span class="n">res_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">p</span> <span class="ow">in</span> <span class="n">termPattern</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+        <span class="n">n</span><span class="p">,</span><span class="n">p</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span><span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">p</span><span class="p">:</span> <span class="k">continue</span>
+        <span class="n">n</span><span class="p">,</span><span class="n">p</span> <span class="o">=</span> <span class="n">parse_n</span><span class="p">(</span><span class="n">n</span><span class="p">),</span><span class="n">parse_p</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">powerPattern</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">res_dict</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">p</span><span class="p">):</span> <span class="n">res_dict</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">+=</span> <span class="n">n</span>
+        <span class="k">else</span><span class="p">:</span> <span class="n">res_dict</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span>
+    <span class="n">highest_order</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">res_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">highest_order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span><span class="n">value</span> <span class="ow">in</span> <span class="n">res_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span> <span class="n">res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="n">res</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span> <span class="c">#reverse the order of the polynomial</span>
+    <span class="k">return</span> <span class="n">poly1d</span><span class="p">(</span><span class="n">res</span><span class="p">,</span><span class="n">variable</span><span class="o">=</span><span class="n">varLetter</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why minpower?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../documentation.html">Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About minpower</a></li>
+</ul>
+
+<div class="plusone"><g:plusone></g:plusone></div>
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

@@ -1,0 +1,293 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>commonscripts &mdash; minpower</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="top" title="minpower" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for commonscripts</h1><pre>
+Many of them are one liners.
+"""
+
+import os
+import csv, zipfile
+import itertools,operator
+import datetime
+from dateutil import parser
+
+###### matrix stuff #######
+def getColumn(matrix,colNum): return [row[colNum] for row in matrix]#equiv to matrix(:,j)
+def elementwiseMultiply(La,Lb): return map(operator.mul, La,Lb)
+<div class="viewcode-block" id="getColumn"><a class="viewcode-back" href="../documentation.html#commonscripts.getColumn">[docs]</a>def elementwiseAdd(La,Lb): return map(operator.add, La,Lb)</div>
+<div class="viewcode-block" id="elementwiseMultiply"><a class="viewcode-back" href="../documentation.html#commonscripts.elementwiseMultiply">[docs]</a>def transpose(listoflists): return map(None,*listoflists)</div>
+<div class="viewcode-block" id="elementwiseAdd"><a class="viewcode-back" href="../documentation.html#commonscripts.elementwiseAdd">[docs]</a>def flatten(listoflists):</div>
+<div class="viewcode-block" id="transpose"><a class="viewcode-back" href="../documentation.html#commonscripts.transpose">[docs]</a>    '''Flatten one level of nesting'''</div>
+<div class="viewcode-block" id="flatten"><a class="viewcode-back" href="../documentation.html#commonscripts.flatten">[docs]</a>    return list(itertools.chain.from_iterable(listoflists))
+def unflatten(flatlist,levels):
+    '''Turn a flat list into a nested list, with a specified number of lists per nesting level.</div>
+<div class="viewcode-block" id="unflatten"><a class="viewcode-back" href="../documentation.html#commonscripts.unflatten">[docs]</a>    Excess elements are silently ignored.
+        
+    &gt;&gt;&gt; unflatten(range(12),[2,2,3])
+    [[[0, 1, 2], [3, 4, 5]], [[6, 7, 8], [9, 10, 11]]]
+    '''
+    def nestgenerator(flatlist,levels):
+        if levels:
+            it = nestgenerator(flatlist,levels[1:])
+            while 1: yield list(itertools.islice(it,levels[0]))
+        else:
+            for d in flatlist: yield d        
+    return nestgenerator(flatlist,levels).next()
+def unique(seq): 
+    # order preserving, &lt;http://bit.ly/pyUnique&gt;</div>
+<div class="viewcode-block" id="unique"><a class="viewcode-back" href="../documentation.html#commonscripts.unique">[docs]</a>    U = []
+    [U.append(i) for i in seq if not U.count(i)]
+    return U
+def within(x, val=0, eps=1e-3): return (val-eps) &lt;= x &lt;= (val+eps)
+</div>
+<div class="viewcode-block" id="within"><a class="viewcode-back" href="../documentation.html#commonscripts.within">[docs]</a>def frange(start, stop, step=1.0):
+    """Like range(), but returns list of floats instead</div>
+<div class="viewcode-block" id="frange"><a class="viewcode-back" href="../documentation.html#commonscripts.frange">[docs]</a>    All numbers are generated on-demand using generators
+    """
+
+    cur = float(start)
+    while cur &lt; stop:
+        yield cur
+        cur += step
+
+def replace_all(seq, obj, replacement):
+    def with_index(seq):</div>
+<div class="viewcode-block" id="replace_all"><a class="viewcode-back" href="../documentation.html#commonscripts.replace_all">[docs]</a>        for i in xrange(len(seq)): yield i, seq[i]
+
+    for i, elem in with_index(seq):
+        if elem == obj: seq[i] = replacement
+    return seq
+    
+##### csv stuff #####
+def csvColumn(filenm,fieldNm):
+    '''get a single column of csv data'''</div>
+<div class="viewcode-block" id="csvColumn"><a class="viewcode-back" href="../documentation.html#commonscripts.csvColumn">[docs]</a>    data,fields=readCSV(filenm)
+    try: num=fields.index(fieldNm) #column number to return
+    except ValueError or IndexError: num=indexCaseSpaceInsensitive(fields,fieldNm) #try again with case and space insensitive        
+    return getColumn(data,num)
+
+def readCSV(filenm,validFields='all'):
+    """</div>
+<div class="viewcode-block" id="readCSV"><a class="viewcode-back" href="../documentation.html#commonscripts.readCSV">[docs]</a>    Read data from a csv into a list of lists. 
+    Does parsing of each cell with :func:`csvDataConvert`.
+    Field order doesn't matter. If validFields is not 'all' and
+    a field is not in validFields, its data will be excluded from 
+    the output data.
+        
+    :param filenm: name of the csv file to read
+    :param validFields: list of valid field names (case and space insensitive)
+    
+    :returns: data, a list of lists
+    :returns: fieldsChecked, a list of fields 
+    """
+    csvfile = open(filenm)
+    try: dialect = csv.Sniffer().sniff(csvfile.read(4048))
+    except: 
+        print 'problem with reading: ',filenm
+        raise 
+    csvfile.seek(0)
+    reader = csv.reader(csvfile, dialect)
+    def csvDataConvert(inData, repForBlankStrings=None, checkForNumbers=True):
+        outData=[]
+        for row in inData:
+            newRow=[]
+            for entry in row:
+                entry=entry.strip()
+                if entry.strip()=='': newRow.append( repForBlankStrings )
+                elif checkForNumbers: newRow.append( stringToNumberConversion(entry) )
+                else: newRow.append(entry)
+            #if not all(e=='' for e in newRow): 
+            outData.append(newRow)
+        return outData
+    
+    data=csvDataConvert(zip(*reader))
+    csvfile.close()
+    
+    try: data=transpose(data) #return data in r,c index order 
+    except TypeError:
+        print 'data for {file} is length: {n}'.format(file=filenm,n=len(data))
+        print 'file is {n}B'.format(n=os.path.getsize(filenm))
+        raise
+    fields=data.pop(0) #fields are the first row of csv
+    
+    if validFields=='all': return data,fields
+    else: #ensure that each field is in validFields
+        
+        fieldsChecked=list(fields[:])
+        for i,field in enumerate(fields): 
+            if field in validFields: continue
+            else: 
+                fieldSimple=drop_case_spaces(field)
+                if fieldSimple in validFields: fieldsChecked[fieldsChecked.index(field)]=fieldSimple #compare without considering case or spaces
+                elif fieldSimple is not None: print 'Ignored "{f}" as not a valid input field for {nm}. '.format(f=field,nm=filenm)
+        
+        return data,fieldsChecked    
+
+def writeCSV(fields,data,filename):
+    with open(filename, 'w+') as f:</div>
+<div class="viewcode-block" id="writeCSV"><a class="viewcode-back" href="../documentation.html#commonscripts.writeCSV">[docs]</a>        writer = csv.writer(f)
+        writer.writerow(fields)
+        writer.writerows(data)
+        
+#################### string stuff ##################
+def stringToNumberConversion(s):
+    try: return int(s)</div>
+<div class="viewcode-block" id="stringToNumberConversion"><a class="viewcode-back" href="../documentation.html#commonscripts.stringToNumberConversion">[docs]</a>    except ValueError: 
+        try: return float(s)
+        except ValueError: return s
+def indexCaseSpaceInsensitive(L,s): return map(drop_case_spaces,L).index( drop_case_spaces(s) )
+def drop_case_spaces(s): </div>
+<div class="viewcode-block" id="indexCaseSpaceInsensitive"><a class="viewcode-back" href="../documentation.html#commonscripts.indexCaseSpaceInsensitive">[docs]</a>    '''get rid of spaces in a string and make lower case. will also work with list of strings'''</div>
+<div class="viewcode-block" id="drop_case_spaces"><a class="viewcode-back" href="../documentation.html#commonscripts.drop_case_spaces">[docs]</a>    try: return s.lower().replace(' ','')
+    except AttributeError: 
+        if s is None: return None
+        elif isinstance(s, list): return map(drop_case_spaces,s)
+
+def toPercent(val,digits=0): return '{p:.{d}%}'.format(p=val,d=digits)            
+##################### file stuff ###########################</div>
+<div class="viewcode-block" id="toPercent"><a class="viewcode-back" href="../documentation.html#commonscripts.toPercent">[docs]</a>def splitFilename(fullPathFilenm):
+    '''split a filename into its directory, filename, and extension'''</div>
+<div class="viewcode-block" id="splitFilename"><a class="viewcode-back" href="../documentation.html#commonscripts.splitFilename">[docs]</a>    (dirNm,fullFilenm)=os.path.split(fullPathFilenm)
+    (fileNm,extNm)=os.path.splitext(fullFilenm)
+    return dirNm, fileNm, extNm
+def joindir(dir,file): return os.path.join(dir, file)
+            </div>
+<div class="viewcode-block" id="joindir"><a class="viewcode-back" href="../documentation.html#commonscripts.joindir">[docs]</a>################### time stuff ###########################
+def parseTime(str,formatter=None): 
+    if formatter is None: return parser.parse(str)</div>
+<div class="viewcode-block" id="parseTime"><a class="viewcode-back" href="../documentation.html#commonscripts.parseTime">[docs]</a>    else: return parser.parse(str,**formatter)
+def getTimeFormat(str):
+    formatter=dict()</div>
+<div class="viewcode-block" id="getTimeFormat"><a class="viewcode-back" href="../documentation.html#commonscripts.getTimeFormat">[docs]</a>    t=parseTime(str)
+    if t == parseTime(str,dict(dayfirst=True)): formatter['dayfirst']=True
+    if t == parseTime(str,dict(yearfirst=True)): formatter['yearfirst']=True
+    return formatter
+def hours(t): 
+    try:  return t.days*24.0 + t.seconds/3600.0 #t is a datetime object</div>
+<div class="viewcode-block" id="hours"><a class="viewcode-back" href="../documentation.html#commonscripts.hours">[docs]</a>    except AttributeError: return datetime.timedelta(hours=t) #t is a number
+
+
+####################### class stuff #######################
+def getattrL(L,attribute='name'):
+    '''get the attribute of each class instance in a list'''</div>
+<div class="viewcode-block" id="getattrL"><a class="viewcode-back" href="../documentation.html#commonscripts.getattrL">[docs]</a>    return [getattr(item,attribute) for item in L]
+def getclass_inlist(L,values,attribute='name'):
+    if isinstance(values,str): values=[values]</div>
+<div class="viewcode-block" id="getclass_inlist"><a class="viewcode-back" href="../documentation.html#commonscripts.getclass_inlist">[docs]</a>    attrL=getattrL(L,attribute)
+    try: indL=[attrL.index(value) for value in values]
+    except ValueError:
+        print attrL
+        raise
+    if len(indL)==1: return L[indL[0]]
+    else: return [L[ind] for ind in indL]
+
+####################### dict stuff ########################
+def subset(D, subsetL):
+    '''subset of dictionary'''</div>
+<div class="viewcode-block" id="subset"><a class="viewcode-back" href="../documentation.html#commonscripts.subset">[docs]</a>    subsetLcopy=subsetL
+    for k,key in enumerate(subsetL): #ensure that subset doesn't contain any keys not in D already
+         if key not in D: subsetLcopy.pop(k)
+    return dict(zip(subsetL, map(D.get, subsetLcopy)))
+def subsetexcept(D,exceptL):
+    '''dictionary without exceptions list'''</div>
+<div class="viewcode-block" id="subsetexcept"><a class="viewcode-back" href="../documentation.html#commonscripts.subsetexcept">[docs]</a>    for e in exceptL: D.pop(e)
+    return D
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why minpower?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../documentation.html">Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About minpower</a></li>
+</ul>
+
+<div class="plusone"><g:plusone></g:plusone></div>
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

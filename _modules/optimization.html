@@ -1,0 +1,258 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>optimization &mdash; minpower</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="top" title="minpower" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for optimization</h1><pre>
+Currently uses pulp but is transitioning to using coopr.
+"""
+
+from config import optimization_package
+
+if optimization_package=='pulp':
+    import pulp
+elif optimization_package=='coopr':
+    import coopr.pyomo as pyomo
+    from coopr.opt.base import solver as cooprsolver
+else: raise ImportError('optimization library must be coopr or pulp.')
+import logging
+
+
+
+if optimization_package=='coopr':
+    class Problem(object):
+        '''an optimization problem/model based on pyomo'''
+        def __init__(self):
+            self.model=pyomo.AbstractModel()
+
+        def addObjective(self,expression,kind=pyomo.minimize):
+            '''add an objective to the problem'''
+            self.model.objective=pyomo.Objective(rule=expression,sense=kind)
+        def addConstraints(self,constraintsD):
+            '''add a dictionary of constraints (keyed by name) to the problem'''
+            try:
+                for name,val in constraintsD.iteritems(): self.addConstraint(name,val)
+            except AttributeError:
+                if constraintsD is None: pass
+                else: raise AttributeError('addConstraints takes a dictionary of constraints argument')
+        def addConstraint(self,name,expression):
+            '''add a single constraint to the problem'''
+            setattr(self.model, name, pyomo.Constraint(name=name,rule=expression))
+        def addVar(self,name,kind='Reals',low=-float('inf'),high=float('inf')):
+            '''add a single variable to the problem'''
+            #TODO: what kinds are acceptable (how to get Binary)
+            setattr(self.model, name, pyomo.Var(name=name,bounds=(low,high) ))#,domain=kind))
+
+        def solve(self,solver='cplex'):
+            ''' solve the optimization problem.
+                valid solvers are {cplex,gurobi,glpk}'''
+
+            logging.info('Solving with {s} ... '.format(s=solver))
+            instance=self.model.create()
+            opt = cooprsolver.SolverFactory(solver)
+            results = opt.solve(instance, suffixes=['.*'])
+            instance.update_results(results)
+            self.results=results
+            return results
+        def __getattr__(self,name):
+            try: return getattr(self.model,name)
+            except AttributeError:
+                raise AttributeError('the model has no variable/constraint/... named "{n}"'.format(n=name))
+
+    def value(name,result):
+        '''value of an optimization variable'''
+        var=result.solution.variable[name]
+        return var.Value
+    def dual(name, result):
+        '''dual value of an optimization constraint'''
+        cons=result.solution.constraint[name]
+        try: return cons.dual
+        except AttributeError: return None #not active constraint
+
+    def sumVars(variables): return sum(variables)
+    def newProblem(*args,**kwargs): return Problem_coopr()
+    def solve(problem,solver,verbose): return problem.solve(solver,verbose)
+
+elif optimization_package=='pulp':
+    class Problem(pulp.LpProblem):
+        '''an optimization problem'''
+<div class="viewcode-block" id="Problem"><a class="viewcode-back" href="../documentation.html#optimization.Problem">[docs]</a>
+        def addObjective(self,expression,name='objective'):
+            '''add an objective to the problem'''
+<div class="viewcode-block" id="Problem.addObjective"><a class="viewcode-back" href="../documentation.html#optimization.Problem.addObjective">[docs]</a>            self+=expression,name
+        def newVar(self,*args,**kwargs):
+            #low=-float('inf'),high=float('inf')):</div>
+<div class="viewcode-block" id="Problem.newVar"><a class="viewcode-back" href="../documentation.html#optimization.Problem.newVar">[docs]</a>            '''create an optimization variable'''
+            return newVar(*args,**kwargs)
+        def addConstraints(self, constraintsD):
+            '''add a dictionary of constraints (keyed by name) to the problem'''</div>
+<div class="viewcode-block" id="Problem.addConstraints"><a class="viewcode-back" href="../documentation.html#optimization.Problem.addConstraints">[docs]</a>            try:
+                for name,val in constraintsD.iteritems(): self=addConstraint(self,val,name)
+            except AttributeError:
+                if constraintsD is None: pass
+                else: raise AttributeError('addConstraints takes a dictionary of constraints argument')
+
+        def write(self,filename):
+            '''write the problem to a human-readable file'''</div>
+<div class="viewcode-block" id="Problem.write"><a class="viewcode-back" href="../documentation.html#optimization.Problem.write">[docs]</a>            self.writeLP(filename)
+        def statusText(self):
+            '''solution status of the problem'''</div>
+<div class="viewcode-block" id="Problem.statusText"><a class="viewcode-back" href="../documentation.html#optimization.Problem.statusText">[docs]</a>            return pulp.LpStatus[self.status]
+        def save(self,filename='problem.dat'):
+            from yaml import dump</div>
+<div class="viewcode-block" id="Problem.save"><a class="viewcode-back" href="../documentation.html#optimization.Problem.save">[docs]</a>            with open(filename, 'w+') as file: dump(self, file)
+
+
+    def solve(problem,solver='cplex'):
+        '''solve the optimization problem'''</div></div>
+<div class="viewcode-block" id="solve"><a class="viewcode-back" href="../documentation.html#optimization.solve">[docs]</a>        logging.info('Solving with {s} ... '.format(s=solver))
+        try:
+            if   solver.lower()=='cplex':  out=problem.solve(pulp.CPLEX_CMD(msg=0)),
+            elif solver.lower()=='glpk':   out=problem.solve(pulp.GLPK_CMD(msg=0)),
+            elif solver.lower()=='gurobi': out=problem.solve(pulp.GUROBI(msg=0))
+            elif solver.lower()=='coin':   out=problem.solve(pulp.COINMP_DLL(msg=0))
+            else:
+                msg='Couldnt find the solver "{}"'.format(solver)
+                raise OptimizationError(msg)
+        except pulp.solvers.PulpSolverError:
+            problem.status=0
+            out=None
+
+        if problem.status:
+            logging.info('{stat} in {time:0.4f} sec'.format(
+                stat=problem.statusText(),
+                time=problem.solutionTime))
+        #else: logging.warning(problem.statusText())
+
+        return out
+    def value(variable):
+        '''value of an optimization variable'''</div>
+<div class="viewcode-block" id="value"><a class="viewcode-back" href="../documentation.html#optimization.value">[docs]</a>        try: return pulp.value(variable)
+        except AttributeError: return variable
+    def dual(constraint,default=None):
+        '''dual value of an optimization constraint'''</div>
+<div class="viewcode-block" id="dual"><a class="viewcode-back" href="../documentation.html#optimization.dual">[docs]</a>        try: return constraint.pi
+        except AttributeError:
+            logging.warning('Duals information not supported by GLPK.')
+            return default
+
+    def sumVars(variables):
+        '''sums a list of optimization variables'''</div>
+<div class="viewcode-block" id="sumVars"><a class="viewcode-back" href="../documentation.html#optimization.sumVars">[docs]</a>        return pulp.lpSum(variables)
+    def newProblem(name='problem',kind=pulp.LpMinimize):
+        '''create a new problem'''</div>
+<div class="viewcode-block" id="newProblem"><a class="viewcode-back" href="../documentation.html#optimization.newProblem">[docs]</a>        return Problem(name=name,sense=kind)
+    def addConstraint(problem,expression,name=''):
+        '''add a single constraint to the problem'''</div>
+<div class="viewcode-block" id="addConstraint"><a class="viewcode-back" href="../documentation.html#optimization.addConstraint">[docs]</a>        problem+=expression,name
+        return problem
+    def newVar(name='',kind='Continuous',low=-1000000,high=1000000):
+        '''create an optimization variable'''</div>
+<div class="viewcode-block" id="newVar"><a class="viewcode-back" href="../documentation.html#optimization.newVar">[docs]</a>        #note that if binary variable, pulp will reset the bounds to (0,1)
+        #note that if using glpk, bounds of -inf and inf produces error
+        return pulp.LpVariable(name=name,cat=kind,lowBound=low,upBound=high)
+
+class OptimizationError(Exception):
+    def __init__(self, ivalue):</div>
+<div class="viewcode-block" id="OptimizationError"><a class="viewcode-back" href="../documentation.html#optimization.OptimizationError">[docs]</a>        if ivalue: self.value=ivalue
+        else: self.value="Optimization Error: there was a problem"
+        Exception.__init__( self, self.value)
+
+    def __str__(self): return self.value
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why minpower?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../documentation.html">Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About minpower</a></li>
+</ul>
+
+<div class="plusone"><g:plusone></g:plusone></div>
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

@@ -1,0 +1,276 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>solve &mdash; minpower</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="top" title="minpower" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for solve</h1><pre>
+(ED, OPF, UC, and SCUC problems).
+"""
+
+import sys,os,logging
+from datetime import datetime as wallclocktime
+
+import optimization
+import get_data
+import powersystems
+import results
+import config
+from commonscripts import joindir,flatten
+
+  
+def _setup_logging(fn):
+    ''' set up the logging to report on the status'''
+    logging.basicConfig( level=logging.INFO, format='%(levelname)s: %(message)s')
+    return fn
+    
+@_setup_logging
+def problem(datadir='./tests/uc/',
+    outputs=dict(
+<div class="viewcode-block" id="problem"><a class="viewcode-back" href="../documentation.html#solve.problem">[docs]</a>        shell=True,problemfile=True,
+        vizualization=True,csv=True),
+    solver=config.optimization_solver):
+    
+    """ Solve a optimization problem in a directory.
+        Problem type is determined from the data.
+            
+        :param datadir: directory of data files, see :mod:`get_data`
+        :param outputs: dictionary of outputs flags: {shell, problemfile, vizualization,csv}
+        :param solver:  choice of solver
+        
+        :returns: :class:`~results.Solution` object
+    """
+    
+    buses,lines,times=get_data.parsedir(datadir)
+
+    if times.spanhrs&lt;=24:
+        problem=create_problem(buses,lines,times)
+        if outputs['problemfile']: problem.write(joindir(datadir,'problem-formulation.lp'))
+        optimization.solve(problem,solver)
+        solution=results.makeSolution(times=times,lines=lines,buses=buses,problem=problem,datadir=datadir)
+    else: #split into multi-stage problem
+        problemsL,stageTimes=create_problem_multistage(buses,lines,times,datadir)
+        solution=results.makeMultistageSolution(problemsL=problemsL,times=times,stageTimes=stageTimes,buses=buses,lines=lines,datadir=datadir)
+
+    logging.info('displaying solution')
+    if outputs['shell']: solution.show()
+    if outputs['csv']: solution.saveCSV()
+    if outputs['vizualization']: solution.vizualization()
+    return solution
+
+def create_problem(buses,lines,times,load_shedding_allowed=False):
+    """</div>
+<div class="viewcode-block" id="create_problem"><a class="viewcode-back" href="../documentation.html#solve.create_problem">[docs]</a>        Create a power systems optimization problem.
+        
+        :param buses: list of :class:`~powersystems.Bus` objects
+        :param lines: list of :class:`~powersystems.Line` objects
+        :param times: :class:`~schedule.Timelist` object
+        :param filename: (optional) create a .lp file of the problem
+        
+        :returns: :class:`~optimization.Problem` object
+    """
+
+    Bmatrix=powersystems.Network(buses,lines).Bmatrix
+    prob=optimization.newProblem()
+    costs=[]
+    
+    for bus in buses:
+        if len(buses)&gt;1: bus.add_timevars(times)
+        
+        for gen in bus.generators:
+            gen.add_timevars(times)
+            prob.addConstraints(gen.constraints(times))
+            for time in times: costs.append(gen.cost(time))
+
+        for load in bus.loads:
+            load.add_timevars(times,shedding_allowed=load_shedding_allowed)
+            prob.addConstraints(load.constraints(times))
+            for time in times: costs.append(-1*load.benifit(time))
+            
+    for line in lines:
+        line.add_timevars(times)
+        prob.addConstraints(line.constraints(times,buses))
+                    
+    for bus in buses:
+        prob.addConstraints(bus.constraints(times,Bmatrix,buses))
+        
+    prob.addObjective( optimization.sumVars(costs) )
+    
+    return prob
+
+
+
+
+
+
+def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHrs=24,writeproblem=False, showclock=True):
+    """</div>
+<div class="viewcode-block" id="create_problem_multistage"><a class="viewcode-back" href="../documentation.html#solve.create_problem_multistage">[docs]</a>    Create a multi-stage power systems optimization problem.
+    Each stage will be one optimization run. A stage's final
+    conditions will be the next stage's initial condition.
+    Multi-stage problems are generally used for UCs over many days.
+    
+    :param buses: list of :class:`~powersystems.Bus` objects
+    :param lines: list of :class:`~powersystems.Line` objects
+    :param times: :class:`~schedule.Timelist` object
+    :param intervalHrs: define the number of hours per interval
+    :param stageHrs: define the number of hours per stage
+    
+    
+    :returns: a list of :class:`~optimization.Problem` objects (one per stage)
+    :returns: a list of :class:`~schedule.Timelist` objects (one per stage)
+    
+    """
+        
+    if not intervalHrs: intervalHrs=times.intervalhrs
+        
+    stageTimes=times.subdivide(hrsperdivision=stageHrs,hrsinterval=intervalHrs)
+    problemsL=[]
+
+    
+    def set_initialconditions(buses,initTime):
+        for bus in buses:
+            for gen in bus.generators:
+                try: 
+                    gen.setInitialCondition(time=initTime,**gen.finalstatus)
+                    del gen.finalstatus
+                except AttributeError: pass #first stage of problem already has initial time definied
+
+    def get_finalconditions(buses,times):
+        for bus in buses:
+            for gen in bus.generators: gen.finalstatus=gen.getstatus(t=times[-1],times=times)
+
+
+    for t_stage in stageTimes:
+        logging.info('Stage starting at {} {}'.format(t_stage[0].Start, 'time={}'.format(wallclocktime.now()) if showclock else ''))
+        set_initialconditions(buses,t_stage.initialTime)
+        stageproblem=create_problem(buses,lines,t_stage)
+        if writeproblem: stageproblem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
+        
+        optimization.solve(stageproblem)
+        if stageproblem.status!=1: 
+            #redo stage, with shedding allowed
+            logging.warning('Stage infeasible, re-runnning with load shedding.')
+            stageproblem=create_problem(buses,lines,t_stage,load_shedding_allowed=True)
+            optimization.solve(stageproblem)
+            
+        if stageproblem.status==1:
+            get_finalconditions(buses,t_stage)
+            stage_sln=results.get_stage_solution(stageproblem,buses,t_stage)
+            problemsL.append(stage_sln)
+            
+        else: 
+            print stageproblem.status,stageproblem.statusText()
+            stageproblem.write('infeasible-problem.lp')
+            results.write_last_stage_status(buses,t_stage)
+            msg='Infeasible problem - writing to .lp file for examination.'
+            raise optimization.OptimizationError(msg)
+    return problemsL,stageTimes
+
+if __name__ == "__main__": 
+    ''' command line input'''</div>
+    _setup_logging()
+    if len(sys.argv)==1: problem()
+    elif len(sys.argv)==2: 
+        datadir=sys.argv[1]
+        if not os.path.isdir(datadir):
+            raise OSError( "data directory does not exist: '{d}'".format(d=datadir) )
+        problem(datadir=datadir)
+    else: 
+        raise IOError('solve.main() takes only one input argument (the directory). {n} inputs passed'.format(n=len(sys.argv)))
+</pre>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why minpower?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../documentation.html">Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About minpower</a></li>
+</ul>
+
+<div class="plusone"><g:plusone></g:plusone></div>
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

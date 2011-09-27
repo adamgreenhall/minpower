@@ -1,0 +1,199 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>For Researchers &mdash; minpower</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="top" title="minpower" href="index.html" />
+    <link rel="next" title="Economic Dispatch" href="economic-dispatch.html" />
+    <link rel="prev" title="Intro to Python" href="python-intro.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="for-researchers">
+<h1>For Researchers<a class="headerlink" href="#for-researchers" title="Permalink to this headline">¶</a></h1>
+<p>You&#8217;re probably a researcher or grad student interested in power system optimization.</p>
+<p><strong>minpower</strong> is a powerful tool even if you just want to use it as a <a class="reference external" href="http://en.wikipedia.org/wiki/Black_box">black box</a> for solving <a class="reference internal" href="economic-dispatch.html"><em>ED</em></a>, <a class="reference internal" href="optimal-power-flow.html"><em>OPF</em></a>, or <a class="reference internal" href="unit-commitment.html"><em>UC</em></a> problems. Some great built in features include:</p>
+<ul class="simple">
+<li>polynomial cost or bid curves</li>
+<li>multi-stage unit commitment</li>
+<li>great visualizations</li>
+</ul>
+<p>But where <strong>minpower</strong> really shines is when you want to <a class="reference internal" href="#add-model"><em>add in a model</em></a> of an electric vehicle aggregator. Or run a wind farm profitability study where <a class="reference internal" href="unit-commitment.html"><em>UC</em></a> is just another <a class="reference internal" href="#procedure"><em>procedure</em></a> that you need in a long chain of analysis. When you want to do research.</p>
+<p>Because <strong>minpower</strong> is written in Python, the code is easy to read and write. Because <strong>minpower</strong> is open source you can use models other people have written and create your own.</p>
+<div class="section" id="calling-a-procedure">
+<span id="procedure"></span><h2>Calling a procedure<a class="headerlink" href="#calling-a-procedure" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ol class="arabic">
+<li><p class="first">Find the procedure you are looking for (use the search box on the sidebar or check the <a class="reference internal" href="documentation.html"><em>Documentation</em></a>)</p>
+</li>
+<li><p class="first">Import the procedure into your own script:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">minpower.solve</span> <span class="kn">import</span> <span class="n">create_problem</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div></blockquote>
+</div>
+<div class="section" id="adding-your-own-model">
+<span id="add-model"></span><h2>Adding your own model<a class="headerlink" href="#adding-your-own-model" title="Permalink to this headline">¶</a></h2>
+<p>The models in <strong>minpower</strong> are all <a class="reference internal" href="python-intro.html#object-oriented"><em>object oriented</em></a>. Check out <a class="reference internal" href="documentation.html#module-powersystems" title="powersystems"><tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt></a> for examples of existing models.
+Note the five standard methods:</p>
+<ul class="simple">
+<li><tt class="xref py py-meth docutils literal"><span class="pre">__init__()</span></tt> creates a new object of that class</li>
+<li><tt class="xref py py-meth docutils literal"><span class="pre">add_timevars()</span></tt> sets up the optimization variables</li>
+<li><tt class="xref py py-meth docutils literal"><span class="pre">constraints()</span></tt> sets up the optimization constraints (and returns them in a dictionary)</li>
+<li><tt class="xref py py-meth docutils literal"><span class="pre">cost()</span></tt> defines a cost (if any) for the time</li>
+<li><tt class="xref py py-meth docutils literal"><span class="pre">__str__()</span></tt> defines a <abbr title="for use in creating constraints, which must have unique names">unique string</abbr> representing the object</li>
+</ul>
+<p>Then create your own model:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">EV_aggregator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;an example model of an electric vehicle aggregator&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">number_cars</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">per_car_capacity</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="n">index</span><span class="o">=</span><span class="bp">None</span>
+        <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;create a new aggregator object&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">locals</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">add_timevars</span><span class="p">(</span><span class="n">times</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;create the aggregator&#39;s optimization</span>
+<span class="sd">           variables for each time here&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">constraints</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;define the aggregator&#39;s optimization</span>
+<span class="sd">           constraints here&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">constraintsD</span>
+    <span class="k">def</span> <span class="nf">cost</span><span class="p">(</span><span class="n">time</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;define the aggregator&#39;s cost function here&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;a unique identifier for the aggregator&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&#39;agg_&#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span>
+    <span class="c">#some more methods for the aggregator</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This section is part of a larger tutorial on creating your own models in <strong>minpower</strong> that is coming soon.</p>
+</div>
+<div class="section" id="wishlist">
+<h3>Wishlist<a class="headerlink" href="#wishlist" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>stochastic wind</li>
+<li>storage</li>
+<li>cascading hydro-systems</li>
+</ul>
+</div>
+</div>
+<div class="section" id="collaboration">
+<h2>Collaboration<a class="headerlink" href="#collaboration" title="Permalink to this headline">¶</a></h2>
+<p>For collaboration <a class="reference external" href="mailto:workwith&#37;&#52;&#48;adamgreenhall&#46;com">email Adam</a>.</p>
+</div>
+<div class="section" id="help">
+<h2>Help<a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h2>
+<p>Perhaps you are unfamiliar with Python? Check out <a class="reference internal" href="python-intro.html"><em>Intro to Python</em></a> to get up to speed.</p>
+<p>Check out <a class="reference external" href="http://stackoverflow.com/questions/tagged/python">Stackoverflow</a> for general Python help - it&#8217;s approximately
+one million times better than any other help forum. Hashtag any <strong>minpower</strong> questions you post
+with <a class="reference external" href="http://stackoverflow.com/questions/tagged/minpower">#minpower</a></p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="why-minpower.html">Why minpower?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="students.html">For Students</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">For Researchers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#calling-a-procedure">Calling a procedure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-your-own-model">Adding your own model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#wishlist">Wishlist</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#collaboration">Collaboration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#help">Help</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About minpower</a></li>
+</ul>
+
+<div class="plusone"><g:plusone></g:plusone></div>
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

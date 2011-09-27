@@ -1,0 +1,351 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Data Input &mdash; minpower</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="top" title="minpower" href="index.html" />
+    <link rel="up" title="Documentation" href="documentation.html" />
+    <link rel="next" title="Collaborate" href="collaborate.html" />
+    <link rel="prev" title="Documentation" href="documentation.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="data-input">
+<h1>Data Input<a class="headerlink" href="#data-input" title="Permalink to this headline">¶</a></h1>
+<p>There is a huge advantage to putting some distance between your data and your models. This page describes the process of translating between data (in spreadsheets) and the model (Python classes).</p>
+<p><a class="reference internal" href="documentation.html#module-get_data" title="get_data"><tt class="xref py py-mod docutils literal"><span class="pre">get_data</span></tt></a> takes a directory of <abbr title="currently just .csv">spreadsheet files</abbr> and  handles the process of translating the data into lists of usable <a class="reference internal" href="documentation.html#module-powersystems" title="powersystems"><tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt></a> objects &#8212; <a class="reference internal" href="documentation.html#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt></a>, <a class="reference internal" href="documentation.html#powersystems.Load" title="powersystems.Load"><tt class="xref py py-class docutils literal"><span class="pre">Load</span></tt></a>, and <a class="reference internal" href="documentation.html#powersystems.Line" title="powersystems.Line"><tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt></a>. <a class="footnote-reference" href="#f1" id="id1">[1]</a></p>
+<p>A simple example is the generators table for a dispatch <a class="footnote-reference" href="#f2" id="id2">[2]</a>:</p>
+<div class="highlight-python"><pre>name,     P max, cost curve equation
+cheap,    100,   200 + 5 * P + .3 P^2
+expensive,100,   300 + 10 P + .25 P^2 + .005 P^3
+</pre>
+</div>
+<p>Field names, found on <strong>the top row of the spreadsheet</strong>, tell <a class="reference internal" href="documentation.html#module-get_data" title="get_data"><tt class="xref py py-mod docutils literal"><span class="pre">get_data</span></tt></a> that <tt class="docutils literal"><span class="pre">cheap</span></tt> and <tt class="docutils literal"><span class="pre">expensive</span></tt> are generator names, and that <tt class="docutils literal"><span class="pre">100</span></tt> is a maximum power. Then <a class="reference internal" href="documentation.html#get_data.build_class_list" title="get_data.build_class_list"><tt class="xref py py-func docutils literal"><span class="pre">get_data.build_class_list()</span></tt></a> maps the data in each row into the object&#8217;s appropriate attribute as described in the <a class="reference internal" href="#fields-gens"><em>generators table below</em></a> - the equivalent of typing the following code:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">minpower.powersystems</span> <span class="kn">import</span> <span class="n">Generator</span>
+<span class="n">gen1</span><span class="o">=</span><span class="n">Generator</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;cheap&#39;</span><span class="p">,</span> <span class="n">Pmax</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">costcurvestring</span><span class="o">=</span><span class="s">&#39;200 + 5 * P + .3 P^2&#39;</span><span class="p">)</span>
+<span class="n">gen2</span><span class="o">=</span><span class="n">Generator</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;expensive&#39;</span><span class="p">,</span> <span class="n">Pmax</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">costcurvestring</span><span class="o">=</span><span class="s">&#39;300 + 10 P + .25 P^2 + .005 P^3&#39;</span><span class="p">)</span>
+<span class="k">return</span> <span class="p">[</span><span class="n">gen1</span><span class="p">,</span><span class="n">gen2</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>The field names in a <tt class="docutils literal"><span class="pre">csv</span></tt> file (the top row) are treated as <strong>case</strong> and <strong>space</strong> insensitive! This means that &#8220;<tt class="docutils literal"><span class="pre">Schedule</span> <span class="pre">FiLe</span></tt>&#8221; will be translated to &#8220;<tt class="docutils literal"><span class="pre">schedulefile</span></tt>&#8221;.</p>
+<p class="last">Field order does not matter. If fields are left out, the values will be set to the class default. Entries which are left blank for a row of data will be given default values.</p>
+</div>
+<div class="section" id="field-names-to-attributes">
+<h2>Field Names to Attributes<a class="headerlink" href="#field-names-to-attributes" title="Permalink to this headline">¶</a></h2>
+<p>Field names have a mapping to <a class="reference internal" href="documentation.html#module-powersystems" title="powersystems"><tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt></a> object attributes as described in the tables below.</p>
+<div class="section" id="generator">
+<span id="fields-gens"></span><h3><a class="reference internal" href="documentation.html#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt></a><a class="headerlink" href="#generator" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="27%" />
+<col width="73%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Field</th>
+<th class="head">Attribute</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>bus</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">bus</span></tt></td>
+</tr>
+<tr><td>costcurveequation</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">costcurvestring</span></tt></td>
+</tr>
+<tr><td>fuelcost</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">fuelcost</span></tt></td>
+</tr>
+<tr><td>heatrateequation</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">heatratestring</span></tt></td>
+</tr>
+<tr><td>kind</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">kind</span></tt></td>
+</tr>
+<tr><td>mindowntime</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">mindowntime</span></tt></td>
+</tr>
+<tr><td>minuptime</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">minuptime</span></tt></td>
+</tr>
+<tr><td>mustrun</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">mustrun</span></tt></td>
+</tr>
+<tr><td>name</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></td>
+</tr>
+<tr><td>pmax</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">Pmax</span></tt></td>
+</tr>
+<tr><td>pmin</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">Pmin</span></tt></td>
+</tr>
+<tr><td>rampratemax</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">rampratemax</span></tt></td>
+</tr>
+<tr><td>rampratemin</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">rampratemin</span></tt></td>
+</tr>
+<tr><td>schedulefilename</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">schedulefilename</span></tt></td>
+</tr>
+<tr><td>shutdowncost</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">shutdowncost</span></tt></td>
+</tr>
+<tr><td>startupcost</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">startupcost</span></tt></td>
+</tr>
+<tr><td>type</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">kind</span></tt></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+<div class="section" id="line">
+<h3><a class="reference internal" href="documentation.html#powersystems.Line" title="powersystems.Line"><tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt></a><a class="headerlink" href="#line" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="26%" />
+<col width="74%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Field</th>
+<th class="head">Attribute</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>from</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">From</span></tt></td>
+</tr>
+<tr><td>name</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></td>
+</tr>
+<tr><td>pmax</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">Pmax</span></tt></td>
+</tr>
+<tr><td>to</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">To</span></tt></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+<div class="section" id="load">
+<h3><a class="reference internal" href="documentation.html#powersystems.Load" title="powersystems.Load"><tt class="xref py py-class docutils literal"><span class="pre">Load</span></tt></a><a class="headerlink" href="#load" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="71%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Field</th>
+<th class="head">Attribute</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>bus</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">bus</span></tt></td>
+</tr>
+<tr><td>kind</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">kind</span></tt></td>
+</tr>
+<tr><td>name</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt></td>
+</tr>
+<tr><td>p</td>
+<td><a class="reference internal" href="documentation.html#powersystems.Load.P" title="powersystems.Load.P"><tt class="xref py py-attr docutils literal"><span class="pre">P</span></tt></a></td>
+</tr>
+<tr><td>pd</td>
+<td><a class="reference internal" href="documentation.html#powersystems.Load.P" title="powersystems.Load.P"><tt class="xref py py-attr docutils literal"><span class="pre">P</span></tt></a></td>
+</tr>
+<tr><td>pmax</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">Pmax</span></tt></td>
+</tr>
+<tr><td>pmin</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">Pmin</span></tt></td>
+</tr>
+<tr><td>schedulefilename</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">schedulefilename</span></tt></td>
+</tr>
+<tr><td>type</td>
+<td><tt class="xref py py-attr docutils literal"><span class="pre">kind</span></tt></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="polynomials">
+<h2>Polynomials<a class="headerlink" href="#polynomials" title="Permalink to this headline">¶</a></h2>
+<p>Polynomials are input as a simple string and become <tt class="xref py py-class docutils literal"><span class="pre">numpy.poly1d</span></tt> objects. See <a class="reference internal" href="documentation.html#bidding.parsePolynomial" title="bidding.parsePolynomial"><tt class="xref py py-func docutils literal"><span class="pre">bidding.parsePolynomial()</span></tt></a>.</p>
+<p class="rubric">Footnotes</p>
+<table class="docutils footnote" frame="void" id="f1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>From <a class="reference internal" href="documentation.html#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt></a>, <a class="reference internal" href="documentation.html#powersystems.Load" title="powersystems.Load"><tt class="xref py py-class docutils literal"><span class="pre">Load</span></tt></a>, and <a class="reference internal" href="documentation.html#powersystems.Line" title="powersystems.Line"><tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt></a> objects <a class="reference internal" href="documentation.html#module-get_data" title="get_data"><tt class="xref py py-mod docutils literal"><span class="pre">get_data</span></tt></a> also creates two additional lists of power system objects: <a class="reference internal" href="documentation.html#powersystems.Bus" title="powersystems.Bus"><tt class="xref py py-class docutils literal"><span class="pre">Bus</span></tt></a> and <a class="reference internal" href="documentation.html#schedule.Time" title="schedule.Time"><tt class="xref py py-class docutils literal"><span class="pre">Time</span></tt></a>.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="f2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Don&#8217;t worry about the format (quotes and delimiters) of the <tt class="docutils literal"><span class="pre">csv</span></tt> file too much. <a class="reference internal" href="documentation.html#commonscripts.readCSV" title="commonscripts.readCSV"><tt class="xref py py-func docutils literal"><span class="pre">readCSV()</span></tt></a> uses the very flexible <a class="reference external" href="http://docs.python.org/release/2.7.1/library/csv.html#csv.Sniffer" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">csv.Sniffer</span></tt></a> to decipher the format.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="why-minpower.html">Why minpower?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="researchers.html">For Researchers</a></li>
+</ul>
+<ul class="current current current">
+<li class="toctree-l1 current"><a class="reference internal" href="economic-dispatch.html">Economic Dispatch</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="">Data Input</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#field-names-to-attributes">Field Names to Attributes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#generator"><tt class="docutils literal"><span class="pre">Generator</span></tt></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line"><tt class="docutils literal"><span class="pre">Line</span></tt></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#load"><tt class="docutils literal"><span class="pre">Load</span></tt></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#polynomials">Polynomials</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="economic-dispatch.html#the-problem">The problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="economic-dispatch.html#the-basics">The basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="economic-dispatch.html#what-s-actually-going-on">What&#8217;s actually going on?</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="optimal-power-flow.html">Optimal Power Flow</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="">Data Input</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#field-names-to-attributes">Field Names to Attributes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#generator"><tt class="docutils literal"><span class="pre">Generator</span></tt></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line"><tt class="docutils literal"><span class="pre">Line</span></tt></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#load"><tt class="docutils literal"><span class="pre">Load</span></tt></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#polynomials">Polynomials</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="optimal-power-flow.html#the-problem">The problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimal-power-flow.html#the-basics">The basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimal-power-flow.html#what-s-actually-going-on">What&#8217;s actually going on?</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="unit-commitment.html">Unit Commitment</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="">Data Input</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#field-names-to-attributes">Field Names to Attributes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#generator"><tt class="docutils literal"><span class="pre">Generator</span></tt></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line"><tt class="docutils literal"><span class="pre">Line</span></tt></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#load"><tt class="docutils literal"><span class="pre">Load</span></tt></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#polynomials">Polynomials</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="unit-commitment.html#the-problem">The problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unit-commitment.html#the-basics">The basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unit-commitment.html#what-s-actually-going-on">What&#8217;s actually going on?</a></li>
+</ul>
+</li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="documentation.html">Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="">Data Input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#module-solve"><tt class="docutils literal"><span class="pre">solve</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#module-get_data"><tt class="docutils literal"><span class="pre">get_data</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#module-powersystems"><tt class="docutils literal"><span class="pre">powersystems</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#module-bidding"><tt class="docutils literal"><span class="pre">bidding</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#module-optimization"><tt class="docutils literal"><span class="pre">optimization</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#module-schedule"><tt class="docutils literal"><span class="pre">schedule</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#module-results"><tt class="docutils literal"><span class="pre">results</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#module-commonscripts"><tt class="docutils literal"><span class="pre">commonscripts</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#module-config"><tt class="docutils literal"><span class="pre">config</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#tests"><tt class="docutils literal"><span class="pre">tests</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#addons"><tt class="docutils literal"><span class="pre">addons</span></tt></a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About minpower</a></li>
+</ul>
+
+<div class="plusone"><g:plusone></g:plusone></div>
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

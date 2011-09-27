@@ -242,7 +242,7 @@ class Solution_UC(Solution):
             fields.append('power: '+str(gen.name))
             data.append([value(gen.P(t)) for t in times])
         for load in self.loads:
-            fields.append('power: '+str(load.name))
+            fields.append('load power: '+str(load.name))
             data.append([value(load.P(t)) for t in times])
         
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))
@@ -304,7 +304,7 @@ class Solution_UC(Solution):
         
         else: 
             #show all generators individually 
-            #sort generators by merit order by 1.committed hrs (and then by 2. energy)
+            #sort generators by 1.committed hrs (and then by 2. energy)
             generators=sorted(generators,reverse=True,
                               key=lambda gen: 
                               ( sum(value(gen.u[t]) if hasattr(gen,'u') else 0 for t in times), #committed hrs
@@ -460,6 +460,6 @@ def write_last_stage_status(buses,stagetimes):
     fields.append('hours in status');  data.append([value(g.initialStatusHours) for g in generators])
     writeCSV(fields,transpose(data),filename='stagestatus{}.csv'.format(t.End))          
 
-def colormap(numcolors,colormapName='gist_rainbow',mincolor=0):
+def colormap(numcolors,colormapName='gist_rainbow',mincolor=1):
     cm = matplotlib.cm.get_cmap(colormapName)
     return [cm(1.*i/numcolors) for i in range(mincolor,numcolors+mincolor)]      

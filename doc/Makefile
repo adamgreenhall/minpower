@@ -43,8 +43,7 @@ html:
 
 gh-pages: clean html
 	git checkout gh-pages
-	cd ..
-	git rm *.html
+	git rm ../*.html
 	git checkout HEAD -- .gitignore .nojekyll
 	cp -r doc/_build/html/* .
 	git add *.html

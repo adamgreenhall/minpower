@@ -46,9 +46,13 @@ gh-pages: clean html
 	git rm ../*.html
 	git checkout HEAD -- ../.gitignore ../.nojekyll
 	cp -r ./_build/html/* ..
+	rm -r ../_sources #get rid of sources folder
 	git add ../*.html
 	git add ../_modules/\*.html #recursive add module html files
-	@echo 'Commit and push when ready and git checkout master to get back to work'
+	git commit -m 'publishing'
+	git push
+	@echo "to get back to work::: git checkout master"
+	#git checkout master
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml

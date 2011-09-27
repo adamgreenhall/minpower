@@ -108,7 +108,7 @@ Multi-stage problems are generally used for UCs over many days.</p>
 
 <dl class="function">
 <dt id="solve.problem">
-<tt class="descclassname">solve.</tt><tt class="descname">problem</tt><big>(</big><em>datadir='./tests/uc/'</em>, <em>outputs={'vizualization': True</em>, <em>'problemfile': True</em>, <em>'shell': True</em>, <em>'csv': True}</em>, <em>solver='glpk'</em><big>)</big><a class="reference internal" href="_modules/solve.html#problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.problem" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">solve.</tt><tt class="descname">problem</tt><big>(</big><em>datadir='./tests/uc/'</em>, <em>shell=True</em>, <em>problemfile=False</em>, <em>vizualization=True</em>, <em>csv=True</em>, <em>solver='glpk'</em><big>)</big><a class="reference internal" href="_modules/solve.html#problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.problem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Solve a optimization problem in a directory.
 Problem type is determined from the data.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -273,11 +273,6 @@ tranmission lines start/end).</p>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="powersystems.Bus.addTimeElement">
-<tt class="descname">addTimeElement</tt><big>(</big><em>time=None</em>, <em>angle=None</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Bus.addTimeElement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Bus.addTimeElement" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
 <dt id="powersystems.Bus.add_timevars">
 <tt class="descname">add_timevars</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Bus.add_timevars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Bus.add_timevars" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -290,12 +285,17 @@ tranmission lines start/end).</p>
 
 <dl class="method">
 <dt id="powersystems.Bus.getprice">
-<tt class="descname">getprice</tt><big>(</big><em>constraints</em>, <em>time</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Bus.getprice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Bus.getprice" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getprice</tt><big>(</big><em>time</em>, <em>problem</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Bus.getprice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Bus.getprice" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="powersystems.Bus.iden">
 <tt class="descname">iden</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Bus.iden"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Bus.iden" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Bus.update_vars">
+<tt class="descname">update_vars</tt><big>(</big><em>times</em>, <em>problem</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Bus.update_vars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Bus.update_vars" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -339,7 +339,7 @@ converts to cost curve when multiplied by fuelcost.</li>
 
 <dl class="method">
 <dt id="powersystems.Generator.add_timevars">
-<tt class="descname">add_timevars</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Generator.add_timevars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.add_timevars" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">add_timevars</tt><big>(</big><em>times</em>, <em>dispatch_decommit_allowed=False</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Generator.add_timevars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.add_timevars" title="Permalink to this definition">¶</a></dt>
 <dd><p>set up dicts for time-varying optimization variables
 (power,u,startup,shutdown,bid)</p>
 </dd></dl>
@@ -363,8 +363,8 @@ converts to cost curve when multiplied by fuelcost.</li>
 </dd></dl>
 
 <dl class="method">
-<dt id="powersystems.Generator.fix_timevars">
-<tt class="descname">fix_timevars</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Generator.fix_timevars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.fix_timevars" title="Permalink to this definition">¶</a></dt>
+<dt id="powersystems.Generator.fix_vars">
+<tt class="descname">fix_vars</tt><big>(</big><em>times</em>, <em>problem</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Generator.fix_vars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.fix_vars" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -416,11 +416,16 @@ converts to cost curve when multiplied by fuelcost.</li>
 <dd><p>exact cost of real power production at time (based on exact bid polynomial).</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="powersystems.Generator.update_vars">
+<tt class="descname">update_vars</tt><big>(</big><em>times</em>, <em>problem</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Generator.update_vars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.update_vars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="powersystems.Generator_nonControllable">
-<em class="property">class </em><tt class="descclassname">powersystems.</tt><tt class="descname">Generator_nonControllable</tt><big>(</big><em>schedule=None</em>, <em>fuelcost=1</em>, <em>costcurvestring='0'</em>, <em>mustrun=False</em>, <em>Pmin=0</em>, <em>Pmax=None</em>, <em>name=None</em>, <em>index=None</em>, <em>bus=None</em>, <em>kind=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Generator_nonControllable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">powersystems.</tt><tt class="descname">Generator_nonControllable</tt><big>(</big><em>schedule=None</em>, <em>fuelcost=1</em>, <em>costcurvestring='0'</em>, <em>mustrun=False</em>, <em>Pmin=0</em>, <em>Pmax=None</em>, <em>name=None</em>, <em>index=None</em>, <em>bus=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Generator_nonControllable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Describes a generator with a fixed schedule.</p>
 <dl class="method">
 <dt id="powersystems.Generator_nonControllable.P">
@@ -477,6 +482,11 @@ converts to cost curve when multiplied by fuelcost.</li>
 <tt class="descname">truecost</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Generator_nonControllable.truecost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable.truecost" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="method">
+<dt id="powersystems.Generator_nonControllable.update_vars">
+<tt class="descname">update_vars</tt><big>(</big><em>times=None</em>, <em>problem=None</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Generator_nonControllable.update_vars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable.update_vars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -512,8 +522,18 @@ Defaults to -<tt class="xref py py-attr docutils literal"><span class="pre">Pmax
 </dd></dl>
 
 <dl class="method">
+<dt id="powersystems.Line.getprice">
+<tt class="descname">getprice</tt><big>(</big><em>time</em>, <em>problem</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Line.getprice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Line.getprice" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="powersystems.Line.iden">
 <tt class="descname">iden</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Line.iden"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Line.iden" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Line.update_vars">
+<tt class="descname">update_vars</tt><big>(</big><em>times</em>, <em>problem</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Line.update_vars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Line.update_vars" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -559,11 +579,6 @@ by <a class="reference internal" href="#get_data.build_class_list" title="get_da
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="powersystems.Load.fix_timevars">
-<tt class="descname">fix_timevars</tt><big>(</big><em>times=None</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Load.fix_timevars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Load.fix_timevars" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
 <dt id="powersystems.Load.iden">
 <tt class="descname">iden</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Load.iden"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Load.iden" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -571,6 +586,11 @@ by <a class="reference internal" href="#get_data.build_class_list" title="get_da
 <dl class="method">
 <dt id="powersystems.Load.shed">
 <tt class="descname">shed</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Load.shed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Load.shed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Load.update_vars">
+<tt class="descname">update_vars</tt><big>(</big><em>times</em>, <em>problem</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Load.update_vars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Load.update_vars" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -672,7 +692,7 @@ power value <tt class="xref py py-attr docutils literal"><span class="pre">P</sp
 <span id="bidding"></span><h2><a class="reference internal" href="#module-bidding" title="bidding"><tt class="xref py py-mod docutils literal"><span class="pre">bidding</span></tt></a><a class="headerlink" href="#module-bidding" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="bidding.Bid">
-<em class="property">class </em><tt class="descclassname">bidding.</tt><tt class="descname">Bid</tt><big>(</big><em>model</em>, <em>iden</em><big>)</big><a class="reference internal" href="_modules/bidding.html#Bid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">bidding.</tt><tt class="descname">Bid</tt><big>(</big><em>model</em>, <em>inputvar</em>, <em>iden</em>, <em>statusvar=True</em><big>)</big><a class="reference internal" href="_modules/bidding.html#Bid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Descibes a bid as modeled by :attr:model. (Bids variables change</dt>
 <dd>with time while <a class="reference internal" href="#bidding.PWLmodel" title="bidding.PWLmodel"><tt class="xref py py-class docutils literal"><span class="pre">PWLmodel</span></tt></a> objects do not store
@@ -692,8 +712,13 @@ time dependent information.)</dd>
 </tbody>
 </table>
 <dl class="method">
+<dt id="bidding.Bid.add_timevars">
+<tt class="descname">add_timevars</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bidding.html#Bid.add_timevars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid.add_timevars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="bidding.Bid.constraints">
-<tt class="descname">constraints</tt><big>(</big><em>inputVar</em>, <em>status</em><big>)</big><a class="reference internal" href="_modules/bidding.html#Bid.constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid.constraints" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">constraints</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bidding.html#Bid.constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid.constraints" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the constraints for a bid by calling its 
 model.constraint() method.</p>
 </dd></dl>
@@ -705,7 +730,7 @@ model.constraint() method.</p>
 
 <dl class="method">
 <dt id="bidding.Bid.output">
-<tt class="descname">output</tt><big>(</big><em>inputVar</em><big>)</big><a class="reference internal" href="_modules/bidding.html#Bid.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid.output" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">output</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bidding.html#Bid.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid.output" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -723,6 +748,11 @@ model.constraint() method.</p>
 <tt class="descname">trueOutput</tt><big>(</big><em>input</em><big>)</big><a class="reference internal" href="_modules/bidding.html#Bid.trueOutput"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid.trueOutput" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="method">
+<dt id="bidding.Bid.update_vars">
+<tt class="descname">update_vars</tt><big>(</big><em>solution</em><big>)</big><a class="reference internal" href="_modules/bidding.html#Bid.update_vars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid.update_vars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -735,12 +765,12 @@ model.constraint() method.</p>
 
 <dl class="method">
 <dt id="bidding.LinearModel.constraints">
-<tt class="descname">constraints</tt><big>(</big><em>S</em>, <em>F</em>, <em>inputVar</em>, <em>status</em>, <em>iden</em><big>)</big><a class="reference internal" href="_modules/bidding.html#LinearModel.constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.LinearModel.constraints" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">constraints</tt><big>(</big><em>variables</em>, <em>iden</em><big>)</big><a class="reference internal" href="_modules/bidding.html#LinearModel.constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.LinearModel.constraints" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="bidding.LinearModel.output">
-<tt class="descname">output</tt><big>(</big><em>F</em>, <em>inputVar</em><big>)</big><a class="reference internal" href="_modules/bidding.html#LinearModel.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.LinearModel.output" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">output</tt><big>(</big><em>variables</em>, <em>iden</em><big>)</big><a class="reference internal" href="_modules/bidding.html#LinearModel.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.LinearModel.output" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -775,7 +805,7 @@ the polynomial (currently the default comes from <a class="reference internal" h
 
 <dl class="method">
 <dt id="bidding.PWLmodel.constraints">
-<tt class="descname">constraints</tt><big>(</big><em>S</em>, <em>F</em>, <em>inputVar</em>, <em>status</em>, <em>iden</em><big>)</big><a class="reference internal" href="_modules/bidding.html#PWLmodel.constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.PWLmodel.constraints" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">constraints</tt><big>(</big><em>variables</em>, <em>iden</em><big>)</big><a class="reference internal" href="_modules/bidding.html#PWLmodel.constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.PWLmodel.constraints" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Create the constraints for a single time instance of </dt>
 <dd>a piecewise linear model.</dd>
@@ -785,10 +815,7 @@ the polynomial (currently the default comes from <a class="reference internal" h
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>S</strong> &#8211; list of segment status variables</li>
-<li><strong>F</strong> &#8211; list of breakpoint fraction variables</li>
-<li><strong>inputVar</strong> &#8211; variable specifying the bidder power</li>
-<li><strong>status</strong> &#8211; variable specifying whether bidder is committed</li>
+<li><strong>variables</strong> &#8211; a dictionary of the variables for the bid</li>
 <li><strong>iden</strong> &#8211; identifying string for the bidder and time interval</li>
 </ul>
 </td>
@@ -807,7 +834,7 @@ the polynomial (currently the default comes from <a class="reference internal" h
 
 <dl class="method">
 <dt id="bidding.PWLmodel.output">
-<tt class="descname">output</tt><big>(</big><em>F</em>, <em>inputVar=None</em><big>)</big><a class="reference internal" href="_modules/bidding.html#PWLmodel.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.PWLmodel.output" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">output</tt><big>(</big><em>variables</em>, <em>iden</em><big>)</big><a class="reference internal" href="_modules/bidding.html#PWLmodel.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.PWLmodel.output" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -836,6 +863,46 @@ the polynomial (currently the default comes from <a class="reference internal" h
 <dd></dd></dl>
 
 </dd></dl>
+
+<dl class="class">
+<dt id="bidding.convexPWLmodel">
+<em class="property">class </em><tt class="descclassname">bidding.</tt><tt class="descname">convexPWLmodel</tt><big>(</big><em>polyText='2+10P+0.1P^2'</em>, <em>multiplier=1</em>, <em>minInput=0</em>, <em>maxInput=10000</em>, <em>numBreakpoints=10</em>, <em>inputNm='x'</em>, <em>outputNm='y'</em><big>)</big><a class="reference internal" href="_modules/bidding.html#convexPWLmodel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.convexPWLmodel" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="bidding.convexPWLmodel.add_timevars">
+<tt class="descname">add_timevars</tt><big>(</big><em>iden</em><big>)</big><a class="reference internal" href="_modules/bidding.html#convexPWLmodel.add_timevars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.convexPWLmodel.add_timevars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bidding.convexPWLmodel.constraints">
+<tt class="descname">constraints</tt><big>(</big><em>variables</em>, <em>iden</em><big>)</big><a class="reference internal" href="_modules/bidding.html#convexPWLmodel.constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.convexPWLmodel.constraints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bidding.convexPWLmodel.incOutput">
+<tt class="descname">incOutput</tt><big>(</big><em>input</em><big>)</big><a class="reference internal" href="_modules/bidding.html#convexPWLmodel.incOutput"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.convexPWLmodel.incOutput" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bidding.convexPWLmodel.output">
+<tt class="descname">output</tt><big>(</big><em>variables</em>, <em>iden</em><big>)</big><a class="reference internal" href="_modules/bidding.html#convexPWLmodel.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.convexPWLmodel.output" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bidding.convexPWLmodel.plot">
+<tt class="descname">plot</tt><big>(</big><em>P=None</em>, <em>filename=None</em>, <em>showPW=True</em><big>)</big><a class="reference internal" href="_modules/bidding.html#convexPWLmodel.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.convexPWLmodel.plot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bidding.convexPWLmodel.trueOutput">
+<tt class="descname">trueOutput</tt><big>(</big><em>input</em><big>)</big><a class="reference internal" href="_modules/bidding.html#convexPWLmodel.trueOutput"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.convexPWLmodel.trueOutput" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="bidding.isConvex">
+<tt class="descclassname">bidding.</tt><tt class="descname">isConvex</tt><big>(</big><em>P</em><big>)</big><a class="reference internal" href="_modules/bidding.html#isConvex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.isConvex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="bidding.isLinear">
@@ -882,8 +949,14 @@ Currently uses pulp but is transitioning to using coopr.</p>
 
 <dl class="class">
 <dt id="optimization.Problem">
-<em class="property">class </em><tt class="descclassname">optimization.</tt><tt class="descname">Problem</tt><big>(</big><em>name='NoName'</em>, <em>sense=1</em><big>)</big><a class="reference internal" href="_modules/optimization.html#Problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem" title="Permalink to this definition">¶</a></dt>
-<dd><p>an optimization problem</p>
+<em class="property">class </em><tt class="descclassname">optimization.</tt><tt class="descname">Problem</tt><a class="reference internal" href="_modules/optimization.html#Problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem" title="Permalink to this definition">¶</a></dt>
+<dd><p>an optimization problem/model based on pyomo</p>
+<dl class="method">
+<dt id="optimization.Problem.addConstraint">
+<tt class="descname">addConstraint</tt><big>(</big><em>name</em>, <em>expression</em><big>)</big><a class="reference internal" href="_modules/optimization.html#Problem.addConstraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.addConstraint" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a single constraint to the problem</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="optimization.Problem.addConstraints">
 <tt class="descname">addConstraints</tt><big>(</big><em>constraintsD</em><big>)</big><a class="reference internal" href="_modules/optimization.html#Problem.addConstraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.addConstraints" title="Permalink to this definition">¶</a></dt>
@@ -892,52 +965,40 @@ Currently uses pulp but is transitioning to using coopr.</p>
 
 <dl class="method">
 <dt id="optimization.Problem.addObjective">
-<tt class="descname">addObjective</tt><big>(</big><em>expression</em>, <em>name='objective'</em><big>)</big><a class="reference internal" href="_modules/optimization.html#Problem.addObjective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.addObjective" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">addObjective</tt><big>(</big><em>expression</em>, <em>sense=1</em><big>)</big><a class="reference internal" href="_modules/optimization.html#Problem.addObjective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.addObjective" title="Permalink to this definition">¶</a></dt>
 <dd><p>add an objective to the problem</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="optimization.Problem.newVar">
-<tt class="descname">newVar</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/optimization.html#Problem.newVar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.newVar" title="Permalink to this definition">¶</a></dt>
-<dd><p>create an optimization variable</p>
+<dt id="optimization.Problem.addVar">
+<tt class="descname">addVar</tt><big>(</big><em>var</em><big>)</big><a class="reference internal" href="_modules/optimization.html#Problem.addVar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.addVar" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a single variable to the problem</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="optimization.Problem.save">
-<tt class="descname">save</tt><big>(</big><em>filename='problem.dat'</em><big>)</big><a class="reference internal" href="_modules/optimization.html#Problem.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.save" title="Permalink to this definition">¶</a></dt>
+<dt id="optimization.Problem.addVariables">
+<tt class="descname">addVariables</tt><big>(</big><em>vars</em><big>)</big><a class="reference internal" href="_modules/optimization.html#Problem.addVariables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.addVariables" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="optimization.Problem.statusText">
-<tt class="descname">statusText</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/optimization.html#Problem.statusText"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.statusText" title="Permalink to this definition">¶</a></dt>
-<dd><p>solution status of the problem</p>
+<dt id="optimization.Problem.dual">
+<tt class="descname">dual</tt><big>(</big><em>constraintname</em>, <em>index=None</em><big>)</big><a class="reference internal" href="_modules/optimization.html#Problem.dual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.dual" title="Permalink to this definition">¶</a></dt>
+<dd><p>dual value of an optimization constraint</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="optimization.Problem.write">
-<tt class="descname">write</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="_modules/optimization.html#Problem.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.write" title="Permalink to this definition">¶</a></dt>
-<dd><p>write the problem to a human-readable file</p>
+<dt id="optimization.Problem.solve">
+<tt class="descname">solve</tt><big>(</big><em>solver='glpk'</em><big>)</big><a class="reference internal" href="_modules/optimization.html#Problem.solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>solve the optimization problem.
+valid solvers are {cplex,gurobi,glpk}</p>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="function">
-<dt id="optimization.addConstraint">
-<tt class="descclassname">optimization.</tt><tt class="descname">addConstraint</tt><big>(</big><em>problem</em>, <em>expression</em>, <em>name=''</em><big>)</big><a class="reference internal" href="_modules/optimization.html#addConstraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.addConstraint" title="Permalink to this definition">¶</a></dt>
-<dd><p>add a single constraint to the problem</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="optimization.dual">
-<tt class="descclassname">optimization.</tt><tt class="descname">dual</tt><big>(</big><em>constraint</em>, <em>default=None</em><big>)</big><a class="reference internal" href="_modules/optimization.html#dual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.dual" title="Permalink to this definition">¶</a></dt>
-<dd><p>dual value of an optimization constraint</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="optimization.newProblem">
-<tt class="descclassname">optimization.</tt><tt class="descname">newProblem</tt><big>(</big><em>name='problem'</em>, <em>kind=1</em><big>)</big><a class="reference internal" href="_modules/optimization.html#newProblem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.newProblem" title="Permalink to this definition">¶</a></dt>
-<dd><p>create a new problem</p>
-</dd></dl>
+<tt class="descclassname">optimization.</tt><tt class="descname">newProblem</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/optimization.html#newProblem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.newProblem" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="optimization.newVar">
@@ -947,19 +1008,17 @@ Currently uses pulp but is transitioning to using coopr.</p>
 
 <dl class="function">
 <dt id="optimization.solve">
-<tt class="descclassname">optimization.</tt><tt class="descname">solve</tt><big>(</big><em>problem</em>, <em>solver='cplex'</em><big>)</big><a class="reference internal" href="_modules/optimization.html#solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.solve" title="Permalink to this definition">¶</a></dt>
-<dd><p>solve the optimization problem</p>
-</dd></dl>
+<tt class="descclassname">optimization.</tt><tt class="descname">solve</tt><big>(</big><em>problem</em>, <em>solver='glpk'</em><big>)</big><a class="reference internal" href="_modules/optimization.html#solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.solve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="optimization.sumVars">
 <tt class="descclassname">optimization.</tt><tt class="descname">sumVars</tt><big>(</big><em>variables</em><big>)</big><a class="reference internal" href="_modules/optimization.html#sumVars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.sumVars" title="Permalink to this definition">¶</a></dt>
-<dd><p>sums a list of optimization variables</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="optimization.value">
-<tt class="descclassname">optimization.</tt><tt class="descname">value</tt><big>(</big><em>variable</em><big>)</big><a class="reference internal" href="_modules/optimization.html#value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.value" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">optimization.</tt><tt class="descname">value</tt><big>(</big><em>variable</em>, <em>problem=None</em><big>)</big><a class="reference internal" href="_modules/optimization.html#value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.value" title="Permalink to this definition">¶</a></dt>
 <dd><p>value of an optimization variable</p>
 </dd></dl>
 
@@ -1080,13 +1139,6 @@ for each sub-list. If not specified, <cite>intervalhrs</cite> is used.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="schedule.create_single_time">
-<tt class="descclassname">schedule.</tt><tt class="descname">create_single_time</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/schedule.html#create_single_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.create_single_time" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a  simple schedule &#8211; only one time interval &#8211;
-for an ED or OPF problem.</p>
-</dd></dl>
-
-<dl class="function">
 <dt id="schedule.makeSchedule">
 <tt class="descclassname">schedule.</tt><tt class="descname">makeSchedule</tt><big>(</big><em>filename</em>, <em>times</em><big>)</big><a class="reference internal" href="_modules/schedule.html#makeSchedule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.makeSchedule" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read time and power information from spreadsheet file.</p>
@@ -1115,7 +1167,7 @@ vizualization.</p>
 
 <dl class="method">
 <dt id="results.Solution.calcPrices">
-<tt class="descname">calcPrices</tt><big>(</big><em>constraints</em><big>)</big><a class="reference internal" href="_modules/results.html#Solution.calcPrices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.calcPrices" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">calcPrices</tt><big>(</big><em>problem</em><big>)</big><a class="reference internal" href="_modules/results.html#Solution.calcPrices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.calcPrices" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1516,7 +1568,7 @@ Just fix it before you push your change.</p>
 
 <dl class="function">
 <dt id="tests.testall.main">
-<tt class="descclassname">tests.testall.</tt><tt class="descname">main</tt><big>(</big><em>solver='cplex'</em><big>)</big><a class="reference internal" href="_modules/tests/testall.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.testall.main" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">tests.testall.</tt><tt class="descname">main</tt><big>(</big><em>solver='glpk'</em><big>)</big><a class="reference internal" href="_modules/tests/testall.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.testall.main" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">

@@ -50,9 +50,11 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
-    <dt><a href="documentation.html#bidding.LinearModel.add_timevars">add_timevars() (bidding.LinearModel method)</a></dt>
+    <dt><a href="documentation.html#bidding.Bid.add_timevars">add_timevars() (bidding.Bid method)</a></dt>
     <dd><dl>
+      <dt><a href="documentation.html#bidding.LinearModel.add_timevars">(bidding.LinearModel method)</a></dt>
       <dt><a href="documentation.html#bidding.PWLmodel.add_timevars">(bidding.PWLmodel method)</a></dt>
+      <dt><a href="documentation.html#bidding.convexPWLmodel.add_timevars">(bidding.convexPWLmodel method)</a></dt>
       <dt><a href="documentation.html#powersystems.Bus.add_timevars">(powersystems.Bus method)</a></dt>
       <dt><a href="documentation.html#powersystems.Generator.add_timevars">(powersystems.Generator method)</a></dt>
       <dt><a href="documentation.html#powersystems.Generator_nonControllable.add_timevars">(powersystems.Generator_nonControllable method)</a></dt>
@@ -60,12 +62,13 @@
       <dt><a href="documentation.html#powersystems.Load.add_timevars">(powersystems.Load method)</a></dt>
       <dt><a href="documentation.html#powersystems.Load_Fixed.add_timevars">(powersystems.Load_Fixed method)</a></dt>
   </dl></dd>
-    <dt><a href="documentation.html#optimization.addConstraint">addConstraint() (in module optimization)</a></dt>
+    <dt><a href="documentation.html#optimization.Problem.addConstraint">addConstraint() (optimization.Problem method)</a></dt>
     <dt><a href="documentation.html#optimization.Problem.addConstraints">addConstraints() (optimization.Problem method)</a></dt>
 </dl></td>
   <td style="width: 33%" valign="top"><dl>
     <dt><a href="documentation.html#optimization.Problem.addObjective">addObjective() (optimization.Problem method)</a></dt>
-    <dt><a href="documentation.html#powersystems.Bus.addTimeElement">addTimeElement() (powersystems.Bus method)</a></dt>
+    <dt><a href="documentation.html#optimization.Problem.addVar">addVar() (optimization.Problem method)</a></dt>
+    <dt><a href="documentation.html#optimization.Problem.addVariables">addVariables() (optimization.Problem method)</a></dt>
 </dl></td>
 </tr></table>
 
@@ -105,6 +108,7 @@
     <dd><dl>
       <dt><a href="documentation.html#bidding.LinearModel.constraints">(bidding.LinearModel method)</a></dt>
       <dt><a href="documentation.html#bidding.PWLmodel.constraints">(bidding.PWLmodel method)</a></dt>
+      <dt><a href="documentation.html#bidding.convexPWLmodel.constraints">(bidding.convexPWLmodel method)</a></dt>
       <dt><a href="documentation.html#powersystems.Bus.constraints">(powersystems.Bus method)</a></dt>
       <dt><a href="documentation.html#powersystems.Generator.constraints">(powersystems.Generator method)</a></dt>
       <dt><a href="documentation.html#powersystems.Generator_nonControllable.constraints">(powersystems.Generator_nonControllable method)</a></dt>
@@ -113,13 +117,13 @@
   </dl></dd>
 </dl></td>
   <td style="width: 33%" valign="top"><dl>
+    <dt><a href="documentation.html#bidding.convexPWLmodel">convexPWLmodel (class in bidding)</a></dt>
     <dt><a href="documentation.html#powersystems.Generator.cost">cost() (powersystems.Generator method)</a></dt>
     <dd><dl>
       <dt><a href="documentation.html#powersystems.Generator_nonControllable.cost">(powersystems.Generator_nonControllable method)</a></dt>
   </dl></dd>
     <dt><a href="documentation.html#solve.create_problem">create_problem() (in module solve)</a></dt>
     <dt><a href="documentation.html#solve.create_problem_multistage">create_problem_multistage() (in module solve)</a></dt>
-    <dt><a href="documentation.html#schedule.create_single_time">create_single_time() (in module schedule)</a></dt>
     <dt><a href="documentation.html#powersystems.Network.createBmatrix">createBmatrix() (powersystems.Network method)</a></dt>
     <dt><a href="documentation.html#commonscripts.csvColumn">csvColumn() (in module commonscripts)</a></dt>
 </dl></td>
@@ -131,7 +135,7 @@
     <dt><a href="documentation.html#commonscripts.drop_case_spaces">drop_case_spaces() (in module commonscripts)</a></dt>
 </dl></td>
   <td style="width: 33%" valign="top"><dl>
-    <dt><a href="documentation.html#optimization.dual">dual() (in module optimization)</a></dt>
+    <dt><a href="documentation.html#optimization.Problem.dual">dual() (optimization.Problem method)</a></dt>
 </dl></td>
 </tr></table>
 
@@ -148,14 +152,11 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
-    <dt><a href="documentation.html#powersystems.Generator.fix_timevars">fix_timevars() (powersystems.Generator method)</a></dt>
-    <dd><dl>
-      <dt><a href="documentation.html#powersystems.Generator_nonControllable.fix_timevars">(powersystems.Generator_nonControllable method)</a></dt>
-      <dt><a href="documentation.html#powersystems.Load.fix_timevars">(powersystems.Load method)</a></dt>
-  </dl></dd>
-    <dt><a href="documentation.html#commonscripts.flatten">flatten() (in module commonscripts)</a></dt>
+    <dt><a href="documentation.html#powersystems.Generator_nonControllable.fix_timevars">fix_timevars() (powersystems.Generator_nonControllable method)</a></dt>
+    <dt><a href="documentation.html#powersystems.Generator.fix_vars">fix_vars() (powersystems.Generator method)</a></dt>
 </dl></td>
   <td style="width: 33%" valign="top"><dl>
+    <dt><a href="documentation.html#commonscripts.flatten">flatten() (in module commonscripts)</a></dt>
     <dt><a href="documentation.html#commonscripts.frange">frange() (in module commonscripts)</a></dt>
 </dl></td>
 </tr></table>
@@ -175,6 +176,9 @@
     <dt><a href="documentation.html#schedule.Schedule.getEnergy">getEnergy() (schedule.Schedule method)</a></dt>
     <dt><a href="documentation.html#powersystems.Generator.gethrsinstatus">gethrsinstatus() (powersystems.Generator method)</a></dt>
     <dt><a href="documentation.html#powersystems.Bus.getprice">getprice() (powersystems.Bus method)</a></dt>
+    <dd><dl>
+      <dt><a href="documentation.html#powersystems.Line.getprice">(powersystems.Line method)</a></dt>
+  </dl></dd>
     <dt><a href="documentation.html#powersystems.Generator.getstatus">getstatus() (powersystems.Generator method)</a></dt>
     <dd><dl>
       <dt><a href="documentation.html#powersystems.Generator_nonControllable.getstatus">(powersystems.Generator_nonControllable method)</a></dt>
@@ -205,6 +209,7 @@
     <dt><a href="documentation.html#bidding.Bid.incOutput">incOutput() (bidding.Bid method)</a></dt>
     <dd><dl>
       <dt><a href="documentation.html#bidding.PWLmodel.incOutput">(bidding.PWLmodel method)</a></dt>
+      <dt><a href="documentation.html#bidding.convexPWLmodel.incOutput">(bidding.convexPWLmodel method)</a></dt>
   </dl></dd>
     <dt><a href="documentation.html#powersystems.Generator.incrementalcost">incrementalcost() (powersystems.Generator method)</a></dt>
     <dd><dl>
@@ -218,9 +223,9 @@
       <dt><a href="documentation.html#results.Solution_UC.info_buses">(results.Solution_UC method)</a></dt>
   </dl></dd>
     <dt><a href="documentation.html#results.Solution.info_cost">info_cost() (results.Solution method)</a></dt>
+    <dt><a href="documentation.html#results.Solution.info_generators">info_generators() (results.Solution method)</a></dt>
 </dl></td>
   <td style="width: 33%" valign="top"><dl>
-    <dt><a href="documentation.html#results.Solution.info_generators">info_generators() (results.Solution method)</a></dt>
     <dt><a href="documentation.html#results.Solution.info_lines">info_lines() (results.Solution method)</a></dt>
     <dd><dl>
       <dt><a href="documentation.html#results.Solution_ED.info_lines">(results.Solution_ED method)</a></dt>
@@ -237,6 +242,7 @@
     <dd><dl>
       <dt><a href="documentation.html#results.Solution_multistageUC.info_status">(results.Solution_multistageUC method)</a></dt>
   </dl></dd>
+    <dt><a href="documentation.html#bidding.isConvex">isConvex() (in module bidding)</a></dt>
     <dt><a href="documentation.html#bidding.isLinear">isLinear() (in module bidding)</a></dt>
 </dl></td>
 </tr></table>
@@ -283,9 +289,6 @@
 </dl></td>
   <td style="width: 33%" valign="top"><dl>
     <dt><a href="documentation.html#optimization.newVar">newVar() (in module optimization)</a></dt>
-    <dd><dl>
-      <dt><a href="documentation.html#optimization.Problem.newVar">(optimization.Problem method)</a></dt>
-  </dl></dd>
 </dl></td>
 </tr></table>
 
@@ -304,6 +307,7 @@
     <dd><dl>
       <dt><a href="documentation.html#bidding.LinearModel.output">(bidding.LinearModel method)</a></dt>
       <dt><a href="documentation.html#bidding.PWLmodel.output">(bidding.PWLmodel method)</a></dt>
+      <dt><a href="documentation.html#bidding.convexPWLmodel.output">(bidding.convexPWLmodel method)</a></dt>
   </dl></dd>
 </dl></td>
 </tr></table>
@@ -328,6 +332,7 @@
     <dt><a href="documentation.html#bidding.Bid.plot">plot() (bidding.Bid method)</a></dt>
     <dd><dl>
       <dt><a href="documentation.html#bidding.PWLmodel.plot">(bidding.PWLmodel method)</a></dt>
+      <dt><a href="documentation.html#bidding.convexPWLmodel.plot">(bidding.convexPWLmodel method)</a></dt>
   </dl></dd>
     <dt><a href="documentation.html#powersystems.Generator.plotCostCurve">plotCostCurve() (powersystems.Generator method)</a></dt>
     <dt><a href="documentation.html#bidding.Bid.plotDeriv">plotDeriv() (bidding.Bid method)</a></dt>
@@ -356,7 +361,6 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
-    <dt><a href="documentation.html#optimization.Problem.save">save() (optimization.Problem method)</a></dt>
     <dt><a href="documentation.html#results.Solution_ED.saveCSV">saveCSV() (results.Solution_ED method)</a></dt>
     <dd><dl>
       <dt><a href="documentation.html#results.Solution_OPF.saveCSV">(results.Solution_OPF method)</a></dt>
@@ -389,12 +393,14 @@
     <dt><a href="documentation.html#results.Solution_UC">Solution_UC (class in results)</a></dt>
     <dt><a href="documentation.html#module-solve">solve (module)</a></dt>
     <dt><a href="documentation.html#optimization.solve">solve() (in module optimization)</a></dt>
+    <dd><dl>
+      <dt><a href="documentation.html#optimization.Problem.solve">(optimization.Problem method)</a></dt>
+  </dl></dd>
     <dt><a href="documentation.html#commonscripts.splitFilename">splitFilename() (in module commonscripts)</a></dt>
     <dt><a href="documentation.html#powersystems.Generator.status">status() (powersystems.Generator method)</a></dt>
     <dd><dl>
       <dt><a href="documentation.html#powersystems.Generator_nonControllable.status">(powersystems.Generator_nonControllable method)</a></dt>
   </dl></dd>
-    <dt><a href="documentation.html#optimization.Problem.statusText">statusText() (optimization.Problem method)</a></dt>
     <dt><a href="documentation.html#commonscripts.stringToNumberConversion">stringToNumberConversion() (in module commonscripts)</a></dt>
     <dt><a href="documentation.html#schedule.Timelist.subdivide">subdivide() (schedule.Timelist method)</a></dt>
     <dt><a href="documentation.html#commonscripts.subset">subset() (in module commonscripts)</a></dt>
@@ -423,6 +429,7 @@
     <dt><a href="documentation.html#bidding.Bid.trueOutput">trueOutput() (bidding.Bid method)</a></dt>
     <dd><dl>
       <dt><a href="documentation.html#bidding.PWLmodel.trueOutput">(bidding.PWLmodel method)</a></dt>
+      <dt><a href="documentation.html#bidding.convexPWLmodel.trueOutput">(bidding.convexPWLmodel method)</a></dt>
   </dl></dd>
 </dl></td>
 </tr></table>
@@ -431,9 +438,17 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
     <dt><a href="documentation.html#commonscripts.unflatten">unflatten() (in module commonscripts)</a></dt>
+    <dt><a href="documentation.html#commonscripts.unique">unique() (in module commonscripts)</a></dt>
 </dl></td>
   <td style="width: 33%" valign="top"><dl>
-    <dt><a href="documentation.html#commonscripts.unique">unique() (in module commonscripts)</a></dt>
+    <dt><a href="documentation.html#bidding.Bid.update_vars">update_vars() (bidding.Bid method)</a></dt>
+    <dd><dl>
+      <dt><a href="documentation.html#powersystems.Bus.update_vars">(powersystems.Bus method)</a></dt>
+      <dt><a href="documentation.html#powersystems.Generator.update_vars">(powersystems.Generator method)</a></dt>
+      <dt><a href="documentation.html#powersystems.Generator_nonControllable.update_vars">(powersystems.Generator_nonControllable method)</a></dt>
+      <dt><a href="documentation.html#powersystems.Line.update_vars">(powersystems.Line method)</a></dt>
+      <dt><a href="documentation.html#powersystems.Load.update_vars">(powersystems.Load method)</a></dt>
+  </dl></dd>
 </dl></td>
 </tr></table>
 
@@ -457,7 +472,6 @@
   <td style="width: 33%" valign="top"><dl>
     <dt><a href="documentation.html#tests.testall.wipeTestSlate">wipeTestSlate() (in module tests.testall)</a></dt>
     <dt><a href="documentation.html#commonscripts.within">within() (in module commonscripts)</a></dt>
-    <dt><a href="documentation.html#optimization.Problem.write">write() (optimization.Problem method)</a></dt>
 </dl></td>
   <td style="width: 33%" valign="top"><dl>
     <dt><a href="documentation.html#results.write_last_stage_status">write_last_stage_status() (in module results)</a></dt>

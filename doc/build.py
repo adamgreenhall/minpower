@@ -2,7 +2,7 @@ import os, subprocess, sys
 import glob
 
 def main(publish=False):
-    #if not os.getcwd().endswith('doc'): os.chdir('./doc')
+    if not os.getcwd().endswith('doc'): os.chdir('./doc')
     os.system('make html')
     #os.system('make latexpdf')
     for f in glob.glob('*.log'): os.remove(f)

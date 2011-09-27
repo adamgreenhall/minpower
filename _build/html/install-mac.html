@@ -1,0 +1,172 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Mac Installation &mdash; minpower</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="top" title="minpower" href="index.html" />
+    <link rel="up" title="Installation" href="install.html" />
+    <link rel="next" title="Windows Installation" href="install-windows.html" />
+    <link rel="prev" title="Linux Installation" href="install-linux.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="mac-installation">
+<h1>Mac Installation<a class="headerlink" href="#mac-installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="add-packages">
+<h2>Add packages<a class="headerlink" href="#add-packages" title="Permalink to this headline">¶</a></h2>
+<p>If you already use Python, see the required package list in <a class="reference internal" href="install-python-packages.html"><em>Python Packages</em></a>.</p>
+<p>If you are starting from scratch with Python, we are going to need Python and several <abbr title="Think add-ons. In Python terms minpower is a package.">packages</abbr>.</p>
+<ul>
+<li><p class="first">install <a class="reference external" href="http://activestate.com/activepython/downloads">ActivePython</a></p>
+</li>
+<li><p class="first">open a command prompt and install the <strong>minpower</strong>-required <a class="reference internal" href="install-python-packages.html"><em>Python Packages</em></a> by typing:</p>
+<div class="highlight-python"><pre>pypm install minpower pulp coopr numpy matplotlib networkx</pre>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="add-solvers">
+<h2>Add solvers<a class="headerlink" href="#add-solvers" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference external" href="http://www.arnab-deka.com/posts/2010/02/installing-glpk-on-a-mac/">GLPK</a></li>
+<li><a class="reference external" href="http://gurobi.com/doc/45/quickstart">Gurobi</a></li>
+<li><a class="reference external" href="http://www.ibm.com/software/integration/optimization/cplex-optimizer">CPLEX</a> (tutorial coming soon)</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="solver-to-python-hooks">
+<span id="solver-to-python-mac"></span><h2>solver-to-Python hooks<a class="headerlink" href="#solver-to-python-hooks" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>Gurobi<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>If you are using Gurobi, you may need to alter the PuLP configuration (in <tt class="docutils literal"><span class="pre">/Library/Frameworks/Python.framework/Versions/2.7/dist-packages/PuLP-1.4.8-py2.7.egg/pulp.cfg.linux</span></tt>)
+and change the gurobi path line to the location of your gurobi executable. E.g.:</p>
+<blockquote>
+<div>GurobiPath = /usr/local/gurobi/gurobi401/linux64/lib/python2.5</div></blockquote>
+</div>
+<div class="section" id="id2">
+<h3>CPLEX<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>If you are using CPLEX, Python needs to know where to find it. So we need to modify the path environment variables.
+The following is an example what needs to be added to the end of the <tt class="docutils literal"><span class="pre">~/.bashrc</span></tt> file using Ubunutu:</p>
+<div class="highlight-python"><pre>export PATH="$PATH:/usr/ilog/CPLEX_Studio_AcademicResearch122/cplex/bin/x86-64_sles10_4.1"
+alias cplex='/usr/ilog/CPLEX_Studio_AcademicResearch122/cplex/bin/x86-64_sles10_4.1/cplex'
+export PYTHONPATH=$PYTHONPATH:/usr/ilog/CPLEX_Studio_AcademicResearch122/cplex/python/x86-64_sles10_4.1</pre>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Your CPLEX root directory (in the case above <tt class="docutils literal"><span class="pre">/usr/ilog/CPLEX_Studio_AcademicResearch122/cplex/</span></tt>) will probably be different.</p>
+</div>
+<p><strong>You are done!</strong> Check out the resources <a class="reference internal" href="students.html"><em>For Students</em></a> or <a class="reference internal" href="researchers.html"><em>For Researchers</em></a> and try solving a problem.</p>
+</div>
+</div>
+<div class="section" id="having-trouble">
+<h2>Having trouble?<a class="headerlink" href="#having-trouble" title="Permalink to this headline">¶</a></h2>
+<p>Check out <a class="reference internal" href="install-testing.html"><em>Installation Testing</em></a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">minpower</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="why-minpower.html">Why minpower?</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="install.html">Installation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="install-linux.html">Linux Installation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Mac Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#add-packages">Add packages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#add-solvers">Add solvers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#solver-to-python-hooks">solver-to-Python hooks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#having-trouble">Having trouble?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="install-windows.html">Windows Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install-python-packages.html">Python Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers.html">Solver Choices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install-testing.html">Installation Testing</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About minpower</a></li>
+</ul>
+
+<div class="plusone"><g:plusone></g:plusone></div>
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

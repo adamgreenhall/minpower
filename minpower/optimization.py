@@ -101,6 +101,7 @@ if optimization_package=='coopr':
                     instance.load(results)
                 except RuntimeError:
                     logging.error('in re-solving for the duals. the duals will be set to default value. keeping files for examination.')
+                    
                     try: results= cooprsolve(instance, keepFiles=True)
                     except RuntimeError: pass
                 

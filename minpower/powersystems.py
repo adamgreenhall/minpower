@@ -176,7 +176,7 @@ class Generator(object):
         commitment_problem= len(times)>1 or dispatch_decommit_allowed
         for time in times:    
             iden=self.iden(time)
-            self.power[time]=newVar(name='P_'+iden,low=self.Pmin,high=self.Pmax)
+            self.power[time]=newVar(name='P_'+iden,low=0,high=self.Pmax) #even if off, Pmax>=P>=0
 
             
             if commitment_problem: #UC problem

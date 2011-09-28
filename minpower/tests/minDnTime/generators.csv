@@ -1,4 +1,3 @@
 name,cost curve equation,min down time,P max,P min
-expensive,61P,0,100,5
-middle,60P,2,100,5
-cheap,45P,0,100,0
+expensive,60P,2,100,5
+cheap,40P,0,100,0

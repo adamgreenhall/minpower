@@ -214,7 +214,9 @@ class Schedule(object):
                 t=getattrL(times,'Start').index(timeperiod.Start)
                 return self.getEnergy(times[t])
             else: raise
-
+def just_one_time():
+    """For a single-time problem, generate a Timelist with just one time in it."""
+    return Timelist([Time(Start='0:00',index=0)])
 def parse_timestrings(timestringsL):
     """
     Convert list of strings to list of :py:class:`datetime.datetime`

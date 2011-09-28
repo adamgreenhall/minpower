@@ -195,7 +195,7 @@ def setup_times(file_gens,file_loads,datadir):
     
     if len(genScheds)==0 and len(loadScheds)==0:
         #this is a ED or OPF problem - only one time
-        times=schedule.Timelist([schedule.Time(Start='0:00',index=0)])
+        times=schedule.just_one_time()
         return times
 
 

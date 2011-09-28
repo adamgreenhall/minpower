@@ -7,7 +7,7 @@ else
     solver='usedefault'
 fi
 
-if [solver='usedefault']; then
+if ["$solver" = "usedefault"]; then
     pyargs="'$dir'"
 else
     pyargs="'$dir',solver='$solver'"

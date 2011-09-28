@@ -53,6 +53,7 @@ if optimization_package=='coopr':
             ''' solve the optimization problem.
                 valid solvers are {cplex,gurobi,glpk}'''
 
+            
             current_log_level = logging.getLogger().getEffectiveLevel()      
                         
             def cooprsolve(instance,opt=None,suffixes=['dual'],keepFiles=False):
@@ -69,35 +70,13 @@ if optimization_package=='coopr':
                 elapsed = (time.time() - start)
                 logging.getLogger().setLevel(current_log_level)
                 return results,elapsed
-                
-            def resolvefixvariables(instance,results):
-                active_vars= instance.active_components(pyomo.Var)
-                need_to_resolve=False
-                for name,var in active_vars.iteritems():
-                    if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet):
-                        var.fixed=True
-                        need_to_resolve=True
-
-                if not need_to_resolve: return instance,results
-                logging.info('resolving fixed-integer LP for duals')
-                instance.preprocess()
-                try: 
-                    results,elapsed=cooprsolve(instance)    
-                    self.solutionTime+=elapsed
-                    instance.load(results)
-                except RuntimeError:
-                    logging.error('in re-solving for the duals. the duals will be set to default value. keeping files for examination.')
-                    
-                    try: results= cooprsolve(instance, keepFiles=True)
-                    except RuntimeError: pass
-                
-                return instance,results            
             
             
-            #solve
             logging.info('Solving with {s} ... '.format(s=solver))
             instance=self.model.create()
+                 
             results,elapsed=cooprsolve(instance)
+            
             self.statusText = str(results.solver[0]['Termination condition'])
             if not self.statusText =='optimal':
                 logging.warning('problem not solved. Solver terminated with status: "{}"'.format(self.statusText))
@@ -106,19 +85,47 @@ if optimization_package=='coopr':
                 self.status=True
                 self.solutionTime =elapsed #results.Solver[0]['Wallclock time']
                 logging.info('Problem solved in {}s.'.format(self.solutionTime)) #('Problem solved.')
-            if not self.status: return        
             
-            #get results
+                    
+            if not self.status: return
+            
             instance.load(results)
-            instance,results = resolvefixvariables(instance,results)
             
-            #get solution information                     
+
+            
+            def resolvefixvariables(instance,results):
+                active_vars= instance.active_components(pyomo.Var)
+                need_to_resolve=False
+                for name,var in active_vars.iteritems():
+                    if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet):
+                        var.fixed=True
+                        need_to_resolve=True
+                
+                if not need_to_resolve: return instance,results
+                logging.info('resolving fixed-integer LP for duals')
+                instance.preprocess()
+                try:
+                    results,elapsed=cooprsolve(instance)
+                    self.solutionTime+=elapsed
+                except RuntimeError:
+                    logging.error('coopr raised an error in solving. keep the files for debugging.')
+                    results= cooprsolve(instance, keepFiles=True)    
+                
+                instance.load(results)
+                return instance,results
+
+            try: instance,results = resolvefixvariables(instance,results)
+            except RuntimeError:
+                logging.error('in re-solving for the duals. the duals will be set to default value.')
+                
+                    
             try: self.objective = results.Solution.objective['objective'].value #instance.active_components(pyomo.Objective)['objective']
             except AttributeError:
                 self.objective = results.Solution.objective['__default_objective__'].value
                 
             self.constraints = instance.active_components(pyomo.Constraint)
             self.variables =   instance.active_components(pyomo.Var)
+
             return 
 
         def __getattr__(self,name):

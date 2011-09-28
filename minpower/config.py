@@ -54,7 +54,7 @@ generator_defaults=dict(
         ),
     startupcost=dict(
         #from Henry Louie thesis
-        generic=          80000,
+        generic=              0, #if kind not specified, no startup cost 
         coal=            107800,
         nuclear=         283500,
         steamturbine=     73500,

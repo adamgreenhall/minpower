@@ -209,12 +209,13 @@ class Generator(object):
         #commitment_problem= len(times)>1
         for time in times:
             self.power[time] = value(self.power[time],problem)
-            self.bid[time].update_vars(problem)
             #if commitment_problem: #UC problem
             self.u[time]=value(self.u[time],problem)
             self.startup[time] =value(self.startup[time],problem)
             self.shutdown[time]=value(self.shutdown[time],problem)
+            self.bid[time].update_vars(problem)
         
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
     def fix_timevars(self,times):
@@ -227,6 +228,8 @@ class Generator(object):
 >>>>>>> added load shedding to insure feasibility
 =======
             
+=======
+>>>>>>> working startup and shutdown constraints
     def fix_vars(self,times,problem):
         self.update_vars(times,problem)
         self.bid={} #wipe bid info - no longer needed

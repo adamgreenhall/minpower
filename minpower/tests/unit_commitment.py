@@ -13,8 +13,12 @@ uc = Tests()
 @uc.test
 def prices():
     '''
-    
+    Run a basic unit commitment. 
+    Ensure that the correct LMPs are returned for all times.
     '''
-
+    
+    
+    
+    
 if __name__ == "__main__": 
     uc.run()

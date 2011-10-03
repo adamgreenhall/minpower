@@ -21,6 +21,8 @@ def make_single_bus(generators,loads):
 
 def make_cheap_gen(**kwargs):
     return Generator(name='cheap gen', costcurvestring='10P', **kwargs)
+def make_mid_gen(**kwargs):
+    return Generator(name='middle-range gen', costcurvestring='20P', **kwargs)    
 def make_expensive_gen(**kwargs):
     return Generator(name='expensive gen', costcurvestring='30P', **kwargs)    
 def make_load(Pd=200,Pdt=None):
@@ -163,7 +165,7 @@ def ramp_down_initial():
 
 
 
-@generation_updown_times.test
+@generation.test
 def min_up_time():
     '''
     Create two generators: cheap with max power limit, exp. with min up time and min power limits.
@@ -178,12 +180,34 @@ def min_up_time():
         dict(u=False)]
     load = make_load(Pdt=[80,120,80,80])
     problem,times=solve_problem(generators,load,gen_init=initial)
-    limgen=generators[1]
-    off_status = Assert([ limgen.u[times[0]],limgen.u[times[3]] ])
-    on_status  = Assert([ limgen.u[times[1]],limgen.u[times[2]] ])
-    assert on_status==[1,1] and off_status==[0,0]
+    limgen_status=Assert([generators[1].u[t] for t in times])
+    assert limgen_status == [0,1,1,0]
 
+@generation.test
+def min_down_time():
+    '''
+    Create three generators: 
+        -cheap with max power limit
+        -mid with min down time
+        -expensive
+    Create load that is higher than the cheap limit all but t1.
+    Ensure that the mid generator is OFF at t1 and t2, then turns on again.
+    Ensure that the hi generator is ON for t2 to make up the difference.
+    '''
+    generators=[
+        make_cheap_gen(Pmax=100),
+        make_mid_gen(mindowntime=2,Pmin=40),
+        make_expensive_gen()]
+    initial = [
+        dict(P= 100, u=True),
+        dict(P=40, u=True,hoursinstatus=0),
+        dict(u=False)]
+    load = make_load(Pdt=[150,10,140,140])
+    problem,times=solve_problem(generators,load,gen_init=initial)
+    limgen_status=Assert([generators[1].u[t] for t in times])
+    expensive_status_t2 = Assert(generators[2].u[times[2]])
+    assert limgen_status==[1,0,0,1] and expensive_status_t2==1
 
            
 if __name__ == "__main__": 
-    generation_updown_times.run()
+    generation.run()

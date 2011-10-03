@@ -6,6 +6,10 @@ from minpower.optimization import value
 
 singletime=schedule.just_one_time()
 
+
+gen_costs = dict(cheap=10,mid=20,expensive=30)
+
+
 def make_single_bus(generators,loads):
     singlebus=powersystems.Bus()
     singlebus.generators=generators
@@ -13,11 +17,11 @@ def make_single_bus(generators,loads):
     return [singlebus]    
 
 def make_cheap_gen(**kwargs):
-    return Generator(name='cheap gen', costcurvestring='10P', **kwargs)
+    return Generator(name='cheap gen', costcurvestring='{}P'.format(gen_costs['cheap']), **kwargs)
 def make_mid_gen(**kwargs):
-    return Generator(name='middle-range gen', costcurvestring='20P', **kwargs)    
+    return Generator(name='middle-range gen', costcurvestring='{}P'.format(gen_costs['mid']), **kwargs)    
 def make_expensive_gen(**kwargs):
-    return Generator(name='expensive gen', costcurvestring='30P', **kwargs)    
+    return Generator(name='expensive gen', costcurvestring='{}P'.format(gen_costs['expensive']), **kwargs)    
 def make_load(Pd=200,Pdt=None):
     if Pdt is None: 
         return dict(load=[powersystems.Load_Fixed(P=Pd)],times=singletime)
@@ -46,4 +50,4 @@ def solve_problem(generators,load,  gen_init=None, lines=None, solver=config.opt
         #logging.critical( [g.power[times.initialTime] for g in generators] )
         problem.write('problem.lp')
         raise optimization.OptimizationError('infeasible problem, wrote to problem.lp')
-    return problem,times
+    return problem,times,buses

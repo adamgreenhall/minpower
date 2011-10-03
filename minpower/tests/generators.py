@@ -48,7 +48,7 @@ def solve_problem(generators,load,  gen_init=None, lines=None, solver=config.opt
     problem=solve.create_problem(buses,lines,times)
     problem.solve(solver=solver)
     if problem.solved:
-        for g in generators: g.fix_vars(times,problem)
+        for g in generators: g.update_vars(times,problem)
     else:
         #logging.critical( [g.power[times.initialTime] for g in generators] )
         problem.write('problem.lp')
@@ -208,6 +208,49 @@ def min_down_time():
     expensive_status_t2 = Assert(generators[2].u[times[2]])
     assert limgen_status==[1,0,0,1] and expensive_status_t2==1
 
-           
+
+@generation.test
+def start_up_cost():
+    '''
+    Create two generators:
+    - cheap with a max power
+    - expensive with a start up cost.
+    Create an increasing load.
+    Ensure that the objective includes the startup cost.
+    '''
+    startupcost=9000
+    generators=[
+        make_cheap_gen(Pmax=100),
+        make_expensive_gen(startupcost=startupcost)   ]
+    initial = [
+        dict(P= 80, u=True),
+        dict(u=False)]
+    load = make_load(Pdt=[80,120])
+    problem,times=solve_problem(generators,load,gen_init=initial)
+    obj_startupcost = Assert(problem.objective - sum( gen.operatingcost(t) for t in times for gen in generators) )
+    assert obj_startupcost==startupcost
+
+@generation.test
+def shut_down_cost():
+    '''
+    Create two generators, both on:
+    - cheap with a max power
+    - expensive with a start down cost and a min power.
+    Create an decreasing load.
+    Ensure that the objective includes the shutdown cost.
+    '''
+    shutdowncost=200
+    generators=[
+        make_cheap_gen(Pmax=100),
+        make_expensive_gen(shutdowncost=shutdowncost, Pmin=20)   ]
+    initial = [
+        dict(P= 80, u=True),
+        dict(P=20,u=True)]
+    load = make_load(Pdt=[150,10])
+    problem,times=solve_problem(generators,load,gen_init=initial)
+    obj_sdcost = Assert(problem.objective - sum( gen.operatingcost(t) for t in times for gen in generators) )
+    assert obj_sdcost==shutdowncost
+
+    
 if __name__ == "__main__": 
     generation.run()

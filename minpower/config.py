@@ -71,5 +71,6 @@ default_num_breakpoints=5
 
 optimization_package='coopr' #'pulp'
 
-optimization_solver='glpk'
+optimization_solver='gurobi'
+available_solvers = ['glpk','gurobi']#,'cplex']
 logging_level= logging.INFO

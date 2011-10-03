@@ -3,15 +3,12 @@ dir=$1
 
 if [ $# = 2 ]; then
     solver=$2
+    pyargs="'$dir',solver='$solver'"
 else
-    solver='usedefault'
+    #use default solver
+    pyargs="'$dir'"
 fi
 
-if ["$solver" = "usedefault"]; then
-    pyargs="'$dir'"
-else
-    pyargs="'$dir',solver='$solver'"
-fi
 
 if [ -d "$dir" ]; then
     #run minpower solve on the directory

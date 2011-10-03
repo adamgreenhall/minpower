@@ -169,14 +169,6 @@ def setup_times(file_gens,file_loads,datadir):
         :returns: a :class:`~schedule.Timelist` object
     """
 
-    def makeTimes(datetimeL):
-        '''convert list of datetime objects to Timelist() class'''
-        S=datetimeL[0]
-        I=datetimeL[1] - S #interval
-        E=datetimeL[-1] + I #one past the last time
-        times=schedule.Timelist(Start=S,End=E,interval=I)
-        times.setInitial()
-        return times
 
     def getTimeCol(filename):
         if filename is None: return []
@@ -208,11 +200,11 @@ def setup_times(file_gens,file_loads,datadir):
     timedateL=schedule.parse_timestrings(timestrL)
     
     if len(timestrL) == max(n for n in nT_loads+nT_gens): 
-        times=makeTimes(timedateL) #just one schedule
+        times=schedule.makeTimes(timedateL) #just one schedule
     else: 
         uniqueTimes=unique(timedateL)
         #make times from unique list
-        times=makeTimes(uniqueTimes)
+        times=schedule.makeTimes(uniqueTimes)
         
     #check for missing data problems by checking length
     nT=len(times)

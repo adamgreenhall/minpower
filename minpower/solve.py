@@ -20,7 +20,7 @@ def _setup_logging(fn):
     return fn
     
 @_setup_logging
-def problem(datadir='./tests/uc/',shell=True,problemfile=False,
+def problem(datadir='./tests/uc/',shell=True,problemfile=True,
         vizualization=True,csv=True,solver=config.optimization_solver):
     """ Solve a optimization problem in a directory.
         Problem type is determined from the data.
@@ -38,7 +38,10 @@ def problem(datadir='./tests/uc/',shell=True,problemfile=False,
         problem=create_problem(buses,lines,times)
         optimization.solve(problem,solver)
         if problemfile: problem.write(joindir(datadir,'problem-formulation.lp'))
-        solution=results.makeSolution(times=times,lines=lines,buses=buses,problem=problem,datadir=datadir)
+        if problem.solved:
+            solution=results.makeSolution(times=times,lines=lines,buses=buses,problem=problem,datadir=datadir)
+        else: 
+            raise optimization.OptimizationError('problem not solved')
     else: #split into multi-stage problem
         problemsL,stageTimes=create_problem_multistage(buses,lines,times,datadir)
         solution=results.makeMultistageSolution(problemsL=problemsL,times=times,stageTimes=stageTimes,buses=buses,lines=lines,datadir=datadir)

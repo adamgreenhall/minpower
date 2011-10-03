@@ -243,6 +243,11 @@ class Generator(object):
 
     def constraints(self,times):
         '''create the optimization constraints for a generator over all times'''
+        def roundoff(n):
+            if n!=round(n): raise ValueError('min up/down times must be integer number of intervals, not {}'.format(n))
+            n=round(n)
+            return n
+
         constraintsD=dict()
         
         commitment_problem= len(times)>1
@@ -257,25 +262,28 @@ class Generator(object):
             minUpHoursRemainingInit = max(0, (self.u[tInitial]==1) * min(tEndHours, self.minuptime - self.initialStatusHours))
             minDnHoursRemainingInit = max(0, (self.u[tInitial]==0) * min(tEndHours, self.mindowntime - self.initialStatusHours))
             #initial up down time
-            def roundoff(n):
-                if type(n) is float: 
-                    if n!=int(n): raise ValueError('min up downtimes must be integer hours, not {}'.format(n))
-                    n=int(n)
-                return n
             if minUpHoursRemainingInit>0: constraintsD['minuptime_'+iden]= 0==sumVars([(1-self.u[times[t]]) for t in range(0,roundoff(minUpHoursRemainingInit/times.intervalhrs))])
             if minDnHoursRemainingInit>0: constraintsD['mindowntime_'+iden]= 0==sumVars([self.u[times[t]] for t in range(0,roundoff(minDnHoursRemainingInit/times.intervalhrs))])
             #initial start up / shut down
             constraintsD['statusChange_'+iden]= self.startup[times[0]]-self.shutdown[times[0]] == self.u[times[0]] - self.u[tInitial]
+
             #initial ramp rate
-            constraintsD['rampingLimHi_'+iden]=                     self.P(times[0]) - self.P(tInitial) <= self.rampratemax
-            constraintsD['rampingLimLo_'+iden]= self.rampratemin <=     self.P(times[0]) - self.P(tInitial)
+            if self.P(tInitial) + self.rampratemax < self.Pmax:
+                constraintsD['rampingLimHi_'+iden]= self.P(times[0]) - self.P(tInitial) <= self.rampratemax
+            # else: 
+            #     logging.debug('skipped hi ramp lim for '+iden) 
+            #     logging.debug(' rlim:'+str(self.P(tInitial) + self.rampratemax)+' pmax='+str(self.Pmax))
+
+            if self.P(tInitial) + self.rampratemin > self.Pmin:
+                constraintsD['rampingLimLo_'+iden]= self.rampratemin <= self.P(times[0]) - self.P(tInitial)
+            # else:    
+            #     logging.debug('skipped lo ramp lim for '+iden)
+            #     logging.debug(' rlim:'+str(self.P(tInitial) + self.rampratemin)+' pmin='+str(self.Pmin))
         else: #fix status for ED,OPF problems
             if self.u[times[0]] in (True, False):
                 pass #gen status fixed for dispatch period
             elif self.u[times[0]].value is None: 
                 pass #variable because dispatch_decommit_allowed
-            else: 
-                raise TypeError
                 
         
         for t,time in enumerate(times):

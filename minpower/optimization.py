@@ -93,10 +93,10 @@ if optimization_package=='coopr':
             
             self.statusText = str(results.solver[0]['Termination condition'])
             if not self.statusText =='optimal':
-                logging.warning('problem not solved. Solver terminated with status: "{}"'.format(self.statusText))
-                self.status=False
+                logging.critical('problem not solved. Solver terminated with status: "{}"'.format(self.statusText))
+                self.status=self.solved=False
             else:
-                self.status=True
+                self.status=self.solved=True
                 self.solutionTime =elapsed #results.Solver[0]['Wallclock time']
                 logging.info('Problem solved in {}s.'.format(self.solutionTime)) #('Problem solved.')
             
@@ -282,8 +282,17 @@ if optimization_package=='coopr':
             self.variables =   instance.active_components(pyomo.Var)
 
             return 
+<<<<<<< HEAD
 
 >>>>>>> working coopr and pulp mix
+=======
+        def value(self,name):
+            try: 
+                return getattr(self.model,name).value
+            except TypeError: #name is not a string
+                return name.value
+        
+>>>>>>> testing of ramp rates. added conditional initial ramp rates.
         def __getattr__(self,name):
             try: return getattr(self.model,name)
             except AttributeError:
@@ -306,12 +315,15 @@ if optimization_package=='coopr':
     def value(variable,problem=None):
 >>>>>>> working coopr and pulp mix
         '''value of an optimization variable'''
-        if problem is None: return variable #just a number
-
-        try: varname=variable.name
-        except AttributeError: return variable #just a number
-
-        return problem.variables[varname].value
+        if problem is None: 
+            try: 
+                return variable.value
+            except AttributeError:
+                return variable #just a number
+        else:
+            try: varname=variable.name
+            except AttributeError: return variable #just a number
+            return problem.variables[varname].value
 
     def sumVars(variables): return sum(variables)
     def newProblem(): return Problem()

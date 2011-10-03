@@ -1,8 +1,7 @@
 '''Test the all of the solver links'''
 
 from attest import Tests
-from minpower import optimization
-
+from minpower import optimization, config
 solvers = Tests()
 
 def simple_problem():
@@ -21,14 +20,20 @@ def test_one_solver(solver_name):
 
 @solvers.test
 def cplex():
-    assert test_one_solver('cplex')
+    '''Test each available solver on a simple problem'''
+    if 'cplex' in config.available_solvers:
+        assert test_one_solver('cplex')
 
 @solvers.test
 def glpk():
-    assert test_one_solver('glpk')
+    '''Test the glpk solver on a simple problem'''
+    if 'glpk' in config.available_solvers:
+        assert test_one_solver('glpk')
 
 @solvers.test
 def gurobi():
-    assert test_one_solver('gurobi')
+    '''Test the gurobi solver on a simple problem'''
+    if 'gurobi' in config.available_solvers:
+        assert test_one_solver('gurobi')
         
 if __name__ == "__main__": solvers.run()

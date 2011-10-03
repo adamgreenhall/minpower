@@ -3,6 +3,7 @@ Time and schedule related models.
 """
 
 import dateutil
+import logging
 from commonscripts import hours,parseTime, readCSV,getclass_inlist, drop_case_spaces,transpose,frange,getattrL,getTimeFormat
 
 
@@ -44,7 +45,27 @@ class Time(object):
     def __str__(self): 
         try: return 't{ind:02d}'.format(ind=self.index)    
         except ValueError: return 't_{ind}'.format(ind=self.index) #index is str    
+    def __unicode__(self):
+        return unicode(self.Start)+' to '+unicode(self.End)
 
+def makeTimes(datetimeL):
+    '''convert list of datetime objects to Timelist() class'''
+    S=datetimeL[0]
+    I=datetimeL[1] - S #interval
+    E=datetimeL[-1] + I #one past the last time
+    times=Timelist(Start=S,End=E,interval=I)
+    times.setInitial()
+    return times
+
+def make_times_basic(N):
+    ''' make a :class:`schedule.Timelist` of N times, assume hourly interval.'''
+    S=dateutil.parser.parse('0:00')
+    I=dateutil.parser.parse('1:00')-S
+    E=S+I*(N)    
+    times=Timelist(Start=S,End=E,interval=I)
+    times.setInitial()
+    return times
+    
 class Timelist(object):
     """
     A container for :class:`schedule.Time` objects.
@@ -158,14 +179,8 @@ def makeSchedule(filename,times):
 class Schedule(object):
     """
     Describes a schedule of times and corresponding power values.
-    In basic use is mostly a container for a dictionary keyed by
+    Mostly a container for a dictionary keyed by
     :py:class:`~schedule.Time` objects.
-    
-    If inputs are `P` and `times`: create dictionary directly.
-    
-    If inputs are `filename` and `times`: 
-    use :meth:`~schedule.setUpSchedule` to read information from 
-    spreadsheet file.
     """
     def __init__(self,times=None,P=None):
         self.P=dict(zip(times,P))
@@ -176,7 +191,7 @@ class Schedule(object):
         """
         Multiplies each power value in schedule by a multiplier.        
         Usage: schedule*=.9 
-        would give a schedule with 90% of the power.
+        would give a schedule with 90 percent of the power.
         """
         for t,p in self.P.iteritems():
             self.P[t]=p*multiplier

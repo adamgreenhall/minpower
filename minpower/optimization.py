@@ -450,6 +450,9 @@ elif optimization_package=='pulp':
 
         return out
 
+
+#class OptimizationObject(object):
+
 class OptimizationError(Exception):
     def __init__(self, ivalue):
         if ivalue: self.value=ivalue

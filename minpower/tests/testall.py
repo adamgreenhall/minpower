@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """ 
 Testing for minpower development. 
 Runs solve.problem() on all directories in ./tests
@@ -58,3 +59,15 @@ def main(solver=config.optimization_solver):
         sys.stdout = sys.__stdout__ #switch back to standard outputting
 
 if __name__ == "__main__": main()
+=======
+from attest import Tests
+all_tests=Tests([
+    'solvers.solvers',
+    'generators.generation',
+    'unit_commitment.uc',
+    'opf.opf',
+    'bidding.bidding'
+    ])
+
+if __name__ == "__main__": all_tests.run()
+>>>>>>> run all tests

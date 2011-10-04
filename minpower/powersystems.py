@@ -94,7 +94,7 @@ class Generator(object):
     def __init__(self,kind='generic',
         Pmin=0,Pmax=500,
         minuptime=0,mindowntime=0,
-        rampratemax=1000,rampratemin=None,
+        rampratemax=None,rampratemin=None,
         costcurvestring='20P',
         heatratestring=None,fuelcost=1,
         startupcost=0,shutdowncost=0,
@@ -103,7 +103,7 @@ class Generator(object):
         
         vars(self).update(locals()) #load in inputs
         if index is None: self.index=hash(self)        
-        if self.rampratemin is None: self.rampratemin = -1*self.rampratemax
+        if self.rampratemin is None and self.rampratemax is not None: self.rampratemin = -1*self.rampratemax
         
         self.buildCostModel()
         self._makeEmpties()
@@ -186,12 +186,12 @@ class Generator(object):
     def update_vars(self,times,problem):
         #commitment_problem= len(times)>1
         for time in times:
-            self.power[time] = value(self.power[time],problem)
+            self.power[time] = value(self.power[time])
             #if commitment_problem: #UC problem
-            self.u[time]=value(self.u[time],problem)
-            self.startup[time] =value(self.startup[time],problem)
-            self.shutdown[time]=value(self.shutdown[time],problem)
-            self.bid[time].update_vars(problem)
+            self.u[time]=value(self.u[time])
+            self.startup[time] =value(self.startup[time])
+            self.shutdown[time]=value(self.shutdown[time])
+            self.bid[time].update_vars()
         
     def fix_vars(self,times,problem):
         self.update_vars(times,problem)
@@ -233,22 +233,12 @@ class Generator(object):
             constraintsD['statusChange_'+iden]= self.startup[times[0]]-self.shutdown[times[0]] == self.u[times[0]] - self.u[tInitial]
 
             #initial ramp rate
-            if self.P(tInitial) + self.rampratemax < self.Pmax:
-                constraintsD['rampingLimHi_'+iden]= self.P(times[0]) - self.P(tInitial) <= self.rampratemax
-            # else: 
-            #     logging.debug('skipped hi ramp lim for '+iden) 
-            #     logging.debug(' rlim:'+str(self.P(tInitial) + self.rampratemax)+' pmax='+str(self.Pmax))
-
-            if self.P(tInitial) + self.rampratemin > self.Pmin:
-                constraintsD['rampingLimLo_'+iden]= self.rampratemin <= self.P(times[0]) - self.P(tInitial)
-            # else:    
-            #     logging.debug('skipped lo ramp lim for '+iden)
-            #     logging.debug(' rlim:'+str(self.P(tInitial) + self.rampratemin)+' pmin='+str(self.Pmin))
-        else: #fix status for ED,OPF problems
-            if self.u[times[0]] in (True, False):
-                pass #gen status fixed for dispatch period
-            elif self.u[times[0]].value is None: 
-                pass #variable because dispatch_decommit_allowed
+            if self.rampratemax is not None:
+                if self.P(tInitial) + self.rampratemax < self.Pmax:
+                    constraintsD['rampingLimHi_'+iden]= self.P(times[0]) - self.P(tInitial) <= self.rampratemax
+            if self.rampratemin is not None:
+                if self.P(tInitial) + self.rampratemin > self.Pmin:
+                    constraintsD['rampingLimLo_'+iden]= self.rampratemin <= self.P(times[0]) - self.P(tInitial)
                 
         
         for t,time in enumerate(times):
@@ -272,8 +262,10 @@ class Generator(object):
                     constraintsD['mindowntime_'+iden]= 1 >= self.shutdown[time] + sumVars([ self.startup[times[s]] for s in range(t,min(tEndIndex,t+self.mindowntime))])
                 #ramping power
                 if t>0:
-                    constraintsD['rampingLimHi_'+iden]=                     self.P(time) - self.P(times[t-1]) <= self.rampratemax
-                    constraintsD['rampingLimLo_'+iden]= self.rampratemin <=     self.P(time) - self.P(times[t-1])
+                    if self.rampratemax is not None:
+                        constraintsD['rampingLimHi_'+iden]=                     self.P(time) - self.P(times[t-1]) <= self.rampratemax
+                    if self.rampratemin is not None:
+                        constraintsD['rampingLimLo_'+iden]= self.rampratemin <=     self.P(time) - self.P(times[t-1])
 
         return constraintsD        
         

@@ -47,9 +47,8 @@ class Bid(object):
         self.variables['statusvar']=self.statusvar
         return out
         
-    def update_vars(self,solution):
-        for v in self.variables.iteritems():
-            v=value(v, solution)
+    def update_vars(self):
+        for k,v in self.variables.iteritems(): self.variables[k]=value(v)
     def __str__(self): return 'bid {i}'.format(i=self.iden)
 
 
@@ -89,8 +88,8 @@ class PWLmodel(object):
         if isLinear(self.polyCurve): self.numBreakpoints=2 #linear models only need 2 breakpoints
         inDiscrete=linspace(self.minInput, self.maxInput, 1e6) #fine discretization of the curve
         outDiscrete=polyval(self.polyCurve,inDiscrete)
-        self.bpInputs = linspace(self.minInput, self.maxInput, self.numBreakpoints) #interpolation to get pwl breakpoints
-        self.bpOutputs= interp(self.bpInputs,inDiscrete,outDiscrete)
+        self.bpInputs = [float(bpi) for bpi in linspace(self.minInput, self.maxInput, self.numBreakpoints)] #interpolation to get pwl breakpoints
+        self.bpOutputs= [float(bpo) for bpo in interp(self.bpInputs,inDiscrete,outDiscrete)]
         self.segments=range(1,len(self.bpInputs))
         
     def plot(self,P=None,filename=None,showPW=True):
@@ -190,8 +189,8 @@ class convexPWLmodel(PWLmodel):
         self.polyCurve=multiplier * parsePolynomial(polyText) #parse curve
         inDiscrete=linspace(self.minInput, self.maxInput, 1e6) #fine discretization of the curve
         outDiscrete=polyval(self.polyCurve,inDiscrete)
-        self.bpInputs = linspace(self.minInput, self.maxInput, self.numBreakpoints) #interpolation to get pwl breakpoints
-        self.bpOutputs= interp(self.bpInputs,inDiscrete,outDiscrete)
+        self.bpInputs = [float(bpi) for bpi in linspace(self.minInput, self.maxInput, self.numBreakpoints)] #interpolation to get pwl breakpoints
+        self.bpOutputs= [float(bpo) for bpo in interp(self.bpInputs,inDiscrete,outDiscrete)]
         self.segment_lines=[]
         for b,x1 in enumerate(self.bpInputs[:-1]):
             x2,y2=self.bpInputs[b+1],self.bpOutputs[b+1]

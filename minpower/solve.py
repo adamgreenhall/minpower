@@ -97,9 +97,17 @@ def create_problem(buses,lines,times,load_shedding_allowed=False):
         prob.addConstraints(line.constraints(times,buses))
                     
     for bus in buses:
+<<<<<<< HEAD
         problemvars.extend(bus.add_timevars(times))
         prob.addConstraints(bus.constraints(times,Bmatrix,buses))
         
+=======
+        problemvars.extend([v for k,v in bus.add_timevars(times).iteritems()])
+        prob.addConstraints(bus.create_constraints(times,Bmatrix,buses))
+    
+    
+    for v in problemvars: prob.addVar(v)
+>>>>>>> this is going to be a major refactor. putting on hold for now.
     prob.addObjective( optimization.sumVars(costs) )
     
 <<<<<<< HEAD

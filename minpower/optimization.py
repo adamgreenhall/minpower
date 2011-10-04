@@ -451,7 +451,69 @@ elif optimization_package=='pulp':
         return out
 
 
-#class OptimizationObject(object):
+class OptimizationObject(object):
+    '''
+    A template for an optimization object. 
+    Override the methods of the template with your own.
+    '''
+    def __init__(self,*args,**kwargs):
+        '''
+        Initialize the object. Often this just means assigning 
+        all of the keyword arguments to self.
+        You should also call the :meth:`~OptimizationObject.init_optimization` method.
+        '''
+        vars(self).update(locals()) #load in inputs
+        self.init_opt_object()
+        
+    def init_optimization(self):
+        '''
+        Make this an optimization object, by adding variables, 
+        constraints, objective, and an index (unique) attributes.
+        '''
+        self.variables=dict()
+        self.constraints=dict()
+        self.objective  =0
+        if self.index is None: self.index=hash(self)
+        
+    def create_variables(self, *args,**kwargs):
+        ''' 
+        Here we would create the variables.
+        Variables should not belong to the :class:`OptimizationObject` directly, 
+        but you can write you own shortcut class methods, 
+        like :meth:`~powersystems.Generator.P`.
+        
+        :returns: dictionary of variables
+        '''
+        return self.variables
+    def create_constraints(self, *args,**kwargs):
+        ''' 
+        Here we would create the constraints.
+        Constraints should not belong to the :class:`OptimizationObject` directly, 
+        but you can write you own shortcut class methods, 
+        like :meth:`~powersystems.Bus.price`.
+        
+        :returns: dictionary of constraints
+        '''
+        return self.constraints
+ 
+    def update_variables(self):
+        '''
+        Replace the object's variables with their numeric value.
+        This method shouldn't need overwriting.
+        '''
+        for name,var in self.variables.iteritems(): self.variables[name]=value(var)
+    def iden(self,*args,**kwargs):
+        msg='the optimization object template identifier method must be overwritten'
+        raise NotImplementedError(msg)
+        return 'some unique identifying string'
+    def __str__(self): 
+        '''
+        Often you want a string representation for your object (for calling print).
+        You probably want to override this one with a more descriptive string.
+        '''
+        return 'opt_obj{ind}'.format(ind=self.index)
+    def __int__(self): return self.index
+
 
 class OptimizationError(Exception):
     def __init__(self, ivalue):

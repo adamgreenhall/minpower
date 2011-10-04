@@ -155,9 +155,9 @@ if optimization_package=='coopr':
     def newProblem(): return Problem()
     def newVar(name='',kind='Continuous',low=-1000000,high=1000000):
         '''create an optimization variable'''
-
         kindmap = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyomo.Boolean)
         return pyomo.Var(name=name,bounds=(low,high),domain=kindmap[kind])
+    def new_constraint(name,expression): return pyomo.Constraint(name=name,rule=expression)
     def solve(problem,solver=config.optimization_solver): return problem.solve(solver)
 
 
@@ -259,7 +259,7 @@ class OptimizationObject(object):
         '''
         self.variables=dict()
         self.constraints=dict()
-        self.objective  =0
+        self.objective  =0 #cost
         if self.index is None: self.index=hash(self)
         
     def create_variables(self, *args,**kwargs):
@@ -272,6 +272,7 @@ class OptimizationObject(object):
         :returns: dictionary of variables
         '''
         return self.variables
+
     def create_constraints(self, *args,**kwargs):
         ''' 
         Here we would create the constraints.
@@ -289,6 +290,21 @@ class OptimizationObject(object):
         This method shouldn't need overwriting.
         '''
         for name,var in self.variables.iteritems(): self.variables[name]=value(var)
+    def add_variable(self,name,time=None,**kwargs):
+        '''
+        Create a new variable and add it to the variables dictionary.
+        This method shouldn't need overwriting.
+        '''
+        if time is not None: name=name+'_'+self.iden(time)
+        self.variables[name]=newVar(name,**kwargs)
+    def add_constraint(self,name,time=None,expression=None):
+        '''
+        Create a new constraint and add it to the constraints dictionary.
+        This method shouldn't need overwriting.
+        '''
+        if time is not None: name=name+'_'+self.iden(time)
+        self.constraints[name]=new_constraint(name,expression)    
+    
     def iden(self,*args,**kwargs):
         msg='the optimization object template identifier method must be overwritten'
         raise NotImplementedError(msg)
@@ -299,7 +315,6 @@ class OptimizationObject(object):
         You probably want to override this one with a more descriptive string.
         '''
         return 'opt_obj{ind}'.format(ind=self.index)
-    def __int__(self): return self.index
 
 
 class OptimizationError(Exception):

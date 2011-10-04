@@ -4,7 +4,7 @@ Defines models for power systems concepts:
 :class:`~powersystems.Line`, and :class:`~powersystems.Load`.
 """
 import bidding
-from optimization import newVar,value,sumVars
+from optimization import newVar,value,sumVars,OptimizationObject
 from commonscripts import hours,subset,subsetexcept,drop_case_spaces,getattrL,flatten,unique
 import config
 import logging
@@ -330,7 +330,7 @@ class Line(object):
             iden = self.iden(t)
             busNames=getattrL(buses,'name')
             iFrom,iTo=busNames.index(self.From),busNames.index(self.To)
-            constraints['lineFlow_'+iden]=     self.P[t] == (1/self.X) * sumVars([ buses[iFrom].angle[t],-1*buses[iTo].angle[t] ])
+            constraints['lineFlow_'+iden]=     self.P[t] == (1/self.X) * sumVars([ buses[iFrom].angle(t),-1*buses[iTo].angle(t) ])
             constraints['lineLimitHi_'+iden]=  self.P[t]<=self.Pmax
             constraints['lineLimitLow_'+iden]= self.Pmin<=self.P[t]
         return constraints
@@ -343,7 +343,7 @@ class Line(object):
         return problem.dual('lineFlow_'+self.iden(time)) #problem.dual('lineLimitHi_'+self.iden(time))+problem.dual('lineLimitLow_'+self.iden(time))    
 
 
-class Bus(object):
+class Bus(OptimizationObject):
     """
     Describes a bus (usually a substation where one or more
     tranmission lines start/end).
@@ -354,35 +354,44 @@ class Bus(object):
     def __init__(self,name=None,index=None,isSwing=False):
         vars(self).update(locals()) #load in inputs
         self.generators,self.loads=[],[]
-        self.angle,self.price=dict(),dict()
-    def add_timevars(self,times):
-        for time in times: self.angle[time]=newVar(name='angle_'+self.iden(time))
-        return self.angle.values()
-    def update_vars(self,times,problem):
-        for time in times: self.angle[time]=value(self.angle[time],problem)
+        #self.angle,self.price=dict(),dict()
+        self.init_optimization()
 
-    def __str__(self):     return 'i{ind}'.format(ind=self.index)    
-    def __int__(self):    return self.index
+    def add_timevars(self,times): return self.create_variables(times)
+    
+    def angle(self,time):
+        return self.variables['angle_'+self.iden(time)]
+    def price(self,time):
+        return self.constraints['powerBalance_'+self.iden(time)].dual
+    def create_variables(self,times):
+        for time in times: 
+            self.add_variable('angle',time)
+        return self.variables
+        
+    def __str__(self):     return 'i{ind}'.format(ind=self.index)
     def iden(self,t):        return str(self)+str(t)
     def Pgen(self,t):   return sumVars([gen.P(t) for gen in self.generators])
     def Pload(self,t):  return sumVars([ ld.P(t) for ld in self.loads])
         
-    def constraints(self,times,Bmatrix,buses):
+    def constraints(self,times,Bmatrix,buses): return self.create_constraints(times,Bmatrix,buses)
+    
+    def create_constraints(self,times,Bmatrix,buses):
         '''create the constraints for a bus over all times'''
         def powerBalance(self,t,Bmatrix,allBuses):
             if len(allBuses)==1: lineFlowsFromBus=0
-            else: lineFlowsFromBus=sumVars([Bmatrix[self.index][otherBus.index]*otherBus.angle[t] for otherBus in allBuses]) #P_{ij}=sum_{i} B_{ij}*theta_j ???
+            else: lineFlowsFromBus=sumVars([Bmatrix[self.index][otherBus.index]*otherBus.angle(t) for otherBus in allBuses]) #P_{ij}=sum_{i} B_{ij}*theta_j ???
             return sumVars([ -lineFlowsFromBus,-self.Pload(t),self.Pgen(t) ])
-
-        constraints=dict()
+            
         nBus=len(buses)
         for t in times:
-            iden=self.iden(t)
-            if nBus>1 and self.isSwing: constraints['swingBus '+iden] = self.angle[t]==0 #swing bus has angle=0
-            constraints['powerBalance_'+iden] = powerBalance(self,t,Bmatrix,buses)==0 #power balance must be zero
-        return constraints
-    def getprice(self,time,problem):
-        return problem.dual('powerBalance_'+self.iden(time))
+            self.add_constraint('powerBalance',t, powerBalance(self,t,Bmatrix,buses)==0) #power balance must be zero
+            if nBus>1 and self.isSwing: 
+                self.add_constraint('swingBus',t, self.angle(t)==0)#swing bus has angle=0
+            
+        return self.constraints
+    def getprice(self,time,problem): return self.price(time)
+    
+        #return problem.dual('powerBalance_'+self.iden(time))
         
 def make_buses_list(loads,generators):
     """Create list of :class:`powersystems.Bus` objects 

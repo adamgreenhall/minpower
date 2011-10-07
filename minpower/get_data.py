@@ -93,6 +93,10 @@ def setup_initialcond(filename,generators,times):
         raise
     
     
+    #if no initial data for generator, set it to default? off?
+    raise NotImplementedError('if no initial data for generator, set it to default? off? and then overwrite the ones with data.')
+
+
     #add info to generators
     genNames=[g.name for g in generators]
     nameCol = attributes.index('name')

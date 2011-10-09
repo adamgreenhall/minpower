@@ -106,7 +106,8 @@ def setup_initialcond(filename,generators,times):
     #overwrite initial condition for generators which are specified in the initial file
     genNames=[g.name for g in generators]
     nameCol = attributes.index('name')
-    excludeCols = [nameCol, attributes.index(None)]
+    excludeCols = [nameCol]
+    if None in attributes: excludeCols.append( attributes.index(None) )
     for row in data:
         inputs=dict()
         for c,elem in enumerate(row): 

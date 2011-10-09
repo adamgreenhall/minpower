@@ -10,11 +10,11 @@ singletime=schedule.just_one_time()
 gen_costs = dict(cheap=10,mid=20,expensive=30)
 
 
-def make_single_bus(generators,loads):
-    singlebus=powersystems.Bus()
-    singlebus.generators=generators
-    singlebus.loads=loads
-    return [singlebus]    
+#def make_single_bus(generators,loads):
+    #singlebus=powersystems.Bus()
+    #singlebus.generators=generators
+    #singlebus.loads=loads
+    #return [singlebus]    
 
 def make_cheap_gen(**kwargs):
     return Generator(name='cheap gen', costcurvestring='{}P'.format(gen_costs['cheap']), **kwargs)
@@ -22,14 +22,14 @@ def make_mid_gen(**kwargs):
     return Generator(name='middle-range gen', costcurvestring='{}P'.format(gen_costs['mid']), **kwargs)    
 def make_expensive_gen(**kwargs):
     return Generator(name='expensive gen', costcurvestring='{}P'.format(gen_costs['expensive']), **kwargs)    
-def make_load(Pd=200,Pdt=None):
+def make_load(Pd=200,Pdt=None,**kwargs):
     if Pdt is None: 
-        return dict(load=[powersystems.Load_Fixed(P=Pd)],times=singletime)
+        return dict(load=[powersystems.Load_Fixed(P=Pd,**kwargs)],times=singletime)
     else: 
         times = schedule.make_times_basic(N=len(Pdt))
         #logging.critical([unicode(t) for t in times])
         sched = schedule.Schedule(times=times, P=Pdt)
-        return dict(load=[powersystems.Load(schedule=sched)],times=times)
+        return dict(load=[powersystems.Load(schedule=sched,**kwargs)],times=times)
 
 def solve_problem(generators,load,  gen_init=None, lines=None, solver=config.optimization_solver,load_shedding_allowed=False):
     if lines is None: lines=[]
@@ -41,7 +41,7 @@ def solve_problem(generators,load,  gen_init=None, lines=None, solver=config.opt
             else:                gen.setInitialCondition(times.initialTime, **gen_init[g])
             gen.index=g
         
-    buses=make_single_bus(generators,loads=load['load'])
+    buses=powersystems.make_buses_list(loads=load['load'],generators=generators)
     problem=solve.create_problem(buses,lines,times,load_shedding_allowed=load_shedding_allowed)
     problem.solve(solver=solver)
     if problem.solved:

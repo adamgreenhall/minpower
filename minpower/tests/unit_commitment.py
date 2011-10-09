@@ -1,4 +1,4 @@
-'''Test the constraint behavior of the generators'''
+'''Test the higher level behavior of the unit commitment'''
 
 from attest import Tests,Assert
 import logging,random

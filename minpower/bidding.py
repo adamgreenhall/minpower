@@ -47,9 +47,8 @@ class Bid(object):
         self.variables['statusvar']=self.statusvar
         return out
         
-    def update_vars(self,solution):
-        for v in self.variables.iteritems():
-            v=value(v, solution)
+    def update_vars(self):
+        for k,v in self.variables.iteritems(): self.variables[k]=value(v)
     def __str__(self): return 'bid {i}'.format(i=self.iden)
 
 
@@ -89,8 +88,8 @@ class PWLmodel(object):
         if isLinear(self.polyCurve): self.numBreakpoints=2 #linear models only need 2 breakpoints
         inDiscrete=linspace(self.minInput, self.maxInput, 1e6) #fine discretization of the curve
         outDiscrete=polyval(self.polyCurve,inDiscrete)
-        self.bpInputs = linspace(self.minInput, self.maxInput, self.numBreakpoints) #interpolation to get pwl breakpoints
-        self.bpOutputs= interp(self.bpInputs,inDiscrete,outDiscrete)
+        self.bpInputs = [float(bpi) for bpi in linspace(self.minInput, self.maxInput, self.numBreakpoints)] #interpolation to get pwl breakpoints
+        self.bpOutputs= [float(bpo) for bpo in interp(self.bpInputs,inDiscrete,outDiscrete)]
         self.segments=range(1,len(self.bpInputs))
         
     def plot(self,P=None,filename=None,showPW=True):
@@ -134,11 +133,12 @@ class PWLmodel(object):
         """
         constraints=dict()
         status = variables['statusvar']
+        if status in (True,False): status=1 if status else 0 #convert bool to integer for coopr 
         inputVar = variables['inputvar']
         S = [variables['{iden}_s{segNum}'.format(segNum=s,iden=iden)] for s in range(len(self.segments))] 
         F = [variables['{iden}_f{bpNum}'.format(bpNum=f,iden=iden)] for f in range(len(self.bpInputs))]
 
-        constraints['oneActiveSegment '+iden]= ( sumVars(S)== status )        
+        constraints['oneActiveSegment '+iden]= ( sumVars(S)== status )
         constraints['fractionSums '+iden]    = ( sumVars(F) == status )
         constraints['computeInput '+iden]    = ( inputVar == sumVars( elementwiseMultiply(F,self.bpInputs) ) )
         constraints['firstSegment '+iden]    = ( F[0]<=S[0] )
@@ -189,8 +189,8 @@ class convexPWLmodel(PWLmodel):
         self.polyCurve=multiplier * parsePolynomial(polyText) #parse curve
         inDiscrete=linspace(self.minInput, self.maxInput, 1e6) #fine discretization of the curve
         outDiscrete=polyval(self.polyCurve,inDiscrete)
-        self.bpInputs = linspace(self.minInput, self.maxInput, self.numBreakpoints) #interpolation to get pwl breakpoints
-        self.bpOutputs= interp(self.bpInputs,inDiscrete,outDiscrete)
+        self.bpInputs = [float(bpi) for bpi in linspace(self.minInput, self.maxInput, self.numBreakpoints)] #interpolation to get pwl breakpoints
+        self.bpOutputs= [float(bpo) for bpo in interp(self.bpInputs,inDiscrete,outDiscrete)]
         self.segment_lines=[]
         for b,x1 in enumerate(self.bpInputs[:-1]):
             x2,y2=self.bpInputs[b+1],self.bpOutputs[b+1]
@@ -247,7 +247,7 @@ def isLinear(P):
 def isConvex(P):
     #convexity is complicated: http://plus.maths.org/content/convexity
     #so for now: if all polynomial coefs are positive, call it convex
-    return True if all(coef>0 for coef in P.c) else False
+    return True if all(coef>=0 for coef in P.c) else False
     
 def parsePolynomial(s):
     """

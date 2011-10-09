@@ -33,7 +33,7 @@ generator_defaults=dict(
         baseload=2,coal=2,nuclear=18
         ),
     rampratemax=dict(
-        generic=1000,
+        generic=None,
         baseload=200,   coal=200,nuclear=100,
         shoulder=500, naturalgas=500, steamturbine=500,
         peaker=3000, combustionturbine=3000,
@@ -54,7 +54,7 @@ generator_defaults=dict(
         ),
     startupcost=dict(
         #from Henry Louie thesis
-        generic=          80000,
+        generic=              0, #if kind not specified, no startup cost 
         coal=            107800,
         nuclear=         283500,
         steamturbine=     73500,
@@ -71,5 +71,6 @@ default_num_breakpoints=10
 
 optimization_package='coopr' #'pulp'
 
-optimization_solver='glpk'
+optimization_solver='gurobi'
+available_solvers = ['glpk','gurobi']#,'cplex']
 logging_level= logging.INFO

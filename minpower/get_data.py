@@ -68,7 +68,7 @@ def parsedir(datadir='./tests/uc/',
     except IOError: lines=[]
     
     #create buses list    
-    buses=setup_buses(loads,generators)
+    buses=powersystems.make_buses_list(loads,generators)
     
     return buses,lines,times
 
@@ -93,6 +93,10 @@ def setup_initialcond(filename,generators,times):
         raise
     
     
+    #if no initial data for generator, set it to default? off?
+    raise NotImplementedError('if no initial data for generator, set it to default? off? and then overwrite the ones with data.')
+
+
     #add info to generators
     genNames=[g.name for g in generators]
     nameCol = attributes.index('name')
@@ -169,14 +173,6 @@ def setup_times(file_gens,file_loads,datadir):
         :returns: a :class:`~schedule.Timelist` object
     """
 
-    def makeTimes(datetimeL):
-        '''convert list of datetime objects to Timelist() class'''
-        S=datetimeL[0]
-        I=datetimeL[1] - S #interval
-        E=datetimeL[-1] + I #one past the last time
-        times=schedule.Timelist(Start=S,End=E,interval=I)
-        times.setInitial()
-        return times
 
     def getTimeCol(filename):
         if filename is None: return []
@@ -195,7 +191,7 @@ def setup_times(file_gens,file_loads,datadir):
     
     if len(genScheds)==0 and len(loadScheds)==0:
         #this is a ED or OPF problem - only one time
-        times=schedule.Timelist([schedule.Time(Start='0:00',index=0)])
+        times=schedule.just_one_time()
         return times
 
 
@@ -208,11 +204,11 @@ def setup_times(file_gens,file_loads,datadir):
     timedateL=schedule.parse_timestrings(timestrL)
     
     if len(timestrL) == max(n for n in nT_loads+nT_gens): 
-        times=makeTimes(timedateL) #just one schedule
+        times=schedule.makeTimes(timedateL) #just one schedule
     else: 
         uniqueTimes=unique(timedateL)
         #make times from unique list
-        times=makeTimes(uniqueTimes)
+        times=schedule.makeTimes(uniqueTimes)
         
     #check for missing data problems by checking length
     nT=len(times)
@@ -223,33 +219,6 @@ def setup_times(file_gens,file_loads,datadir):
         msg='a generator has schedule with inconsistent times. gen schedule lengths={L} and there are {t} times.'.format(L=nT_gens,t=nT)
         raise ValueError(msg)
     return times
-    
-    
-def setup_buses(loads,generators):
-    """Create list of :class:`powersystems.Bus` objects 
-        from the load and generator bus names. Otherwise
-        (as in ED,UC) create just one (system)
-        :class:`powersystems.Bus` instance.
-        
-        :param loads: a list of :class:`powersystems.Load` objects
-        :param generators: a list of :class:`powersystems.Generator` objects
-        :returns: a list of :class:`powersystems.Bus` objects
-    """
-    busNameL=[]
-    busNameL.extend(getattrL(generators,'bus'))
-    busNameL.extend(getattrL(loads,'bus'))
-    busNameL=unique(busNameL)
-    buses=[]
-    swingHasBeenSet=False
-    for b,busNm in enumerate(busNameL):
-        newBus=powersystems.Bus(name=busNm,index=b)
-        for gen in generators: 
-            if gen.bus==newBus.name: newBus.generators.append(gen) 
-            if not swingHasBeenSet: newBus.isSwing=swingHasBeenSet=True
-        for ld in loads: 
-            if ld.bus==newBus.name: newBus.loads.append(ld)             
-        buses.append(newBus)
-    return buses
 
 if __name__ == "__main__": 
     if len(sys.argv)==1: parsedir()

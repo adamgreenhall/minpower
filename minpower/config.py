@@ -61,7 +61,8 @@ generator_defaults=dict(
         combustionturbine=36750,
         wind=                 0
         ),
-    isControllable=True
+    isControllable=True,
+    power=None
     )
 
 

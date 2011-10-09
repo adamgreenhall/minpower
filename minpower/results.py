@@ -109,7 +109,10 @@ class Solution(object):
         print '  Pk =', [value(line.P[t]) for line in self.lines]
         print '  mu=', [line.price[t] for line in self.lines]
     def calcCosts(self):
-        self.fuelcost_generation=float(sum( flatten([[value(gen.operatingcost(t)) for t in self.times] for gen in self.generators]) ))
+        gen_fuel_costs=[[value(gen.operatingcost(t)) for t in self.times] for gen in self.generators]
+        # print gen_fuel_costs
+        # print self.generators[gen_fuel_costs.index(None)].name
+        self.fuelcost_generation=float(sum( [c for c in flatten(gen_fuel_costs) if c is not None] ))
     
         self.truecost_generation=float(sum( flatten([[gen.truecost(t) for t in self.times] for gen in self.generators]) ))
         try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
@@ -149,7 +152,7 @@ class Solution_ED(Solution):
             plot.plot([minGen,maxGen],[price,price],'--k',color=grayColor)
             plot.text(maxGen, price, '{p:0.2f} $/MWh'.format(p=price),color=grayColor,horizontalalignment='right')
         for gen in generators:
-            if gen.u[t]:
+            if gen.status(t):
                 gensPlotted.append( gen.costModel.plotDeriv(P=value(gen.P(t)),linestyle='-') )
                 genNames.append(gen.name)
         for load in loads: 
@@ -173,7 +176,7 @@ class Solution_ED(Solution):
         
         fields,data=[],[]
         fields.append('generator name');  data.append(getattrL(generators,'name'))
-        fields.append('u');  data.append([value(g.u[t]) for g in generators])
+        fields.append('u');  data.append([value(g.status(t)) for g in generators])
         fields.append('P');  data.append([value(g.P(t)) for g in generators])
         fields.append('IC');  data.append([g.incrementalcost(t) for g in generators])
         

@@ -18,6 +18,7 @@ fields_lines={'name':'name','to':'To','from':'From','pmax':'Pmax'}
 fields_gens={
     'name':'name','type':'kind','kind':'kind','bus':'bus',
     'pmin':'Pmin','pmax':'Pmax',
+    'p':'power','pg':'power','power':'power', #for a non-controllable gen in an ED
     'rampratemin':'rampratemin','rampratemax':'rampratemax',
     'minuptime':'minuptime','mindowntime':'mindowntime',
     'costcurveequation':'costcurvestring', 
@@ -125,8 +126,8 @@ def build_class_list(filename,model,field_attr_map,times=None):
     data,fields=readCSV(filename,validFields)
     try: attributes=[field_attr_map[drop_case_spaces(f)] for f in fields]
     except KeyError:
-        raise KeyError('Field "{f}" is not in list'.format(f=f)+
-            'of valid fields (case insensitive): {V}.'.format(V=validFields))
+        msg='Field "{f}" is not in list of valid fields (case insensitive): {V}.'.format(f=f,V=validFields)
+        raise KeyError(msg)
     
     def getmodel(default,name,inputs):
         model=default

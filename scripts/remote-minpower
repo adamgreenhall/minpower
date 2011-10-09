@@ -1,0 +1,16 @@
+#!/bin/bash
+dir=$1
+remote_computer=$2
+remote_loc="/tmp/"
+remote_dir="/tmp/$dir"
+remote_script='minpower'
+
+if [ -d "$dir" ]; then
+    #run minpower solve on the directory
+    echo 'copying directory:' $dir
+    scp -r "$dir" "$remote_computer":"$remote_loc"
+    echo "solving problem on $remote_computer"
+    ssh "$remote_computer" "'$remote_script '$remote_dir''"
+    echo 'copying results'
+    scp -r "$remote_computer":"$remote_dir" "$dir/results"
+fi

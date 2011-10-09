@@ -18,6 +18,7 @@ fields_lines={'name':'name','to':'To','from':'From','pmax':'Pmax'}
 fields_gens={
     'name':'name','type':'kind','kind':'kind','bus':'bus',
     'pmin':'Pmin','pmax':'Pmax',
+    'p':'power','pg':'power','power':'power', #for a non-controllable gen in an ED
     'rampratemin':'rampratemin','rampratemax':'rampratemax',
     'minuptime':'minuptime','mindowntime':'mindowntime',
     'costcurveequation':'costcurvestring', 
@@ -28,8 +29,14 @@ fields_loads={'name':'name','bus':'bus','type':'kind','kind':'kind',
             'p':'P','pd':'P', 'pmin':'Pmin','pmax':'Pmax',
             'schedulefilename':'schedulefilename',
             'bidequation':'costcurvestring','costcurveequation':'costcurvestring'}
-
-def parsedir(datadir='./tests/uc/',
+fields_initial={
+    'name':'name','generatorname':'name',
+    'status':'u','u':'u',
+    'p':'P','pg':'P','power':'P',
+    'hoursinstatus':'hoursinstatus',
+    'ic':None}
+    
+def parsedir(datadir='.',
         file_gens='generators.csv',
         file_loads='loads.csv',
         file_lines='lines.csv',
@@ -68,44 +75,44 @@ def parsedir(datadir='./tests/uc/',
     except IOError: lines=[]
     
     #create buses list    
-    buses=setup_buses(loads,generators)
+    buses=powersystems.make_buses_list(loads,generators)
     
     return buses,lines,times
 
 def setup_initialcond(filename,generators,times):
     '''read initial conditions from spreadsheet and add information to each :class:`powersystems.Generator`.'''
     if len(times)<=1: return generators #for UC,ED no need to set initial status
-    field_attr_map={'name':'name','status':'u','p':'P','hoursinstatus':'hoursinstatus'}
-    validFields=field_attr_map.keys()
+    validFields=fields_initial.keys()
     
     initialTime = times.initialTime
     
     try: data,fields=readCSV(filename,validFields)
     except IOError: 
-        #no initial conditions file, use defaults
         data,fields=[],[]
         logging.warning('No generation initial conditions file found. Setting to defaults.')
         for gen in generators: gen.setInitialCondition(time=initialTime)
         return generators
         
-    try: attributes=[field_attr_map[drop_case_spaces(f)] for f in fields]
+    try: attributes=[fields_initial[drop_case_spaces(f)] for f in fields]
     except KeyError:
         print 'Field "{f}" is not in valid fields (case insensitive): {V}.'.format(f=f,V=validFields)
         raise
     
     
-    
-    #set all gens to off (in case some are not listed in initial file)
-    for gen in generators: gen.setInitialCondition(time=initialTime,P=0,u=False)
-    
-    #for each row in initial file, find gen (by name), add initial condifion
+    #set initial condition for all gens to off
+    for g in generators: g.setInitialCondition(initialTime, u=False, P=0)
+
+
+    #overwrite initial condition for generators which are specified in the initial file
     genNames=[g.name for g in generators]
     nameCol = attributes.index('name')
+    excludeCols = [nameCol]
+    if None in attributes: excludeCols.append( attributes.index(None) )
     for row in data:
         inputs=dict()
         for c,elem in enumerate(row): 
-            if c==nameCol: continue
-            elif row[c] is not None: inputs[attributes[c]]=row[c]
+            if c in excludeCols: continue
+            elif elem is not None: inputs[attributes[c]]=elem
         g=genNames.index(row[nameCol])
         generators[g].setInitialCondition(time=initialTime,**inputs)
         
@@ -130,8 +137,8 @@ def build_class_list(filename,model,field_attr_map,times=None):
     data,fields=readCSV(filename,validFields)
     try: attributes=[field_attr_map[drop_case_spaces(f)] for f in fields]
     except KeyError:
-        raise KeyError('Field "{f}" is not in list'.format(f=f)+
-            'of valid fields (case insensitive): {V}.'.format(V=validFields))
+        msg='Field "{f}" is not in list of valid fields (case insensitive): {V}.'.format(f=f,V=validFields)
+        raise KeyError(msg)
     
     def getmodel(default,name,inputs):
         model=default
@@ -174,14 +181,6 @@ def setup_times(file_gens,file_loads,datadir):
         :returns: a :class:`~schedule.Timelist` object
     """
 
-    def makeTimes(datetimeL):
-        '''convert list of datetime objects to Timelist() class'''
-        S=datetimeL[0]
-        I=datetimeL[1] - S #interval
-        E=datetimeL[-1] + I #one past the last time
-        times=schedule.Timelist(Start=S,End=E,interval=I)
-        times.setInitial()
-        return times
 
     def getTimeCol(filename):
         if filename is None: return []
@@ -200,14 +199,12 @@ def setup_times(file_gens,file_loads,datadir):
     
     if len(genScheds)==0 and len(loadScheds)==0:
         #this is a ED or OPF problem - only one time
-        times=schedule.create_single_time()
+        times=schedule.just_one_time()
         return times
 
 
-    for filename in loadScheds:
-        if filename!='': timestrL_loads.append( getTimeCol(filename) )
-    for filename in genScheds:
-        if filename!='': timestrL_gens.append( getTimeCol(filename) )
+    for filename in loadScheds: timestrL_loads.append( getTimeCol(filename) )
+    for filename in genScheds:  timestrL_gens.append( getTimeCol(filename) )
     nT_loads=[len(L) for L in timestrL_loads]
     nT_gens =[len(L) for L in timestrL_gens]
     
@@ -215,11 +212,11 @@ def setup_times(file_gens,file_loads,datadir):
     timedateL=schedule.parse_timestrings(timestrL)
     
     if len(timestrL) == max(n for n in nT_loads+nT_gens): 
-        times=makeTimes(timedateL) #just one schedule
+        times=schedule.makeTimes(timedateL) #just one schedule
     else: 
         uniqueTimes=unique(timedateL)
         #make times from unique list
-        times=makeTimes(uniqueTimes)
+        times=schedule.makeTimes(uniqueTimes)
         
     #check for missing data problems by checking length
     nT=len(times)
@@ -230,33 +227,6 @@ def setup_times(file_gens,file_loads,datadir):
         msg='a generator has schedule with inconsistent times. gen schedule lengths={L} and there are {t} times.'.format(L=nT_gens,t=nT)
         raise ValueError(msg)
     return times
-    
-    
-def setup_buses(loads,generators):
-    """Create list of :class:`powersystems.Bus` objects 
-        from the load and generator bus names. Otherwise
-        (as in ED,UC) create just one (system)
-        :class:`powersystems.Bus` instance.
-        
-        :param loads: a list of :class:`powersystems.Load` objects
-        :param generators: a list of :class:`powersystems.Generator` objects
-        :returns: a list of :class:`powersystems.Bus` objects
-    """
-    busNameL=[]
-    busNameL.extend(getattrL(generators,'bus'))
-    busNameL.extend(getattrL(loads,'bus'))
-    busNameL=unique(busNameL)
-    buses=[]
-    swingHasBeenSet=False
-    for b,busNm in enumerate(busNameL):
-        newBus=powersystems.Bus(name=busNm,index=b)
-        for gen in generators: 
-            if gen.bus==newBus.name: newBus.generators.append(gen) 
-            if not swingHasBeenSet: newBus.isSwing=swingHasBeenSet=True
-        for ld in loads: 
-            if ld.bus==newBus.name: newBus.loads.append(ld)             
-        buses.append(newBus)
-    return buses
 
 if __name__ == "__main__": 
     if len(sys.argv)==1: parsedir()

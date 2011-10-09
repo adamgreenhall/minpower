@@ -3,6 +3,7 @@ Time and schedule related models.
 """
 
 import dateutil
+import logging
 from commonscripts import hours,parseTime, readCSV,getclass_inlist, drop_case_spaces,transpose,frange,getattrL,getTimeFormat
 
 
@@ -44,7 +45,27 @@ class Time(object):
     def __str__(self): 
         try: return 't{ind:02d}'.format(ind=self.index)    
         except ValueError: return 't_{ind}'.format(ind=self.index) #index is str    
+    def __unicode__(self):
+        return unicode(self.Start)+' to '+unicode(self.End)
 
+def makeTimes(datetimeL):
+    '''convert list of datetime objects to Timelist() class'''
+    S=datetimeL[0]
+    I=datetimeL[1] - S #interval
+    E=datetimeL[-1] + I #one past the last time
+    times=Timelist(Start=S,End=E,interval=I)
+    times.setInitial()
+    return times
+
+def make_times_basic(N):
+    ''' make a :class:`schedule.Timelist` of N times, assume hourly interval.'''
+    S=dateutil.parser.parse('0:00')
+    I=dateutil.parser.parse('1:00')-S
+    E=S+I*(N)    
+    times=Timelist(Start=S,End=E,interval=I)
+    times.setInitial()
+    return times
+    
 class Timelist(object):
     """
     A container for :class:`schedule.Time` objects.
@@ -92,6 +113,7 @@ class Timelist(object):
         else: self.initialTime = Time(Start=self.Start-self.interval, interval=self.interval)
         self.wInitial = tuple([self.initialTime] + list(self.times))
     def subdivide(self,hrsperdivision=24,hrsinterval=None):
+        ### add offset=0 to this
         """
         Subdivide a list of times into serval lists,  each list
         spanning `hrsperdivision` with intervals of `hrsinterval`.
@@ -157,14 +179,8 @@ def makeSchedule(filename,times):
 class Schedule(object):
     """
     Describes a schedule of times and corresponding power values.
-    In basic use is mostly a container for a dictionary keyed by
+    Mostly a container for a dictionary keyed by
     :py:class:`~schedule.Time` objects.
-    
-    If inputs are `P` and `times`: create dictionary directly.
-    
-    If inputs are `filename` and `times`: 
-    use :meth:`~schedule.setUpSchedule` to read information from 
-    spreadsheet file.
     """
     def __init__(self,times=None,P=None):
         self.P=dict(zip(times,P))
@@ -175,7 +191,7 @@ class Schedule(object):
         """
         Multiplies each power value in schedule by a multiplier.        
         Usage: schedule*=.9 
-        would give a schedule with 90% of the power.
+        would give a schedule with 90 percent of the power.
         """
         for t,p in self.P.iteritems():
             self.P[t]=p*multiplier
@@ -213,7 +229,13 @@ class Schedule(object):
                 t=getattrL(times,'Start').index(timeperiod.Start)
                 return self.getEnergy(times[t])
             else: raise
-
+class FixedSchedule(Schedule):
+    def __init__(self,times=None,P=None): self.P=P
+    def getEnergy(self,timeperiod=None): return self.P
+    
+def just_one_time():
+    """For a single-time problem, generate a Timelist with just one time in it."""
+    return Timelist([Time(Start='0:00',index=0)])
 def parse_timestrings(timestringsL):
     """
     Convert list of strings to list of :py:class:`datetime.datetime`
@@ -221,11 +243,3 @@ def parse_timestrings(timestringsL):
     """
     fmt=getTimeFormat(timestringsL[0])
     return [dateutil.parser.parse(str,**fmt) for str in timestringsL]
-
-
-def create_single_time():
-    """
-    Create a  simple schedule -- only one time interval --
-    for an ED or OPF problem.
-    """
-    return Timelist( [Time(Start='0:00',index=0)] )

@@ -1,0 +1,11 @@
+h1. minpower 
+
+h2. power systems optimization made beautiful
+
+* Solves:
+    - Economic Dispatch
+    - Optimal Power Flow
+    - Unit Commitment
+* Problems can be made in simple spreadsheets.
+* Many solvers supported.
+* "Full documentation and tutorials":http://minpowertoolkit.com

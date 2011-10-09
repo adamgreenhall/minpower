@@ -16,16 +16,12 @@ from commonscripts import joindir,flatten
   
 def _setup_logging(fn):
     ''' set up the logging to report on the status'''
-    logging.basicConfig( level=logging.INFO, format='%(levelname)s: %(message)s')
+    logging.basicConfig( level=config.logging_level, format='%(levelname)s: %(message)s')
     return fn
     
 @_setup_logging
-def problem(datadir='./tests/uc/',
-    outputs=dict(
-        shell=True,problemfile=True,
-        vizualization=True,csv=True),
-    solver=config.optimization_solver):
-    
+def problem(datadir='.',shell=True,problemfile=True,
+        vizualization=True,csv=True,solver=config.optimization_solver):
     """ Solve a optimization problem in a directory.
         Problem type is determined from the data.
             
@@ -40,27 +36,29 @@ def problem(datadir='./tests/uc/',
 
     if times.spanhrs<=24:
         problem=create_problem(buses,lines,times)
-        if outputs['problemfile']: problem.write(joindir(datadir,'problem-formulation.lp'))
         optimization.solve(problem,solver)
-        solution=results.makeSolution(times=times,lines=lines,buses=buses,problem=problem,datadir=datadir)
+        if problemfile: problem.write(joindir(datadir,'problem-formulation.lp'))
+        if problem.solved:
+            solution=results.makeSolution(times=times,lines=lines,buses=buses,problem=problem,datadir=datadir)
+        else: 
+            raise optimization.OptimizationError('problem not solved')
     else: #split into multi-stage problem
         problemsL,stageTimes=create_problem_multistage(buses,lines,times,datadir)
         solution=results.makeMultistageSolution(problemsL=problemsL,times=times,stageTimes=stageTimes,buses=buses,lines=lines,datadir=datadir)
-
-    logging.info('displaying solution')
-    if outputs['shell']: solution.show()
-    if outputs['csv']: solution.saveCSV()
-    if outputs['vizualization']: solution.vizualization()
+        logging.info('problem solved in {}'.format(solution.solveTime))
+    
+    if shell: solution.show()
+    if csv: solution.saveCSV()
+    if vizualization: solution.vizualization()
     return solution
 
-def create_problem(buses,lines,times,load_shedding_allowed=False):
+def create_problem(buses,lines,times,load_shedding_allowed=False,dispatch_decommit_allowed=False):
     """
         Create a power systems optimization problem.
         
         :param buses: list of :class:`~powersystems.Bus` objects
         :param lines: list of :class:`~powersystems.Line` objects
         :param times: :class:`~schedule.Timelist` object
-        :param filename: (optional) create a .lp file of the problem
         
         :returns: :class:`~optimization.Problem` object
     """
@@ -68,30 +66,34 @@ def create_problem(buses,lines,times,load_shedding_allowed=False):
     Bmatrix=powersystems.Network(buses,lines).Bmatrix
     prob=optimization.newProblem()
     costs=[]
+    problemvars=[]
     
     for bus in buses:
         if len(buses)>1: bus.add_timevars(times)
         
         for gen in bus.generators:
-            gen.add_timevars(times)
+            problemvars.extend(gen.add_timevars(times,dispatch_decommit_allowed))
             prob.addConstraints(gen.constraints(times))
             for time in times: costs.append(gen.cost(time))
 
         for load in bus.loads:
-            load.add_timevars(times,shedding_allowed=load_shedding_allowed)
+            problemvars.extend(load.add_timevars(times,load_shedding_allowed))
             prob.addConstraints(load.constraints(times))
             for time in times: costs.append(-1*load.benifit(time))
             
     for line in lines:
-        line.add_timevars(times)
+        problemvars.extend(line.add_timevars(times))
         prob.addConstraints(line.constraints(times,buses))
                     
     for bus in buses:
+        problemvars.extend(bus.add_timevars(times))
         prob.addConstraints(bus.constraints(times,Bmatrix,buses))
-        
+    
+    for v in problemvars: prob.addVar(v)
     prob.addObjective( optimization.sumVars(costs) )
     
     return prob
+
 
 
 
@@ -130,9 +132,11 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
                     del gen.finalstatus
                 except AttributeError: pass #first stage of problem already has initial time definied
 
-    def get_finalconditions(buses,times):
+    def get_finalconditions(buses,times,lastproblem):
         for bus in buses:
-            for gen in bus.generators: gen.finalstatus=gen.getstatus(t=times[-1],times=times)
+            for gen in bus.generators:
+                gen.update_vars(times, lastproblem)
+                gen.finalstatus=gen.getstatus(t=times[-1],times=times)
 
 
     for t_stage in stageTimes:
@@ -149,10 +153,9 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
             optimization.solve(stageproblem)
             
         if stageproblem.status==1:
-            get_finalconditions(buses,t_stage)
+            get_finalconditions(buses,t_stage,stageproblem)
             stage_sln=results.get_stage_solution(stageproblem,buses,t_stage)
             problemsL.append(stage_sln)
-            
         else: 
             print stageproblem.status,stageproblem.statusText()
             stageproblem.write('infeasible-problem.lp')

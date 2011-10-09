@@ -4,6 +4,7 @@ results.txt
 *.png
 *.gif
 *.jpg
+.*
 MANIFEST
 doc/publish.py
 doc/Makefile

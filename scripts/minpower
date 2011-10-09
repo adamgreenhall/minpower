@@ -1,0 +1,21 @@
+#!/bin/bash
+dir=$1
+
+if [ $# = 2 ]; then
+    solver=$2
+    pyargs="'$dir',solver='$solver'"
+else
+    #use default solver
+    pyargs="'$dir'"
+fi
+
+
+if [ -d "$dir" ]; then
+    #run minpower solve on the directory
+    echo 'solving directory:' $dir
+    python -c "from minpower import solve; solve.problem($pyargs)"
+else
+    #try a test case with the input name
+    echo 'solving testcase:' $dir
+    python -c "from minpower.tests import test; test.problem($pyargs)"
+fi

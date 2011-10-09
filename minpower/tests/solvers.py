@@ -1,21 +1,39 @@
 '''Test the all of the solver links'''
 
-from minpower import optimization
+from attest import Tests,assert_hook
+from minpower import optimization, config
+solvers = Tests()
 
-def testall(stop_on_error=False):
+def simple_problem():
     prob=optimization.newProblem()
-    x= prob.newVar('x',low=0,high=3)
-    y= prob.newVar('y',low=0,high=1)
+    x= optimization.newVar('x',low=0,high=3)
+    y= optimization.newVar('y',low=0,high=1)
+    prob.addVariables([x,y])
     prob.addObjective(y-4*x)
-    prob.addConstraints(dict(theconstr=(x+y<=2)))
+    prob.addConstraints(dict(theconstr=(x+y<=2)))    
+    return prob 
 
-    for solver in ['glpk','cplex','gurobi']:
-        try: 
-            optimization.solve(prob,solver)
-            print solver,'solved problem, status: ', 
-            print prob.statusText()
-        except:
-            print solver,' failed'
-            if stop_on_error: raise
+def test_one_solver(solver_name):
+    prob=simple_problem()
+    optimization.solve(prob,solver=solver_name)
+    return prob.status
 
-if __name__ == "__main__": testall()
+@solvers.test
+def cplex():
+    '''Test each available solver on a simple problem'''
+    if 'cplex' in config.available_solvers:
+        assert test_one_solver('cplex')
+
+@solvers.test
+def glpk():
+    '''Test the glpk solver on a simple problem'''
+    if 'glpk' in config.available_solvers:
+        assert test_one_solver('glpk')
+
+@solvers.test
+def gurobi():
+    '''Test the gurobi solver on a simple problem'''
+    if 'gurobi' in config.available_solvers:
+        assert test_one_solver('gurobi')
+        
+if __name__ == "__main__": solvers.run()

@@ -341,7 +341,7 @@ class Generator_nonControllable(Generator):
         mustrun=False,
         Pmin=0,Pmax=None,
         power=None,
-        name=None,index=None,bus=None,**kwargs):
+        name=None,index=None,bus=None,kind='wind',**kwargs):
         vars(self).update(locals()) #load in inputs
         if power is not None and schedule is None: 
             self.schedule = FixedSchedule(P=power)
@@ -356,12 +356,16 @@ class Generator_nonControllable(Generator):
         self.schedule.P[time]=P
     def getstatus(self,t,times): return dict()
 <<<<<<< HEAD
+<<<<<<< HEAD
     def add_timevars(self,times): return []
 <<<<<<< HEAD
     def update_vars(self,times=None,solution=None): return
 =======
     def add_timevars(self,times): return
 =======
+=======
+    def add_timevars(self,times,dispatch_decommit_allowed=False): return []
+>>>>>>> initial generator status defaults to off if not specified. solve directory defaults to current directory if not specified. initial conditions spec now accepts ED results.
     def update_vars(self,times=None,problem=None): return
 >>>>>>> duals and variables now working with coopr. tests are still failing.
     def fix_timevars(self,times=None): return

@@ -33,7 +33,7 @@ def makeMultistageSolution(lines,**kwargs):
     return Solution_multistageUC(**kwargs)
 
 class Solution(object):
-    def __init__(self,problem,buses,lines,times,datadir):
+    def __init__(self,problem,buses,lines,times,datadir='.'):
         vars(self).update(subset(locals(),['buses','lines','times','datadir']))
         self.generators=flatten( [[gen for gen in bus.generators] for bus in buses] )
         self.loads     =flatten( [[ld  for ld   in bus.loads]     for bus in buses] )
@@ -461,7 +461,7 @@ class Solution_SCUC(Solution):
     def vizualization(self): raise NotImplementedError('need to implement vizualization for SCUC')
     def saveCSV(self,filename='commitment.csv'): raise NotImplementedError
 class Solution_multistageUC(Solution_UC):
-    def __init__(self,problemsL,times,stageTimes,buses,datadir):
+    def __init__(self,problemsL,times,stageTimes,buses,datadir='.'):
         vars(self).update(locals())
         self.times=Timelist(flatten([list(tL) for tL in stageTimes]))
         self.times.setInitial(stageTimes[0].initialTime)

@@ -83,7 +83,7 @@ class Solution(object):
         if len(self.generators)<10:
             if len(self.buses)>1: print '  bus={L}'.format(L=getattrL(self.generators,'bus'))
             print '  name=', getattrL(self.generators,'name')
-            print '  u=',   [value(gen.u[t]) if gen.isControllable else ' ' for gen in self.generators]
+            print '  u=',   [value(gen.status(t)) if gen.isControllable else ' ' for gen in self.generators]
             if len(self.times)>1: print '  du=', [value(gen.startup[t]) or value(gen.shutdown[t]) if gen.isControllable else ' ' for gen in self.generators]
             print '  Pg=',  [value(gen.P(t)) for gen in self.generators]
             print '  IC=', [gen.incrementalcost(t) for gen in self.generators]
@@ -149,7 +149,7 @@ class Solution_ED(Solution):
             plot.plot([minGen,maxGen],[price,price],'--k',color=grayColor)
             plot.text(maxGen, price, '{p:0.2f} $/MWh'.format(p=price),color=grayColor,horizontalalignment='right')
         for gen in generators:
-            if gen.u[t]:
+            if gen.status(t):
                 gensPlotted.append( gen.costModel.plotDeriv(P=value(gen.P(t)),linestyle='-') )
                 genNames.append(gen.name)
         for load in loads: 
@@ -173,7 +173,7 @@ class Solution_ED(Solution):
         
         fields,data=[],[]
         fields.append('generator name');  data.append(getattrL(generators,'name'))
-        fields.append('u');  data.append([value(g.u[t]) for g in generators])
+        fields.append('u');  data.append([value(g.status(t)) for g in generators])
         fields.append('P');  data.append([value(g.P(t)) for g in generators])
         fields.append('IC');  data.append([g.incrementalcost(t) for g in generators])
         
@@ -211,7 +211,7 @@ class Solution_OPF(Solution):
         
         fields,data=[],[]
         fields.append('generator name');  data.append(getattrL(generators,'name'))
-        fields.append('u');  data.append([value(g.u[t]) for g in generators])
+        fields.append('u');  data.append([value(g.status(t)) for g in generators])
         fields.append('P');  data.append([value(g.P(t)) for g in generators])
         fields.append('IC');  data.append([g.incrementalcost(t) for g in generators])
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename+'-generators.csv'))           
@@ -238,7 +238,7 @@ class Solution_UC(Solution):
         for gen in self.generators: 
             if gen.isControllable:
                 fields.append('status: '+str(gen.name))
-                data.append([value(gen.u[t]) for t in times])
+                data.append([value(gen.status(t)) for t in times])
             fields.append('power: '+str(gen.name))
             data.append([value(gen.P(t)) for t in times])
         for load in self.loads:
@@ -307,7 +307,7 @@ class Solution_UC(Solution):
             #sort generators by merit order by 1.committed hrs (and then by 2. energy)
             generators=sorted(generators,reverse=True,
                               key=lambda gen: 
-                              ( sum(value(gen.u[t]) if hasattr(gen,'u') else 0 for t in times), #committed hrs
+                              ( sum(value(gen.status(t)) for t in times), #committed hrs
                                sum(value(gen.P(t)) for t in times) #energy
                                ))
             colors=colormap(len(generators),colormapName='Blues')
@@ -455,7 +455,7 @@ def write_last_stage_status(buses,stagetimes):
     
     fields,data=[],[]
     fields.append('generator name');  data.append(getattrL(generators,'name'))
-    fields.append('u');  data.append([value(g.u[t]) for g in generators])
+    fields.append('u');  data.append([value(g.status(t)) for g in generators])
     fields.append('P');  data.append([value(g.P(t)) for g in generators])
     fields.append('hours in status');  data.append([value(g.initialStatusHours) for g in generators])
     writeCSV(fields,transpose(data),filename='stagestatus{}.csv'.format(t.End))          

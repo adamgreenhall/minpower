@@ -8,24 +8,25 @@
 #python setup.py sdist upload
 
 
-from distutils.core import setup
+#from distutils.core import setup
+from setuptools import setup
 setup(
     name = "minpower",
     packages = ["minpower"], #code location
-    version = "0.0.1",
+    version = "1.0.0",
     description = "power systems optimization made beautiful",
     author = "Adam Greenhall",
     author_email = "minpower@adamgreenhall.com",
     url = "http://minpowertoolkit.com/",
-    download_url = "http://minpowertoolkit.com/minpower-0.0.1.tgz",
+    download_url = "https://github.com/adamgreenhall/minpower/zipball/v1.0.0",
     keywords = ["power systems","optimization",""],
     
     scripts= [
         'scripts/minpower',
+        'scripts/remote-minpower',
         ],
     
     install_requires=[
-        'pulp',
         'coopr',
         'numpy',
         'matplotlib',
@@ -34,7 +35,7 @@ setup(
         ],
     
     classifiers = [    
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Environment :: Other Environment",
         "Intended Audience :: Science/Research",      
         "Intended Audience :: Education",

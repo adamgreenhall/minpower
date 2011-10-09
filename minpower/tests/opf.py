@@ -99,7 +99,7 @@ def three_buses():
         for g in generators: g.update_vars(times,problem)
     
     num_lmps=len(set(b.getprice(times[0], problem) for b in buses))
-    total_load = sum(b.Pload(times[0]) for b in buses)
+    total_load = value(sum(b.Pload(times[0]) for b in buses))
     assert total_load==sum(Pd) and num_lmps>1
 
 

@@ -20,7 +20,7 @@ def _setup_logging(fn):
     return fn
     
 @_setup_logging
-def problem(datadir='./tests/uc/',shell=True,problemfile=True,
+def problem(datadir='.',shell=True,problemfile=True,
         vizualization=True,csv=True,solver=config.optimization_solver):
     """ Solve a optimization problem in a directory.
         Problem type is determined from the data.
@@ -52,14 +52,13 @@ def problem(datadir='./tests/uc/',shell=True,problemfile=True,
     if vizualization: solution.vizualization()
     return solution
 
-def create_problem(buses,lines,times,load_shedding_allowed=False):
+def create_problem(buses,lines,times,load_shedding_allowed=False,dispatch_decommit_allowed=False):
     """
         Create a power systems optimization problem.
         
         :param buses: list of :class:`~powersystems.Bus` objects
         :param lines: list of :class:`~powersystems.Line` objects
         :param times: :class:`~schedule.Timelist` object
-        :param filename: (optional) create a .lp file of the problem
         
         :returns: :class:`~optimization.Problem` object
     """
@@ -73,12 +72,12 @@ def create_problem(buses,lines,times,load_shedding_allowed=False):
         if len(buses)>1: bus.add_timevars(times)
         
         for gen in bus.generators:
-            problemvars.extend(gen.add_timevars(times))
+            problemvars.extend(gen.add_timevars(times,dispatch_decommit_allowed))
             prob.addConstraints(gen.constraints(times))
             for time in times: costs.append(gen.cost(time))
 
         for load in bus.loads:
-            problemvars.extend(load.add_timevars(times,shedding_allowed=load_shedding_allowed))
+            problemvars.extend(load.add_timevars(times,load_shedding_allowed))
             prob.addConstraints(load.constraints(times))
             for time in times: costs.append(-1*load.benifit(time))
             

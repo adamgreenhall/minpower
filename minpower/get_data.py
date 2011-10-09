@@ -29,8 +29,14 @@ fields_loads={'name':'name','bus':'bus','type':'kind','kind':'kind',
             'p':'P','pd':'P', 'pmin':'Pmin','pmax':'Pmax',
             'schedulefilename':'schedulefilename',
             'bidequation':'costcurvestring','costcurveequation':'costcurvestring'}
-
-def parsedir(datadir='./tests/uc/',
+fields_initial={
+    'name':'name','generatorname':'name',
+    'status':'u','u':'u',
+    'p':'P','pg':'P','power':'P',
+    'hoursinstatus':'hoursinstatus',
+    'ic':None}
+    
+def parsedir(datadir='.',
         file_gens='generators.csv',
         file_loads='loads.csv',
         file_lines='lines.csv',
@@ -76,8 +82,7 @@ def parsedir(datadir='./tests/uc/',
 def setup_initialcond(filename,generators,times):
     '''read initial conditions from spreadsheet and add information to each :class:`powersystems.Generator`.'''
     if len(times)<=1: return generators #for UC,ED no need to set initial status
-    field_attr_map={'name':'name','status':'u','p':'P','hoursinstatus':'hoursinstatus'}
-    validFields=field_attr_map.keys()
+    validFields=fields_initial.keys()
     
     initialTime = times.initialTime
     
@@ -88,24 +93,25 @@ def setup_initialcond(filename,generators,times):
         for gen in generators: gen.setInitialCondition(time=initialTime)
         return generators
         
-    try: attributes=[field_attr_map[drop_case_spaces(f)] for f in fields]
+    try: attributes=[fields_initial[drop_case_spaces(f)] for f in fields]
     except KeyError:
         print 'Field "{f}" is not in valid fields (case insensitive): {V}.'.format(f=f,V=validFields)
         raise
     
     
-    #if no initial data for generator, set it to default? off?
-    raise NotImplementedError('if no initial data for generator, set it to default? off? and then overwrite the ones with data.')
+    #set initial condition for all gens to off
+    for g in generators: g.setInitialCondition(initialTime, u=False, P=0)
 
 
-    #add info to generators
+    #overwrite initial condition for generators which are specified in the initial file
     genNames=[g.name for g in generators]
     nameCol = attributes.index('name')
+    excludeCols = [nameCol, attributes.index(None)]
     for row in data:
         inputs=dict()
         for c,elem in enumerate(row): 
-            if c==nameCol: continue
-            elif row[c] is not None: inputs[attributes[c]]=row[c]
+            if c in excludeCols: continue
+            elif elem is not None: inputs[attributes[c]]=elem
         g=genNames.index(row[nameCol])
         generators[g].setInitialCondition(time=initialTime,**inputs)
         

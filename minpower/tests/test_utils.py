@@ -31,7 +31,7 @@ def make_load(Pd=200,Pdt=None,**kwargs):
         sched = schedule.Schedule(times=times, P=Pdt)
         return dict(load=[powersystems.Load(schedule=sched,**kwargs)],times=times)
 
-def solve_problem(generators,load,  gen_init=None, lines=None, solver=config.optimization_solver):
+def solve_problem(generators,load,  gen_init=None, lines=None, solver=config.optimization_solver,load_shedding_allowed=False):
     if lines is None: lines=[]
     
     times=load['times']
@@ -42,7 +42,7 @@ def solve_problem(generators,load,  gen_init=None, lines=None, solver=config.opt
             gen.index=g
         
     buses=powersystems.make_buses_list(loads=load['load'],generators=generators)
-    problem=solve.create_problem(buses,lines,times)
+    problem=solve.create_problem(buses,lines,times,load_shedding_allowed=load_shedding_allowed)
     problem.solve(solver=solver)
     if problem.solved:
         for g in generators: g.update_vars(times,problem)

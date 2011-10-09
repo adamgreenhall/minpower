@@ -3,11 +3,12 @@ Defines models for power systems concepts:
 :class:`~powersystems.Bus`, :class:`~powersystems.Generator`, 
 :class:`~powersystems.Line`, and :class:`~powersystems.Load`.
 """
-import bidding
+
 from optimization import newVar,value,sumVars
 from commonscripts import hours,subset,subsetexcept,drop_case_spaces,getattrL,flatten,unique
-import config
-import logging,math
+import config, bidding
+from schedule import FixedSchedule
+import logging
 
 from dateutil.relativedelta import relativedelta
 import numpy 
@@ -51,10 +52,14 @@ def makeGenerator(kind='generic',**kwargs):
     
     
     kind,kwargs=parse_args(kind,**kwargs)    
-    if kind=='wind' or not kwargs['isControllable'] or kwargs.get('schedule',None): 
+    if kind=='wind' or not kwargs['isControllable'] or kwargs.get('schedule',None) or (kwargs.get('power') is not None): 
         classname=Generator_nonControllable
-    else: classname=Generator
+    else:
+        classname=Generator
+        kwargs.pop('power')
+
     kwargs.pop('isControllable')
+
     return classname(kind=kind,**kwargs)
 
 def makeLoad(kind='varying',**kwargs):
@@ -280,8 +285,11 @@ class Generator_nonControllable(Generator):
         fuelcost=1,costcurvestring='0',
         mustrun=False,
         Pmin=0,Pmax=None,
+        power=None,
         name=None,index=None,bus=None,**kwargs):
         vars(self).update(locals()) #load in inputs
+        if power is not None and schedule is None: 
+            self.schedule = FixedSchedule(P=power)
         if Pmax is None: self.Pmax = self.schedule.maxvalue
         self.buildCostModel()
         self.isControllable=False

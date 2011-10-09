@@ -109,7 +109,10 @@ class Solution(object):
         print '  Pk =', [value(line.P[t]) for line in self.lines]
         print '  mu=', [line.price[t] for line in self.lines]
     def calcCosts(self):
-        self.fuelcost_generation=float(sum( flatten([[value(gen.operatingcost(t)) for t in self.times] for gen in self.generators]) ))
+        gen_fuel_costs=[[value(gen.operatingcost(t)) for t in self.times] for gen in self.generators]
+        # print gen_fuel_costs
+        # print self.generators[gen_fuel_costs.index(None)].name
+        self.fuelcost_generation=float(sum( [c for c in flatten(gen_fuel_costs) if c is not None] ))
     
         self.truecost_generation=float(sum( flatten([[gen.truecost(t) for t in self.times] for gen in self.generators]) ))
         try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation

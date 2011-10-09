@@ -137,10 +137,10 @@ def min_up_time():
     initial = [
         dict(P= 80, u=True),
         dict(u=False)]
-    load = make_load(Pdt=[80,120,80,80])
+    load = make_load(Pdt=[85,120,80,80])
     problem,times,buses=solve_problem(generators,load,gen_init=initial)
     limgen_status=[generators[1].u[t] for t in times]
-    assert limgen_status == [0,1,1,0]
+    assert limgen_status == [0,1,1,0] or limgen_status == [1,1,0,0]
 
 @generation.test
 def min_down_time():

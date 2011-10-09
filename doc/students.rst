@@ -25,5 +25,6 @@ Perhaps you are unfamiliar with Python? Check out :doc:`python-intro` to get up 
 
 Check out `Stackoverflow <http://stackoverflow.com/questions/tagged/python>`_ for general Python help - it's approximately 
 one million times better than any other help forum. Hashtag any **minpower** questions you post 
-with `#minpower <http://stackoverflow.com/questions/tagged/minpower>`_
+with `#minpower <http://stackoverflow.com/questions/tagged/minpower>`_. 
 
+If you find a bug, please report it on the `GitHub issue tracker <https://github.com/adamgreenhall/minpower/issues>`_.

@@ -17,11 +17,11 @@ The problem
     
     :math:`\min \sum_g C_g(P_g)`
     
-    :math:`\mathrm{s.t.}\/ P_{\min (g)} \leq P_g \leq P_{\max (g)} \/ \forall \/ \mathrm{generators}\/(g)`
+    :math:`\mathrm{s.t.} \; P_{\min (g)} \leq P_g \leq P_{\max (g)}  \; \forall  \; \mathrm{generators} \;(g)`
     
-    :math:`\mathrm{s.t.}\/ P_{\mathrm{gen} (i)} - P_{\mathrm{load} (i)} - \sum_j P_{ij} = 0  \/ \forall \/ \mathrm{buses}\/(i)`
+    :math:`\mathrm{s.t.} \; P_{\mathrm{gen} (i)} - P_{\mathrm{load} (i)} - \sum_j P_{ij} = 0   \; \forall  \; \mathrm{buses} \;(i)`
     
-    :math:`\mathrm{s.t.}\/ P_{\min (ij)} \leq P_{ij} \leq P_{\max (ij)} \forall \/ \mathrm{lines}\/(ij)`
+    :math:`\mathrm{s.t.} \; P_{\min (ij)} \leq P_{ij} \leq P_{\max (ij)} \forall  \; \mathrm{lines} \;(ij)`
 
 In this mathematical formulation generators are indexed by :math:`g`. :math:`P_g` is a generator’s power output and :math:`C_g()` is its cost function. The objective is to minimize the total cost. There are three constraints: 
 
@@ -29,7 +29,7 @@ In this mathematical formulation generators are indexed by :math:`g`. :math:`P_g
 * :abbr:`inflow must equal outflow (called power balance)` at each bus
 * each line must be within its real power limits
 
-For :abbr:`DCOPF (De-Coupled Optimal Power Flow)`, the real power flow on a line :math:`P_{ij} = \frac{1}{X_{ij}} \left( \theta_i-\theta_j \right)` depends linearly on the voltage angles of the buses it connects (:math:`\theta_{i}`, :math:`\theta_{j}`) and its own reactance :math:`X_{ij}`. Bus angles are the difference in voltage angle between the bus and the :abbr:`reference bus (known as the swing or slack bus)` which has angle :math:`0\degree`. 
+For :abbr:`DCOPF (De-Coupled Optimal Power Flow)`, the real power flow on a line :math:`P_{ij} = \frac{1}{X_{ij}} \left( \theta_i-\theta_j \right)` depends linearly on the voltage angles of the buses it connects (:math:`\theta_{i}`, :math:`\theta_{j}`) and its own reactance :math:`X_{ij}`. Bus angles are the difference in voltage angle between the bus and the :abbr:`reference bus (known as the swing or slack bus)` which has angle :math:`0^{\circ}`. 
 
 
 

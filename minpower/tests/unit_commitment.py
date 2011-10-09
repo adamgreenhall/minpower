@@ -1,6 +1,6 @@
 '''Test the higher level behavior of the unit commitment'''
 
-from attest import Tests,Assert
+from attest import Tests,Assert,assert_hook
 import logging,random
 logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s')
 
@@ -24,7 +24,7 @@ def prices():
     ]
     load=make_load(Pdt=[80,110,130])
     problem,times,buses=solve_problem(generators,load)
-    lmps = Assert([buses[0].getprice(t,problem) for t in times])
+    lmps = [buses[0].getprice(t,problem) for t in times]
     
     assert lmps==[gen_costs['cheap'],gen_costs['mid'],gen_costs['expensive']]
 
@@ -55,9 +55,9 @@ def load_shedding():
     generators=[make_cheap_gen(Pmax=Pmax)]
     load=make_load(Pdt=[110,Pdt1,110])
     problem,times,buses=solve_problem(generators,load,load_shedding_allowed=True)
-    load_t1=Assert(buses[0].loads[0].P(times[1]))
-    load_t1_shed=Assert(buses[0].loads[0].shed(times[1]))
-    price_t1 = Assert(buses[0].getprice(times[1],problem))
+    load_t1=buses[0].loads[0].P(times[1])
+    load_t1_shed=buses[0].loads[0].shed(times[1])
+    price_t1 = buses[0].getprice(times[1],problem)
     assert load_t1==Pmax and load_t1_shed==Pdt1-Pmax and price_t1==config.cost_loadshedding
 
 if __name__ == "__main__": 

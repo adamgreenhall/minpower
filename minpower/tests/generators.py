@@ -1,6 +1,6 @@
 '''Test the constraint behavior of the generators'''
 
-from attest import Tests,Assert
+from attest import Tests,Assert,assert_hook
 import logging
 logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s')
 
@@ -80,7 +80,8 @@ def ramp_down():
     
     load=make_load(Pdt=[550,450])
     problem,times,buses=solve_problem(generators,load,gen_init=initial)
-    assert generators[1].power[times[1]] - generators[1].power[times[0]] == ramp_limit
+    ramp_rate = generators[1].power[times[1]] - generators[1].power[times[0]]
+    assert ramp_rate == ramp_limit
 
 @generation.test
 def ramp_up_initial():
@@ -99,7 +100,7 @@ def ramp_up_initial():
     load=make_load(Pdt=[350,350])
     
     problem,times,buses=solve_problem(generators,load,gen_init=initial)
-    ramp_rate = Assert(generators[0].power[times[0]] - generators[0].power[times.initialTime])
+    ramp_rate = generators[0].power[times[0]] - generators[0].power[times.initialTime]
     assert ramp_rate == ramp_limit
 
 
@@ -118,7 +119,7 @@ def ramp_down_initial():
     
     load=make_load(Pdt=[300,300])
     problem,times,buses=solve_problem(generators,load,gen_init=initial)
-    ramp_rate = Assert(generators[1].power[times[0]] - generators[1].power[times.initialTime])
+    ramp_rate = generators[1].power[times[0]] - generators[1].power[times.initialTime]
     assert ramp_rate == ramp_limit
 
 
@@ -138,7 +139,7 @@ def min_up_time():
         dict(u=False)]
     load = make_load(Pdt=[80,120,80,80])
     problem,times,buses=solve_problem(generators,load,gen_init=initial)
-    limgen_status=Assert([generators[1].u[t] for t in times])
+    limgen_status=[generators[1].u[t] for t in times]
     assert limgen_status == [0,1,1,0]
 
 @generation.test
@@ -163,7 +164,7 @@ def min_down_time():
     load = make_load(Pdt=[150,10,140,140])
     problem,times,buses=solve_problem(generators,load,gen_init=initial)
     limgen_status=Assert([generators[1].u[t] for t in times])
-    expensive_status_t2 = Assert(generators[2].u[times[2]])
+    expensive_status_t2 = generators[2].u[times[2]]
     assert limgen_status==[1,0,0,1] and expensive_status_t2==1
 
 
@@ -185,7 +186,7 @@ def start_up_cost():
         dict(u=False)]
     load = make_load(Pdt=[80,120])
     problem,times,buses=solve_problem(generators,load,gen_init=initial)
-    obj_startupcost = Assert(problem.objective - sum( gen.operatingcost(t) for t in times for gen in generators) )
+    obj_startupcost = problem.objective - sum( gen.operatingcost(t) for t in times for gen in generators)
     assert obj_startupcost==startupcost
 
 @generation.test
@@ -206,7 +207,7 @@ def shut_down_cost():
         dict(P=20,u=True)]
     load = make_load(Pdt=[150,10])
     problem,times,buses=solve_problem(generators,load,gen_init=initial)
-    obj_sdcost = Assert(problem.objective - sum( gen.operatingcost(t) for t in times for gen in generators) )
+    obj_sdcost = problem.objective - sum( gen.operatingcost(t) for t in times for gen in generators)
     assert obj_sdcost==shutdowncost
 
     

@@ -94,7 +94,7 @@ What :abbr:`inputs (field names)` are allowed for spreadsheets? How do these rel
 :mod:`tests`
 ===============================
 
-The tests module contains a directory structure full of test cases as well as a few test scripts.
+The tests module contains unit tests and a directory structure full of example cases (for integration testing).
 
 :mod:`tests.testall`
 ---------------------
@@ -102,12 +102,53 @@ The tests module contains a directory structure full of test cases as well as a 
 .. automodule:: tests.testall
     :members:
     :undoc-members:    
-    
-:mod:`tests.solvers`
----------------------
-.. automodule:: tests.solvers
+
+:mod:`tests.testall_integration_demos`
+---------------------------------------
+
+.. automodule:: tests.testall_integration_demos
     :members:
     :undoc-members:    
+    
+..  comment out 
+    
+    :mod:`tests.bidding`
+    ---------------------
+    .. automodule:: tests.bidding
+        :members:
+        :undoc-members:    
+        
+    :mod:`tests.generators`
+    ------------------------
+    .. automodule:: tests.generators
+        :members:
+        :undoc-members:    
+
+    :mod:`tests.opf`
+    ---------------------
+    .. automodule:: tests.opf
+        :members:
+        :undoc-members:    
+
+    :mod:`tests.solvers`
+    ---------------------
+    .. automodule:: tests.solvers
+        :members:
+        :undoc-members:    
+
+    :mod:`tests.unit_commitment`
+    -----------------------------
+    .. automodule:: tests.unit_commitment
+        :members:
+        :undoc-members:    
+
+:mod:`tests.test_utils`
+-----------------------------
+.. automodule:: tests.test_utils
+    :members:
+    :undoc-members:  
+
+
 
 ===============================
 :mod:`addons`

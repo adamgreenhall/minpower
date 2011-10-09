@@ -146,9 +146,9 @@ def min_up_time():
 def min_down_time():
     '''
     Create three generators: 
-        -cheap with max power limit
-        -mid with min down time
-        -expensive
+    * cheap with max power limit
+    * with min down time
+    * expensive
     Create load that is higher than the cheap limit all but t1.
     Ensure that the mid generator is OFF at t1 and t2, then turns on again.
     Ensure that the hi generator is ON for t2 to make up the difference.
@@ -172,8 +172,8 @@ def min_down_time():
 def start_up_cost():
     '''
     Create two generators:
-    - cheap with a max power
-    - expensive with a start up cost.
+    * cheap with a max power
+    * expensive with a start up cost.
     Create an increasing load.
     Ensure that the objective includes the startup cost.
     '''
@@ -193,8 +193,8 @@ def start_up_cost():
 def shut_down_cost():
     '''
     Create two generators, both on:
-    - cheap with a max power
-    - expensive with a start down cost and a min power.
+    * cheap with a max power
+    * expensive with a start down cost and a min power.
     Create an decreasing load.
     Ensure that the objective includes the shutdown cost.
     '''

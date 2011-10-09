@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 """ 
 Testing for minpower development. 
 Runs solve.problem() on all directories in ./tests
@@ -60,14 +61,29 @@ def main(solver=config.optimization_solver):
 
 if __name__ == "__main__": main()
 =======
+=======
+"""
+Run all of the unit tests, currently: 
+bidding, generation, opf, solvers, unit commitment
+ 
+This module uses the Attest package testing framework.
+"""
+
+>>>>>>> documentation
 from attest import Tests
-all_tests=Tests([
+
+if __name__ == "__main__": 
+    all_tests=Tests([
     'solvers.solvers',
     'generators.generation',
     'unit_commitment.uc',
     'opf.opf',
     'bidding.bidding'
     ])
+<<<<<<< HEAD
 
 if __name__ == "__main__": all_tests.run()
 >>>>>>> run all tests
+=======
+    all_tests.run()
+>>>>>>> documentation

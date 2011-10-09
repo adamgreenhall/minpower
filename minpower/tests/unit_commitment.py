@@ -47,9 +47,9 @@ def load_shedding():
     Create a single generator with a high limit.
     Create a load that exceeds that limit at t1.
     Ensure that:
-      Pdt1=Pgmax
-      Pshedt1 = Pdt1 - Pmax
-      pricet1 = cost of load shedding
+    * Pdt1=Pgmax
+    * Pshedt1 = Pdt1 - Pmax
+    * pricet1 = cost of load shedding
     '''
     Pmax=100
     Pdt1=211

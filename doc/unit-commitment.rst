@@ -19,11 +19,11 @@ The problem
     
     :math:`\min \sum_t \sum_g C_g(P_{t,g}) + C_{\mathrm{su} (g)}(u_{t,g})`
     
-    :math:`\mathrm{s.t.}\/ P_{\min (g)} \leq P_{t,g} \leq P_{\max (g)} \/ \forall \/ t,g \/ \mathrm{where} \/ u_{t,g}=1`
+    :math:`\mathrm{s.t.} \; P_{\min (g)} \leq P_{t,g} \leq P_{\max (g)}  \; \forall  \; t,g  \; \mathrm{where}  \; u_{t,g}=1`
     
-    :math:`\mathrm{s.t.}\/ \sum_g P_{t,g}= P_{\mathrm{load}(t)} \/ \forall \/ t`
+    :math:`\mathrm{s.t.} \; \sum_g P_{t,g}= P_{\mathrm{load}(t)}  \; \forall  \; t`
     
-    :math:`\mathrm{s.t.}\/ P_{\mathrm{ramp min} (g)} \leq P_{t,g}-P_{t-1,g} \leq P_{\mathrm{ramp max} (g)}   \/ \forall \/ t,g`
+    :math:`\mathrm{s.t.} \; P_{\mathrm{ramp min} (g)} \leq P_{t,g}-P_{t-1,g} \leq P_{\mathrm{ramp max} (g)}    \; \forall  \; t,g`
 
 In this mathematical formulation generators are indexed by :math:`g` and time is indexed by :math:`t`. :math:`P_{t,g}` is a generator’s power output at time :math:`t` and :math:`u_{t,g}` is its operation status (on/off). :math:`C_g()` is the generator's production cost function and :math:`C_{\mathrm{su} (g)}()` is its startup/shutdown cost. The objective is to minimize the total cost. The constraints are: 
 
@@ -107,4 +107,4 @@ and in this case we just have one schedule file (``small-changing-load.csv``):
 .. rubric:: Footnotes
 
 
-.. [#f1] Binary variables (like generator status :math:`u_{t,g}`) don't have easy translations into the dual space. And duals are how we get prices in optimization. In the real world the monetary differences are dealt with via a system called "side payments". In the example above a side payment of $105/MWh would be made to the more expensive generator for its second hour to make sure that it recovers its cost of operating for that hour.
+.. [#f1] Generators at their limits can't set the price. In the real world the monetary differences are dealt with via a system called "side payments". In the example above a side payment of $105/MWh would be made to the more expensive generator for its second hour to make sure that it recovers its cost of operating for that hour.

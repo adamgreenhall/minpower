@@ -323,6 +323,7 @@ class Line(object):
     """
     def __init__(self,name='',index=None,From=None,To=None,X=0.05,Pmax=9999,Pmin=None,**kwargs):
         vars(self).update(locals()) #load in inputs
+        if index is None: self.index=hash(self)
         if self.Pmin is None: self.Pmin=-self.Pmax #reset default to be -Pmax
         self.P,self.price=dict(),dict()
     def add_timevars(self,times):
@@ -361,6 +362,7 @@ class Bus(object):
     """
     def __init__(self,name=None,index=None,isSwing=False):
         vars(self).update(locals()) #load in inputs
+        if index is None: self.index=hash(self)
         self.generators,self.loads=[],[]
         self.angle,self.price=dict(),dict()
     def add_timevars(self,times):
@@ -461,6 +463,7 @@ class Load_Fixed(Load):
     """
     def __init__(self,kind='fixed',name=None,index=None,bus=None,P=0):
         vars(self).update(locals()) #load in inputs
+        if index is None: self.index=hash(self)
         self.Pfixed = self.P
         del self.P
         self.dispatched_power = dict()

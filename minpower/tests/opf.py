@@ -1,6 +1,6 @@
 '''Test the constraint behavior of an OPF'''
 
-from attest import Tests,Assert
+from attest import Tests,Assert,assert_hook
 import logging
 logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s')
 
@@ -30,9 +30,9 @@ def line_limit_high():
     load=make_load(Pd=225,bus='B')
     lines=[powersystems.Line(Pmax=Pmax, From='A',To='B')]
     problem,times,buses=solve_problem(generators,load,lines=lines)
-    Pline = Assert(lines[0].P[times[0]])
+    Pline = lines[0].P[times[0]]
     lmps=[b.getprice(times[0], problem) for b in buses]
-    congestion_price = Assert(lines[0].getprice(times[0],problem))
+    congestion_price = lines[0].getprice(times[0],problem)
     #logging.critical('cong={}, Pmax={}'.format(lines[0].getprice(times[0],problem),Pmax))
     assert Pline==Pmax and congestion_price == (lmps[1] - lmps[0])
     
@@ -55,9 +55,9 @@ def line_limit_low():
     load=make_load(Pd=225,bus='B')
     lines=[powersystems.Line(Pmin=Pmin, From='B',To='A')]
     problem,times,buses=solve_problem(generators,load,lines=lines)
-    Pline = Assert(lines[0].P[times[0]])
+    Pline = lines[0].P[times[0]]
     lmps=[b.getprice(times[0], problem) for b in buses]
-    congestion_price = Assert(lines[0].getprice(times[0],problem))
+    congestion_price = lines[0].getprice(times[0],problem)
     assert Pline==Pmin and congestion_price == -1*(lmps[1] - lmps[0])
 
 
@@ -98,9 +98,8 @@ def three_buses():
     if problem.solved:
         for g in generators: g.update_vars(times,problem)
     
-    num_lmps=Assert(len(set(b.getprice(times[0], problem) for b in buses)))
-    total_load = Assert(sum(b.Pload(times[0]) for b in buses))
-    #clearlogging.critical([b.getprice(times[0], problem) for b in buses])
+    num_lmps=len(set(b.getprice(times[0], problem) for b in buses))
+    total_load = sum(b.Pload(times[0]) for b in buses)
     assert total_load==sum(Pd) and num_lmps>1
 
 

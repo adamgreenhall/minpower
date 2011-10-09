@@ -1,6 +1,6 @@
 '''Test the all of the solver links'''
 
-from attest import Tests
+from attest import Tests,assert_hook
 from minpower import optimization, config
 solvers = Tests()
 

@@ -331,8 +331,11 @@ if optimization_package=='coopr':
         '''create an optimization variable'''
         kindmap = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyomo.Boolean)
         return pyomo.Var(name=name,bounds=(low,high),domain=kindmap[kind])
+<<<<<<< HEAD
     def new_constraint(name,expression): return pyomo.Constraint(name=name,rule=expression)
     def solve(problem,solver=config.optimization_solver): return problem.solve(solver)
+=======
+>>>>>>> rewrote Problem.sovle for pulp
 
 
 elif optimization_package=='pulp':
@@ -367,6 +370,30 @@ elif optimization_package=='pulp':
         def save(self,filename='problem.dat'):
             from yaml import dump
             with open(filename, 'w+') as file: dump(self, file)
+
+        def solve(self,solver=config.optimization_solver):
+            '''solve the optimization problem'''
+            self.solved=False
+            logging.info('Solving with {s} ... '.format(s=solver))
+            solvermap = dict(
+                glpk=pulp.GLPK_CMD,
+                cplex=pulp.CPLEX_CMD,
+                gurobi=pulp.GUROBI,
+                coin=pulp.pulp.COINMP_DLL,
+                )
+
+            try: #call LpProblem solve method
+                status = super( Problem, self ).solve(solver = solvermap[solver.lower()](msg=0) )
+                self.statusText=pulp.LpStatus[status]
+            except pulp.solvers.PulpSolverError:
+                status=0
+
+            
+            if status:
+                self.solved = True
+                logging.info('{stat} in {time:0.4f} sec'.format(
+                    stat=self.statusText,
+                    time=self.solutionTime))
 
 
 <<<<<<< HEAD
@@ -425,30 +452,6 @@ elif optimization_package=='pulp':
         #note that if using glpk, bounds of -inf and inf produces error
         return pulp.LpVariable(name=name,cat=kind,lowBound=low,upBound=high)
 
-    def solve(problem,solver=config.optimization_solver):
-        '''solve the optimization problem'''
-        logging.info('Solving with {s} ... '.format(s=solver))
-        solvermap = dict(
-            glpk=pulp.GLPK_CMD,
-            cplex=pulp.CPLEX_CMD,
-            gurobi=pulp.GUROBI,
-            coin=pulp.pulp.COINMP_DLL,
-            )
-
-        try: out=problem.solve(solvermap[solver.lower()](msg=0))
-        except pulp.solvers.PulpSolverError:
-            problem.status=0
-            out=None
-
-        problem.statusText=pulp.LpStatus[problem.status]
-        #print logging.getLogger().getEffectiveLevel()
-        if problem.status:
-            logging.info('{stat} in {time:0.4f} sec'.format(
-                stat=problem.statusText,
-                time=problem.solutionTime))
-        #else: logging.warning(problem.statusText())
-
-        return out
 
 
 class OptimizationObject(object):
@@ -529,6 +532,8 @@ class OptimizationObject(object):
         '''
         return 'opt_obj{ind}'.format(ind=self.index)
 
+
+def solve(problem,solver=config.optimization_solver): return problem.solve(solver)
 
 class OptimizationError(Exception):
     def __init__(self, ivalue):

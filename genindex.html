@@ -154,6 +154,7 @@
   <td style="width: 33%" valign="top"><dl>
     <dt><a href="documentation.html#powersystems.Generator_nonControllable.fix_timevars">fix_timevars() (powersystems.Generator_nonControllable method)</a></dt>
     <dt><a href="documentation.html#powersystems.Generator.fix_vars">fix_vars() (powersystems.Generator method)</a></dt>
+    <dt><a href="documentation.html#schedule.FixedSchedule">FixedSchedule (class in schedule)</a></dt>
 </dl></td>
   <td style="width: 33%" valign="top"><dl>
     <dt><a href="documentation.html#commonscripts.flatten">flatten() (in module commonscripts)</a></dt>
@@ -173,7 +174,10 @@
 </dl></td>
   <td style="width: 33%" valign="top"><dl>
     <dt><a href="documentation.html#commonscripts.getColumn">getColumn() (in module commonscripts)</a></dt>
-    <dt><a href="documentation.html#schedule.Schedule.getEnergy">getEnergy() (schedule.Schedule method)</a></dt>
+    <dt><a href="documentation.html#schedule.FixedSchedule.getEnergy">getEnergy() (schedule.FixedSchedule method)</a></dt>
+    <dd><dl>
+      <dt><a href="documentation.html#schedule.Schedule.getEnergy">(schedule.Schedule method)</a></dt>
+  </dl></dd>
     <dt><a href="documentation.html#powersystems.Generator.gethrsinstatus">gethrsinstatus() (powersystems.Generator method)</a></dt>
     <dt><a href="documentation.html#powersystems.Bus.getprice">getprice() (powersystems.Bus method)</a></dt>
     <dd><dl>
@@ -190,7 +194,7 @@
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
-    <dt><a href="documentation.html#tests.testall.hasPyscript">hasPyscript() (in module tests.testall)</a></dt>
+    <dt><a href="documentation.html#tests.testall_integration_demos.hasPyscript">hasPyscript() (in module tests.testall_integration_demos)</a></dt>
 </dl></td>
   <td style="width: 33%" valign="top"><dl>
     <dt><a href="documentation.html#commonscripts.hours">hours() (in module commonscripts)</a></dt>
@@ -252,6 +256,9 @@
   <td style="width: 33%" valign="top"><dl>
     <dt><a href="documentation.html#commonscripts.joindir">joindir() (in module commonscripts)</a></dt>
 </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+    <dt><a href="documentation.html#schedule.just_one_time">just_one_time() (in module schedule)</a></dt>
+</dl></td>
 </tr></table>
 
 <h2 id="L">L</h2>
@@ -269,15 +276,22 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
-    <dt><a href="documentation.html#tests.testall.main">main() (in module tests.testall)</a></dt>
+    <dt><a href="documentation.html#tests.testall_integration_demos.main">main() (in module tests.testall_integration_demos)</a></dt>
+    <dt><a href="documentation.html#powersystems.make_buses_list">make_buses_list() (in module powersystems)</a></dt>
+    <dt><a href="documentation.html#tests.test_utils.make_cheap_gen">make_cheap_gen() (in module tests.test_utils)</a></dt>
+    <dt><a href="documentation.html#tests.test_utils.make_expensive_gen">make_expensive_gen() (in module tests.test_utils)</a></dt>
+    <dt><a href="documentation.html#tests.test_utils.make_load">make_load() (in module tests.test_utils)</a></dt>
+    <dt><a href="documentation.html#tests.test_utils.make_mid_gen">make_mid_gen() (in module tests.test_utils)</a></dt>
+    <dt><a href="documentation.html#schedule.make_times_basic">make_times_basic() (in module schedule)</a></dt>
+</dl></td>
+  <td style="width: 33%" valign="top"><dl>
     <dt><a href="documentation.html#powersystems.makeGenerator">makeGenerator() (in module powersystems)</a></dt>
     <dt><a href="documentation.html#powersystems.makeLoad">makeLoad() (in module powersystems)</a></dt>
     <dt><a href="documentation.html#bidding.makeModel">makeModel() (in module bidding)</a></dt>
-</dl></td>
-  <td style="width: 33%" valign="top"><dl>
     <dt><a href="documentation.html#results.makeMultistageSolution">makeMultistageSolution() (in module results)</a></dt>
     <dt><a href="documentation.html#schedule.makeSchedule">makeSchedule() (in module schedule)</a></dt>
     <dt><a href="documentation.html#results.makeSolution">makeSolution() (in module results)</a></dt>
+    <dt><a href="documentation.html#schedule.makeTimes">makeTimes() (in module schedule)</a></dt>
 </dl></td>
 </tr></table>
 
@@ -375,7 +389,6 @@
     <dd><dl>
       <dt><a href="documentation.html#powersystems.Generator_nonControllable.setInitialCondition">(powersystems.Generator_nonControllable method)</a></dt>
   </dl></dd>
-    <dt><a href="documentation.html#get_data.setup_buses">setup_buses() (in module get_data)</a></dt>
     <dt><a href="documentation.html#get_data.setup_initialcond">setup_initialcond() (in module get_data)</a></dt>
     <dt><a href="documentation.html#get_data.setup_times">setup_times() (in module get_data)</a></dt>
     <dt><a href="documentation.html#powersystems.Load.shed">shed() (powersystems.Load method)</a></dt>
@@ -385,9 +398,9 @@
   </dl></dd>
     <dt><a href="documentation.html#results.Solution">Solution (class in results)</a></dt>
     <dt><a href="documentation.html#results.Solution_ED">Solution_ED (class in results)</a></dt>
+    <dt><a href="documentation.html#results.Solution_multistageUC">Solution_multistageUC (class in results)</a></dt>
 </dl></td>
   <td style="width: 33%" valign="top"><dl>
-    <dt><a href="documentation.html#results.Solution_multistageUC">Solution_multistageUC (class in results)</a></dt>
     <dt><a href="documentation.html#results.Solution_OPF">Solution_OPF (class in results)</a></dt>
     <dt><a href="documentation.html#results.Solution_SCUC">Solution_SCUC (class in results)</a></dt>
     <dt><a href="documentation.html#results.Solution_UC">Solution_UC (class in results)</a></dt>
@@ -396,6 +409,7 @@
     <dd><dl>
       <dt><a href="documentation.html#optimization.Problem.solve">(optimization.Problem method)</a></dt>
   </dl></dd>
+    <dt><a href="documentation.html#tests.test_utils.solve_problem">solve_problem() (in module tests.test_utils)</a></dt>
     <dt><a href="documentation.html#commonscripts.splitFilename">splitFilename() (in module commonscripts)</a></dt>
     <dt><a href="documentation.html#powersystems.Generator.status">status() (powersystems.Generator method)</a></dt>
     <dd><dl>
@@ -412,9 +426,9 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
-    <dt><a href="documentation.html#tests.solvers.testall">testall() (in module tests.solvers)</a></dt>
-    <dt><a href="documentation.html#module-tests.solvers">tests.solvers (module)</a></dt>
+    <dt><a href="documentation.html#module-tests.test_utils">tests.test_utils (module)</a></dt>
     <dt><a href="documentation.html#module-tests.testall">tests.testall (module)</a></dt>
+    <dt><a href="documentation.html#module-tests.testall_integration_demos">tests.testall_integration_demos (module)</a></dt>
     <dt><a href="documentation.html#bidding.PWLmodel.texrepresentation">texrepresentation() (bidding.PWLmodel method)</a></dt>
     <dt><a href="documentation.html#schedule.Time">Time (class in schedule)</a></dt>
 </dl></td>
@@ -456,6 +470,9 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
     <dt><a href="documentation.html#optimization.value">value() (in module optimization)</a></dt>
+    <dd><dl>
+      <dt><a href="documentation.html#optimization.Problem.value">(optimization.Problem method)</a></dt>
+  </dl></dd>
 </dl></td>
   <td style="width: 33%" valign="top"><dl>
     <dt><a href="documentation.html#results.Solution_ED.vizualization">vizualization() (results.Solution_ED method)</a></dt>
@@ -470,7 +487,7 @@
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
-    <dt><a href="documentation.html#tests.testall.wipeTestSlate">wipeTestSlate() (in module tests.testall)</a></dt>
+    <dt><a href="documentation.html#tests.testall_integration_demos.wipeTestSlate">wipeTestSlate() (in module tests.testall_integration_demos)</a></dt>
     <dt><a href="documentation.html#commonscripts.within">within() (in module commonscripts)</a></dt>
 </dl></td>
   <td style="width: 33%" valign="top"><dl>

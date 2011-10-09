@@ -52,9 +52,9 @@
 <h2>The problem<a class="headerlink" href="#the-problem" title="Permalink to this headline">¶</a></h2>
 <div class="optimizationproblem container">
 <p><span class="math">\(\min \sum_t \sum_g C_g(P_{t,g}) + C_{\mathrm{su} (g)}(u_{t,g})\)</span></p>
-<p><span class="math">\(\mathrm{s.t.}\/ P_{\min (g)} \leq P_{t,g} \leq P_{\max (g)} \/ \forall \/ t,g \/ \mathrm{where} \/ u_{t,g}=1\)</span></p>
-<p><span class="math">\(\mathrm{s.t.}\/ \sum_g P_{t,g}= P_{\mathrm{load}(t)} \/ \forall \/ t\)</span></p>
-<p><span class="math">\(\mathrm{s.t.}\/ P_{\mathrm{ramp min} (g)} \leq P_{t,g}-P_{t-1,g} \leq P_{\mathrm{ramp max} (g)}   \/ \forall \/ t,g\)</span></p>
+<p><span class="math">\(\mathrm{s.t.} \; P_{\min (g)} \leq P_{t,g} \leq P_{\max (g)}  \; \forall  \; t,g  \; \mathrm{where}  \; u_{t,g}=1\)</span></p>
+<p><span class="math">\(\mathrm{s.t.} \; \sum_g P_{t,g}= P_{\mathrm{load}(t)}  \; \forall  \; t\)</span></p>
+<p><span class="math">\(\mathrm{s.t.} \; P_{\mathrm{ramp min} (g)} \leq P_{t,g}-P_{t-1,g} \leq P_{\mathrm{ramp max} (g)}    \; \forall  \; t,g\)</span></p>
 </div>
 <p>In this mathematical formulation generators are indexed by <span class="math">\(g\)</span> and time is indexed by <span class="math">\(t\)</span>. <span class="math">\(P_{t,g}\)</span> is a generator’s power output at time <span class="math">\(t\)</span> and <span class="math">\(u_{t,g}\)</span> is its operation status (on/off). <span class="math">\(C_g()\)</span> is the generator&#8217;s production cost function and <span class="math">\(C_{\mathrm{su} (g)}()\)</span> is its startup/shutdown cost. The objective is to minimize the total cost. The constraints are:</p>
 <ul class="simple">
@@ -89,16 +89,16 @@ about your problem in the folder. Then if you run the script:</p>
 <p>But why doesn&#8217;t the expensive generator turn back off at 6:00, when the load goes back down? It can&#8217;t turn off that quickly - it has a minimum up time of 2hrs and a minimum output of 20MW. But why does the price go back down? It&#8217;s complicated <a class="footnote-reference" href="#f1" id="id1">[1]</a>.</p>
 <p>The data from the graph is also output in spreadsheet form:</p>
 <blockquote>
-<div><div class="highlight-python"><pre>times, prices, status: expensive,power: expensive, status: cheap, power: cheap
-2011-07-20 01:00:00,45.0,0.0,0.0,1.0,10.0
-2011-07-20 02:00:00,45.0,0.0,0.0,1.0,10.0
-2011-07-20 03:00:00,45.0,0.0,0.0,1.0,45.0
-2011-07-20 04:00:00,45.0,0.0,0.0,1.0,90.0
-2011-07-20 05:00:00,150.0,1.0,50.0,1.0,100.0
-2011-07-20 06:00:00,45.0,1.0,20.0,1.0,70.0
-2011-07-20 07:00:00,45.0,0.0,0.0,1.0,45.0
-2011-07-20 08:00:00,45.0,0.0,0.0,1.0,10.0
-2011-07-20 09:00:00,45.0,0.0,0.0,1.0,10.0
+<div><div class="highlight-python"><pre>times,prices,status: expensive,power: expensive,status: cheap,power: cheap,load power: small
+2011-10-09 01:00:00,45.0,0.0,0.0,1.0,10.0,10
+2011-10-09 02:00:00,45.0,0.0,0.0,1.0,10.0,10
+2011-10-09 03:00:00,45.0,0.0,0.0,1.0,45.0,45
+2011-10-09 04:00:00,45.0,0.0,0.0,1.0,90.0,90
+2011-10-09 05:00:00,150.0,1.0,50.0,1.0,100.0,150
+2011-10-09 06:00:00,45.0,1.0,5.0,1.0,85.0,90
+2011-10-09 07:00:00,45.0,0.0,0.0,1.0,45.0,45
+2011-10-09 08:00:00,45.0,0.0,0.0,1.0,10.0,10
+2011-10-09 09:00:00,45.0,0.0,0.0,1.0,10.0,10
 </pre>
 </div>
 </div></blockquote>
@@ -120,9 +120,9 @@ about your problem in the folder. Then if you run the script:</p>
 <p><strong>minpower</strong> just looks for the files in the <tt class="docutils literal"><span class="pre">mycommitment</span></tt> directory that describe the generators and load.</p>
 <p id="commitment-inputs-example">Tell it the specifics of your problem by editing the generator file (<tt class="docutils literal"><span class="pre">generators.csv</span></tt>):</p>
 <blockquote>
-<div><div class="highlight-python"><pre>name,      cost curve equation,min up time,P min,P max
-expensive, 150P,               2,          20,   500
-cheap,     45P,                0,          0,    100
+<div><div class="highlight-python"><pre>name,cost curve equation,min up time,P max,P min,startup cost
+expensive,150P,2,500,5,0
+cheap,45P,0,100,0,0
 </pre>
 </div>
 </div></blockquote>
@@ -132,17 +132,16 @@ cheap,     45P,                0,          0,    100
 </div>
 <p>the initial generator state file (<tt class="docutils literal"><span class="pre">initial.csv</span></tt>):</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span class="n">name</span><span class="p">,</span>      <span class="n">P</span><span class="p">,</span>  <span class="n">status</span><span class="p">,</span> <span class="n">hours</span> <span class="ow">in</span> <span class="n">status</span>
-<span class="n">expensive</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span>      <span class="mi">10</span>
-<span class="n">cheap</span><span class="p">,</span>     <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>      <span class="mi">10</span>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">name</span><span class="p">,</span><span class="n">P</span><span class="p">,</span><span class="n">status</span><span class="p">,</span><span class="n">hours</span> <span class="ow">in</span> <span class="n">status</span>
+<span class="n">expensive</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span>
+<span class="n">cheap</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>the loads file (<tt class="docutils literal"><span class="pre">loads.csv</span></tt>):</p>
 <blockquote>
-<div><div class="highlight-python"><pre>name,     P, schedule filename
-small,     , small-changing-load.csv
-baseload, 0,
+<div><div class="highlight-python"><pre>name,schedule filename
+small,small-changing-load.csv 
 </pre>
 </div>
 </div></blockquote>
@@ -152,17 +151,17 @@ baseload, 0,
 </div>
 <p>and in this case we just have one schedule file (<tt class="docutils literal"><span class="pre">small-changing-load.csv</span></tt>):</p>
 <blockquote>
-<div><div class="highlight-python"><pre>time, P
-1:00, 10
-2:00, 10
-3:00, 45
-4:00, 90
-5:00, 150
-6:00, 90
-7:00, 45
-8:00, 10
-9:00, 10
-</pre>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;time&quot;</span><span class="p">,</span><span class="s">&quot;P&quot;</span>
+<span class="s">&quot;1:00&quot;</span><span class="p">,</span><span class="s">&quot;10&quot;</span>
+<span class="s">&quot;2:00&quot;</span><span class="p">,</span><span class="s">&quot;10&quot;</span>
+<span class="s">&quot;3:00&quot;</span><span class="p">,</span><span class="s">&quot;45&quot;</span>
+<span class="s">&quot;4:00&quot;</span><span class="p">,</span><span class="s">&quot;90&quot;</span>
+<span class="s">&quot;5:00&quot;</span><span class="p">,</span><span class="s">&quot;150&quot;</span>
+<span class="s">&quot;6:00&quot;</span><span class="p">,</span><span class="s">&quot;90&quot;</span>
+<span class="s">&quot;7:00&quot;</span><span class="p">,</span><span class="s">&quot;45&quot;</span>
+<span class="s">&quot;8:00&quot;</span><span class="p">,</span><span class="s">&quot;10&quot;</span>
+<span class="s">&quot;9:00&quot;</span><span class="p">,</span><span class="s">&quot;10&quot;</span>
+</pre></div>
 </div>
 </div></blockquote>
 <div class="admonition note">
@@ -173,7 +172,7 @@ baseload, 0,
 <table class="docutils footnote" frame="void" id="f1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Binary variables (like generator status <span class="math">\(u_{t,g}\)</span>) don&#8217;t have easy translations into the dual space. And duals are how we get prices in optimization. In the real world the monetary differences are dealt with via a system called &#8220;side payments&#8221;. In the example above a side payment of $105/MWh would be made to the more expensive generator for its second hour to make sure that it recovers its cost of operating for that hour.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Generators at their limits can&#8217;t set the price. In the real world the monetary differences are dealt with via a system called &#8220;side payments&#8221;. In the example above a side payment of $105/MWh would be made to the more expensive generator for its second hour to make sure that it recovers its cost of operating for that hour.</td></tr>
 </tbody>
 </table>
 </div>

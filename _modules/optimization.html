@@ -42,236 +42,257 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <h1>Source code for optimization</h1><pre>
-Currently uses pulp but is transitioning to using coopr.
-"""
+  <h1>Source code for optimization</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">An optimization command library.</span>
+<span class="sd">Currently uses pulp but is transitioning to using coopr.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
-from config import optimization_package
+<span class="kn">from</span> <span class="nn">config</span> <span class="kn">import</span> <span class="n">optimization_package</span>
 
-if optimization_package=='pulp':
-    import pulp
-elif optimization_package=='coopr':
-    import coopr.pyomo as pyomo
-    from pyutilib.misc import Options as cooprOptions
-    import coopr.pyomo.scripting.util as cooprUtil
-    try: from coopr.opt.base import solvers as cooprsolver #for coopr version&gt;3.0.4362
-    except ImportError:
-        #previous versions of coopr
-        from coopr.opt.base import solver as cooprsolver
-else: raise ImportError('optimization library must be coopr or pulp.')
-import logging,time
-import config
+<span class="k">if</span> <span class="n">optimization_package</span><span class="o">==</span><span class="s">&#39;pulp&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pulp</span>
+<span class="k">elif</span> <span class="n">optimization_package</span><span class="o">==</span><span class="s">&#39;coopr&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">coopr.pyomo</span> <span class="kn">as</span> <span class="nn">pyomo</span>
+    <span class="kn">from</span> <span class="nn">pyutilib.misc</span> <span class="kn">import</span> <span class="n">Options</span> <span class="k">as</span> <span class="n">cooprOptions</span>
+    <span class="kn">import</span> <span class="nn">coopr.pyomo.scripting.util</span> <span class="kn">as</span> <span class="nn">cooprUtil</span>
+    <span class="k">try</span><span class="p">:</span> <span class="kn">from</span> <span class="nn">coopr.opt.base</span> <span class="kn">import</span> <span class="n">solvers</span> <span class="k">as</span> <span class="n">cooprsolver</span> <span class="c">#for coopr version&gt;3.0.4362</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="c">#previous versions of coopr</span>
+        <span class="kn">from</span> <span class="nn">coopr.opt.base</span> <span class="kn">import</span> <span class="n">solver</span> <span class="k">as</span> <span class="n">cooprsolver</span>
+<span class="k">else</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&#39;optimization library must be coopr or pulp.&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">logging</span><span class="o">,</span><span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">config</span>
 
-if optimization_package=='coopr':
-    class Problem(object):
-        '''an optimization problem/model based on pyomo'''
-        def __init__(self):
-            self.model=pyomo.ConcreteModel()
-            self.solved=False
-        def addObjective(self,expression,sense=pyomo.minimize):
-            '''add an objective to the problem'''            
-            self.model.objective=pyomo.Objective(name='objective',rule=expression,sense=sense)
-        def addVariables(self,vars): [self.addVar(v) for v in vars]
-        def addVar(self,var):
-<div class="viewcode-block" id="Problem.addVariables"><a class="viewcode-back" href="../documentation.html#optimization.Problem.addVariables">[docs]</a>            '''add a single variable to the problem'''</div>
-            try: setattr(self.model, var.name, var)
-            except AttributeError: pass #just a number, don't add to vars
+<span class="k">if</span> <span class="n">optimization_package</span><span class="o">==</span><span class="s">&#39;coopr&#39;</span><span class="p">:</span>
+    <span class="k">class</span> <span class="nc">Problem</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;an optimization problem/model based on pyomo&#39;&#39;&#39;</span>
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">=</span><span class="n">pyomo</span><span class="o">.</span><span class="n">ConcreteModel</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">solved</span><span class="o">=</span><span class="bp">False</span>
+        <span class="k">def</span> <span class="nf">addObjective</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">expression</span><span class="p">,</span><span class="n">sense</span><span class="o">=</span><span class="n">pyomo</span><span class="o">.</span><span class="n">minimize</span><span class="p">):</span>
+            <span class="sd">&#39;&#39;&#39;add an objective to the problem&#39;&#39;&#39;</span>            
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">objective</span><span class="o">=</span><span class="n">pyomo</span><span class="o">.</span><span class="n">Objective</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;objective&#39;</span><span class="p">,</span><span class="n">rule</span><span class="o">=</span><span class="n">expression</span><span class="p">,</span><span class="n">sense</span><span class="o">=</span><span class="n">sense</span><span class="p">)</span>
+<div class="viewcode-block" id="Problem.addVariables"><a class="viewcode-back" href="../documentation.html#optimization.Problem.addVariables">[docs]</a>        <span class="k">def</span> <span class="nf">addVariables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">vars</span><span class="p">):</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">addVar</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">]</span></div>
+        <span class="k">def</span> <span class="nf">addVar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">var</span><span class="p">):</span>
+            <span class="sd">&#39;&#39;&#39;add a single variable to the problem&#39;&#39;&#39;</span>
+            <span class="k">try</span><span class="p">:</span> <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="k">pass</span> <span class="c">#just a number, don&#39;t add to vars</span>
 
-        def addConstraints(self,constraintsD):
-            '''add a dictionary of constraints (keyed by name) to the problem'''
-            try:
-                for name,expression in constraintsD.iteritems(): self.addConstraint(name,expression)
-            except AttributeError:
-                if constraintsD is None: pass
-                else: raise AttributeError('addConstraints takes a dictionary of constraints argument')
-        def addConstraint(self,name,expression):
-            '''add a single constraint to the problem'''
-<div class="viewcode-block" id="Problem.addConstraint"><a class="viewcode-back" href="../documentation.html#optimization.Problem.addConstraint">[docs]</a>            setattr(self.model, name, pyomo.Constraint(name=name,rule=expression))
-        def dual(self,constraintname,index=None):
-            '''dual value of an optimization constraint'''</div>
-            return self.constraints[constraintname][index].dual
+        <span class="k">def</span> <span class="nf">addConstraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">constraintsD</span><span class="p">):</span>
+            <span class="sd">&#39;&#39;&#39;add a dictionary of constraints (keyed by name) to the problem&#39;&#39;&#39;</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span><span class="n">expression</span> <span class="ow">in</span> <span class="n">constraintsD</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span> <span class="bp">self</span><span class="o">.</span><span class="n">addConstraint</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">expression</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">constraintsD</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&#39;addConstraints takes a dictionary of constraints argument&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="Problem.addConstraint"><a class="viewcode-back" href="../documentation.html#optimization.Problem.addConstraint">[docs]</a>        <span class="k">def</span> <span class="nf">addConstraint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">expression</span><span class="p">):</span>
+            <span class="sd">&#39;&#39;&#39;add a single constraint to the problem&#39;&#39;&#39;</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">pyomo</span><span class="o">.</span><span class="n">Constraint</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span><span class="n">rule</span><span class="o">=</span><span class="n">expression</span><span class="p">))</span></div>
+        <span class="k">def</span> <span class="nf">dual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">constraintname</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+            <span class="sd">&#39;&#39;&#39;dual value of an optimization constraint&#39;&#39;&#39;</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">[</span><span class="n">constraintname</span><span class="p">][</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">dual</span>
 
 
-        def solve(self,solver=config.optimization_solver):
-            ''' solve the optimization problem.
-<div class="viewcode-block" id="Problem.solve"><a class="viewcode-back" href="../documentation.html#optimization.Problem.solve">[docs]</a>                valid solvers are {cplex,gurobi,glpk}'''
+        <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">solver</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">optimization_solver</span><span class="p">):</span>
+            <span class="sd">&#39;&#39;&#39; solve the optimization problem.</span>
+<span class="sd">                valid solvers are {cplex,gurobi,glpk}&#39;&#39;&#39;</span>
 
-            current_log_level = logging.getLogger().getEffectiveLevel()      
+            
+            <span class="n">current_log_level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">getEffectiveLevel</span><span class="p">()</span>      
                         
-            def cooprsolve(instance,opt=None,suffixes=['dual'],keepFiles=False):
-                if not keepFiles: logging.getLogger().setLevel(logging.WARNING)
-                if opt is None: 
-                    opt = cooprsolver.SolverFactory(solver)
-                    if opt is None: 
-                        msg='solver "{}" not found'.format(solver)
-                        raise OptimizationError(msg)
+            <span class="k">def</span> <span class="nf">cooprsolve</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span><span class="n">opt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">suffixes</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;dual&#39;</span><span class="p">],</span><span class="n">keepFiles</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">keepFiles</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">opt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> 
+                    <span class="n">opt</span> <span class="o">=</span> <span class="n">cooprsolver</span><span class="o">.</span><span class="n">SolverFactory</span><span class="p">(</span><span class="n">solver</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">opt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> 
+                        <span class="n">msg</span><span class="o">=</span><span class="s">&#39;solver &quot;{}&quot; not found&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">solver</span><span class="p">)</span>
+                        <span class="k">raise</span> <span class="n">OptimizationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 
-                start = time.time()
-                results= opt.solve(instance,suffixes=suffixes,keepFiles=keepFiles)
-                #results,opt=cooprUtil.apply_optimizer(options,instance)
-                elapsed = (time.time() - start)
-                logging.getLogger().setLevel(current_log_level)
-                return results,elapsed
-                
-            def resolvefixvariables(instance,results):
-                active_vars= instance.active_components(pyomo.Var)
-                need_to_resolve=False
-                for name,var in active_vars.iteritems():
-                    if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet):
-                        var.fixed=True
-                        need_to_resolve=True
-
-                if not need_to_resolve: return instance,results
-                logging.info('resolving fixed-integer LP for duals')
-                instance.preprocess()
-                try: 
-                    results,elapsed=cooprsolve(instance)    
-                    self.solutionTime+=elapsed
-                    instance.load(results)
-                except RuntimeError:
-                    logging.error('in re-solving for the duals. the duals will be set to default value. keeping files for examination.')
+                <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="n">results</span><span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span><span class="n">suffixes</span><span class="o">=</span><span class="n">suffixes</span><span class="p">,</span><span class="n">keepFiles</span><span class="o">=</span><span class="n">keepFiles</span><span class="p">)</span>
+                <span class="c">#results,opt=cooprUtil.apply_optimizer(options,instance)</span>
+                <span class="n">elapsed</span> <span class="o">=</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">current_log_level</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">results</span><span class="p">,</span><span class="n">elapsed</span>
+            
+            
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Solving with {s} ... &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">solver</span><span class="p">))</span>
+            <span class="n">instance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">create</span><span class="p">()</span>
+                 
+            <span class="n">results</span><span class="p">,</span><span class="n">elapsed</span><span class="o">=</span><span class="n">cooprsolve</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">statusText</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">solver</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;Termination condition&#39;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">statusText</span> <span class="o">==</span><span class="s">&#39;optimal&#39;</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s">&#39;problem not solved. Solver terminated with status: &quot;{}&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">statusText</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">solved</span><span class="o">=</span><span class="bp">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">solved</span><span class="o">=</span><span class="bp">True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">solutionTime</span> <span class="o">=</span><span class="n">elapsed</span> <span class="c">#results.Solver[0][&#39;Wallclock time&#39;]</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Problem solved in {}s.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solutionTime</span><span class="p">))</span> <span class="c">#(&#39;Problem solved.&#39;)</span>
+            
                     
-                    try: results= cooprsolve(instance, keepFiles=True)
-                    except RuntimeError: pass
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">:</span> <span class="k">return</span>
+            
+            <span class="n">instance</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+            
+
+            
+            <span class="k">def</span> <span class="nf">resolvefixvariables</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span><span class="n">results</span><span class="p">):</span>
+                <span class="n">active_vars</span><span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">active_components</span><span class="p">(</span><span class="n">pyomo</span><span class="o">.</span><span class="n">Var</span><span class="p">)</span>
+                <span class="n">need_to_resolve</span><span class="o">=</span><span class="bp">False</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span><span class="n">var</span> <span class="ow">in</span> <span class="n">active_vars</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">pyomo</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">IntegerSet</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">pyomo</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">BooleanSet</span><span class="p">):</span>
+                        <span class="n">var</span><span class="o">.</span><span class="n">fixed</span><span class="o">=</span><span class="bp">True</span>
+                        <span class="n">need_to_resolve</span><span class="o">=</span><span class="bp">True</span>
                 
-                return instance,results            
-            
-            
-            #solve
-            logging.info('Solving with {s} ... '.format(s=solver))
-            instance=self.model.create()
-            results,elapsed=cooprsolve(instance)
-            self.statusText = str(results.solver[0]['Termination condition'])
-            if not self.statusText =='optimal':
-                logging.warning('problem not solved. Solver terminated with status: "{}"'.format(self.statusText))
-                self.status=False
-            else:
-                self.status=True
-                self.solutionTime =elapsed #results.Solver[0]['Wallclock time']
-                logging.info('Problem solved in {}s.'.format(self.solutionTime)) #('Problem solved.')
-            if not self.status: return        
-            
-            #get results
-            instance.load(results)
-            instance,results = resolvefixvariables(instance,results)
-            
-            #get solution information                     
-            try: self.objective = results.Solution.objective['objective'].value #instance.active_components(pyomo.Objective)['objective']
-            except AttributeError:
-                self.objective = results.Solution.objective['__default_objective__'].value
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">need_to_resolve</span><span class="p">:</span> <span class="k">return</span> <span class="n">instance</span><span class="p">,</span><span class="n">results</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;resolving fixed-integer LP for duals&#39;</span><span class="p">)</span>
+                <span class="n">instance</span><span class="o">.</span><span class="n">preprocess</span><span class="p">()</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">results</span><span class="p">,</span><span class="n">elapsed</span><span class="o">=</span><span class="n">cooprsolve</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">solutionTime</span><span class="o">+=</span><span class="n">elapsed</span>
+                <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;coopr raised an error in solving. keep the files for debugging.&#39;</span><span class="p">)</span>
+                    <span class="n">results</span><span class="o">=</span> <span class="n">cooprsolve</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">keepFiles</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>    
                 
-            self.constraints = instance.active_components(pyomo.Constraint)
-            self.variables =   instance.active_components(pyomo.Var)
-            return 
+                <span class="n">instance</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">instance</span><span class="p">,</span><span class="n">results</span>
 
-        def __getattr__(self,name):
-            try: return getattr(self.model,name)</div>
-            except AttributeError:
-                msg='the model has no variable/constraint/attribute named "{n}"'.format(n=name)
-                raise AttributeError(msg)
+            <span class="k">try</span><span class="p">:</span> <span class="n">instance</span><span class="p">,</span><span class="n">results</span> <span class="o">=</span> <span class="n">resolvefixvariables</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span><span class="n">results</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;in re-solving for the duals. the duals will be set to default value.&#39;</span><span class="p">)</span>
+                
+                    
+            <span class="k">try</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">objective</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">Solution</span><span class="o">.</span><span class="n">objective</span><span class="p">[</span><span class="s">&#39;objective&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="c">#instance.active_components(pyomo.Objective)[&#39;objective&#39;]</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">objective</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">Solution</span><span class="o">.</span><span class="n">objective</span><span class="p">[</span><span class="s">&#39;__default_objective__&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+                
+            <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">active_components</span><span class="p">(</span><span class="n">pyomo</span><span class="o">.</span><span class="n">Constraint</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span>   <span class="n">instance</span><span class="o">.</span><span class="n">active_components</span><span class="p">(</span><span class="n">pyomo</span><span class="o">.</span><span class="n">Var</span><span class="p">)</span>
 
-    def value(variable,problem=None):
-        '''value of an optimization variable'''
-        if problem is None: return variable #just a number
+            <span class="k">return</span> 
+<div class="viewcode-block" id="Problem.value"><a class="viewcode-back" href="../documentation.html#optimization.Problem.value">[docs]</a>        <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">name</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span> 
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span> <span class="c">#name is not a string</span>
+                <span class="k">return</span> <span class="n">name</span><span class="o">.</span><span class="n">value</span>
+        </div>
+        <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">name</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span> <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="n">msg</span><span class="o">=</span><span class="s">&#39;the model has no variable/constraint/attribute named &quot;{n}&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        try: varname=variable.name
-        except AttributeError: return variable #just a number
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span><span class="n">problem</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;value of an optimization variable&#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">problem</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> 
+            <span class="k">try</span><span class="p">:</span> 
+                <span class="k">return</span> <span class="n">variable</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">variable</span> <span class="c">#just a number</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span> <span class="n">varname</span><span class="o">=</span><span class="n">variable</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="k">return</span> <span class="n">variable</span> <span class="c">#just a number</span>
+            <span class="k">return</span> <span class="n">problem</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">varname</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
 
-        return problem.variables[varname].value
+    <span class="k">def</span> <span class="nf">sumVars</span><span class="p">(</span><span class="n">variables</span><span class="p">):</span> <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">newProblem</span><span class="p">():</span> <span class="k">return</span> <span class="n">Problem</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">newVar</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span><span class="n">kind</span><span class="o">=</span><span class="s">&#39;Continuous&#39;</span><span class="p">,</span><span class="n">low</span><span class="o">=-</span><span class="mi">1000000</span><span class="p">,</span><span class="n">high</span><span class="o">=</span><span class="mi">1000000</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;create an optimization variable&#39;&#39;&#39;</span>
 
-    def sumVars(variables): return sum(variables)
-    def newProblem(): return Problem()
-    def newVar(name='',kind='Continuous',low=-1000000,high=1000000):
-        '''create an optimization variable'''
-
-        kindmap = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyomo.Boolean)
-        return pyomo.Var(name=name,bounds=(low,high),domain=kindmap[kind])
-    def solve(problem,solver=config.optimization_solver): return problem.solve(solver)
+        <span class="n">kindmap</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">Continuous</span><span class="o">=</span><span class="n">pyomo</span><span class="o">.</span><span class="n">Reals</span><span class="p">,</span> <span class="n">Binary</span><span class="o">=</span><span class="n">pyomo</span><span class="o">.</span><span class="n">Boolean</span><span class="p">,</span> <span class="n">Boolean</span><span class="o">=</span><span class="n">pyomo</span><span class="o">.</span><span class="n">Boolean</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pyomo</span><span class="o">.</span><span class="n">Var</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span><span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="n">low</span><span class="p">,</span><span class="n">high</span><span class="p">),</span><span class="n">domain</span><span class="o">=</span><span class="n">kindmap</span><span class="p">[</span><span class="n">kind</span><span class="p">])</span>
 
 
-elif optimization_package=='pulp':
-    class Problem(pulp.LpProblem):
-        '''an optimization problem'''
-<div class="viewcode-block" id="Problem"><a class="viewcode-back" href="../documentation.html#optimization.Problem">[docs]</a>
-        def addObjective(self,expression,name='objective'):
-            '''add an objective to the problem'''
-<div class="viewcode-block" id="Problem.addObjective"><a class="viewcode-back" href="../documentation.html#optimization.Problem.addObjective">[docs]</a>            self+=expression,name
-        def addVar(self,var):
-            #no need to add variables to the model for puLP</div>
-<div class="viewcode-block" id="Problem.addVar"><a class="viewcode-back" href="../documentation.html#optimization.Problem.addVar">[docs]</a>            pass
-        def addConstraints(self, constraintsD):
-            '''add a dictionary of constraints (keyed by name) to the problem'''</div>
-<div class="viewcode-block" id="Problem.addConstraints"><a class="viewcode-back" href="../documentation.html#optimization.Problem.addConstraints">[docs]</a>            try:
-                for name,expression in constraintsD.iteritems(): self.addConstraint(expression,name)
-            except AttributeError:
-                if constraintsD is None: pass
-                else: raise AttributeError('addConstraints takes a dictionary of constraints argument')
+<span class="k">elif</span> <span class="n">optimization_package</span><span class="o">==</span><span class="s">&#39;pulp&#39;</span><span class="p">:</span>
+<div class="viewcode-block" id="Problem"><a class="viewcode-back" href="../documentation.html#optimization.Problem">[docs]</a>    <span class="k">class</span> <span class="nc">Problem</span><span class="p">(</span><span class="n">pulp</span><span class="o">.</span><span class="n">LpProblem</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;an optimization problem&#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="Problem.addObjective"><a class="viewcode-back" href="../documentation.html#optimization.Problem.addObjective">[docs]</a>        <span class="k">def</span> <span class="nf">addObjective</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">expression</span><span class="p">,</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;objective&#39;</span><span class="p">):</span>
+            <span class="sd">&#39;&#39;&#39;add an objective to the problem&#39;&#39;&#39;</span>
+            <span class="bp">self</span><span class="o">+=</span><span class="n">expression</span><span class="p">,</span><span class="n">name</span></div>
+<div class="viewcode-block" id="Problem.addVar"><a class="viewcode-back" href="../documentation.html#optimization.Problem.addVar">[docs]</a>        <span class="k">def</span> <span class="nf">addVar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">var</span><span class="p">):</span>
+            <span class="c">#no need to add variables to the model for puLP</span>
+            <span class="k">pass</span></div>
+<div class="viewcode-block" id="Problem.addConstraints"><a class="viewcode-back" href="../documentation.html#optimization.Problem.addConstraints">[docs]</a>        <span class="k">def</span> <span class="nf">addConstraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constraintsD</span><span class="p">):</span>
+            <span class="sd">&#39;&#39;&#39;add a dictionary of constraints (keyed by name) to the problem&#39;&#39;&#39;</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span><span class="n">expression</span> <span class="ow">in</span> <span class="n">constraintsD</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span> <span class="bp">self</span><span class="o">.</span><span class="n">addConstraint</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">constraintsD</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&#39;addConstraints takes a dictionary of constraints argument&#39;</span><span class="p">)</span>
+            </div>
+<div class="viewcode-block" id="Problem.dual"><a class="viewcode-back" href="../documentation.html#optimization.Problem.dual">[docs]</a>        <span class="k">def</span> <span class="nf">dual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">constraintname</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+            <span class="sd">&#39;&#39;&#39;dual value of an optimization constraint&#39;&#39;&#39;</span>
+            <span class="n">constraint</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">[</span><span class="n">constraintname</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span> <span class="k">return</span> <span class="n">constraint</span><span class="o">.</span><span class="n">pi</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Duals information not supported by GLPK.&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">default</span>
+</div>
+        <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">filename</span><span class="p">):</span>
+            <span class="sd">&#39;&#39;&#39;write the problem to a human-readable file&#39;&#39;&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">writeLP</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">filename</span><span class="o">=</span><span class="s">&#39;problem.dat&#39;</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">yaml</span> <span class="kn">import</span> <span class="n">dump</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;w+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="nb">file</span><span class="p">:</span> <span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">file</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Problem.solve"><a class="viewcode-back" href="../documentation.html#optimization.Problem.solve">[docs]</a>        <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">solver</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">optimization_solver</span><span class="p">):</span>
+            <span class="sd">&#39;&#39;&#39;solve the optimization problem&#39;&#39;&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">solved</span><span class="o">=</span><span class="bp">False</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Solving with {s} ... &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">solver</span><span class="p">))</span>
+            <span class="n">solvermap</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">glpk</span><span class="o">=</span><span class="n">pulp</span><span class="o">.</span><span class="n">GLPK_CMD</span><span class="p">,</span>
+                <span class="n">cplex</span><span class="o">=</span><span class="n">pulp</span><span class="o">.</span><span class="n">CPLEX_CMD</span><span class="p">,</span>
+                <span class="n">gurobi</span><span class="o">=</span><span class="n">pulp</span><span class="o">.</span><span class="n">GUROBI</span><span class="p">,</span>
+                <span class="n">coin</span><span class="o">=</span><span class="n">pulp</span><span class="o">.</span><span class="n">pulp</span><span class="o">.</span><span class="n">COINMP_DLL</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span> <span class="c">#call LpProblem solve method</span>
+                <span class="n">status</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span> <span class="n">Problem</span><span class="p">,</span> <span class="bp">self</span> <span class="p">)</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span> <span class="o">=</span> <span class="n">solvermap</span><span class="p">[</span><span class="n">solver</span><span class="o">.</span><span class="n">lower</span><span class="p">()](</span><span class="n">msg</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">statusText</span><span class="o">=</span><span class="n">pulp</span><span class="o">.</span><span class="n">LpStatus</span><span class="p">[</span><span class="n">status</span><span class="p">]</span>
+            <span class="k">except</span> <span class="n">pulp</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">PulpSolverError</span><span class="p">:</span>
+                <span class="n">status</span><span class="o">=</span><span class="mi">0</span>
+
             
-        def dual(self,constraintname,default=0):
-            '''dual value of an optimization constraint'''</div>
-<div class="viewcode-block" id="Problem.dual"><a class="viewcode-back" href="../documentation.html#optimization.Problem.dual">[docs]</a>            constraint=self.constraints[constraintname]
-            try: return constraint.pi
-            except AttributeError:
-                logging.debug('Duals information not supported by GLPK.')
-                return default
+            <span class="k">if</span> <span class="n">status</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">solved</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;{stat} in {time:0.4f} sec&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">stat</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">statusText</span><span class="p">,</span>
+                    <span class="n">time</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">solutionTime</span><span class="p">))</span>
 
-        def write(self,filename):
-            '''write the problem to a human-readable file'''</div>
-            self.writeLP(filename)
-        def save(self,filename='problem.dat'):
-            from yaml import dump
-            with open(filename, 'w+') as file: dump(self, file)
+</div></div>
+<div class="viewcode-block" id="value"><a class="viewcode-back" href="../documentation.html#optimization.value">[docs]</a>    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span><span class="n">problem</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;value of an optimization variable&#39;&#39;&#39;</span>
+        <span class="k">try</span><span class="p">:</span> <span class="k">return</span> <span class="n">pulp</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="k">return</span> <span class="n">variable</span>
+</div>
+<div class="viewcode-block" id="sumVars"><a class="viewcode-back" href="../documentation.html#optimization.sumVars">[docs]</a>    <span class="k">def</span> <span class="nf">sumVars</span><span class="p">(</span><span class="n">variables</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;sums a list of optimization variables&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">pulp</span><span class="o">.</span><span class="n">lpSum</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span></div>
+<div class="viewcode-block" id="newProblem"><a class="viewcode-back" href="../documentation.html#optimization.newProblem">[docs]</a>    <span class="k">def</span> <span class="nf">newProblem</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;problem&#39;</span><span class="p">,</span><span class="n">kind</span><span class="o">=</span><span class="n">pulp</span><span class="o">.</span><span class="n">LpMinimize</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;create a new problem&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">Problem</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span><span class="n">sense</span><span class="o">=</span><span class="n">kind</span><span class="p">)</span></div>
+<div class="viewcode-block" id="newVar"><a class="viewcode-back" href="../documentation.html#optimization.newVar">[docs]</a>    <span class="k">def</span> <span class="nf">newVar</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span><span class="n">kind</span><span class="o">=</span><span class="s">&#39;Continuous&#39;</span><span class="p">,</span><span class="n">low</span><span class="o">=-</span><span class="mi">1000000</span><span class="p">,</span><span class="n">high</span><span class="o">=</span><span class="mi">1000000</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;create an optimization variable&#39;&#39;&#39;</span>
+        <span class="c">#note that if binary variable, pulp will reset the bounds to (0,1)</span>
+        <span class="c">#note that if using glpk, bounds of -inf and inf produces error</span>
+        <span class="k">return</span> <span class="n">pulp</span><span class="o">.</span><span class="n">LpVariable</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span><span class="n">cat</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span><span class="n">lowBound</span><span class="o">=</span><span class="n">low</span><span class="p">,</span><span class="n">upBound</span><span class="o">=</span><span class="n">high</span><span class="p">)</span>
 
 
-    def value(variable,problem=None):
-        '''value of an optimization variable'''</div>
-<div class="viewcode-block" id="value"><a class="viewcode-back" href="../documentation.html#optimization.value">[docs]</a>        try: return pulp.value(variable)
-        except AttributeError: return variable
 
-    def sumVars(variables):
-        '''sums a list of optimization variables'''</div>
-<div class="viewcode-block" id="sumVars"><a class="viewcode-back" href="../documentation.html#optimization.sumVars">[docs]</a>        return pulp.lpSum(variables)
-    def newProblem(name='problem',kind=pulp.LpMinimize):
-        '''create a new problem'''</div>
-<div class="viewcode-block" id="newProblem"><a class="viewcode-back" href="../documentation.html#optimization.newProblem">[docs]</a>        return Problem(name=name,sense=kind)
-    def newVar(name='',kind='Continuous',low=-1000000,high=1000000):
-        '''create an optimization variable'''</div>
-<div class="viewcode-block" id="newVar"><a class="viewcode-back" href="../documentation.html#optimization.newVar">[docs]</a>        #note that if binary variable, pulp will reset the bounds to (0,1)
-        #note that if using glpk, bounds of -inf and inf produces error
-        return pulp.LpVariable(name=name,cat=kind,lowBound=low,upBound=high)
+<span class="c">#class OptimizationObject(object):</span>
+</div>
+<div class="viewcode-block" id="solve"><a class="viewcode-back" href="../documentation.html#optimization.solve">[docs]</a><span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span><span class="n">solver</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">optimization_solver</span><span class="p">):</span> <span class="k">return</span> <span class="n">problem</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="OptimizationError"><a class="viewcode-back" href="../documentation.html#optimization.OptimizationError">[docs]</a><span class="k">class</span> <span class="nc">OptimizationError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ivalue</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ivalue</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">=</span><span class="n">ivalue</span>
+        <span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">=</span><span class="s">&quot;Optimization Error: there was a problem&quot;</span>
+        <span class="ne">Exception</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 
-    def solve(problem,solver=config.optimization_solver):
-        '''solve the optimization problem'''</div>
-<div class="viewcode-block" id="solve"><a class="viewcode-back" href="../documentation.html#optimization.solve">[docs]</a>        logging.info('Solving with {s} ... '.format(s=solver))
-        solvermap = dict(
-            glpk=pulp.GLPK_CMD,
-            cplex=pulp.CPLEX_CMD,
-            gurobi=pulp.GUROBI,
-            coin=pulp.pulp.COINMP_DLL,
-            )
-
-        try: out=problem.solve(solvermap[solver.lower()](msg=0))
-        except pulp.solvers.PulpSolverError:
-            problem.status=0
-            out=None
-
-        problem.statusText=pulp.LpStatus[problem.status]
-        #print logging.getLogger().getEffectiveLevel()
-        if problem.status:
-            logging.info('{stat} in {time:0.4f} sec'.format(
-                stat=problem.statusText,
-                time=problem.solutionTime))
-        #else: logging.warning(problem.statusText())
-
-        return out
-
-class OptimizationError(Exception):
-    def __init__(self, ivalue):</div>
-<div class="viewcode-block" id="OptimizationError"><a class="viewcode-back" href="../documentation.html#optimization.OptimizationError">[docs]</a>        if ivalue: self.value=ivalue
-        else: self.value="Optimization Error: there was a problem"
-        Exception.__init__( self, self.value)
-
-    def __str__(self): return self.value
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span></div>
 </pre></div>
 
           </div>

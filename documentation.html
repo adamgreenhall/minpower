@@ -55,7 +55,7 @@
 (ED, OPF, UC, and SCUC problems).</p>
 <dl class="function">
 <dt id="solve.create_problem">
-<tt class="descclassname">solve.</tt><tt class="descname">create_problem</tt><big>(</big><em>buses</em>, <em>lines</em>, <em>times</em>, <em>load_shedding_allowed=False</em><big>)</big><a class="reference internal" href="_modules/solve.html#create_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.create_problem" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">solve.</tt><tt class="descname">create_problem</tt><big>(</big><em>buses</em>, <em>lines</em>, <em>times</em>, <em>load_shedding_allowed=False</em>, <em>dispatch_decommit_allowed=False</em><big>)</big><a class="reference internal" href="_modules/solve.html#create_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.create_problem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a power systems optimization problem.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -65,7 +65,6 @@
 <li><strong>buses</strong> &#8211; list of <a class="reference internal" href="#powersystems.Bus" title="powersystems.Bus"><tt class="xref py py-class docutils literal"><span class="pre">Bus</span></tt></a> objects</li>
 <li><strong>lines</strong> &#8211; list of <a class="reference internal" href="#powersystems.Line" title="powersystems.Line"><tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt></a> objects</li>
 <li><strong>times</strong> &#8211; <a class="reference internal" href="#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a> object</li>
-<li><strong>filename</strong> &#8211; (optional) create a .lp file of the problem</li>
 </ul>
 </td>
 </tr>
@@ -108,7 +107,7 @@ Multi-stage problems are generally used for UCs over many days.</p>
 
 <dl class="function">
 <dt id="solve.problem">
-<tt class="descclassname">solve.</tt><tt class="descname">problem</tt><big>(</big><em>datadir='./tests/uc/'</em>, <em>shell=True</em>, <em>problemfile=False</em>, <em>vizualization=True</em>, <em>csv=True</em>, <em>solver='glpk'</em><big>)</big><a class="reference internal" href="_modules/solve.html#problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.problem" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">solve.</tt><tt class="descname">problem</tt><big>(</big><em>datadir='.'</em>, <em>shell=True</em>, <em>problemfile=True</em>, <em>vizualization=True</em>, <em>csv=True</em>, <em>solver='gurobi'</em><big>)</big><a class="reference internal" href="_modules/solve.html#problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.problem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Solve a optimization problem in a directory.
 Problem type is determined from the data.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -162,7 +161,7 @@ a master:class:<cite>~schedule.Timelist</cite> list to pass to <a class="referen
 
 <dl class="function">
 <dt id="get_data.parsedir">
-<tt class="descclassname">get_data.</tt><tt class="descname">parsedir</tt><big>(</big><em>datadir='./tests/uc/'</em>, <em>file_gens='generators.csv'</em>, <em>file_loads='loads.csv'</em>, <em>file_lines='lines.csv'</em>, <em>file_init='initial.csv'</em><big>)</big><a class="reference internal" href="_modules/get_data.html#parsedir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.parsedir" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">get_data.</tt><tt class="descname">parsedir</tt><big>(</big><em>datadir='.'</em>, <em>file_gens='generators.csv'</em>, <em>file_loads='loads.csv'</em>, <em>file_lines='lines.csv'</em>, <em>file_init='initial.csv'</em><big>)</big><a class="reference internal" href="_modules/get_data.html#parsedir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.parsedir" title="Permalink to this definition">¶</a></dt>
 <dd><p>Import data from spreadsheets and build lists of
 <a class="reference internal" href="#module-powersystems" title="powersystems"><tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt></a> classes.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -181,30 +180,6 @@ for UC problems if not specified.)</li>
 </td>
 </tr>
 <tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">buses, lines, times (lists of objects)</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="get_data.setup_buses">
-<tt class="descclassname">get_data.</tt><tt class="descname">setup_buses</tt><big>(</big><em>loads</em>, <em>generators</em><big>)</big><a class="reference internal" href="_modules/get_data.html#setup_buses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.setup_buses" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create list of <a class="reference internal" href="#powersystems.Bus" title="powersystems.Bus"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Bus</span></tt></a> objects 
-from the load and generator bus names. Otherwise
-(as in ED,UC) create just one (system)
-<a class="reference internal" href="#powersystems.Bus" title="powersystems.Bus"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Bus</span></tt></a> instance.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>loads</strong> &#8211; a list of <a class="reference internal" href="#powersystems.Load" title="powersystems.Load"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Load</span></tt></a> objects</li>
-<li><strong>generators</strong> &#8211; a list of <a class="reference internal" href="#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Generator</span></tt></a> objects</li>
-</ul>
-</td>
-</tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a list of <a class="reference internal" href="#powersystems.Bus" title="powersystems.Bus"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Bus</span></tt></a> objects</p>
 </td>
 </tr>
 </tbody>
@@ -302,7 +277,7 @@ tranmission lines start/end).</p>
 
 <dl class="class">
 <dt id="powersystems.Generator">
-<em class="property">class </em><tt class="descclassname">powersystems.</tt><tt class="descname">Generator</tt><big>(</big><em>kind='generic'</em>, <em>Pmin=0</em>, <em>Pmax=500</em>, <em>minuptime=0</em>, <em>mindowntime=0</em>, <em>rampratemax=1000</em>, <em>rampratemin=None</em>, <em>costcurvestring='20P'</em>, <em>heatratestring=None</em>, <em>fuelcost=1</em>, <em>startupcost=0</em>, <em>shutdowncost=0</em>, <em>mustrun=False</em>, <em>name=''</em>, <em>index=None</em>, <em>bus=None</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">powersystems.</tt><tt class="descname">Generator</tt><big>(</big><em>kind='generic'</em>, <em>Pmin=0</em>, <em>Pmax=500</em>, <em>minuptime=0</em>, <em>mindowntime=0</em>, <em>rampratemax=None</em>, <em>rampratemin=None</em>, <em>costcurvestring='20P'</em>, <em>heatratestring=None</em>, <em>fuelcost=1</em>, <em>startupcost=0</em>, <em>shutdowncost=0</em>, <em>mustrun=False</em>, <em>name=''</em>, <em>index=None</em>, <em>bus=None</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator" title="Permalink to this definition">¶</a></dt>
 <dd><p>A generator model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -425,7 +400,7 @@ converts to cost curve when multiplied by fuelcost.</li>
 
 <dl class="class">
 <dt id="powersystems.Generator_nonControllable">
-<em class="property">class </em><tt class="descclassname">powersystems.</tt><tt class="descname">Generator_nonControllable</tt><big>(</big><em>schedule=None</em>, <em>fuelcost=1</em>, <em>costcurvestring='0'</em>, <em>mustrun=False</em>, <em>Pmin=0</em>, <em>Pmax=None</em>, <em>name=None</em>, <em>index=None</em>, <em>bus=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Generator_nonControllable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">powersystems.</tt><tt class="descname">Generator_nonControllable</tt><big>(</big><em>schedule=None</em>, <em>fuelcost=1</em>, <em>costcurvestring='0'</em>, <em>mustrun=False</em>, <em>Pmin=0</em>, <em>Pmax=None</em>, <em>power=None</em>, <em>name=None</em>, <em>index=None</em>, <em>bus=None</em>, <em>kind='wind'</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Generator_nonControllable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Describes a generator with a fixed schedule.</p>
 <dl class="method">
 <dt id="powersystems.Generator_nonControllable.P">
@@ -434,7 +409,7 @@ converts to cost curve when multiplied by fuelcost.</li>
 
 <dl class="method">
 <dt id="powersystems.Generator_nonControllable.add_timevars">
-<tt class="descname">add_timevars</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Generator_nonControllable.add_timevars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable.add_timevars" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">add_timevars</tt><big>(</big><em>times</em>, <em>dispatch_decommit_allowed=False</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#Generator_nonControllable.add_timevars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable.add_timevars" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -687,6 +662,30 @@ kinds are defined in <tt class="xref py py-data docutils literal"><span class="p
 power value <tt class="xref py py-attr docutils literal"><span class="pre">P</span></tt> is specified).</p>
 </dd></dl>
 
+<dl class="function">
+<dt id="powersystems.make_buses_list">
+<tt class="descclassname">powersystems.</tt><tt class="descname">make_buses_list</tt><big>(</big><em>loads</em>, <em>generators</em><big>)</big><a class="reference internal" href="_modules/powersystems.html#make_buses_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.make_buses_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create list of <a class="reference internal" href="#powersystems.Bus" title="powersystems.Bus"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Bus</span></tt></a> objects 
+from the load and generator bus names. Otherwise
+(as in ED,UC) create just one (system)
+<a class="reference internal" href="#powersystems.Bus" title="powersystems.Bus"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Bus</span></tt></a> instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>loads</strong> &#8211; a list of <a class="reference internal" href="#powersystems.Load" title="powersystems.Load"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Load</span></tt></a> objects</li>
+<li><strong>generators</strong> &#8211; a list of <a class="reference internal" href="#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Generator</span></tt></a> objects</li>
+</ul>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a list of <a class="reference internal" href="#powersystems.Bus" title="powersystems.Bus"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Bus</span></tt></a> objects</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 <div class="section" id="module-bidding">
 <span id="bidding"></span><h2><a class="reference internal" href="#module-bidding" title="bidding"><tt class="xref py py-mod docutils literal"><span class="pre">bidding</span></tt></a><a class="headerlink" href="#module-bidding" title="Permalink to this headline">¶</a></h2>
@@ -750,7 +749,7 @@ model.constraint() method.</p>
 
 <dl class="method">
 <dt id="bidding.Bid.update_vars">
-<tt class="descname">update_vars</tt><big>(</big><em>solution</em><big>)</big><a class="reference internal" href="_modules/bidding.html#Bid.update_vars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid.update_vars" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">update_vars</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bidding.html#Bid.update_vars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid.update_vars" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -777,7 +776,7 @@ model.constraint() method.</p>
 
 <dl class="class">
 <dt id="bidding.PWLmodel">
-<em class="property">class </em><tt class="descclassname">bidding.</tt><tt class="descname">PWLmodel</tt><big>(</big><em>polyText='2+10P+0.1P^2'</em>, <em>multiplier=1</em>, <em>minInput=0</em>, <em>maxInput=10000</em>, <em>numBreakpoints=10</em>, <em>inputNm='x'</em>, <em>outputNm='y'</em><big>)</big><a class="reference internal" href="_modules/bidding.html#PWLmodel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.PWLmodel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">bidding.</tt><tt class="descname">PWLmodel</tt><big>(</big><em>polyText='2+10P+0.1P^2'</em>, <em>multiplier=1</em>, <em>minInput=0</em>, <em>maxInput=10000</em>, <em>numBreakpoints=5</em>, <em>inputNm='x'</em>, <em>outputNm='y'</em><big>)</big><a class="reference internal" href="_modules/bidding.html#PWLmodel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.PWLmodel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Describes a piecewise linear model of a polynomial curve.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -866,7 +865,7 @@ the polynomial (currently the default comes from <a class="reference internal" h
 
 <dl class="class">
 <dt id="bidding.convexPWLmodel">
-<em class="property">class </em><tt class="descclassname">bidding.</tt><tt class="descname">convexPWLmodel</tt><big>(</big><em>polyText='2+10P+0.1P^2'</em>, <em>multiplier=1</em>, <em>minInput=0</em>, <em>maxInput=10000</em>, <em>numBreakpoints=10</em>, <em>inputNm='x'</em>, <em>outputNm='y'</em><big>)</big><a class="reference internal" href="_modules/bidding.html#convexPWLmodel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.convexPWLmodel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">bidding.</tt><tt class="descname">convexPWLmodel</tt><big>(</big><em>polyText='2+10P+0.1P^2'</em>, <em>multiplier=1</em>, <em>minInput=0</em>, <em>maxInput=10000</em>, <em>numBreakpoints=5</em>, <em>inputNm='x'</em>, <em>outputNm='y'</em><big>)</big><a class="reference internal" href="_modules/bidding.html#convexPWLmodel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.convexPWLmodel" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
 <dt id="bidding.convexPWLmodel.add_timevars">
 <tt class="descname">add_timevars</tt><big>(</big><em>iden</em><big>)</big><a class="reference internal" href="_modules/bidding.html#convexPWLmodel.add_timevars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.convexPWLmodel.add_timevars" title="Permalink to this definition">¶</a></dt>
@@ -988,10 +987,15 @@ Currently uses pulp but is transitioning to using coopr.</p>
 
 <dl class="method">
 <dt id="optimization.Problem.solve">
-<tt class="descname">solve</tt><big>(</big><em>solver='glpk'</em><big>)</big><a class="reference internal" href="_modules/optimization.html#Problem.solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.solve" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">solve</tt><big>(</big><em>solver='gurobi'</em><big>)</big><a class="reference internal" href="_modules/optimization.html#Problem.solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.solve" title="Permalink to this definition">¶</a></dt>
 <dd><p>solve the optimization problem.
 valid solvers are {cplex,gurobi,glpk}</p>
 </dd></dl>
+
+<dl class="method">
+<dt id="optimization.Problem.value">
+<tt class="descname">value</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="_modules/optimization.html#Problem.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -1008,7 +1012,7 @@ valid solvers are {cplex,gurobi,glpk}</p>
 
 <dl class="function">
 <dt id="optimization.solve">
-<tt class="descclassname">optimization.</tt><tt class="descname">solve</tt><big>(</big><em>problem</em>, <em>solver='glpk'</em><big>)</big><a class="reference internal" href="_modules/optimization.html#solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.solve" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">optimization.</tt><tt class="descname">solve</tt><big>(</big><em>problem</em>, <em>solver='gurobi'</em><big>)</big><a class="reference internal" href="_modules/optimization.html#solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.solve" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
@@ -1027,15 +1031,21 @@ valid solvers are {cplex,gurobi,glpk}</p>
 <span id="schedule"></span><h2><a class="reference internal" href="#module-schedule" title="schedule"><tt class="xref py py-mod docutils literal"><span class="pre">schedule</span></tt></a><a class="headerlink" href="#module-schedule" title="Permalink to this headline">¶</a></h2>
 <p>Time and schedule related models.</p>
 <dl class="class">
+<dt id="schedule.FixedSchedule">
+<em class="property">class </em><tt class="descclassname">schedule.</tt><tt class="descname">FixedSchedule</tt><big>(</big><em>times=None</em>, <em>P=None</em><big>)</big><a class="reference internal" href="_modules/schedule.html#FixedSchedule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.FixedSchedule" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="schedule.FixedSchedule.getEnergy">
+<tt class="descname">getEnergy</tt><big>(</big><em>timeperiod=None</em><big>)</big><a class="reference internal" href="_modules/schedule.html#FixedSchedule.getEnergy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.FixedSchedule.getEnergy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="schedule.Schedule">
 <em class="property">class </em><tt class="descclassname">schedule.</tt><tt class="descname">Schedule</tt><big>(</big><em>times=None</em>, <em>P=None</em><big>)</big><a class="reference internal" href="_modules/schedule.html#Schedule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.Schedule" title="Permalink to this definition">¶</a></dt>
 <dd><p>Describes a schedule of times and corresponding power values.
-In basic use is mostly a container for a dictionary keyed by
+Mostly a container for a dictionary keyed by
 <a class="reference internal" href="#schedule.Time" title="schedule.Time"><tt class="xref py py-class docutils literal"><span class="pre">Time</span></tt></a> objects.</p>
-<p>If inputs are <cite>P</cite> and <cite>times</cite>: create dictionary directly.</p>
-<p>If inputs are <cite>filename</cite> and <cite>times</cite>: 
-use <tt class="xref py py-meth docutils literal"><span class="pre">setUpSchedule()</span></tt> to read information from 
-spreadsheet file.</p>
 <dl class="method">
 <dt id="schedule.Schedule.getEnergy">
 <tt class="descname">getEnergy</tt><big>(</big><em>timeperiod</em><big>)</big><a class="reference internal" href="_modules/schedule.html#Schedule.getEnergy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.Schedule.getEnergy" title="Permalink to this definition">¶</a></dt>
@@ -1139,9 +1149,27 @@ for each sub-list. If not specified, <cite>intervalhrs</cite> is used.</li>
 </dd></dl>
 
 <dl class="function">
+<dt id="schedule.just_one_time">
+<tt class="descclassname">schedule.</tt><tt class="descname">just_one_time</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/schedule.html#just_one_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.just_one_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>For a single-time problem, generate a Timelist with just one time in it.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="schedule.makeSchedule">
 <tt class="descclassname">schedule.</tt><tt class="descname">makeSchedule</tt><big>(</big><em>filename</em>, <em>times</em><big>)</big><a class="reference internal" href="_modules/schedule.html#makeSchedule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.makeSchedule" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read time and power information from spreadsheet file.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="schedule.makeTimes">
+<tt class="descclassname">schedule.</tt><tt class="descname">makeTimes</tt><big>(</big><em>datetimeL</em><big>)</big><a class="reference internal" href="_modules/schedule.html#makeTimes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.makeTimes" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert list of datetime objects to Timelist() class</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="schedule.make_times_basic">
+<tt class="descclassname">schedule.</tt><tt class="descname">make_times_basic</tt><big>(</big><em>N</em><big>)</big><a class="reference internal" href="_modules/schedule.html#make_times_basic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.make_times_basic" title="Permalink to this definition">¶</a></dt>
+<dd><p>make a <a class="reference internal" href="#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">schedule.Timelist</span></tt></a> of N times, assume hourly interval.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1159,7 +1187,7 @@ optimization problems. Matplotlib and networkx are used for
 vizualization.</p>
 <dl class="class">
 <dt id="results.Solution">
-<em class="property">class </em><tt class="descclassname">results.</tt><tt class="descname">Solution</tt><big>(</big><em>problem</em>, <em>buses</em>, <em>lines</em>, <em>times</em>, <em>datadir</em><big>)</big><a class="reference internal" href="_modules/results.html#Solution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">results.</tt><tt class="descname">Solution</tt><big>(</big><em>problem</em>, <em>buses</em>, <em>lines</em>, <em>times</em>, <em>datadir='.'</em><big>)</big><a class="reference internal" href="_modules/results.html#Solution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
 <dt id="results.Solution.calcCosts">
 <tt class="descname">calcCosts</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/results.html#Solution.calcCosts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.calcCosts" title="Permalink to this definition">¶</a></dt>
@@ -1245,7 +1273,7 @@ vizualization.</p>
 
 <dl class="class">
 <dt id="results.Solution_OPF">
-<em class="property">class </em><tt class="descclassname">results.</tt><tt class="descname">Solution_OPF</tt><big>(</big><em>problem</em>, <em>buses</em>, <em>lines</em>, <em>times</em>, <em>datadir</em><big>)</big><a class="reference internal" href="_modules/results.html#Solution_OPF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_OPF" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">results.</tt><tt class="descname">Solution_OPF</tt><big>(</big><em>problem</em>, <em>buses</em>, <em>lines</em>, <em>times</em>, <em>datadir='.'</em><big>)</big><a class="reference internal" href="_modules/results.html#Solution_OPF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_OPF" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
 <dt id="results.Solution_OPF.info_price">
 <tt class="descname">info_price</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="_modules/results.html#Solution_OPF.info_price"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_OPF.info_price" title="Permalink to this definition">¶</a></dt>
@@ -1265,7 +1293,7 @@ vizualization.</p>
 
 <dl class="class">
 <dt id="results.Solution_SCUC">
-<em class="property">class </em><tt class="descclassname">results.</tt><tt class="descname">Solution_SCUC</tt><big>(</big><em>problem</em>, <em>buses</em>, <em>lines</em>, <em>times</em>, <em>datadir</em><big>)</big><a class="reference internal" href="_modules/results.html#Solution_SCUC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_SCUC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">results.</tt><tt class="descname">Solution_SCUC</tt><big>(</big><em>problem</em>, <em>buses</em>, <em>lines</em>, <em>times</em>, <em>datadir='.'</em><big>)</big><a class="reference internal" href="_modules/results.html#Solution_SCUC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_SCUC" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
 <dt id="results.Solution_SCUC.info_price">
 <tt class="descname">info_price</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="_modules/results.html#Solution_SCUC.info_price"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_SCUC.info_price" title="Permalink to this definition">¶</a></dt>
@@ -1285,7 +1313,7 @@ vizualization.</p>
 
 <dl class="class">
 <dt id="results.Solution_UC">
-<em class="property">class </em><tt class="descclassname">results.</tt><tt class="descname">Solution_UC</tt><big>(</big><em>problem</em>, <em>buses</em>, <em>lines</em>, <em>times</em>, <em>datadir</em><big>)</big><a class="reference internal" href="_modules/results.html#Solution_UC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">results.</tt><tt class="descname">Solution_UC</tt><big>(</big><em>problem</em>, <em>buses</em>, <em>lines</em>, <em>times</em>, <em>datadir='.'</em><big>)</big><a class="reference internal" href="_modules/results.html#Solution_UC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
 <dt id="results.Solution_UC.info_buses">
 <tt class="descname">info_buses</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="_modules/results.html#Solution_UC.info_buses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC.info_buses" title="Permalink to this definition">¶</a></dt>
@@ -1310,7 +1338,7 @@ vizualization.</p>
 
 <dl class="class">
 <dt id="results.Solution_multistageUC">
-<em class="property">class </em><tt class="descclassname">results.</tt><tt class="descname">Solution_multistageUC</tt><big>(</big><em>problemsL</em>, <em>times</em>, <em>stageTimes</em>, <em>buses</em>, <em>datadir</em><big>)</big><a class="reference internal" href="_modules/results.html#Solution_multistageUC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_multistageUC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">results.</tt><tt class="descname">Solution_multistageUC</tt><big>(</big><em>problemsL</em>, <em>times</em>, <em>stageTimes</em>, <em>buses</em>, <em>datadir='.'</em><big>)</big><a class="reference internal" href="_modules/results.html#Solution_multistageUC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_multistageUC" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
 <dt id="results.Solution_multistageUC.calcCosts">
 <tt class="descname">calcCosts</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/results.html#Solution_multistageUC.calcCosts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_multistageUC.calcCosts" title="Permalink to this definition">¶</a></dt>
@@ -1345,7 +1373,7 @@ vizualization.</p>
 
 <dl class="function">
 <dt id="results.colormap">
-<tt class="descclassname">results.</tt><tt class="descname">colormap</tt><big>(</big><em>numcolors</em>, <em>colormapName='gist_rainbow'</em>, <em>mincolor=0</em><big>)</big><a class="reference internal" href="_modules/results.html#colormap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.colormap" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">results.</tt><tt class="descname">colormap</tt><big>(</big><em>numcolors</em>, <em>colormapName='gist_rainbow'</em>, <em>mincolor=1</em><big>)</big><a class="reference internal" href="_modules/results.html#colormap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.colormap" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
@@ -1550,9 +1578,15 @@ are provided by <tt class="xref py py-data docutils literal"><span class="pre">g
 </div>
 <div class="section" id="tests">
 <h2><tt class="xref py py-mod docutils literal"><span class="pre">tests</span></tt><a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h2>
-<p>The tests module contains a directory structure full of test cases as well as a few test scripts.</p>
+<p>The tests module contains unit tests and a directory structure full of example cases (for integration testing).</p>
 <div class="section" id="module-tests.testall">
 <span id="tests-testall"></span><h3><a class="reference internal" href="#module-tests.testall" title="tests.testall"><tt class="xref py py-mod docutils literal"><span class="pre">tests.testall</span></tt></a><a class="headerlink" href="#module-tests.testall" title="Permalink to this headline">¶</a></h3>
+<p>Run all of the unit tests, currently: 
+bidding, generation, opf, solvers, unit commitment</p>
+<p>This module uses the Attest package testing framework.</p>
+</div>
+<div class="section" id="module-tests.testall_integration_demos">
+<span id="tests-testall-integration-demos"></span><h3><a class="reference internal" href="#module-tests.testall_integration_demos" title="tests.testall_integration_demos"><tt class="xref py py-mod docutils literal"><span class="pre">tests.testall_integration_demos</span></tt></a><a class="headerlink" href="#module-tests.testall_integration_demos" title="Permalink to this headline">¶</a></h3>
 <p>Testing for minpower development. 
 Runs solve.problem() on all directories in ./tests
 These tests include ED,OPF,UC tests designed to ensure that
@@ -1562,27 +1596,46 @@ and vizualizations and solution output work.</p>
 to the minpower code you will break something here. 
 Just fix it before you push your change.</p>
 <dl class="function">
-<dt id="tests.testall.hasPyscript">
-<tt class="descclassname">tests.testall.</tt><tt class="descname">hasPyscript</tt><big>(</big><em>dir</em><big>)</big><a class="reference internal" href="_modules/tests/testall.html#hasPyscript"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.testall.hasPyscript" title="Permalink to this definition">¶</a></dt>
+<dt id="tests.testall_integration_demos.hasPyscript">
+<tt class="descclassname">tests.testall_integration_demos.</tt><tt class="descname">hasPyscript</tt><big>(</big><em>dir</em><big>)</big><a class="reference internal" href="_modules/tests/testall_integration_demos.html#hasPyscript"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.testall_integration_demos.hasPyscript" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
-<dt id="tests.testall.main">
-<tt class="descclassname">tests.testall.</tt><tt class="descname">main</tt><big>(</big><em>solver='glpk'</em><big>)</big><a class="reference internal" href="_modules/tests/testall.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.testall.main" title="Permalink to this definition">¶</a></dt>
+<dt id="tests.testall_integration_demos.main">
+<tt class="descclassname">tests.testall_integration_demos.</tt><tt class="descname">main</tt><big>(</big><em>solver='gurobi'</em><big>)</big><a class="reference internal" href="_modules/tests/testall_integration_demos.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.testall_integration_demos.main" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
-<dt id="tests.testall.wipeTestSlate">
-<tt class="descclassname">tests.testall.</tt><tt class="descname">wipeTestSlate</tt><big>(</big><em>dir</em><big>)</big><a class="reference internal" href="_modules/tests/testall.html#wipeTestSlate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.testall.wipeTestSlate" title="Permalink to this definition">¶</a></dt>
+<dt id="tests.testall_integration_demos.wipeTestSlate">
+<tt class="descclassname">tests.testall_integration_demos.</tt><tt class="descname">wipeTestSlate</tt><big>(</big><em>dir</em><big>)</big><a class="reference internal" href="_modules/tests/testall_integration_demos.html#wipeTestSlate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.testall_integration_demos.wipeTestSlate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
-<div class="section" id="module-tests.solvers">
-<span id="tests-solvers"></span><h3><a class="reference internal" href="#module-tests.solvers" title="tests.solvers"><tt class="xref py py-mod docutils literal"><span class="pre">tests.solvers</span></tt></a><a class="headerlink" href="#module-tests.solvers" title="Permalink to this headline">¶</a></h3>
-<p>Test the all of the solver links</p>
+<div class="section" id="module-tests.test_utils">
+<span id="tests-test-utils"></span><h3><a class="reference internal" href="#module-tests.test_utils" title="tests.test_utils"><tt class="xref py py-mod docutils literal"><span class="pre">tests.test_utils</span></tt></a><a class="headerlink" href="#module-tests.test_utils" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
-<dt id="tests.solvers.testall">
-<tt class="descclassname">tests.solvers.</tt><tt class="descname">testall</tt><big>(</big><em>stop_on_error=False</em><big>)</big><a class="reference internal" href="_modules/tests/solvers.html#testall"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.solvers.testall" title="Permalink to this definition">¶</a></dt>
+<dt id="tests.test_utils.make_cheap_gen">
+<tt class="descclassname">tests.test_utils.</tt><tt class="descname">make_cheap_gen</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/tests/test_utils.html#make_cheap_gen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.test_utils.make_cheap_gen" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tests.test_utils.make_expensive_gen">
+<tt class="descclassname">tests.test_utils.</tt><tt class="descname">make_expensive_gen</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/tests/test_utils.html#make_expensive_gen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.test_utils.make_expensive_gen" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tests.test_utils.make_load">
+<tt class="descclassname">tests.test_utils.</tt><tt class="descname">make_load</tt><big>(</big><em>Pd=200</em>, <em>Pdt=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/tests/test_utils.html#make_load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.test_utils.make_load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tests.test_utils.make_mid_gen">
+<tt class="descclassname">tests.test_utils.</tt><tt class="descname">make_mid_gen</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/tests/test_utils.html#make_mid_gen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.test_utils.make_mid_gen" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tests.test_utils.solve_problem">
+<tt class="descclassname">tests.test_utils.</tt><tt class="descname">solve_problem</tt><big>(</big><em>generators</em>, <em>load</em>, <em>gen_init=None</em>, <em>lines=None</em>, <em>solver='gurobi'</em>, <em>load_shedding_allowed=False</em><big>)</big><a class="reference internal" href="_modules/tests/test_utils.html#solve_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.test_utils.solve_problem" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>

@@ -52,9 +52,9 @@
 <h2>The problem<a class="headerlink" href="#the-problem" title="Permalink to this headline">¶</a></h2>
 <div class="optimizationproblem container">
 <p><span class="math">\(\min \sum_g C_g(P_g)\)</span></p>
-<p><span class="math">\(\mathrm{s.t.}\/ P_{\min (g)} \leq P_g \leq P_{\max (g)} \/ \forall \/ \mathrm{generators}\/(g)\)</span></p>
-<p><span class="math">\(\mathrm{s.t.}\/ P_{\mathrm{gen} (i)} - P_{\mathrm{load} (i)} - \sum_j P_{ij} = 0  \/ \forall \/ \mathrm{buses}\/(i)\)</span></p>
-<p><span class="math">\(\mathrm{s.t.}\/ P_{\min (ij)} \leq P_{ij} \leq P_{\max (ij)} \forall \/ \mathrm{lines}\/(ij)\)</span></p>
+<p><span class="math">\(\mathrm{s.t.} \; P_{\min (g)} \leq P_g \leq P_{\max (g)}  \; \forall  \; \mathrm{generators} \;(g)\)</span></p>
+<p><span class="math">\(\mathrm{s.t.} \; P_{\mathrm{gen} (i)} - P_{\mathrm{load} (i)} - \sum_j P_{ij} = 0   \; \forall  \; \mathrm{buses} \;(i)\)</span></p>
+<p><span class="math">\(\mathrm{s.t.} \; P_{\min (ij)} \leq P_{ij} \leq P_{\max (ij)} \forall  \; \mathrm{lines} \;(ij)\)</span></p>
 </div>
 <p>In this mathematical formulation generators are indexed by <span class="math">\(g\)</span>. <span class="math">\(P_g\)</span> is a generator’s power output and <span class="math">\(C_g()\)</span> is its cost function. The objective is to minimize the total cost. There are three constraints:</p>
 <ul class="simple">
@@ -62,7 +62,7 @@
 <li><abbr title="called power balance">inflow must equal outflow</abbr> at each bus</li>
 <li>each line must be within its real power limits</li>
 </ul>
-<p>For <abbr title="De-Coupled Optimal Power Flow">DCOPF</abbr>, the real power flow on a line <span class="math">\(P_{ij} = \frac{1}{X_{ij}} \left( \theta_i-\theta_j \right)\)</span> depends linearly on the voltage angles of the buses it connects (<span class="math">\(\theta_{i}\)</span>, <span class="math">\(\theta_{j}\)</span>) and its own reactance <span class="math">\(X_{ij}\)</span>. Bus angles are the difference in voltage angle between the bus and the <abbr title="known as the swing or slack bus">reference bus</abbr> which has angle <span class="math">\(0\degree\)</span>.</p>
+<p>For <abbr title="De-Coupled Optimal Power Flow">DCOPF</abbr>, the real power flow on a line <span class="math">\(P_{ij} = \frac{1}{X_{ij}} \left( \theta_i-\theta_j \right)\)</span> depends linearly on the voltage angles of the buses it connects (<span class="math">\(\theta_{i}\)</span>, <span class="math">\(\theta_{j}\)</span>) and its own reactance <span class="math">\(X_{ij}\)</span>. Bus angles are the difference in voltage angle between the bus and the <abbr title="known as the swing or slack bus">reference bus</abbr> which has angle <span class="math">\(0^{\circ}\)</span>.</p>
 </div>
 <div class="section" id="the-basics">
 <h2>The basics<a class="headerlink" href="#the-basics" title="Permalink to this headline">¶</a></h2>

@@ -37,7 +37,8 @@ def rolling():
     generators=[powersystems.Generator(costcurvestring='10P+.01P^2')]
     load=make_load(Pdt=[random.randrange(0, 200) for i in range(0,72)])
     problem,times,buses=solve_problem(generators,load)
-    assert all(generators[0].power[t]==buses[0].loads[0].P(t) for t in times)
+    load_balanced = all(generators[0].power[t]==buses[0].loads[0].P(t) for t in times)
+    assert load_balanced
 
 
 @uc.test

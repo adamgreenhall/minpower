@@ -229,6 +229,10 @@ class Schedule(object):
                 t=getattrL(times,'Start').index(timeperiod.Start)
                 return self.getEnergy(times[t])
             else: raise
+class FixedSchedule(Schedule):
+    def __init__(self,times=None,P=None): self.P=P
+    def getEnergy(self,timeperiod=None): return self.P
+    
 def just_one_time():
     """For a single-time problem, generate a Timelist with just one time in it."""
     return Timelist([Time(Start='0:00',index=0)])

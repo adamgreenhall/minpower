@@ -17,9 +17,9 @@ The problem
     
     :math:`\min \sum_g C_g(P_g)`
     
-    :math:`\mathrm{s.t.}\/ P_{\min (g)} \leq P_g \leq P_{\max (g)} \/ \forall \/ \mathrm{generators}\/(g)`
+    :math:`\mathrm{s.t.}  P_{\min (g)} \leq P_g \leq P_{\max (g)}   \forall   \mathrm{generators} (g)`
     
-    :math:`\mathrm{s.t.}\/ \sum_g P_{g}= P_{\mathrm{load}}`
+    :math:`\mathrm{s.t.}  \sum_g P_{g}= P_{\mathrm{load}}`
 
 In this mathematical formulation generators are indexed by :math:`g`. :math:`P_g` is a generator’s power output and :math:`C_g()` is its cost function. The objective is to minimize the total cost. There are two constraints: 
 

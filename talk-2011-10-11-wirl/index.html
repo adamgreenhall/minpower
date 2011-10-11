@@ -1,0 +1,262 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang='en'>
+  <head>
+    <title>Minpower</title>
+    <link href='stylesheets/site.css' rel='stylesheet' type='text/css' />
+    <link href='http://fonts.googleapis.com/css?family=Alice' rel='stylesheet' type='text/css' />
+  </head>
+  <body>
+    <nav>
+      <button title="Previous slide" id="nav-prev" class="nav-prev">&#8701;</button>
+      <button title="Slide Number" id="slide-no">1</button>
+      <button title="Next slide" id="nav-next" class="nav-next">&#8702;</button>
+      <!-- %menu -->
+      <!-- <button type="checkbox" data-command="toc" title="Table of Contents" class="toc">TOC</button> -->
+      <!-- <button type="checkbox" data-command="notes" title="View Slide Notes">&#9999;</button> -->
+      <!-- <button type="checkbox" data-command="source" title="View slide source">&#8635;</button> -->
+      <!-- <button type="checkbox" data-command="help" title="View Help">?</button> -->
+    </nav>
+    <div class='presentation'>
+      <div id='presentation-counter'></div>
+      <div class='slides'>
+        <div class='slide' id='start'>
+          <header>
+            <a href="http://minpowertoolkit.com">Minpower</a>
+          </header>
+          <section id='bio'>
+            <a href='https://github.com/adamgreenhall'>
+              <img alt='' src='http://en.gravatar.com/avatar/c923ccc7759451faddbc47537382950e?s=200' />
+              <span class='name'>Adam Greenhall</span>
+            </a>
+          </section>
+          <p>an open source toolkit</p>
+          <p>for power systems optimization</p>
+        </div>
+        <!--  -->
+        <!-- I built it because the community (and my research) needed an open source tool. -->
+        <!-- Minpower is based on the state of the art and is now delving into the cutting edge of power systems research. -->
+        <!--  -->
+        <!-- =partial('toc',:locals=>{:name=>'Minpower solves problems', :sections=>[ 'economic dispatch', 'optimal power flow','unit commitment' ]}) -->
+        <div class='slide' id='problems'>
+          <header>Minpower solves problems</header>
+          <section class='results-table chart'>
+            <table>
+            	<tr>
+            		<th><img src="images/dispatch.png" alt="" /></th>
+            		<th><img src="images/powerflow.png" alt="" /></th>
+            		<th><img src="images/ercot-commitment.png" alt="" /></th>
+            	</tr>
+            	<tr>
+            		<td>Economic Dispatch</td>
+            		<td>Optimal Power Flow</td>
+            		<td>Unit Commitment</td>
+            	</tr>
+            </table>
+          </section>
+        </div>
+        <div class='slide' id='awesome'>
+          <header>Why it's awesome</header>
+          <section>
+            <ul>
+              <li>
+                <p>free &amp; open source</p>
+              </li>
+              <li>
+                <p>platform &amp; solver independent</p>
+              </li>
+              <li>
+                <p>easy to use</p>
+              </li>
+            </ul>
+          </section>
+        </div>
+        <div class='slide' id='use'>
+          <header>There are two ways to use it</header>
+          <section>
+            <ul>
+              <li>
+                <p>students: black box script <img src="images/terminal.png" alt="" /></p>
+              </li>
+              <li>
+                <p>developers: within code <img src="images/python-code.gif" alt="" /></p>
+              </li>
+            </ul>
+          </section>
+        </div>
+        <div class='slide' id='economic-dispatch'>
+          <header>Demonstration</header>
+          <section class='middle'>
+            <p>Let&#8217;s walk through <br />
+            an Economic Dispatch problem.</p>
+          </section>
+        </div>
+        <div class='slide' id='ed-problem'>
+          <header>
+            Problem:
+            <span class='subtitle'>ED</span>
+          </header>
+          <section>
+            <!-- .databuild(data-build) -->
+            <div class='math display'>
+              \[
+              \operatorname{min} \sum_g C_g(P_g)
+              \]
+            </div>
+            <div class='math display'>
+              \[
+              \operatorname{s.t.} P_{\min (g)} \leq P_g \leq P_{\max (g)} \; \forall g
+              \]
+            </div>
+            <div class='math display'>
+              \[
+              \operatorname{s.t.} \sum_g P_{g}= P_{\text{load}}
+              \]
+            </div>
+          </section>
+        </div>
+        <div class='slide' id='ed-inputs'>
+          <header>
+            Inputs:
+            <span class='subtitle'>ED</span>
+          </header>
+          <section class='results-table'>
+            <table>
+            	<tr>
+            		<th>generators</th>
+            		<th>loads</th>
+            	</tr>
+            	<tr>
+            		<td><div class='csvtable'><table><tr><th>name</th><th>Pmax</th><th>costcurveequation</th></tr><tr><td>cheap</td><td>120</td><td>200+5*P+.3P^2</td></tr><tr><td>expensive</td><td>400</td><td>300+10P+.25P^2+.005P^3</td></tr></table></div></td>
+            		<td><div class='csvtable'><table><tr><th>name</th><th>Pd</th></tr><tr><td>SeattleCityLight</td><td>100</td></tr></table></div></td>
+            	</tr>
+            </table>
+          </section>
+        </div>
+        <div class='slide' id='ed-solve'>
+          <header>
+            Solve:
+            <span class='subtitle'>ED</span>
+          </header>
+          <section>
+            <img src='images/terminal.png' width='200px' />
+          </section>
+        </div>
+        <div class='slide' id='ed-results'>
+          <header>
+            Results:
+            <span class='subtitle'>ED</span>
+          </header>
+          <section class='results-table chart'>
+            <table>
+            	<tr>
+            		<td><img src="images/dispatch.png" style="width:400px;" alt="" /></td>
+            		<td><div class='csvtable'><table><tr><th>name</th><th>u</th><th>P</th><th>IC</th></tr><tr><td>cheap</td><td>True</td><td>66.6666673333</td><td>45.0000004</td></tr><tr><td>expensive</td><td>True</td><td>33.3333326667</td><td>43.3333323334</td></tr></table></div></td>
+            	</tr>
+            </table>
+          </section>
+        </div>
+        <div class='slide' id='works'>
+          <header>How Minpower Works</header>
+          <table class='works'>
+            <tr>
+              <th>
+                <a href='http://python.org'>Python</a>
+              </th>
+              <th>
+                <a href='https://software.sandia.gov/coopr'>Coopr</a>
+              </th>
+              <th class='list'>
+                <table>
+                	<tr>
+                		<td rowspan="4">{</td>
+                		<td><a href="http://www.gnu.org/s/glpk"><span class="caps">GLPK</span></a></td>
+                		<td rowspan="4">}</td>
+                	</tr>
+                	<tr>
+                		<td><a href="http://www.ibm.com/software/integration/optimization/cplex-optimizer"><span class="caps">CPLEX</span></a></td>
+                	</tr>
+                	<tr>
+                		<td><a href="http://gurobi.com/">Gurobi</a></td>
+                	</tr>
+                	<tr>
+                		<td><a href="https://software.sandia.gov/trac/coopr/wiki/GettingStarted/Solvers">&#8230;.</a></td>
+                	</tr>
+                </table>
+              </th>
+              <th>
+                <a href='http://matplotlib.sourceforge.net'>Matplotlib</a>
+              </th>
+            </tr>
+            <tr>
+              <td>load data</td>
+              <td>form problem</td>
+              <td>solve</td>
+              <td>plot</td>
+            </tr>
+          </table>
+        </div>
+        <div class='slide' id='documentation'>
+          <header>Documentation</header>
+          <p>is online at <a href="http://minpowertoolkit.com">minpowertoolkit.com</a></p>
+          <iframe height='75%' src='http://minpowertoolkit.com/documentation.html#powersystems.Load' width='100%'></iframe>
+        </div>
+        <div class='slide' id='unit-commitment'>
+          <header>Unit Commitment</header>
+          <div class='content'>
+            <section class='left'>
+              <p>Formulation includes:</p>
+              <ul>
+                <li>
+                  <p>ramp rates</p>
+                </li>
+                <li>
+                  <p>up/down times</p>
+                </li>
+                <li>
+                  <p>start up costs</p>
+                </li>
+              </ul>
+            </section>
+            <section class='right'>
+              <p>Features:</p>
+              <ul>
+                <li>
+                  <p>rolling commitments</p>
+                </li>
+                <li>
+                  <p>any time interval</p>
+                </li>
+              </ul>
+            </section>
+          </div>
+        </div>
+        <div class='slide' id='unit-commitment-visual'>
+          <header>
+            Unit Commitment
+            <span class='subtitle'>visualization</span>
+          </header>
+          <section>
+            <div class='chart'>
+              <img src='images/ercot-commitment.png' width='90%' />
+            </div>
+            <p>Texas energy market simulation</p>
+          </section>
+        </div>
+        <div class='slide' id='conclusion'>
+          <header>Minpower</header>
+          <div class='content'>
+            <section class='middle'>
+              <p>Use it and make it better.</p>
+              <p><a href="http://minpowertoolkit.com">minpowertoolkit.com</a><br />
+              <a href="http://github.com/adamgreenhall/minpower">GitHub</a></p>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src='javascripts/utils.js' type='text/javascript'></script>
+    <!-- %script{:type => "text/javascript", :src=>'javascripts/hyphenator.js'} -->
+    <script src='http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML' type='text/javascript'></script>
+    <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js' type='text/javascript'></script>
+  </body>
+</html>

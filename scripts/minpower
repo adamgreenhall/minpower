@@ -1,21 +1,29 @@
-#!/bin/bash
-dir=$1
+#!/usr/bin/python
+import argparse,os
+from minpower import solve,config
+from minpower.tests import test
 
-if [ $# = 2 ]; then
-    solver=$2
-    pyargs="'$dir',solver='$solver'"
-else
-    #use default solver
-    pyargs="'$dir'"
-fi
+parser = argparse.ArgumentParser(description='Minpower command line interface')
+parser.add_argument('directory', type=str, 
+                   help='the direcory of the problem you want to solve (or name of minpower demo case)')
+parser.add_argument('--solver','-s', metavar='S', type=str, default=config.optimization_solver,
+                   help='the solver name used to solve the problem (e.g. cplex, gurobi, glpk)')
 
+#figure out the command line arguments
+args = parser.parse_args()
 
-if [ -d "$dir" ]; then
-    #run minpower solve on the directory
-    echo 'solving directory:' $dir
-    python -c "from minpower import solve; solve.problem($pyargs)"
-else
-    #try a test case with the input name
-    echo 'solving testcase:' $dir
-    python -c "from minpower.tests import test; test.problem($pyargs)"
-fi
+directory=args.directory
+
+if not os.path.isdir(directory):
+    #check to see if the name is a minpower test case
+    test_dir=os.path.join(os.path.dirname(test.__file__),directory)
+    if os.path.isdir(test_dir):
+        logging.info('solving test case: {}'.format(directory))
+        directory = test_dir
+    else:
+        #otherwise raise error
+        msg='There is no folder named "{}".'.format(directory)
+        raise OSError(msg)
+
+#solve the problem with those arguments
+solve.problem(directory,solver=args.solver)

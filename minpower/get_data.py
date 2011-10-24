@@ -7,12 +7,10 @@ from the information found in the data.
 
 import powersystems
 import schedule
-from addons import * 
-from commonscripts import readCSV,csvColumn,flatten,unique,drop_case_spaces,getattrL, joindir
+from addons import *
+from commonscripts import readCSV,csvColumn,flatten,unique,drop_case_spaces,joindir
 
 import os,sys,logging
-import dateutil
-import numpy as np
 
 fields_lines={'name':'name','to':'To','from':'From','pmax':'Pmax'}
 fields_gens={
@@ -26,7 +24,8 @@ fields_gens={
     'startupcost':'startupcost','shutdowncost':'shutdowncost',
     'schedulefilename':'schedulefilename','mustrun':'mustrun'}
 fields_loads={'name':'name','bus':'bus','type':'kind','kind':'kind',
-            'p':'P','pd':'P', 'pmin':'Pmin','pmax':'Pmax',
+            'p':'P','pd':'P', 'power':'P',
+            'pmin':'Pmin','pmax':'Pmax',
             'schedulefilename':'schedulefilename',
             'bidequation':'costcurvestring','costcurveequation':'costcurvestring'}
 fields_initial={
@@ -137,7 +136,7 @@ def build_class_list(filename,model,field_attr_map,times=None):
     data,fields=readCSV(filename,validFields)
     try: attributes=[field_attr_map[drop_case_spaces(f)] for f in fields]
     except KeyError:
-        msg='Field "{f}" is not in list of valid fields (case insensitive): {V}.'.format(f=f,V=validFields)
+        msg='Field "{f}" is not in list of valid fields for {m} (case insensitive): {V}.'.format(f=f,m=model,V=validFields)
         raise KeyError(msg)
     
     def getmodel(default,name,inputs):

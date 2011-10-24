@@ -13,6 +13,7 @@ import bidding
 >>>>>>> add non-controllable gen to ED. added remote script- not yet working.
 from optimization import newVar,value,sumVars
 <<<<<<< HEAD
+<<<<<<< HEAD
 from commonscripts import hours,subset,subsetexcept,drop_case_spaces,getattrL,flatten
 <<<<<<< HEAD
 =======
@@ -36,6 +37,9 @@ from commonscripts import hours,subset,subsetexcept,drop_case_spaces,getattrL,fl
 import config
 import logging,math
 =======
+=======
+from commonscripts import hours,drop_case_spaces,getattrL,unique
+>>>>>>> default name for generator based on index
 import config, bidding
 from schedule import FixedSchedule
 import logging
@@ -138,7 +142,8 @@ class Generator(object):
         name='',index=None,bus=None):
         
         vars(self).update(locals()) #load in inputs
-        if index is None: self.index=hash(self)        
+        if index is None: self.index=hash(self)
+        if name in [None, '']: self.name = self.index+1 #1 and up naming     
         if self.rampratemin is None and self.rampratemax is not None: self.rampratemin = -1*self.rampratemax
         
         self.buildCostModel()

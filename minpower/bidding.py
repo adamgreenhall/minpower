@@ -116,21 +116,24 @@ class PWLmodel(object):
         self.bpOutputs= [float(bpo) for bpo in interp(self.bpInputs,inDiscrete,outDiscrete)]
         self.segments=range(1,len(self.bpInputs))
         
-    def plot(self,P=None,filename=None,showPW=True):
+    def plot(self,P=None,linestyle='-',showPW=True):
         inDiscrete=linspace(self.minInput, self.maxInput, 1e6)
         outDiscrete=polyval(self.polyCurve,inDiscrete)
         if showPW: plot(self.bpInputs,self.bpOutputs,'k.--') #show piecewise linearization
-        linePlotted, = plot(inDiscrete,outDiscrete,'-')                      #show continuous curve
+        linePlotted, = plot(inDiscrete,outDiscrete,linestyle=linestyle) #show continuous curve
         xlabel(self.inputNm)
         ylabel(self.outputNm)
         if P is not None: plot(P,polyval(self.polyCurve,P), 'o', c=linePlotted.get_color(), markersize=8, linewidth=2, alpha=0.7) 
-        if filename is not None: savefig(filename)
         return linePlotted
-    def plotDeriv(self,P=None,linestyle='-'):
+    def plotDeriv(self,P=None,linestyle='-',color=None):
         deriv=polyder(self.polyCurve)
         inDiscrete=linspace(self.minInput, self.maxInput, 1e6)
         outDiscrete=polyval(deriv,inDiscrete)
-        linePlotted, =plot(inDiscrete,outDiscrete,linestyle=linestyle)
+        if color is None: 
+            linePlotted, = plot(inDiscrete,outDiscrete,linestyle=linestyle)          #show continuous curve
+        else: 
+            linePlotted, = plot(inDiscrete,outDiscrete,linestyle=linestyle,color=color)
+        
         if P is not None: plot(P,polyval(deriv,P), 'o', c=linePlotted.get_color(), markersize=8, linewidth=2, alpha=0.7)
         return linePlotted            
     def add_timevars(self,iden):
@@ -244,19 +247,18 @@ class convexPWLmodel(PWLmodel):
     def output(self,variables,iden): return variables['bidCost_'+iden]
     def trueOutput(self,input): return polyval( self.polyCurve,         value(input) )
     def incOutput(self,input):  return polyval( polyder(self.polyCurve),value(input) )
-    def plot(self,P=None,filename=None,showPW=True):
+    def plot(self,P=None,showPW=True,linestyle='-',color='k'):
         inDiscrete=linspace(self.minInput, self.maxInput, 1e6)
         outDiscrete=polyval(self.polyCurve,inDiscrete)
+        plot(inDiscrete,outDiscrete,linestyle=linestyle,alpha=0.5,color='gray')          #show continuous curve
+               
         if showPW: 
             x=linspace(self.minInput, self.maxInput, 1e6)
-            for line in self.segment_lines: plot(x,line(x),'k--') #show piecewise linearization
-        plot(inDiscrete,outDiscrete,'-')                      #show continuous curve
+            for line in self.segment_lines: linePlotted, = plot(x,line(x),linestyle='--',alpha=0.4,color=color) #show piecewise linearization
         xlabel(self.inputNm)
         ylabel(self.outputNm)
         if P is not None: plot(P,polyval(self.polyCurve,P), 'o', c=linePlotted.get_color(), markersize=8, linewidth=2, alpha=0.7) 
-        if filename is not None: savefig(filename)
-        else: show()
-        return
+        return linePlotted
 
 class LinearModel(PWLmodel):
     def __init__(self,

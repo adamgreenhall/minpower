@@ -4,10 +4,10 @@
     vizualization.
     """
 
-import os,sys,types,logging
+import logging
 from collections import OrderedDict
 
-from commonscripts import flatten,getColumn,transpose,elementwiseAdd, getattrL,hours,within,subset,writeCSV,joindir,replace_all
+from commonscripts import flatten,transpose,elementwiseAdd, getattrL,within,subset,writeCSV,joindir,replace_all
 from schedule import Timelist
 from optimization import value
 import config
@@ -187,10 +187,7 @@ class Solution_ED(Solution):
         gensPlotted,genNames,loadsPlotted,loadNames=[],[],[],[]
         minGen=min(getattrL(generators,'Pmin'))
         maxGen=max(getattrL(generators,'Pmax'))
-        if price is not None: 
-            grayColor='.75'
-            plot.plot([minGen,maxGen],[price,price],'--k',color=grayColor)
-            plot.text(maxGen, price, '{p:0.2f} $/MWh'.format(p=price),color=grayColor,horizontalalignment='right')
+
         for gen in generators:
             if gen.status(t):
                 gensPlotted.append( gen.costModel.plotDeriv(P=value(gen.P(t)),linestyle='-') )
@@ -199,16 +196,48 @@ class Solution_ED(Solution):
             if load.kind=='bidding': 
                 loadsPlotted.append( load.bid[t].plotDeriv(P=value(load.P(t)),linestyle=':') )
                 loadNames.append(load.name)
-        legendGens=plot.legend(gensPlotted, genNames, fancybox=True,title='Generators:',loc='upper right')
+        if price is not None: 
+            grayColor='.75'
+            plot.plot([minGen,maxGen],[price,price],'--k',color=grayColor)
+            plot.text(maxGen, price, '{p:0.2f} $/MWh'.format(p=price),color=grayColor,horizontalalignment='right')
+        
+        plot.xlabel('P [MWh]')        
+        if loadsPlotted:     plot.ylabel('Marginal Cost-Benifit [$/MWh]')
+        else:                plot.ylabel('Marginal Cost [$/MWh]')
+
+        
+        ymin,_ = plot.ylim()
+        if ymin<0: plot.ylim(ymin=0)        
+
+        legendGens=plot.legend(gensPlotted, genNames, fancybox=True,title='Generators:',loc='best')
         if loadsPlotted:
-            legendLoads=plot.legend(loadsPlotted, loadNames, fancybox=True,title='Loads:',loc='upper left')
+            plot.legend(loadsPlotted, loadNames, fancybox=True,title='Loads:',loc='best')
             plot.gca().add_artist(legendGens) #add first legend to the axes manually bcs multiple legends get overwritten
         
-        plot.xlabel('P [MWh]')
-        plot.ylabel('Marginal Cost/Benifit [$/MWh]')
-        plot.ylim(ymin=0)        
+        self.savevisualization(filename='dispatch-price.png')
         
-        self.savevisualization(filename='marginalCostWorth.png')    
+        
+        #save a plot of the price space - illustrating equal IC
+        plot.figure()
+        gensPlotted_price=gensPlotted
+        gensPlotted,genNames,loadsPlotted,loadNames=[],[],[],[]
+        for g,gen in enumerate(generators):
+            if gen.status(t):
+                gensPlotted.append( gen.costModel.plot(P=value(gen.P(t)),linestyle='-',color=gensPlotted_price[g].get_color()) )
+                genNames.append(gen.name)
+        for load in loads: 
+            if load.kind=='bidding': 
+                loadsPlotted.append( load.bid[t].plot(P=value(load.P(t)),linestyle=':') )
+                loadNames.append(load.name)        
+        plot.xlabel('P [MWh]')
+        if loadsPlotted:     plot.ylabel('Cost-Benifit [$/h]')
+        else:                plot.ylabel('Cost [$/h]')
+        legendGens=plot.legend(gensPlotted, genNames, fancybox=True,title='Generators:',loc='best')
+        if loadsPlotted:
+            plot.legend(loadsPlotted, loadNames, fancybox=True,title='Loads:',loc='best')
+            plot.gca().add_artist(legendGens) #add first legend to the axes manually bcs multiple legends get overwritten
+        
+        self.savevisualization(filename='dispatch.png')        
     def saveCSV(self,filename='dispatch.csv'):
         if not self.solved: return
         t=self.times[0]

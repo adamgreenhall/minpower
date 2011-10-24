@@ -81,8 +81,9 @@ def readCSV(filenm,validFields='all'):
     csvfile = open(filenm)
     try: dialect = csv.Sniffer().sniff(csvfile.read(4048))
     except: 
-        print 'problem with reading: ',filenm
-        raise 
+        #this generally happens when the file is very short
+        #assume dialect is excel
+        dialect = csv.excel
     csvfile.seek(0)
     reader = csv.reader(csvfile, dialect)
     def csvDataConvert(inData, repForBlankStrings=None, checkForNumbers=True):

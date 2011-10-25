@@ -11,17 +11,17 @@ import get_data
 import powersystems
 import results
 import config
-from commonscripts import joindir,flatten
-
-  
-def _setup_logging(fn):
-    ''' set up the logging to report on the status'''
-    logging.basicConfig( level=config.logging_level, format='%(levelname)s: %(message)s')
-    return fn
+from commonscripts import joindir
     
-@_setup_logging
-def problem(datadir='.',shell=True,problemfile=True,
-        vizualization=True,csv=True,solver=config.optimization_solver):
+def problem(datadir='.',
+        shell=True,
+        problemfile=True,
+        vizualization=True,
+        csv=True,
+        solver=config.optimization_solver,
+        num_breakpoints=config.default_num_breakpoints,
+        logging_level=config.logging_level,
+        ):
     """ Solve a optimization problem in a directory.
         Problem type is determined from the data.
             
@@ -32,10 +32,12 @@ def problem(datadir='.',shell=True,problemfile=True,
         :returns: :class:`~results.Solution` object
     """
     
+    setup_logging(logging_level)
+    
     buses,lines,times=get_data.parsedir(datadir)
-
+    
     if times.spanhrs<=24:
-        problem=create_problem(buses,lines,times)
+        problem=create_problem(buses,lines,times,num_breakpoints)
         optimization.solve(problem,solver)
         if problemfile: problem.write(joindir(datadir,'problem-formulation.lp'))
         if problem.solved:
@@ -43,7 +45,7 @@ def problem(datadir='.',shell=True,problemfile=True,
         else: 
             raise optimization.OptimizationError('problem not solved')
     else: #split into multi-stage problem
-        problemsL,stageTimes=create_problem_multistage(buses,lines,times,datadir)
+        problemsL,stageTimes=create_problem_multistage(buses,lines,times,datadir,num_breakpoints)
         solution=results.makeMultistageSolution(problemsL=problemsL,times=times,stageTimes=stageTimes,buses=buses,lines=lines,datadir=datadir)
         logging.info('problem solved in {}'.format(solution.solveTime))
     
@@ -52,7 +54,10 @@ def problem(datadir='.',shell=True,problemfile=True,
     if vizualization: solution.vizualization()
     return solution
 
-def create_problem(buses,lines,times,load_shedding_allowed=False,dispatch_decommit_allowed=False):
+def create_problem(buses,lines,times,
+                   num_breakpoints=config.default_num_breakpoints,
+                   load_shedding_allowed=False,
+                   dispatch_decommit_allowed=False):
     """
         Create a power systems optimization problem.
         
@@ -72,7 +77,7 @@ def create_problem(buses,lines,times,load_shedding_allowed=False,dispatch_decomm
         if len(buses)>1: bus.add_timevars(times)
         
         for gen in bus.generators:
-            problemvars.extend(gen.add_timevars(times,dispatch_decommit_allowed))
+            problemvars.extend(gen.add_timevars(times,num_breakpoints,dispatch_decommit_allowed))
             prob.addConstraints(gen.constraints(times))
             for time in times: costs.append(gen.cost(time))
 
@@ -164,14 +169,7 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
             raise optimization.OptimizationError(msg)
     return problemsL,stageTimes
 
-if __name__ == "__main__": 
-    ''' command line input'''
-    _setup_logging()
-    if len(sys.argv)==1: problem()
-    elif len(sys.argv)==2: 
-        datadir=sys.argv[1]
-        if not os.path.isdir(datadir):
-            raise OSError( "data directory does not exist: '{d}'".format(d=datadir) )
-        problem(datadir=datadir)
-    else: 
-        raise IOError('solve.main() takes only one input argument (the directory). {n} inputs passed'.format(n=len(sys.argv)))
+  
+def setup_logging(level):
+    ''' set up the logging to report on the status'''
+    logging.basicConfig( level=level, format='%(levelname)s: %(message)s')

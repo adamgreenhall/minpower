@@ -20,6 +20,8 @@ def problem(datadir='.',
         csv=True,
         solver=config.optimization_solver,
         num_breakpoints=config.default_num_breakpoints,
+        hours_commitment=config.default_hours_commitment,
+        hours_commitment_overlap=config.default_hours_commitment_overlap,
         logging_level=config.logging_level,
         ):
     """ Solve a optimization problem in a directory.
@@ -36,7 +38,7 @@ def problem(datadir='.',
     
     buses,lines,times=get_data.parsedir(datadir)
     
-    if times.spanhrs<=24:
+    if times.spanhrs<=hours_commitment:
         problem=create_problem(buses,lines,times,num_breakpoints)
         optimization.solve(problem,solver)
         if problemfile: problem.write(joindir(datadir,'problem-formulation.lp'))
@@ -45,6 +47,7 @@ def problem(datadir='.',
         else: 
             raise optimization.OptimizationError('problem not solved')
     else: #split into multi-stage problem
+<<<<<<< HEAD
         problemsL,stageTimes=create_problem_multistage(buses,lines,times,datadir,num_breakpoints=num_breakpoints)
         solution=results.makeMultistageSolution(problemsL=problemsL,times=times,stageTimes=stageTimes,buses=buses,lines=lines,datadir=datadir)
 <<<<<<< HEAD
@@ -56,6 +59,17 @@ def problem(datadir='.',
     if outputs['vizualization']: solution.vizualization()
 =======
 =======
+=======
+        problemsL,stageTimes=create_problem_multistage(buses,lines,times,datadir,
+                                                       stageHrs=hours_commitment,
+                                                       overlap_hours=hours_commitment_overlap,
+                                                       num_breakpoints=num_breakpoints,
+                                                       )
+        solution=results.makeMultistageSolution(problemsL=problemsL,
+            buses=buses,lines=lines,
+            times=times,stageTimes=stageTimes,
+            datadir=datadir)
+>>>>>>> added rolling UC overlap options. tested schedule.Timelist.subdivide function, but need to test integration
         logging.info('problem solved in {}'.format(solution.solveTime))
 >>>>>>> cleaner handling of different bid models. fix for the convex bid model, due to confusion from ugly code.
     
@@ -145,7 +159,9 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
 =======
 
 def create_problem_multistage(buses,lines,times,datadir,
-                              intervalHrs=None,stageHrs=24,
+                              intervalHrs=None,
+                              stageHrs=config.default_hours_commitment,
+                              overlap_hours=config.default_hours_commitment_overlap,
                               num_breakpoints=config.default_num_breakpoints,
                               writeproblem=False,
                               showclock=True):
@@ -160,8 +176,8 @@ def create_problem_multistage(buses,lines,times,datadir,
     :param lines: list of :class:`~powersystems.Line` objects
     :param times: :class:`~schedule.Timelist` object
     :param intervalHrs: define the number of hours per interval
-    :param stageHrs: define the number of hours per stage
-    
+    :param stageHrs: define the number of hours per stage (excluding overlap)
+    :param overlap_hours: number of hours that stages overlap
     
     :returns: a list of :class:`~optimization.Problem` objects (one per stage)
     :returns: a list of :class:`~schedule.Timelist` objects (one per stage)

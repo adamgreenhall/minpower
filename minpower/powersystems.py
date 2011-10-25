@@ -146,10 +146,9 @@ class Generator(object):
         if name in [None, '']: self.name = self.index+1 #1 and up naming     
         if self.rampratemin is None and self.rampratemax is not None: self.rampratemin = -1*self.rampratemax
         
-        self.buildCostModel()
         self._makeEmpties()
         self.isControllable=True
-    def buildCostModel(self):
+    def buildCostModel(self,num_breakpoints):
         ''' create a cost model for bidding with :meth:`~bidding.makeModel` '''
         if getattr(self,'heatratestring',None) is not None: 
             costinputs=dict(polyText=self.heatratestring,multiplier=self.fuelcost)
@@ -157,6 +156,7 @@ class Generator(object):
         else: 
             costinputs=dict(polyText=self.costcurvestring)
             self.fuelcost=1
+        costinputs['num_breakpoints']=num_breakpoints
         self.costModel=bidding.makeModel(minInput=self.Pmin, maxInput=self.Pmax,inputNm='Pg',outputNm='C',**costinputs)
     def _makeEmpties(self): self.u,self.power,self.bid,self.startup,self.shutdown=dict(),dict(),dict(),dict(),dict()
         
@@ -194,11 +194,12 @@ class Generator(object):
             if value(self.u[times.initialTime]) == status: h+=self.initialStatusHours
             return h
         
-    def add_timevars(self,times,dispatch_decommit_allowed=False):
+    def add_timevars(self,times,num_breakpoints=config.default_num_breakpoints,dispatch_decommit_allowed=False):
         '''set up dicts for time-varying optimization variables
         (power,u,startup,shutdown,bid)
         '''
         
+        self.buildCostModel(num_breakpoints=num_breakpoints)
         allvars=[]
         commitment_problem= len(times)>1 or dispatch_decommit_allowed
         for time in times:    
@@ -351,7 +352,6 @@ class Generator_nonControllable(Generator):
         if power is not None and schedule is None: 
             self.schedule = FixedSchedule(P=power)
         if Pmax is None: self.Pmax = self.schedule.maxvalue
-        self.buildCostModel()
         self.isControllable=False
         
     def P(self,time): return self.schedule.getEnergy(time)
@@ -360,6 +360,7 @@ class Generator_nonControllable(Generator):
         if P is None: P=self.schedule.getEnergy(time) #set default power as first scheduled power output
         self.schedule.P[time]=P
     def getstatus(self,t,times): return dict()
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     def add_timevars(self,times): return []
@@ -371,6 +372,11 @@ class Generator_nonControllable(Generator):
 =======
     def add_timevars(self,times,dispatch_decommit_allowed=False): return []
 >>>>>>> initial generator status defaults to off if not specified. solve directory defaults to current directory if not specified. initial conditions spec now accepts ED results.
+=======
+    def add_timevars(self,times,num_break_points=config.default_num_breakpoints,dispatch_decommit_allowed=False):
+        self.buildCostModel(num_break_points)
+        return []
+>>>>>>> added user breakpoint control by moving buildCostModel into add_timevars
     def update_vars(self,times=None,problem=None): return
 >>>>>>> duals and variables now working with coopr. tests are still failing.
     def fix_timevars(self,times=None): return

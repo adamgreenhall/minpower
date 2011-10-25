@@ -1,5 +1,5 @@
-from commonscripts import elementwiseMultiply,subset,flatten
-from optimization import *
+from commonscripts import elementwiseMultiply
+from optimization import value,newVar,sumVars
 from config import default_num_breakpoints
 
 from scipy import linspace, polyval, polyder, interp, poly1d
@@ -7,14 +7,13 @@ from scipy import linspace, polyval, polyder, interp, poly1d
 #from pylab import plot,show,savefig,xlabel,ylabel
 =======
 
-import matplotlib
+#import matplotlib
 #from sys import platform as osname
 #if osname=='darwin': matplotlib.use('macosx') #avoid popups when using matploblib to savefig on MacOSX
-from pylab import plot,show,savefig,xlabel,ylabel
+from pylab import plot,savefig,xlabel,ylabel
 
 >>>>>>> working coopr and pulp mix
 import re
-import logging
 
 class Bid(object):
     """
@@ -49,9 +48,14 @@ class Bid(object):
         vars(self).update(locals())        
     def output(self): 
         return self.model.output(self.variables,self.iden)
+<<<<<<< HEAD
 >>>>>>> cleaner handling of different bid models. fix for the convex bid model, due to confusion from ugly code.
     def trueOutput(self,input): return self.model.trueOutput(input)
     def incOutput(self,input):  return self.model.incOutput(input)
+=======
+    def trueOutput(self,input_val): return self.model.trueOutput(input_val)
+    def incOutput(self,input_val):  return self.model.incOutput(input_val)
+>>>>>>> added user breakpoint control by moving buildCostModel into add_timevars
     def plotDeriv(self,**kwargs): return self.model.plotDeriv(**kwargs)
     def plot(self,P=None,filename=None,showPW=False):
         plotted=self.model.plot(P,showPW=showPW)
@@ -96,7 +100,7 @@ class PWLmodel(object):
     :param multiplier: an optional  multiplier (default is 1) for
       the whole polynomial (used for converting heat rate
       curves to cost curves)
-    :param numBreakpoints: number of breakpoints to use when linearizing
+    :param num_breakpoints: number of breakpoints to use when linearizing
       the polynomial (currently the default comes from :mod:`config`)
     :param (min/max)Input: domain of polynomial to consider
     :param (input/output)Nm: names of in/outputs (for plotting)
@@ -104,15 +108,15 @@ class PWLmodel(object):
     def __init__(self,
         polyText='2+10P+0.1P^2',multiplier=1,
         minInput=0,maxInput=10000,
-        numBreakpoints=default_num_breakpoints,
+        num_breakpoints=default_num_breakpoints,
         inputNm='x',outputNm='y'):
                 
         vars(self).update(locals()) #set the input vars above to be part of class
         self.polyCurve=multiplier * parsePolynomial(polyText) #parse curve
-        if isLinear(self.polyCurve): self.numBreakpoints=2 #linear models only need 2 breakpoints
+        if isLinear(self.polyCurve): self.num_breakpoints=2 #linear models only need 2 breakpoints
         inDiscrete=linspace(self.minInput, self.maxInput, 1e6) #fine discretization of the curve
         outDiscrete=polyval(self.polyCurve,inDiscrete)
-        self.bpInputs = [float(bpi) for bpi in linspace(self.minInput, self.maxInput, self.numBreakpoints)] #interpolation to get pwl breakpoints
+        self.bpInputs = [float(bpi) for bpi in linspace(self.minInput, self.maxInput, self.num_breakpoints)] #interpolation to get pwl breakpoints
         self.bpOutputs= [float(bpo) for bpo in interp(self.bpInputs,inDiscrete,outDiscrete)]
         self.segments=range(1,len(self.bpInputs))
         
@@ -140,11 +144,11 @@ class PWLmodel(object):
         variables={}
         #S: segment of cost curve is active
         #F: breakpoint weighting fraction
-        for segNum,seg in enumerate(self.segments):  
+        for segNum in range(len(self.segments)):  
             name='{iden}_s{segNum}'.format(segNum=segNum,iden=iden)
             variables[name] = newVar(kind='Binary', name=name)
          
-        for bpNum,bp in enumerate(self.bpInputs):
+        for bpNum in range(len(self.bpInputs)):
             name='{iden}_f{bpNum}'.format( bpNum=bpNum,  iden=iden)
             variables[name] = newVar(low=0,high=1,  name=name)
         return variables 
@@ -170,7 +174,7 @@ class PWLmodel(object):
         constraints['computeInput '+iden]    = ( inputVar == sumVars( elementwiseMultiply(F,self.bpInputs) ) )
         constraints['firstSegment '+iden]    = ( F[0]<=S[0] )
         constraints['lastSegment '+iden]     = ( F[-1]<=S[-1] )
-        for b in range(1,self.numBreakpoints-1): 
+        for b in range(1,self.num_breakpoints-1): 
             name='midSegment {iden} b{bnum}'.format(iden=iden,bnum=b)
             constraints[name]                = ( F[b] <= sumVars([S[b-1],S[b]]) )
         return constraints
@@ -185,9 +189,14 @@ class PWLmodel(object):
     def output(self,variables,iden): 
         F = [variables['{iden}_f{bpNum}'.format(bpNum=f,iden=iden)] for f in range(len(self.bpInputs))]
         return sumVars( elementwiseMultiply(F,self.bpOutputs) )
+<<<<<<< HEAD
 >>>>>>> cleaner handling of different bid models. fix for the convex bid model, due to confusion from ugly code.
     def trueOutput(self,input): return polyval( self.polyCurve,         value(input) )
     def incOutput(self,input):  return polyval( polyder(self.polyCurve),value(input) )
+=======
+    def trueOutput(self,inputVar): return polyval( self.polyCurve,         value(inputVar) )
+    def incOutput(self,inputVar):  return polyval( polyder(self.polyCurve),value(inputVar) )
+>>>>>>> added user breakpoint control by moving buildCostModel into add_timevars
     def texrepresentation(self,digits=3):
         '''
         Output polynomial to tex-style string.
@@ -212,7 +221,7 @@ class convexPWLmodel(PWLmodel):
     def __init__(self,
         polyText='2+10P+0.1P^2',multiplier=1,
         minInput=0,maxInput=10000,
-        numBreakpoints=default_num_breakpoints,
+        num_breakpoints=default_num_breakpoints,
         inputNm='x',outputNm='y'):
         
         def linear_equation(x,m,b): return m*x+b
@@ -225,7 +234,7 @@ class convexPWLmodel(PWLmodel):
         self.polyCurve=multiplier * parsePolynomial(polyText) #parse curve
         inDiscrete=linspace(self.minInput, self.maxInput, 1e6) #fine discretization of the curve
         outDiscrete=polyval(self.polyCurve,inDiscrete)
-        self.bpInputs = [float(bpi) for bpi in linspace(self.minInput, self.maxInput, self.numBreakpoints)] #interpolation to get pwl breakpoints
+        self.bpInputs = [float(bpi) for bpi in linspace(self.minInput, self.maxInput, self.num_breakpoints)] #interpolation to get pwl breakpoints
         self.bpOutputs= [float(bpo) for bpo in interp(self.bpInputs,inDiscrete,outDiscrete)]
         self.segment_lines=[]
         for b,x1 in enumerate(self.bpInputs[:-1]):
@@ -245,8 +254,8 @@ class convexPWLmodel(PWLmodel):
             constraints[nm]= variables['bidCost_'+iden] >= line(variables['inputvar'])
         return constraints
     def output(self,variables,iden): return variables['bidCost_'+iden]
-    def trueOutput(self,input): return polyval( self.polyCurve,         value(input) )
-    def incOutput(self,input):  return polyval( polyder(self.polyCurve),value(input) )
+    def trueOutput(self,inputVar): return polyval( self.polyCurve,         value(inputVar) )
+    def incOutput(self,inputVar):  return polyval( polyder(self.polyCurve),value(inputVar) )
     def plot(self,P=None,showPW=True,linestyle='-',color='k'):
         inDiscrete=linspace(self.minInput, self.maxInput, 1e6)
         outDiscrete=polyval(self.polyCurve,inDiscrete)
@@ -264,7 +273,7 @@ class LinearModel(PWLmodel):
     def __init__(self,
         polyText='2+10P+0.1P^2',multiplier=1,
         minInput=0,maxInput=10000,
-        numBreakpoints=None,
+        num_breakpoints=None,
         inputNm='x',outputNm='y'):
         
         self.polyCurve = multiplier * parsePolynomial(polyText)
@@ -305,17 +314,17 @@ def parsePolynomial(s):
     poly1d([ 7,  6, -5])
     """
     
-    def parse_n(str):
+    def parse_n(s):
         '''Parse the number part of a polynomial string term'''
-        if not str: return 1
-        elif str == '-': return -1
-        elif str == '+': return 1
-        return eval(str)
+        if not s: return 1
+        elif s == '-': return -1
+        elif s == '+': return 1
+        return eval(s)
 
-    def parse_p(str,powerPattern):
+    def parse_p(s,powerPattern):
         '''Parse the power part of a polynomial string term'''
-        if not str: return 0
-        res = powerPattern.findall(str)[0]
+        if not s: return 0
+        res = powerPattern.findall(s)[0]
         if not res: return 1
         return int(res)
     s=str(s).replace(' ','') #remove all whitespace from string

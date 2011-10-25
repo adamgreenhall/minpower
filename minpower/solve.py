@@ -3,7 +3,7 @@ Power systems optimization problem solver
 (ED, OPF, UC, and SCUC problems).
 """
 
-import sys,os,logging
+import logging
 from datetime import datetime as wallclocktime
 
 import optimization
@@ -45,7 +45,7 @@ def problem(datadir='.',
         else: 
             raise optimization.OptimizationError('problem not solved')
     else: #split into multi-stage problem
-        problemsL,stageTimes=create_problem_multistage(buses,lines,times,datadir,num_breakpoints)
+        problemsL,stageTimes=create_problem_multistage(buses,lines,times,datadir,num_breakpoints=num_breakpoints)
         solution=results.makeMultistageSolution(problemsL=problemsL,times=times,stageTimes=stageTimes,buses=buses,lines=lines,datadir=datadir)
         logging.info('problem solved in {}'.format(solution.solveTime))
     
@@ -104,7 +104,11 @@ def create_problem(buses,lines,times,
 
 
 
-def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHrs=24,writeproblem=False, showclock=True):
+def create_problem_multistage(buses,lines,times,datadir,
+                              intervalHrs=None,stageHrs=24,
+                              num_breakpoints=config.default_num_breakpoints,
+                              writeproblem=False,
+                              showclock=True):
     """
     Create a multi-stage power systems optimization problem.
     Each stage will be one optimization run. A stage's final
@@ -147,14 +151,14 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
     for t_stage in stageTimes:
         logging.info('Stage starting at {} {}'.format(t_stage[0].Start, 'time={}'.format(wallclocktime.now()) if showclock else ''))
         set_initialconditions(buses,t_stage.initialTime)
-        stageproblem=create_problem(buses,lines,t_stage)
+        stageproblem=create_problem(buses,lines,t_stage,num_breakpoints=num_breakpoints)
         if writeproblem: stageproblem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
         
         optimization.solve(stageproblem)
         if stageproblem.status!=1: 
             #redo stage, with shedding allowed
-            logging.warning('Stage infeasible, re-runnning with load shedding.')
-            stageproblem=create_problem(buses,lines,t_stage,load_shedding_allowed=True)
+            logging.critical('Stage infeasible, re-runnning with load shedding.')
+            stageproblem=create_problem(buses,lines,t_stage,num_breakpoints=num_breakpoints,load_shedding_allowed=True)
             optimization.solve(stageproblem)
             
         if stageproblem.status==1:

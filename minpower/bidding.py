@@ -120,11 +120,14 @@ class PWLmodel(object):
         self.bpOutputs= [float(bpo) for bpo in interp(self.bpInputs,inDiscrete,outDiscrete)]
         self.segments=range(1,len(self.bpInputs))
         
-    def plot(self,P=None,linestyle='-',showPW=True):
+    def plot(self,P=None,linestyle='-',showPW=True,color=None):
         inDiscrete=linspace(self.minInput, self.maxInput, 1e6)
         outDiscrete=polyval(self.polyCurve,inDiscrete)
-        if showPW: plot(self.bpInputs,self.bpOutputs,'k.--') #show piecewise linearization
+        if showPW:
+            try: plot(self.bpInputs,self.bpOutputs,linestyle='.--') #show piecewise linearization
+            except AttributeError: pass                             #this is a linear model - dont need to show the linearization
         linePlotted, = plot(inDiscrete,outDiscrete,linestyle=linestyle) #show continuous curve
+        
         xlabel(self.inputNm)
         ylabel(self.outputNm)
         if P is not None: plot(P,polyval(self.polyCurve,P), 'o', c=linePlotted.get_color(), markersize=8, linewidth=2, alpha=0.7) 
@@ -279,7 +282,8 @@ class LinearModel(PWLmodel):
         self.polyCurve = multiplier * parsePolynomial(polyText)
         self.minInput=minInput
         self.maxInput=maxInput
-        
+        self.inputNm=inputNm
+        self.outputNm=outputNm
     def add_timevars(self,iden): return dict()
     def constraints(self,variables,iden): return dict()
     def output(self,variables,iden): return polyval( self.polyCurve,variables['inputvar'] )    

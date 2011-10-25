@@ -7,7 +7,7 @@ from scipy import linspace, polyval, polyder, interp, poly1d
 #from pylab import plot,show,savefig,xlabel,ylabel
 =======
 
-#import matplotlib
+import matplotlib
 #from sys import platform as osname
 #if osname=='darwin': matplotlib.use('macosx') #avoid popups when using matploblib to savefig on MacOSX
 from pylab import plot,savefig,xlabel,ylabel

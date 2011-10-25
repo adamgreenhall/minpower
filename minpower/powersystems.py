@@ -548,7 +548,7 @@ class Load(object):
     def add_timevars(self,times=None): return []
 =======
     def benifit(self,time=None): return (self.P(time) - self.schedule.getEnergy(time))*config.cost_loadshedding
-    def shed(self,time): return self.schedule.getEnergy(time)- value(self.P(time))
+    def shed(self,time): return self.schedule.getEnergy(time)- value(self.P(time)) #power_to_energy(value(self.P(time)),time)
     def add_timevars(self,times=None,shedding_allowed=False):
         if shedding_allowed: 
             for t in times: self.dispatched_power[t]=newVar('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
@@ -616,3 +616,7 @@ class Network(object):
             self.Bmatrix[busTo.index,busFrom.index]+=-1/line.X
         for i in range(0,nB): 
             self.Bmatrix[i,i]=-1*sum(self.Bmatrix[i,:])
+
+def power_to_energy(P,time):
+    return P*time.intervalhrs
+    

@@ -2,7 +2,6 @@
 import argparse,os
 from minpower import solve,config
 from minpower.tests import test
-import logging
 
 parser = argparse.ArgumentParser(description='Minpower command line interface')
 parser.add_argument('directory', type=str, 
@@ -21,7 +20,7 @@ if not os.path.isdir(directory):
     #check to see if the name is a minpower test case
     test_dir=os.path.join(os.path.dirname(test.__file__),directory)
     if os.path.isdir(test_dir):
-        logging.info('solving test case: {}'.format(directory))
+        print 'solving test case: {}'.format(directory)
         directory = test_dir
     else:
         #otherwise raise error

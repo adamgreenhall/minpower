@@ -28,7 +28,7 @@ if optimization_package=='coopr':
         def addObjective(self,expression,sense=pyomo.minimize):
             '''add an objective to the problem'''            
             self.model.objective=pyomo.Objective(name='objective',rule=expression,sense=sense)
-        def addVariables(self,vars): [self.addVar(v) for v in vars]
+        def addVariables(self,variables): [self.addVar(v) for v in variables]
         def addVar(self,var):
             '''add a single variable to the problem'''
             try: setattr(self.model, var.name, var)

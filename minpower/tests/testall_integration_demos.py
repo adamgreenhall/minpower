@@ -25,7 +25,7 @@ def main(solver=config.optimization_solver):
     from minpower import solve
     
     dirNm=splitFilename(__file__)[0]
-    excludeL=['coding','doctesting','ucRollingYear']
+    excludeL=[]
     for fileNm in os.listdir(dirNm):
         if fileNm in excludeL: continue
         testDir = joindir(dirNm, fileNm)

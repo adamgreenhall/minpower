@@ -137,7 +137,7 @@ class Solution_ED(Solution):
     
     def info_lines(self,t): pass
     def info_buses(self,t): pass
-    def vizualization(self):
+    def vizualization(self,show_cost_also=True):
         ''' economic dispatch visualization '''
         if not self.solved: return
         t=self.times[0]
@@ -148,6 +148,7 @@ class Solution_ED(Solution):
         minGen=min(getattrL(generators,'Pmin'))
         maxGen=max(getattrL(generators,'Pmax'))
 
+        #save a plot of the price space - illustrating equal IC
         for gen in generators:
             if gen.status(t):
                 gensPlotted.append( gen.costModel.plotDeriv(P=value(gen.P(t)),linestyle='-') )
@@ -176,28 +177,28 @@ class Solution_ED(Solution):
         
         self.savevisualization(filename='dispatch-price.png')
         
-        
-        #save a plot of the price space - illustrating equal IC
-        plot.figure()
-        gensPlotted_price=gensPlotted
-        gensPlotted,genNames,loadsPlotted,loadNames=[],[],[],[]
-        for g,gen in enumerate(generators):
-            if gen.status(t):
-                gensPlotted.append( gen.costModel.plot(P=value(gen.P(t)),linestyle='-',color=gensPlotted_price[g].get_color()) )
-                genNames.append(gen.name)
-        for load in loads: 
-            if load.kind=='bidding': 
-                loadsPlotted.append( load.bid[t].plot(P=value(load.P(t)),linestyle=':') )
-                loadNames.append(load.name)        
-        plot.xlabel('P [MWh]')
-        if loadsPlotted:     plot.ylabel('Cost-Benifit [$/h]')
-        else:                plot.ylabel('Cost [$/h]')
-        legendGens=plot.legend(gensPlotted, genNames, fancybox=True,title='Generators:',loc='best')
-        if loadsPlotted:
-            plot.legend(loadsPlotted, loadNames, fancybox=True,title='Loads:',loc='best')
-            plot.gca().add_artist(legendGens) #add first legend to the axes manually bcs multiple legends get overwritten
-        
-        self.savevisualization(filename='dispatch.png')        
+        if show_cost_also:
+            #show a plot of the cost space, illustrating the linearization
+            plot.figure()
+            gensPlotted_price=gensPlotted
+            gensPlotted,genNames,loadsPlotted,loadNames=[],[],[],[]
+            for g,gen in enumerate(generators):
+                if gen.status(t):
+                    gensPlotted.append( gen.costModel.plot(P=value(gen.P(t)),linestyle='-',color=gensPlotted_price[g].get_color()) )
+                    genNames.append(gen.name)
+            for load in loads: 
+                if load.kind=='bidding': 
+                    loadsPlotted.append( load.bid[t].plot(P=value(load.P(t)),linestyle=':') )
+                    loadNames.append(load.name)        
+            plot.xlabel('P [MWh]')
+            if loadsPlotted:     plot.ylabel('Cost-Benifit [$/h]')
+            else:                plot.ylabel('Cost [$/h]')
+            legendGens=plot.legend(gensPlotted, genNames, fancybox=True,title='Generators:',loc='best')
+            if loadsPlotted:
+                plot.legend(loadsPlotted, loadNames, fancybox=True,title='Loads:',loc='best')
+                plot.gca().add_artist(legendGens) #add first legend to the axes manually bcs multiple legends get overwritten
+            
+            self.savevisualization(filename='dispatch.png')        
     def saveCSV(self,filename='dispatch.csv'):
         if not self.solved: return
         t=self.times[0]
@@ -353,7 +354,7 @@ class Solution_UC(Solution):
         
         convert_to_GW=True if max(stackBottom)>20000 else False
         
-        for d,load in enumerate(loads):
+        for load in loads:
             color='.8' #gray
             if load.kind in ['shifting','bidding']:
                 Pd=[value(load.P(t)) for t in times]
@@ -368,15 +369,16 @@ class Solution_UC(Solution):
         #show prices
         if withPrices and any(prices):
             prices=replace_all(prices, config.cost_loadshedding, None)
-            axesPrice = plot.axes([figLeft,.75,figWidth,.2],sharex=ax)
-            plt=axesPrice.step(T[1:]+[times.End],prices+[prices[-1]],  where='post') #start from 1 past initial time
-            axesPrice.set_ylabel('price\n[$/MWh]',ha='center',**bigFont)
-            axesPrice.yaxis.set_label_coords(**yLabel_pos)
-            plot.setp(axesPrice.get_xticklabels(), visible=False)
-            #format the price axis nicely
             prices_wo_none=[p for p in prices if p is not None]
-            plot.ylim((.9*min(prices_wo_none),1.1*max(prices_wo_none)))
-            axesPrice.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(5))
+            if prices_wo_none:
+                axesPrice = plot.axes([figLeft,.75,figWidth,.2],sharex=ax)
+                plt=axesPrice.step(T[1:]+[times.End],prices+[prices[-1]],  where='post') #start from 1 past initial time
+                axesPrice.set_ylabel('price\n[$/MWh]',ha='center',**bigFont)
+                axesPrice.yaxis.set_label_coords(**yLabel_pos)
+                plot.setp(axesPrice.get_xticklabels(), visible=False)
+                #format the price axis nicely
+                plot.ylim((.9*min(prices_wo_none),1.1*max(prices_wo_none)))
+                axesPrice.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(5))
         
         ax.xaxis_date()
         plottedL=loadsPlotted[::-1]+gensPlotted[::-1]
@@ -445,7 +447,6 @@ class Solution_multistageUC(Solution_UC):
         if not self.solved: return
         self.info_cost()
         self.info_shedding()
-        self.vizualization()
     def info_shedding(self):
         if self.load_shed:
             print 'total load shed={}MW'.format(self.load_shed)

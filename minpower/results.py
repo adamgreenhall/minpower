@@ -267,7 +267,7 @@ class Solution_OPF(Solution):
         
         pos=nx.spectral_layout(G)
         Pinj=[ndata['Pinj'] for bus,ndata in G.nodes(data=True) if 'Pinj' in ndata]
-        nx.draw(G,node_color=Pinj,pos=pos,node_size=1500,alpha=.7,cmap=plot.cm.RdYlBu,fontsize=30)
+        nx.draw(G,node_color=Pinj,pos=pos,node_size=1500,alpha=.7,cmap=plot.cm.get_cmap('RdYlBu'),fontsize=30)
         cb=plot.colorbar(shrink=.8)
         cb.set_label('injected power [MW]',fontsize=15)
         

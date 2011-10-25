@@ -263,6 +263,7 @@ class Solution_UC(Solution):
     def info_buses(self,t): pass
     def saveCSV(self,filename='commitment.csv'): 
         if not self.solved: return
+        #times=getattr(self.times,'non_overlap_times',self.times)
         times=self.times
         
         fields,data=[],[]
@@ -414,9 +415,9 @@ class Solution_SCUC(Solution):
     def vizualization(self): raise NotImplementedError('need to implement vizualization for SCUC')
     def saveCSV(self,filename='commitment.csv'): raise NotImplementedError
 class Solution_multistageUC(Solution_UC):
-    def __init__(self,problemsL,times,stageTimes,buses,datadir='.'):
+    def __init__(self,problemsL,times,stageTimes,buses,datadir='.',overlap_hours=0):
         vars(self).update(locals())
-        self.times=Timelist(flatten([list(tL) for tL in stageTimes]))
+        self.times=Timelist(flatten([list(times.non_overlap_times) for times in stageTimes]))
         self.times.setInitial(stageTimes[0].initialTime)
         
         if all([p['status'][0]==1 for p in problemsL]): 
@@ -439,7 +440,7 @@ class Solution_multistageUC(Solution_UC):
         except ZeroDivisionError: self.costerror=0       
     def calcPrices(self):    
         for n,problem in enumerate(self.problemsL):
-            for t in self.stageTimes[n]:
+            for t in self.stageTimes[n].non_overlap_times:
                 for bus in self.buses:
                     bus.price[t] = problem[t]['price_'+bus.iden(t)]
     def show(self):
@@ -454,21 +455,21 @@ class Solution_multistageUC(Solution_UC):
         if self.solved: print('{stat} in total of {time:0.4f} sec'.format(stat=self.status,time=self.solveTime))
         else: print(self.solveStatus)
 
-def get_stage_solution(problem,buses,times):
+def get_stage_solution(problem,buses,times,overlap_hours=0):
     solution=dict()
     solution['objective']=float(value(problem.objective))
     solution['solve-time']=problem.solutionTime
     solution['status'] = ( problem.status,problem.statusText )
-    solution['fuelcost_generation']=sum(flatten(flatten([[[value(gen.operatingcost(t)) for t in times] for gen in bus.generators] for bus in buses]) ))
-    solution['truecost_generation']=sum(flatten(flatten([[[value(gen.truecost(t))      for t in times] for gen in bus.generators] for bus in buses]) ))
+    solution['fuelcost_generation']=sum(flatten(flatten([[[value(gen.operatingcost(t)) for t in times.non_overlap_times] for gen in bus.generators] for bus in buses]) ))
+    solution['truecost_generation']=sum(flatten(flatten([[[value(gen.truecost(t))      for t in times.non_overlap_times] for gen in bus.generators] for bus in buses]) ))
     solution['load_shed']=0
 
-    #reduce memory by setting variables to their value (instead of pulp object)
+    #reduce memory by setting variables to their value (instead of full Variable object)
     for bus in buses:
         for gen in bus.generators: gen.fix_vars(times,problem)
         for load in bus.loads: load.update_vars(times,problem)
     
-    for t in times:
+    for t in times.non_overlap_times:
         sln=dict()
         for bus in buses: 
             sln['price_'+bus.iden(t)]=bus.getprice(t,problem)            

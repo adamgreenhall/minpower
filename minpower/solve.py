@@ -54,8 +54,9 @@ def problem(datadir='.',
                                                        )
         solution=results.makeMultistageSolution(problemsL=problemsL,
             buses=buses,lines=lines,
-            times=times,stageTimes=stageTimes,
-            datadir=datadir)
+            times=times,stageTimes=stageTimes,overlap_hours=hours_commitment_overlap,
+            datadir=datadir
+            )
         logging.info('problem solved in {}'.format(solution.solveTime))
     
     if shell: solution.show()
@@ -177,7 +178,7 @@ def create_problem_multistage(buses,lines,times,datadir,
             
         if stageproblem.solved:
             get_finalconditions(buses,t_stage,stageproblem)
-            stage_sln=results.get_stage_solution(stageproblem,buses,t_stage)
+            stage_sln=results.get_stage_solution(stageproblem,buses,t_stage,overlap_hours)
             problemsL.append(stage_sln)
         else: 
             print stageproblem.status,stageproblem.statusText()

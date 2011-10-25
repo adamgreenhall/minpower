@@ -186,7 +186,7 @@ def create_problem_multistage(buses,lines,times,datadir,
         
     if not intervalHrs: intervalHrs=times.intervalhrs
         
-    stageTimes=times.subdivide(hrsperdivision=stageHrs,hrsinterval=intervalHrs)
+    stageTimes=times.subdivide(hrsperdivision=stageHrs,hrsinterval=intervalHrs,overlap_hrs=overlap_hours)
     problemsL=[]
 
     
@@ -198,7 +198,13 @@ def create_problem_multistage(buses,lines,times,datadir,
                     del gen.finalstatus
                 except AttributeError: pass #first stage of problem already has initial time definied
 
+<<<<<<< HEAD
     def get_finalconditions(buses,times):
+=======
+    def get_finalconditions(buses,times,lastproblem):
+        t_back=overlap_hours/times.intervalhrs
+        next_stage_first_time = times[-1-int(t_back)]         
+>>>>>>> working rolling UC overlap hours
         for bus in buses:
 <<<<<<< HEAD
             for gen in bus.generators: gen.finalstatus=gen.getstatus(t=times[-1],times=times)
@@ -206,23 +212,29 @@ def create_problem_multistage(buses,lines,times,datadir,
 =======
             for gen in bus.generators:
                 gen.update_vars(times, lastproblem)
+<<<<<<< HEAD
                 gen.finalstatus=gen.getstatus(t=times[-1],times=times)
 >>>>>>> update_vars changed to just require problem (variables are embbeded in problem instead of solution)
+=======
+                gen.finalstatus=gen.getstatus(t=next_stage_first_time,times=times)
+
+>>>>>>> working rolling UC overlap hours
 
     for t_stage in stageTimes:
         logging.info('Stage starting at {} {}'.format(t_stage[0].Start, 'time={}'.format(wallclocktime.now()) if showclock else ''))
+        
         set_initialconditions(buses,t_stage.initialTime)
         stageproblem=create_problem(buses,lines,t_stage,num_breakpoints=num_breakpoints)
         if writeproblem: stageproblem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
         
         optimization.solve(stageproblem)
-        if stageproblem.status!=1: 
+        if not stageproblem.solved: 
             #redo stage, with shedding allowed
             logging.critical('Stage infeasible, re-runnning with load shedding.')
             stageproblem=create_problem(buses,lines,t_stage,num_breakpoints=num_breakpoints,load_shedding_allowed=True)
             optimization.solve(stageproblem)
             
-        if stageproblem.status==1:
+        if stageproblem.solved:
             get_finalconditions(buses,t_stage,stageproblem)
             stage_sln=results.get_stage_solution(stageproblem,buses,t_stage)
             problemsL.append(stage_sln)

@@ -68,10 +68,10 @@ generator_defaults=dict(
 
 cost_loadshedding = 100000000 #$/MWh
 
-default_num_breakpoints=5
+default_num_breakpoints=10
 
 optimization_package='coopr' #'pulp'
 
 optimization_solver='gurobi'
-available_solvers = ['glpk','gurobi']#,'cplex']
+available_solvers = ['glpk','gurobi','cplex']
 logging_level= logging.INFO

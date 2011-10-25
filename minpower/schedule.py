@@ -163,7 +163,7 @@ class Timelist(object):
             newtimesL = list(chunks(longertimeL,hrsperdivision/hrsinterval,overlap_hrs/hrsinterval))
 
         for t,stage in enumerate(newtimesL): 
-            if t>0:        stage.setInitial( newtimesL[t-1][-1] )
+            if t>0:        stage.setInitial( newtimesL[t-1][-1-int(overlap_hrs/hrsinterval)] )
             elif t==0: stage.setInitial( self.initialTime )
                 
         return newtimesL

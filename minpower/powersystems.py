@@ -233,6 +233,10 @@ class Generator(object):
             tEndIndex = len(times)
             min_up_hrs_remaining_init = max(0, (self.u[tInitial]==1) * min(tEndHours, self.minuptime - self.initialStatusHours))
             min_down_hrs_remaining_init = max(0, (self.u[tInitial]==0) * min(tEndHours, self.mindowntime - self.initialStatusHours))
+#            except TypeError:
+#                print self.u[tInitial]
+#                print self.initialStatusHours
+#                raise
             #initial up down time
             if min_up_hrs_remaining_init>0: constraintsD['minuptime_'+iden]= 0==sumVars([(1-self.u[times[t]]) for t in range(0,roundoff(min_up_hrs_remaining_init/times.intervalhrs))])
             if min_down_hrs_remaining_init>0: constraintsD['mindowntime_'+iden]= 0==sumVars([self.u[times[t]] for t in range(0,roundoff(min_down_hrs_remaining_init/times.intervalhrs))])

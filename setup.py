@@ -8,18 +8,20 @@
 #python setup.py sdist upload
 
 
-#from distutils.core import setup
-from setuptools import setup
+#changelog
+#1.1: new minpower script!, better setup! more UC features.  
+
+from distutils.core import setup
 setup(
     name = "minpower",
     packages = ["minpower"], #code location
-    version = "1.0.0",
+    version = "1.1.0",
     description = "power systems optimization made beautiful",
     author = "Adam Greenhall",
     author_email = "minpower@adamgreenhall.com",
     url = "http://minpowertoolkit.com/",
-    download_url = "https://github.com/adamgreenhall/minpower/zipball/v1.0.0",
-    keywords = ["power systems","optimization",""],
+    download_url = "https://github.com/adamgreenhall/minpower/zipball/v1.1.0",
+    keywords = ["power systems","optimization"],
     
     scripts= [
         'scripts/minpower',
@@ -28,7 +30,7 @@ setup(
     
     install_requires=[
         'coopr',
-        'numpy',
+        'scipy', #numpy install breaks, try scipy instead 
         'matplotlib',
         'networkx',
         'python-dateutil',

@@ -67,9 +67,15 @@ def problem(datadir='.',
                                                        )
         solution=results.makeMultistageSolution(problemsL=problemsL,
             buses=buses,lines=lines,
+<<<<<<< HEAD
             times=times,stageTimes=stageTimes,
             datadir=datadir)
 >>>>>>> added rolling UC overlap options. tested schedule.Timelist.subdivide function, but need to test integration
+=======
+            times=times,stageTimes=stageTimes,overlap_hours=hours_commitment_overlap,
+            datadir=datadir
+            )
+>>>>>>> fixed results with overlap, by adding non_overlap_times to each stage time
         logging.info('problem solved in {}'.format(solution.solveTime))
 >>>>>>> cleaner handling of different bid models. fix for the convex bid model, due to confusion from ugly code.
     
@@ -236,7 +242,7 @@ def create_problem_multistage(buses,lines,times,datadir,
             
         if stageproblem.solved:
             get_finalconditions(buses,t_stage,stageproblem)
-            stage_sln=results.get_stage_solution(stageproblem,buses,t_stage)
+            stage_sln=results.get_stage_solution(stageproblem,buses,t_stage,overlap_hours)
             problemsL.append(stage_sln)
         else: 
             print stageproblem.status,stageproblem.statusText()

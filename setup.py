@@ -7,6 +7,8 @@
 #python setup.py register
 #python setup.py sdist upload
 
+#info: http://packages.python.org/distribute/setuptools.html#basic-use
+
 
 #changelog
 #1.1: new minpower script, better setup, more UC features.  

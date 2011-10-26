@@ -1,0 +1,9 @@
+minpower
+Coopr>=3.0.4362
+PuLP>=1.4.8
+matplotlib>=1.0.1
+networkx>=1.5
+numpy>=1.5.1
+ordereddict>=1.1
+progressbar>=2.3
+python-dateutil>=1.4.1

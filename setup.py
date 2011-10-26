@@ -11,11 +11,11 @@
 #changelog
 #1.1: new minpower script, better setup, more UC features.  
 
-from distutils.core import setup
+from setuptools import setup, find_packages
 setup(
     name = "minpower",
     packages = ["minpower"], #code location
-    version = "1.1.0",
+    version = "1.1.1",
     description = "power systems optimization made beautiful",
     author = "Adam Greenhall",
     author_email = "minpower@adamgreenhall.com",
@@ -27,7 +27,17 @@ setup(
         'scripts/minpower',
         'scripts/remote-minpower',
         ],
-    
+    install_requires=[
+        'Coopr>=3.0.4362',
+        #'PuLP>=1.4.8',
+        'matplotlib>=1.0.1',
+        'networkx>=1.5',
+        'numpy>=1.5.1',
+        'ordereddict>=1.1',
+        'progressbar>=2.3',
+        'python-dateutil>=1.4.1',
+    ],
+    tests_require=['Attest>=0.5.2'],
     classifiers = [    
         "Development Status :: 4 - Beta",
         "Environment :: Other Environment",

@@ -323,7 +323,7 @@ class Solution_UC(Solution):
     
     def vizualization(self,filename='commitment.png',withPrices=True):
         if not self.solved: return
-        if len(self.generators)<5: fewunits=True
+        if len(self.generators)<=5: fewunits=True
         else: fewunits=False
 <<<<<<< HEAD
     

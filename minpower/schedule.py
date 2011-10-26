@@ -177,7 +177,7 @@ def makeSchedule(filename,times):
     """
     mapFieldsToAttributes={
         'time':'time','t':'time',
-        'p':'P','demand':'P','pd':'P','load':'P','wind':'P'}
+        'power':'P','p':'P','demand':'P','pd':'P','load':'P','wind':'P'}
     validFields=mapFieldsToAttributes.keys()
     
     data,fields=readCSV(filename,validFields)

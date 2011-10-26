@@ -9,7 +9,7 @@
 
 
 #changelog
-#1.1: new minpower script!, better setup! more UC features.  
+#1.1: new minpower script, better setup, more UC features.  
 
 from distutils.core import setup
 setup(
@@ -26,14 +26,6 @@ setup(
     scripts= [
         'scripts/minpower',
         'scripts/remote-minpower',
-        ],
-    
-    install_requires=[
-        'coopr',
-        'scipy', #numpy install breaks, try scipy instead 
-        'matplotlib',
-        'networkx',
-        'python-dateutil',
         ],
     
     classifiers = [    

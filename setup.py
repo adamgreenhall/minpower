@@ -15,12 +15,12 @@ from setuptools import setup, find_packages
 setup(
     name = "minpower",
     packages = ["minpower"], #code location
-    version = "1.1.1",
+    version = "1.1.2",
     description = "power systems optimization made beautiful",
     author = "Adam Greenhall",
     author_email = "minpower@adamgreenhall.com",
     url = "http://minpowertoolkit.com/",
-    download_url = "https://github.com/adamgreenhall/minpower/zipball/v1.1.0",
+    download_url = "https://github.com/adamgreenhall/minpower/zipball/v1.1.2",
     keywords = ["power systems","optimization"],
     
     scripts= [

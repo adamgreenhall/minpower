@@ -14,7 +14,7 @@ import config
 from commonscripts import joindir
     
 def problem(datadir='.',
-        shell=True,
+        shell=False,
         problemfile=True,
         vizualization=True,
         csv=True,
@@ -57,6 +57,10 @@ def problem(datadir='.',
             datadir=datadir
             )
         logging.info('problem solved in {}'.format(solution.solveTime))
+    
+    generators=buses[0].generators
+    for t in times:
+        print t,[g.startup[t] for g in generators],[g.shutdown[t] for g in generators]
     
     if shell: solution.show()
     if csv: solution.saveCSV()

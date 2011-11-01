@@ -11,7 +11,7 @@ from minpower.optimization import value
 from test_utils import *
 
 generation = Tests()
-
+test_new = Tests()
 
 @generation.test
 def power_maximum():
@@ -142,6 +142,8 @@ def min_up_time():
     limgen_status=[generators[1].u[t] for t in times]
     assert limgen_status == [0,1,1,0] or limgen_status == [1,1,0,0]
 
+
+
 @generation.test
 def min_down_time():
     '''
@@ -210,6 +212,27 @@ def shut_down_cost():
     obj_sdcost = problem.objective - sum( gen.operatingcost(t) for t in times for gen in generators)
     assert obj_sdcost==shutdowncost
 
+@test_new.test
+def min_up_time_longer():
+    '''
+    Create two generators: cheap with max power limit, exp. with min up time and min power limits.
+    Create load that increases over the cheap limit at t1 and then reduces back to constant.
+    Ensure that the expensive generator is on at t1 and t2, then turns off. 
+    '''
+    generators=[
+        make_cheap_gen(Pmax=100),
+        make_expensive_gen(minuptime=8,Pmin=5)   ]
+    initial = [
+        dict(P= 80, u=True),
+        dict(u=False)]
+    load = make_load(Pdt=[85,120,80,80,70,70,70,70,80,80])
+    problem,times,buses=solve_problem(generators,load,gen_init=initial,problem_filename='uptimetest.lp')
+    limgen_status=[generators[1].u[t] for t in times]
+    logging.critical(limgen_status)
+    logging.critical([(generators[1].startup[t],generators[1].shutdown[t]) for t in times])
+    logging.critical(problem.constraints['minuptime_g1t01'])
+    assert limgen_status == [0,1,1,1,1,1,1,1,1,0] #or limgen_status == [1,1,1,1,1,1,1,1,0,0]
+
     
 if __name__ == "__main__": 
-    generation.run()
+    test_new.run()

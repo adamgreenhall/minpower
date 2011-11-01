@@ -67,7 +67,7 @@ if optimization_package=='coopr':
             return self.constraints[constraintname][index].dual
 
 
-        def solve(self,solver=config.optimization_solver):
+        def solve(self,solver=config.optimization_solver,problem_filename=False):
             ''' solve the optimization problem.
                 valid solvers are {cplex,gurobi,glpk}'''
 
@@ -102,8 +102,9 @@ if optimization_package=='coopr':
             else:
                 self.status=self.solved=True
                 self.solutionTime =elapsed #results.Solver[0]['Wallclock time']
-                logging.info('Problem solved in {}s.'.format(self.solutionTime)) #('Problem solved.')
+                logging.info('Problem solved in {}s.'.format(self.solutionTime))
             
+            if problem_filename: self.write(problem_filename)
                     
             if not self.status: return
             
@@ -537,7 +538,7 @@ class OptimizationObject(object):
         return 'opt_obj{ind}'.format(ind=self.index)
 
 
-def solve(problem,solver=config.optimization_solver): return problem.solve(solver)
+def solve(problem,solver=config.optimization_solver,problem_filename=False): return problem.solve(solver,problem_filename)
 
 class OptimizationError(Exception):
     def __init__(self, ivalue):

@@ -287,18 +287,24 @@ class Generator(object):
             iden='{g}_init'.format(g=str(self))
             #initial time
             tInitial = times.initialTime
-            startTime = times[0].Start
-            tEndHours = relativedelta(times[-1].Start, times[0].Start).hours
+            #startTime = times[0].Start
+            #tEndHours = relativedelta(times[-1].Start, times[0].Start).hours
             tEndIndex = len(times)
-            min_up_hrs_remaining_init = max(0, (self.u[tInitial]==1) * min(tEndHours, self.minuptime - self.initialStatusHours))
-            min_down_hrs_remaining_init = max(0, (self.u[tInitial]==0) * min(tEndHours, self.mindowntime - self.initialStatusHours))
+            min_up_intervals_remaining_init =   max(0, (self.u[tInitial]==1) * min(tEndIndex, roundoff((self.minuptime - self.initialStatusHours)/times.intervalhrs)))
+            min_down_intervals_remaining_init = max(0, (self.u[tInitial]==0) * min(tEndIndex, roundoff((self.mindowntime - self.initialStatusHours)/times.intervalhrs)))
+            #print times
+            #print 'tend',tEndIndex
+#            print 'min down hours init:',min_down_hrs_remaining_init
+#            print 'min up hours init:',min_up_hrs_remaining_init
 #            except TypeError:
 #                print self.u[tInitial]
 #                print self.initialStatusHours
 #                raise
             #initial up down time
-            if min_up_hrs_remaining_init>0: constraintsD['minuptime_'+iden]= 0==sumVars([(1-self.u[times[t]]) for t in range(0,roundoff(min_up_hrs_remaining_init/times.intervalhrs))])
-            if min_down_hrs_remaining_init>0: constraintsD['mindowntime_'+iden]= 0==sumVars([self.u[times[t]] for t in range(0,roundoff(min_down_hrs_remaining_init/times.intervalhrs))])
+            if min_up_intervals_remaining_init>0: 
+                constraintsD['minuptime_'+iden]= 0==sumVars([(1-self.u[times[t]]) for t in range(min_up_intervals_remaining_init)])
+            if min_down_intervals_remaining_init>0: 
+                constraintsD['mindowntime_'+iden]= 0==sumVars([self.u[times[t]] for t in range(min_down_intervals_remaining_init)])
             #initial start up / shut down
             constraintsD['statusChange_'+iden]= self.startup[times[0]]-self.shutdown[times[0]] == self.u[times[0]] - self.u[tInitial]
 
@@ -309,7 +315,16 @@ class Generator(object):
             if self.rampratemin is not None:
                 if self.P(tInitial) + self.rampratemin > self.Pmin:
                     constraintsD['rampingLimLo_'+iden]= self.rampratemin <= self.P(times[0]) - self.P(tInitial)
-                
+            
+            
+            #calculate up down intervals
+            min_up_intervals =  roundoff(self.minuptime/times.intervalhrs)
+            min_down_intervals = roundoff(self.mindowntime/times.intervalhrs)
+
+#            print self.name
+#            print self.minuptime
+#            print min_up_intervals
+
         
         for t,time in enumerate(times):
             iden=self.iden(time)
@@ -325,11 +340,12 @@ class Generator(object):
                 constraintsD['statusConstant_'+iden]=       self.startup[time]+self.shutdown[time] <= 1
                 if t>0: constraintsD['statusChange_'+iden]= self.startup[time]-self.shutdown[time] == self.u[time] - self.u[times[t-1]]
                 #up/down time minimums 
-                #need to check this for sub-hourly commitment
-                if relativedelta(time.Start, startTime).hours > min_up_hrs_remaining_init:
-                    constraintsD['minuptime_'+iden]= 1 >= self.startup[time]  + sumVars([self.shutdown[times[s]] for s in range(t,min(tEndIndex,t+self.minuptime))])
-                if relativedelta(time.Start, startTime).hours > min_down_hrs_remaining_init:                
-                    constraintsD['mindowntime_'+iden]= 1 >= self.shutdown[time] + sumVars([ self.startup[times[s]] for s in range(t,min(tEndIndex,t+self.mindowntime))])
+                if t > min_up_intervals_remaining_init:
+                    no_shut_down=range(t,min(tEndIndex,t+min_up_intervals))
+                    constraintsD['minuptime_'+iden]= 1 >= self.startup[time]  + sumVars([self.shutdown[times[s]] for s in no_shut_down])
+                if t > min_down_intervals_remaining_init:
+                    no_start_up=range(t,min(tEndIndex,t+min_down_intervals))
+                    constraintsD['mindowntime_'+iden]= 1 >= self.shutdown[time] + sumVars([self.startup[times[s]] for s in no_start_up])
                 #ramping power
                 if t>0:
                     if self.rampratemax is not None:

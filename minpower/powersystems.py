@@ -285,21 +285,10 @@ class Generator(object):
                 
         if commitment_problem:
             iden='{g}_init'.format(g=str(self))
-            #initial time
             tInitial = times.initialTime
-            #startTime = times[0].Start
-            #tEndHours = relativedelta(times[-1].Start, times[0].Start).hours
             tEndIndex = len(times)
             min_up_intervals_remaining_init =   max(0, (self.u[tInitial]==1) * min(tEndIndex, roundoff((self.minuptime - self.initialStatusHours)/times.intervalhrs)))
             min_down_intervals_remaining_init = max(0, (self.u[tInitial]==0) * min(tEndIndex, roundoff((self.mindowntime - self.initialStatusHours)/times.intervalhrs)))
-            #print times
-            #print 'tend',tEndIndex
-#            print 'min down hours init:',min_down_hrs_remaining_init
-#            print 'min up hours init:',min_up_hrs_remaining_init
-#            except TypeError:
-#                print self.u[tInitial]
-#                print self.initialStatusHours
-#                raise
             #initial up down time
             if min_up_intervals_remaining_init>0: 
                 constraintsD['minuptime_'+iden]= 0==sumVars([(1-self.u[times[t]]) for t in range(min_up_intervals_remaining_init)])
@@ -352,7 +341,7 @@ class Generator(object):
                         constraintsD['rampingLimHi_'+iden]=                     self.P(time) - self.P(times[t-1]) <= self.rampratemax
                     if self.rampratemin is not None:
                         constraintsD['rampingLimLo_'+iden]= self.rampratemin <=     self.P(time) - self.P(times[t-1])
-
+        #if self.name=='g2': print constraintsD['minuptime_g2_t01']
         return constraintsD        
         
     def __str__(self): return 'g{ind}'.format(ind=self.index)

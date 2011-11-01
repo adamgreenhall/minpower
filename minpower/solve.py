@@ -40,8 +40,7 @@ def problem(datadir='.',
     
     if times.spanhrs<=hours_commitment:
         problem=create_problem(buses,lines,times,num_breakpoints)
-        optimization.solve(problem,solver)
-        if problemfile: problem.write(joindir(datadir,'problem-formulation.lp'))
+        optimization.solve(problem,solver,problem_filename=joindir(datadir,'problem-formulation.lp'))
         if problem.solved:
             solution=results.makeSolution(times=times,lines=lines,buses=buses,problem=problem,datadir=datadir)
         else: 

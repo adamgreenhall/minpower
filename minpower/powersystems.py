@@ -10,7 +10,7 @@ import config, bidding
 from schedule import FixedSchedule
 import logging
 
-from dateutil.relativedelta import relativedelta
+#from dateutil.relativedelta import relativedelta
 import numpy 
 
 def makeGenerator(kind='generic',**kwargs):

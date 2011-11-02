@@ -243,7 +243,13 @@ class LinearModel(PWLmodel):
         self.outputNm=outputNm
     def add_timevars(self,iden): return dict()
     def constraints(self,variables,iden): return dict()
-    def output(self,variables,iden): return polyval( self.polyCurve,variables['inputvar'] )    
+    def output(self,variables,iden):
+        coefs=self.polyCurve.c
+        new_coefs=list(coefs[:-1])
+        new_coefs.append(0)
+        linear_term=coefs[-1]*variables['statusvar']
+        poly_term = polyval( new_coefs,variables['inputvar'])
+        return linear_term + poly_term
     
     
 def isLinear(P):

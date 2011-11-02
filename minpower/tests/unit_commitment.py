@@ -37,7 +37,7 @@ def rolling():
     generators=[powersystems.Generator(costcurvestring='10P+.01P^2')]
     load=make_load(Pdt=[random.randrange(0, 200) for i in range(0,72)])
     problem,times,buses=solve_problem(generators,load)
-    load_balanced = all(generators[0].power[t]==buses[0].loads[0].P(t) for t in times)
+    load_balanced = all(generators[0].power(t)==buses[0].loads[0].power(t) for t in times)
     assert load_balanced
 
 
@@ -56,7 +56,7 @@ def load_shedding():
     generators=[make_cheap_gen(Pmax=Pmax)]
     load=make_load(Pdt=[110,Pdt1,110])
     problem,times,buses=solve_problem(generators,load,load_shedding_allowed=True)
-    load_t1=buses[0].loads[0].P(times[1])
+    load_t1=buses[0].loads[0].power(times[1])
     load_t1_shed=buses[0].loads[0].shed(times[1])
     price_t1 = buses[0].getprice(times[1],problem)
     assert load_t1==Pmax and load_t1_shed==Pdt1-Pmax and price_t1==config.cost_loadshedding

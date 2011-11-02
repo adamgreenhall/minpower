@@ -44,7 +44,7 @@ class Time(object):
     def __add__(self, other): return self.Start+other
     def __str__(self): 
         try: return 't{ind:02d}'.format(ind=self.index)    
-        except ValueError: return 't_{ind}'.format(ind=self.index) #index is str    
+        except ValueError: return 't{ind}'.format(ind=self.index) #index is str    
     def __unicode__(self):
         return unicode(self.Start)+' to '+unicode(self.End)
     def __repr__(self): return repr(self.Start)
@@ -110,7 +110,7 @@ class Timelist(object):
     def index(self,val): return self.times.index(val)
     def setInitial(self,initialTime=None): 
         if initialTime: self.initialTime= initialTime
-        else: self.initialTime = Time(Start=self.Start-self.interval, interval=self.interval)
+        else: self.initialTime = Time(Start=self.Start-self.interval, interval=self.interval,index='Init')
         self.wInitial = tuple([self.initialTime] + list(self.times))
     def subdivide(self,hrsperdivision=24,hrsinterval=None,overlap_hrs=0,offset_hrs=0):
         """

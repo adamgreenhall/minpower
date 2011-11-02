@@ -14,7 +14,7 @@ import config
 from commonscripts import joindir
     
 def problem(datadir='.',
-        shell=False,
+        shell=True,
         problemfile=True,
         vizualization=True,
         csv=True,
@@ -76,12 +76,16 @@ def problem(datadir='.',
             )
 >>>>>>> fixed results with overlap, by adding non_overlap_times to each stage time
         logging.info('problem solved in {}'.format(solution.solveTime))
+<<<<<<< HEAD
 >>>>>>> cleaner handling of different bid models. fix for the convex bid model, due to confusion from ugly code.
     
     generators=buses[0].generators
     for t in times:
         print t,[g.startup[t] for g in generators],[g.shutdown[t] for g in generators]
     
+=======
+        
+>>>>>>> fix for linear cost curves - now: cost=a*u+b*P
     if shell: solution.show()
     if csv: solution.saveCSV()
     if vizualization: solution.vizualization()

@@ -111,19 +111,19 @@ class Solution(object):
             if len(self.buses)>1: print '  bus={L}'.format(L=getattrL(self.generators,'bus'))
             print '  name=', getattrL(self.generators,'name')
             print '  u=',   [value(gen.status(t)) if gen.isControllable else ' ' for gen in self.generators]
-            if len(self.times)>1: print '  du=', [value(gen.startup[t]) or value(gen.shutdown[t]) if gen.isControllable else ' ' for gen in self.generators]
-            print '  Pg=',  [value(gen.P(t)) for gen in self.generators]
+            #if len(self.times)>1: print '  du=', [value(gen.startup[t]) or value(gen.shutdown[t]) if gen.isControllable else ' ' for gen in self.generators]
+            print '  Pg=',  [value(gen.power(t)) for gen in self.generators]
             print '  IC=', [gen.incrementalcost(t) for gen in self.generators]
         else: #lots of generators
             activeGens = [gen for gen in self.generators if hasattr(gen,'u') or not gen.isControllable]
             print '  name=', [gen.name for gen in activeGens]
-            print '  Pg=',  [value(gen.P(t)) for gen in activeGens]
+            print '  Pg=',  [value(gen.power(t)) for gen in activeGens]
             print '  IC=', [gen.incrementalcost(t) for gen in activeGens]    
     def info_loads(self,t):
         print ' load info:'
         print '  bus={}'.format(getattrL(self.loads,'bus')) if len(self.buses)>1 else ''
         print '  name=', getattrL(self.loads,'name')
-        print '  Pd=',   [value(load.P(t)) for load in self.loads]
+        print '  Pd=',   [value(load.power(t)) for load in self.loads]
     def info_buses(self,t):
         print ' bus info:'
         print '  name =', getattrL(self.buses,'name')
@@ -136,12 +136,12 @@ class Solution(object):
         print '  Pk =', [value(line.P[t]) for line in self.lines]
         print '  mu=', [line.price[t] for line in self.lines]
     def calcCosts(self):
-        gen_fuel_costs=[[value(gen.operatingcost(t)) for t in self.times] for gen in self.generators]
-        # print gen_fuel_costs
-        # print self.generators[gen_fuel_costs.index(None)].name
-        self.fuelcost_generation=float(sum( [c for c in flatten(gen_fuel_costs) if c is not None] ))
-    
-        self.truecost_generation=float(sum( flatten([[gen.truecost(t) for t in self.times] for gen in self.generators]) ))
+        gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t)) for t in self.times] for gen in self.generators]
+        gen_fuel_costs_polynomial = [[gen.truecost(t) for t in self.times] for gen in self.generators]
+        #print gen_fuel_costs_pwlmodel
+        #print gen_fuel_costs_polynomial
+        self.fuelcost_generation=float(sum( [c for c in flatten(gen_fuel_costs_pwlmodel) if c is not None] ))
+        self.truecost_generation=float(sum( [c for c in flatten(gen_fuel_costs_polynomial) if c is not None] ))
         try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
         except ZeroDivisionError: self.costerror=0
 <<<<<<< HEAD
@@ -191,11 +191,11 @@ class Solution_ED(Solution):
         #save a plot of the price space - illustrating equal IC
         for gen in generators:
             if gen.status(t):
-                gensPlotted.append( gen.costModel.plotDeriv(P=value(gen.P(t)),linestyle='-') )
+                gensPlotted.append( gen.costModel.plotDeriv(P=value(gen.power(t)),linestyle='-') )
                 genNames.append(gen.name)
         for load in loads: 
             if load.kind=='bidding': 
-                loadsPlotted.append( load.bid[t].plotDeriv(P=value(load.P(t)),linestyle=':') )
+                loadsPlotted.append( load.bid[t].plotDeriv(P=value(load.power(t)),linestyle=':') )
                 loadNames.append(load.name)
         if price is not None: 
             grayColor='.75'
@@ -224,11 +224,11 @@ class Solution_ED(Solution):
             gensPlotted,genNames,loadsPlotted,loadNames=[],[],[],[]
             for g,gen in enumerate(generators):
                 if gen.status(t):
-                    gensPlotted.append( gen.costModel.plot(P=value(gen.P(t)),linestyle='-',color=gensPlotted_price[g].get_color()) )
+                    gensPlotted.append( gen.costModel.plot(P=value(gen.power(t)),linestyle='-',color=gensPlotted_price[g].get_color()) )
                     genNames.append(gen.name)
             for load in loads: 
                 if load.kind=='bidding': 
-                    loadsPlotted.append( load.bid[t].plot(P=value(load.P(t)),linestyle=':') )
+                    loadsPlotted.append( load.bid[t].plot(P=value(load.power(t)),linestyle=':') )
                     loadNames.append(load.name)        
             plot.xlabel('P [MWh]')
             if loadsPlotted:     plot.ylabel('Cost-Benifit [$/h]')
@@ -247,7 +247,7 @@ class Solution_ED(Solution):
         fields,data=[],[]
         fields.append('generator name');  data.append(getattrL(generators,'name'))
         fields.append('u');  data.append([value(g.status(t)) for g in generators])
-        fields.append('P');  data.append([value(g.P(t)) for g in generators])
+        fields.append('P');  data.append([value(g.power(t)) for g in generators])
         fields.append('IC');  data.append([g.incrementalcost(t) for g in generators])
         
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))        
@@ -285,7 +285,7 @@ class Solution_OPF(Solution):
         fields,data=[],[]
         fields.append('generator name');  data.append(getattrL(generators,'name'))
         fields.append('u');  data.append([value(g.status(t)) for g in generators])
-        fields.append('P');  data.append([value(g.P(t)) for g in generators])
+        fields.append('P');  data.append([value(g.power(t)) for g in generators])
         fields.append('IC');  data.append([g.incrementalcost(t) for g in generators])
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename+'-generators.csv'))           
         
@@ -312,12 +312,12 @@ class Solution_UC(Solution):
         for gen in self.generators: 
             if gen.isControllable:
                 fields.append('status: '+str(gen.name))
-                data.append([value(gen.status(t)) for t in times])
+                data.append([1 if value(gen.status(t))==1 else 0 for t in times])
             fields.append('power: '+str(gen.name))
-            data.append([value(gen.P(t)) for t in times])
+            data.append([value(gen.power(t)) for t in times])
         for load in self.loads:
             fields.append('load power: '+str(load.name))
-            data.append([value(load.P(t)) for t in times])
+            data.append([value(load.power(t)) for t in times])
         
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))
     
@@ -378,12 +378,16 @@ class Solution_UC(Solution):
             for gen in generators:
                 kind=gen.kind if gen.kind in allkinds else 'other'
                 if genbykind[kind] is None:
-                    genbykind[kind]=[value(gen.P(t)) for t in times.wInitial]
+                    genbykind[kind]=[value(gen.power(t)) for t in times.wInitial]
                 else:
+<<<<<<< HEAD
                     genbykind[kind]=elementwiseAdd([value(gen.P(t)) for t in times.wInitial],genbykind[kind])
 <<<<<<< HEAD
 
 =======
+=======
+                    genbykind[kind]=elementwiseAdd([value(gen.power(t)) for t in times.wInitial],genbykind[kind])
+>>>>>>> fix for linear cost curves - now: cost=a*u+b*P
             
 >>>>>>> duals and variables now working with coopr. tests are still failing.
             for kind,Pgen in genbykind.iteritems():
@@ -419,11 +423,11 @@ class Solution_UC(Solution):
             generators=sorted(generators,reverse=True,
                               key=lambda gen: 
                               ( sum(value(gen.status(t)) for t in times), #committed hrs
-                               sum(value(gen.P(t)) for t in times) #energy
+                               sum(value(gen.power(t)) for t in times) #energy
                                ))
             colors=colormap(len(generators),colormapName='Blues')
             for g,gen in enumerate(generators):
-                Pgen=[value(gen.P(t)) for t in times.wInitial]
+                Pgen=[value(gen.power(t)) for t in times.wInitial]
                 gensPlotted,stackBottom=addtostackplot(ax,T,Pgen,colors[g], gensPlotted,stackBottom)
                 yLabels.append(gen.name)      
         
@@ -440,7 +444,7 @@ class Solution_UC(Solution):
 >>>>>>> cleanup
             color='.8' #gray
             if load.kind in ['shifting','bidding']:
-                Pd=[value(load.P(t)) for t in times]
+                Pd=[value(load.power(t)) for t in times]
                 stackBottom=elementwiseAdd([-1*P for P in Pd],stackBottom)
                 plt=ax.bar(T[1:],Pd,bottom=stackBottom,alpha=.5,color=color,edgecolor=color,width=barWidth,hatch="/")
                 loadsPlotted.append(plt[0])
@@ -604,7 +608,7 @@ def write_last_stage_status(buses,stagetimes):
     fields,data=[],[]
     fields.append('generator name');  data.append(getattrL(generators,'name'))
     fields.append('u');  data.append([value(g.status(t)) for g in generators])
-    fields.append('P');  data.append([value(g.P(t)) for g in generators])
+    fields.append('P');  data.append([value(g.power(t)) for g in generators])
     fields.append('hours in status');  data.append([value(g.initialStatusHours) for g in generators])
     writeCSV(fields,transpose(data),filename='stagestatus{}.csv'.format(t.End))          
 

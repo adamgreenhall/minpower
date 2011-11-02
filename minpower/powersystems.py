@@ -218,7 +218,6 @@ class Generator(object):
         for time in times:    
             iden=self.iden(time)
             self.variables['power'][time]=newVar(name='P_'+iden,low=0,high=self.Pmax) #even if off, Pmax>=P>=0
-
             
             if commitment_problem: #UC problem
                 self.variables['status'][time]=newVar(name='u_'+iden,kind='Binary')
@@ -259,6 +258,7 @@ class Generator(object):
             self.bid[time].update_vars()
         for nm,timevar in self.variables.items():
             for tm,var in timevar.items():
+<<<<<<< HEAD
                 self.variables[nm][tm]=value(var)
                  
             
@@ -289,6 +289,12 @@ class Generator(object):
         self.bid={} #wipe bid info - no longer needed
 
 >>>>>>> changed fix_timevars to fix_vars in Generator(). fixed reporting on load shedding.
+=======
+                self.variables[nm][tm]=value(var)            
+    def fix_vars(self,times,problem):
+        self.update_vars(times,problem)
+        self.bid={} #wipe bid info - no longer needed
+>>>>>>> fix for linear cost curves - now: cost=a*u+b*P
     def plotCostCurve(self,P=None,filename=None): self.costModel.plot(P,filename)
     def setInitialCondition(self,time=None, P=None, u=True, hoursinstatus=100):
         if P is None: P=(self.Pmax-self.Pmin)/2 #set default power as median output
@@ -346,7 +352,7 @@ class Generator(object):
             #must run
             if self.mustrun: self.variables['status'][time] = True #overwrite the variable with a true
             #bid constraints
-            constraintsD.update( self.bid[time].constraints() )
+            constraintsD.update( self.bid[time].constraints() ) 
             #min/max power
             if self.Pmin>0: 
                 constraintsD['min-gen-power_'+iden]= self.power(time)>=self.status(time)*self.Pmin

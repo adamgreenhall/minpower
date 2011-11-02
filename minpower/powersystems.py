@@ -141,8 +141,8 @@ class Generator(object):
     def cost(self,time): 
         '''total cost at time (operating + startup + shutdown)'''
         return self.operatingcost(time)+self.cost_startup(time)+self.cost_shutdown(time)
-    def cost_startup(self,time): return self.variables['startupcost'][time]
-    def cost_shutdown(self,time): return self.variables['shutdowncost'][time]
+    def cost_startup(self,time): return self.variables['startupcost'][time] if self.startupcost>0 else 0
+    def cost_shutdown(self,time): return self.variables['shutdowncost'][time] if self.shutdowncost>0 else 0
     def operatingcost(self,time): 
         '''cost of real power production at time (based on bid model approximation).'''
         return self.bid[time].output()
@@ -279,7 +279,8 @@ class Generator(object):
             #bid constraints
             constraintsD.update( self.bid[time].constraints() )
             #min/max power
-            constraintsD['min-gen-power_'+iden]= self.power(time)>=self.status(time)*self.Pmin
+            if self.Pmin>0: 
+                constraintsD['min-gen-power_'+iden]= self.power(time)>=self.status(time)*self.Pmin
             constraintsD['max-gen-power_'+iden]= self.power(time)<=self.status(time)*self.Pmax
             if len(times)>1: #if UC or SCUC problem
                 #start up / shut down

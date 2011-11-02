@@ -61,16 +61,18 @@ generator_defaults=dict(
         combustionturbine=36750,
         wind=                 0
         ),
-    isControllable=True
+    isControllable=True,
+    power=None
     )
 
 
 cost_loadshedding = 100000000 #$/MWh
 
 default_num_breakpoints=10
-
+default_hours_commitment=24
+default_hours_commitment_overlap=0
 optimization_package='coopr' #'pulp'
 
 optimization_solver='gurobi'
-available_solvers = ['glpk','gurobi']#,'cplex']
+available_solvers = ['glpk','gurobi','cplex']
 logging_level= logging.INFO

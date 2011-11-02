@@ -28,7 +28,7 @@ if optimization_package=='coopr':
         def addObjective(self,expression,sense=pyomo.minimize):
             '''add an objective to the problem'''            
             self.model.objective=pyomo.Objective(name='objective',rule=expression,sense=sense)
-        def addVariables(self,vars): [self.addVar(v) for v in vars]
+        def addVariables(self,variables): [self.addVar(v) for v in variables]
         def addVar(self,var):
             '''add a single variable to the problem'''
             try: setattr(self.model, var.name, var)
@@ -49,7 +49,7 @@ if optimization_package=='coopr':
             return self.constraints[constraintname][index].dual
 
 
-        def solve(self,solver=config.optimization_solver):
+        def solve(self,solver=config.optimization_solver,problem_filename=False):
             ''' solve the optimization problem.
                 valid solvers are {cplex,gurobi,glpk}'''
 
@@ -84,19 +84,21 @@ if optimization_package=='coopr':
             else:
                 self.status=self.solved=True
                 self.solutionTime =elapsed #results.Solver[0]['Wallclock time']
-                logging.info('Problem solved in {}s.'.format(self.solutionTime)) #('Problem solved.')
+                logging.info('Problem solved in {}s.'.format(self.solutionTime))
             
+            if problem_filename: self.write(problem_filename)
                     
             if not self.status: return
             
-            instance.load(results)
+            #instance.load(results)
+            instance._load_solution(results.solution(0), ignore_invalid_labels=True )
             
 
             
             def resolvefixvariables(instance,results):
                 active_vars= instance.active_components(pyomo.Var)
                 need_to_resolve=False
-                for name,var in active_vars.iteritems():
+                for _,var in active_vars.items():
                     if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet):
                         var.fixed=True
                         need_to_resolve=True
@@ -111,7 +113,8 @@ if optimization_package=='coopr':
                     logging.error('coopr raised an error in solving. keep the files for debugging.')
                     results= cooprsolve(instance, keepFiles=True)    
                 
-                instance.load(results)
+                #instance.load(results)
+                instance._load_solution(results.solution(0), ignore_invalid_labels=True )
                 return instance,results
 
             try: instance,results = resolvefixvariables(instance,results)
@@ -153,12 +156,12 @@ if optimization_package=='coopr':
 
     def sumVars(variables): return sum(variables)
     def newProblem(): return Problem()
-    def newVar(name='',kind='Continuous',low=-1000000,high=1000000):
+    def new_variable(name='',kind='Continuous',low=-1000000,high=1000000):
         '''create an optimization variable'''
         kindmap = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyomo.Boolean)
         return pyomo.Var(name=name,bounds=(low,high),domain=kindmap[kind])
     def new_constraint(name,expression): return pyomo.Constraint(name=name,rule=expression)
-    def solve(problem,solver=config.optimization_solver): return problem.solve(solver)
+
 
 
 elif optimization_package=='pulp':
@@ -194,6 +197,30 @@ elif optimization_package=='pulp':
             from yaml import dump
             with open(filename, 'w+') as file: dump(self, file)
 
+        def solve(self,solver=config.optimization_solver):
+            '''solve the optimization problem'''
+            self.solved=False
+            logging.info('Solving with {s} ... '.format(s=solver))
+            solvermap = dict(
+                glpk=pulp.GLPK_CMD,
+                cplex=pulp.CPLEX_CMD,
+                gurobi=pulp.GUROBI,
+                coin=pulp.pulp.COINMP_DLL,
+                )
+
+            try: #call LpProblem solve method
+                status = super( Problem, self ).solve(solver = solvermap[solver.lower()](msg=0) )
+                self.statusText=pulp.LpStatus[status]
+            except pulp.solvers.PulpSolverError:
+                status=0
+
+            
+            if status:
+                self.solved = True
+                logging.info('{stat} in {time:0.4f} sec'.format(
+                    stat=self.statusText,
+                    time=self.solutionTime))
+
 
     def value(variable,problem=None):
         '''value of an optimization variable'''
@@ -206,36 +233,12 @@ elif optimization_package=='pulp':
     def newProblem(name='problem',kind=pulp.LpMinimize):
         '''create a new problem'''
         return Problem(name=name,sense=kind)
-    def newVar(name='',kind='Continuous',low=-1000000,high=1000000):
+    def new_variable(name='',kind='Continuous',low=-1000000,high=1000000):
         '''create an optimization variable'''
         #note that if binary variable, pulp will reset the bounds to (0,1)
         #note that if using glpk, bounds of -inf and inf produces error
         return pulp.LpVariable(name=name,cat=kind,lowBound=low,upBound=high)
 
-    def solve(problem,solver=config.optimization_solver):
-        '''solve the optimization problem'''
-        logging.info('Solving with {s} ... '.format(s=solver))
-        solvermap = dict(
-            glpk=pulp.GLPK_CMD,
-            cplex=pulp.CPLEX_CMD,
-            gurobi=pulp.GUROBI,
-            coin=pulp.pulp.COINMP_DLL,
-            )
-
-        try: out=problem.solve(solvermap[solver.lower()](msg=0))
-        except pulp.solvers.PulpSolverError:
-            problem.status=0
-            out=None
-
-        problem.statusText=pulp.LpStatus[problem.status]
-        #print logging.getLogger().getEffectiveLevel()
-        if problem.status:
-            logging.info('{stat} in {time:0.4f} sec'.format(
-                stat=problem.statusText,
-                time=problem.solutionTime))
-        #else: logging.warning(problem.statusText())
-
-        return out
 
 
 class OptimizationObject(object):
@@ -260,14 +263,15 @@ class OptimizationObject(object):
         self.variables=dict()
         self.constraints=dict()
         self.objective  =0 #cost
+        self.children=dict()
         if self.index is None: self.index=hash(self)
         
     def create_variables(self, *args,**kwargs):
         ''' 
         Here we would create the variables.
-        Variables should not belong to the :class:`OptimizationObject` directly, 
+        Variables should not belong to the object directly, 
         but you can write you own shortcut class methods, 
-        like :meth:`~powersystems.Generator.P`.
+        like :meth:`~powersystems.Generator.power`.
         
         :returns: dictionary of variables
         '''
@@ -316,6 +320,8 @@ class OptimizationObject(object):
         '''
         return 'opt_obj{ind}'.format(ind=self.index)
 
+
+def solve(problem,solver=config.optimization_solver,problem_filename=False): return problem.solve(solver,problem_filename)
 
 class OptimizationError(Exception):
     def __init__(self, ivalue):

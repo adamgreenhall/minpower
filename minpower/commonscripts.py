@@ -81,8 +81,9 @@ def readCSV(filenm,validFields='all'):
     csvfile = open(filenm)
     try: dialect = csv.Sniffer().sniff(csvfile.read(4048))
     except: 
-        print 'problem with reading: ',filenm
-        raise 
+        #this generally happens when the file is very short
+        #assume dialect is excel
+        dialect = csv.excel
     csvfile.seek(0)
     reader = csv.reader(csvfile, dialect)
     def csvDataConvert(inData, repForBlankStrings=None, checkForNumbers=True):
@@ -178,6 +179,19 @@ def getclass_inlist(L,values,attribute='name'):
         raise
     if len(indL)==1: return L[indL[0]]
     else: return [L[ind] for ind in indL]
+
+def update_attributes(instance, variables, exclude=['self']):
+    """Update instance attributes
+ 
+    For example, update(self, locals())
+    
+    instance: Instance to update via setattr()
+    variables: Dictionary of variables
+    exclude: Variables to exclude, defaults to ['self']
+    """
+    if 'self' not in exclude: exclude.append('self')
+    for k, v in variables.iteritems():
+        if k not in exclude: setattr(instance, k, v)
 
 ####################### dict stuff ########################
 def subset(D, subsetL):

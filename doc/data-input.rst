@@ -47,8 +47,11 @@ Field names have a mapping to :mod:`powersystems` object attributes as described
     minuptime                :py:attr:`~powersystems.Generator.minuptime`
     mustrun                  :py:attr:`~powersystems.Generator.mustrun`
     name                     :py:attr:`~powersystems.Generator.name`
+    p                        :py:attr:`~powersystems.Generator.power`
+    pg                       :py:attr:`~powersystems.Generator.power`
     pmax                     :py:attr:`~powersystems.Generator.Pmax`
     pmin                     :py:attr:`~powersystems.Generator.Pmin`
+    power                    :py:attr:`~powersystems.Generator.power`
     rampratemax              :py:attr:`~powersystems.Generator.rampratemax`
     rampratemin              :py:attr:`~powersystems.Generator.rampratemin`
     schedulefilename         :py:attr:`~powersystems.Generator.schedulefilename`
@@ -61,7 +64,7 @@ Field names have a mapping to :mod:`powersystems` object attributes as described
 	
 :class:`~powersystems.Line`
 ------------------------------------
-
+    
     ==============    ========================================
     Field             Attribute
     ==============    ========================================
@@ -71,13 +74,16 @@ Field names have a mapping to :mod:`powersystems` object attributes as described
     to                :py:attr:`~powersystems.Line.To`
     ==============    ========================================
 
+
 :class:`~powersystems.Load`
 ------------------------------------	
 
     =====================    ====================================================
     Field                    Attribute
     =====================    ====================================================
+    bidequation              :py:attr:`~powersystems.Load.costcurvestring`
     bus                      :py:attr:`~powersystems.Load.bus`
+    costcurveequation        :py:attr:`~powersystems.Load.costcurvestring`
     kind                     :py:attr:`~powersystems.Load.kind`
     name                     :py:attr:`~powersystems.Load.name`
     p                        :py:attr:`~powersystems.Load.P`
@@ -87,6 +93,7 @@ Field names have a mapping to :mod:`powersystems` object attributes as described
     schedulefilename         :py:attr:`~powersystems.Load.schedulefilename`
     type                     :py:attr:`~powersystems.Load.kind`
     =====================    ====================================================
+
 
 
 =======================

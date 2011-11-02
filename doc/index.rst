@@ -10,10 +10,9 @@ with other :doc:`researchers<researchers>` and to make learning easier for :doc:
 
 
 
-Solving problems is as easy as two lines of script::
+Solving problems is as easy as one command::
 
-    from minpower import solve
-    solve.problem('mycommitment/')
+    minpower mycommitment-folder/
 
 **minpower** creates great visualizations too, like this one for a :doc:`UC problem <unit-commitment>`:
     

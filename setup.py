@@ -7,34 +7,41 @@
 #python setup.py register
 #python setup.py sdist upload
 
+#info: http://packages.python.org/distribute/setuptools.html#basic-use
 
-from distutils.core import setup
+
+#changelog
+#1.1: new minpower script, better setup, more UC features.  
+
+from setuptools import setup, find_packages
 setup(
     name = "minpower",
     packages = ["minpower"], #code location
-    version = "0.0.1",
+    version = "1.1.2",
     description = "power systems optimization made beautiful",
     author = "Adam Greenhall",
     author_email = "minpower@adamgreenhall.com",
     url = "http://minpowertoolkit.com/",
-    download_url = "http://minpowertoolkit.com/minpower-0.0.1.tgz",
-    keywords = ["power systems","optimization",""],
+    download_url = "https://github.com/adamgreenhall/minpower/zipball/v1.1.2",
+    keywords = ["power systems","optimization"],
     
     scripts= [
         'scripts/minpower',
+        'scripts/remote-minpower',
         ],
-    
     install_requires=[
-        'pulp',
-        'coopr',
-        'numpy',
-        'matplotlib',
-        'networkx',
-        'python-dateutil',
-        ],
-    
+        'Coopr>=3.0.4362',
+        #'PuLP>=1.4.8',
+        'matplotlib>=1.0.1',
+        'networkx>=1.5',
+        'numpy>=1.5.1',
+        'ordereddict>=1.1',
+        'progressbar>=2.3',
+        'python-dateutil>=1.4.1',
+    ],
+    tests_require=['Attest>=0.5.2'],
     classifiers = [    
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Environment :: Other Environment",
         "Intended Audience :: Science/Research",      
         "Intended Audience :: Education",

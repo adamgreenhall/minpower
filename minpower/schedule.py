@@ -44,10 +44,10 @@ class Time(object):
     def __add__(self, other): return self.Start+other
     def __str__(self): 
         try: return 't{ind:02d}'.format(ind=self.index)    
-        except ValueError: return 't_{ind}'.format(ind=self.index) #index is str    
+        except ValueError: return 't{ind}'.format(ind=self.index) #index is str    
     def __unicode__(self):
         return unicode(self.Start)+' to '+unicode(self.End)
-
+    def __repr__(self): return repr(self.Start)
 def makeTimes(datetimeL):
     '''convert list of datetime objects to Timelist() class'''
     S=datetimeL[0]
@@ -110,10 +110,9 @@ class Timelist(object):
     def index(self,val): return self.times.index(val)
     def setInitial(self,initialTime=None): 
         if initialTime: self.initialTime= initialTime
-        else: self.initialTime = Time(Start=self.Start-self.interval, interval=self.interval)
+        else: self.initialTime = Time(Start=self.Start-self.interval, interval=self.interval,index='Init')
         self.wInitial = tuple([self.initialTime] + list(self.times))
-    def subdivide(self,hrsperdivision=24,hrsinterval=None):
-        ### add offset=0 to this
+    def subdivide(self,hrsperdivision=24,hrsinterval=None,overlap_hrs=0,offset_hrs=0):
         """
         Subdivide a list of times into serval lists,  each list
         spanning `hrsperdivision` with intervals of `hrsinterval`.
@@ -124,7 +123,7 @@ class Timelist(object):
         
         typical use:
         
-        >>> t=Timeslist([1,2,3,4,5,6,7,8])
+        >>> t=make_times_basic(8)
         >>> t.subdivide(hrsperdivision=4)
         [[1,2,3,4],[5,6,7,8]]
         
@@ -132,33 +131,43 @@ class Timelist(object):
         
         >>> t.subdivide(hrsperdivision=4,hrsinterval=2)
         [[1,3],[5,7]]
+        
+        and handle arbitary overlaps:
+        
+        >>> t.subdivide(hrsperdivision=4,overlap_hrs=2)
+        [[1,2,3,4,5,6],[4,5,6,7,8]]
+        
         """
-        def chunks(L, n):
-            """ Yield successive n-sized chunks from L."""
-            if type(n) is float: 
-                if n!=int(n): raise ValueError('rounding step size for time subdivision from {n} to {nr} not allowed'.format(n=n,nr=round(n)))
-                n=int(n)
-            for i in xrange(0, len(L), n): yield Timelist(L[i:i+n])
+        def chunks(L, n,overlap=0):
+            """ Yield successive n-sized chunks from L, with optional overlap."""
+            if n!=int(n): raise ValueError('rounding step size for time subdivision from {n} to {nr} not allowed'.format(n=n,nr=round(n)))
+            if overlap!=int(overlap): raise ValueError('overlap size for time subdivision from {n} to {nr} not allowed'.format(n=overlap,nr=round(overlap)))
+            n=int(n)
+            overlap=int(overlap)
+            for i in xrange(0, len(L), n): yield Timelist(L[i:i+n+overlap])
             
         def timeslice(tStart,tEnd,index): return Time(Start=tStart,End=tEnd,index=index)
         
         if hrsinterval is None: hrsinterval=self.intervalhrs
+        overlap_intervals = overlap_hrs/hrsinterval
+        
         
         
         if hrsinterval==self.intervalhrs and hrsperdivision==self.intervalhrs: return self
-        elif hrsinterval==self.intervalhrs: newtimesL=list(chunks(self,hrsperdivision/self.intervalhrs))
+        elif hrsinterval==self.intervalhrs: 
+            newtimesL=list(chunks(self,n=hrsperdivision/self.intervalhrs,overlap=overlap_intervals))
         elif hrsinterval>self.intervalhrs:
             steps=hrsinterval/self.intervalhrs
             if steps==int(steps): steps=int(steps)
             else: raise ValueError('Native Timelist interval is i={i}, while proposed interval is j={j}. j/i must be an integer.'.format(i=self.intervalhrs,j=hrsinterval))
             
             longertimeL = Timelist([timeslice(self[i].Start, self[i+steps-1].End,i) for i in range(0,len(self)-steps+1,steps)])
-            newtimesL = list(chunks(longertimeL,hrsperdivision))
+            newtimesL = list(chunks(longertimeL,hrsperdivision/hrsinterval,overlap_intervals))
 
         for t,stage in enumerate(newtimesL): 
-            if t>0:        stage.setInitial( newtimesL[t-1][-1] )
+            if t>0:        stage.setInitial( newtimesL[t-1][-1-int(overlap_hrs/hrsinterval)] )
             elif t==0: stage.setInitial( self.initialTime )
-                
+            stage.non_overlap_times = stage[:-1-int(overlap_intervals)+1] if overlap_intervals>0 else stage   
         return newtimesL
         
         
@@ -168,7 +177,7 @@ def makeSchedule(filename,times):
     """
     mapFieldsToAttributes={
         'time':'time','t':'time',
-        'p':'P','demand':'P','pd':'P','load':'P','wind':'P'}
+        'power':'P','p':'P','demand':'P','pd':'P','load':'P','wind':'P'}
     validFields=mapFieldsToAttributes.keys()
     
     data,fields=readCSV(filename,validFields)
@@ -197,7 +206,7 @@ class Schedule(object):
             self.P[t]=p*multiplier
         return self
     def __repr__(self):
-        return sorted([(str(t.Start),p) for t,p in self.P.iteritems()])    
+        return repr(sorted([(str(t),p) for t,p in self.P.iteritems()]))    
     def getEnergy(self,timeperiod):
         """
         get the amount of energy in a time period 
@@ -229,6 +238,10 @@ class Schedule(object):
                 t=getattrL(times,'Start').index(timeperiod.Start)
                 return self.getEnergy(times[t])
             else: raise
+class FixedSchedule(Schedule):
+    def __init__(self,times=None,P=None): self.P=P
+    def getEnergy(self,timeperiod=None): return self.P
+    
 def just_one_time():
     """For a single-time problem, generate a Timelist with just one time in it."""
     return Timelist([Time(Start='0:00',index=0)])
@@ -238,4 +251,9 @@ def parse_timestrings(timestringsL):
     objects using :meth:`dateutil.parser.parse`.
     """
     fmt=getTimeFormat(timestringsL[0])
-    return [dateutil.parser.parse(str,**fmt) for str in timestringsL]
+    return [dateutil.parser.parse(string,**fmt) for string in timestringsL]
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

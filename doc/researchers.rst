@@ -76,7 +76,7 @@ Wishlist
 Collaboration 
 --------------
 
-For collaboration `email Adam <mailto:workwith@adamgreenhall.com>`_.
+For collaboration get in touch with Adam via `email <mailto:argreen@uw.edu>`_ or `@adamgreenhall <http://twitter.com/adamgreenhall>`_.
 
 Help
 ------
@@ -87,3 +87,4 @@ Check out `Stackoverflow <http://stackoverflow.com/questions/tagged/python>`_ fo
 one million times better than any other help forum. Hashtag any **minpower** questions you post 
 with `#minpower <http://stackoverflow.com/questions/tagged/minpower>`_
 
+If you find a bug, please report it on the `GitHub issue tracker <https://github.com/adamgreenhall/minpower/issues>`_.

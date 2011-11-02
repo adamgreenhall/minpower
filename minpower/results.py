@@ -4,10 +4,10 @@
     vizualization.
     """
 
-import os,sys,types,logging
+import logging
 from collections import OrderedDict
 
-from commonscripts import flatten,getColumn,transpose,elementwiseAdd, getattrL,hours,within,subset,writeCSV,joindir,replace_all
+from commonscripts import flatten,transpose,elementwiseAdd, getattrL,within,subset,writeCSV,joindir,replace_all
 from schedule import Timelist
 from optimization import value
 import config
@@ -33,7 +33,7 @@ def makeMultistageSolution(lines,**kwargs):
     return Solution_multistageUC(**kwargs)
 
 class Solution(object):
-    def __init__(self,problem,buses,lines,times,datadir):
+    def __init__(self,problem,buses,lines,times,datadir='.'):
         vars(self).update(subset(locals(),['buses','lines','times','datadir']))
         self.generators=flatten( [[gen for gen in bus.generators] for bus in buses] )
         self.loads     =flatten( [[ld  for ld   in bus.loads]     for bus in buses] )
@@ -83,20 +83,20 @@ class Solution(object):
         if len(self.generators)<10:
             if len(self.buses)>1: print '  bus={L}'.format(L=getattrL(self.generators,'bus'))
             print '  name=', getattrL(self.generators,'name')
-            print '  u=',   [value(gen.u[t]) if gen.isControllable else ' ' for gen in self.generators]
-            if len(self.times)>1: print '  du=', [value(gen.startup[t]) or value(gen.shutdown[t]) if gen.isControllable else ' ' for gen in self.generators]
-            print '  Pg=',  [value(gen.P(t)) for gen in self.generators]
+            print '  u=',   [value(gen.status(t)) if gen.isControllable else ' ' for gen in self.generators]
+            #if len(self.times)>1: print '  du=', [value(gen.startup[t]) or value(gen.shutdown[t]) if gen.isControllable else ' ' for gen in self.generators]
+            print '  Pg=',  [value(gen.power(t)) for gen in self.generators]
             print '  IC=', [gen.incrementalcost(t) for gen in self.generators]
         else: #lots of generators
             activeGens = [gen for gen in self.generators if hasattr(gen,'u') or not gen.isControllable]
             print '  name=', [gen.name for gen in activeGens]
-            print '  Pg=',  [value(gen.P(t)) for gen in activeGens]
+            print '  Pg=',  [value(gen.power(t)) for gen in activeGens]
             print '  IC=', [gen.incrementalcost(t) for gen in activeGens]    
     def info_loads(self,t):
         print ' load info:'
         print '  bus={}'.format(getattrL(self.loads,'bus')) if len(self.buses)>1 else ''
         print '  name=', getattrL(self.loads,'name')
-        print '  Pd=',   [value(load.P(t)) for load in self.loads]
+        print '  Pd=',   [value(load.power(t)) for load in self.loads]
     def info_buses(self,t):
         print ' bus info:'
         print '  name =', getattrL(self.buses,'name')
@@ -109,9 +109,12 @@ class Solution(object):
         print '  Pk =', [value(line.P[t]) for line in self.lines]
         print '  mu=', [line.price[t] for line in self.lines]
     def calcCosts(self):
-        self.fuelcost_generation=float(sum( flatten([[value(gen.operatingcost(t)) for t in self.times] for gen in self.generators]) ))
-    
-        self.truecost_generation=float(sum( flatten([[gen.truecost(t) for t in self.times] for gen in self.generators]) ))
+        gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t)) for t in self.times] for gen in self.generators]
+        gen_fuel_costs_polynomial = [[gen.truecost(t) for t in self.times] for gen in self.generators]
+        #print gen_fuel_costs_pwlmodel
+        #print gen_fuel_costs_polynomial
+        self.fuelcost_generation=float(sum( [c for c in flatten(gen_fuel_costs_pwlmodel) if c is not None] ))
+        self.truecost_generation=float(sum( [c for c in flatten(gen_fuel_costs_polynomial) if c is not None] ))
         try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
         except ZeroDivisionError: self.costerror=0
     def calcPrices(self,problem):
@@ -134,7 +137,7 @@ class Solution_ED(Solution):
     
     def info_lines(self,t): pass
     def info_buses(self,t): pass
-    def vizualization(self):
+    def vizualization(self,show_cost_also=False):
         ''' economic dispatch visualization '''
         if not self.solved: return
         t=self.times[0]
@@ -144,28 +147,58 @@ class Solution_ED(Solution):
         gensPlotted,genNames,loadsPlotted,loadNames=[],[],[],[]
         minGen=min(getattrL(generators,'Pmin'))
         maxGen=max(getattrL(generators,'Pmax'))
+
+        #save a plot of the price space - illustrating equal IC
+        for gen in generators:
+            if gen.status(t):
+                gensPlotted.append( gen.costModel.plotDeriv(P=value(gen.power(t)),linestyle='-') )
+                genNames.append(gen.name)
+        for load in loads: 
+            if load.kind=='bidding': 
+                loadsPlotted.append( load.bid[t].plotDeriv(P=value(load.power(t)),linestyle=':') )
+                loadNames.append(load.name)
         if price is not None: 
             grayColor='.75'
             plot.plot([minGen,maxGen],[price,price],'--k',color=grayColor)
             plot.text(maxGen, price, '{p:0.2f} $/MWh'.format(p=price),color=grayColor,horizontalalignment='right')
-        for gen in generators:
-            if gen.u[t]:
-                gensPlotted.append( gen.costModel.plotDeriv(P=value(gen.P(t)),linestyle='-') )
-                genNames.append(gen.name)
-        for load in loads: 
-            if load.kind=='bidding': 
-                loadsPlotted.append( load.bid[t].plotDeriv(P=value(load.P(t)),linestyle=':') )
-                loadNames.append(load.name)
-        legendGens=plot.legend(gensPlotted, genNames, fancybox=True,title='Generators:',loc='upper right')
+        
+        plot.xlabel('P [MWh]')        
+        if loadsPlotted:     plot.ylabel('Marginal Cost-Benifit [$/MWh]')
+        else:                plot.ylabel('Marginal Cost [$/MWh]')
+
+        
+        ymin,_ = plot.ylim()
+        if ymin<0: plot.ylim(ymin=0)        
+
+        legendGens=plot.legend(gensPlotted, genNames, fancybox=True,title='Generators:',loc='best')
         if loadsPlotted:
-            legendLoads=plot.legend(loadsPlotted, loadNames, fancybox=True,title='Loads:',loc='upper left')
+            plot.legend(loadsPlotted, loadNames, fancybox=True,title='Loads:',loc='best')
             plot.gca().add_artist(legendGens) #add first legend to the axes manually bcs multiple legends get overwritten
         
-        plot.xlabel('P [MWh]')
-        plot.ylabel('Marginal Cost/Benifit [$/MWh]')
-        plot.ylim(ymin=0)        
+        self.savevisualization(filename='dispatch-price.png')
         
-        self.savevisualization(filename='marginalCostWorth.png')    
+        if show_cost_also:
+            #show a plot of the cost space, illustrating the linearization
+            plot.figure()
+            gensPlotted_price=gensPlotted
+            gensPlotted,genNames,loadsPlotted,loadNames=[],[],[],[]
+            for g,gen in enumerate(generators):
+                if gen.status(t):
+                    gensPlotted.append( gen.costModel.plot(P=value(gen.power(t)),linestyle='-',color=gensPlotted_price[g].get_color()) )
+                    genNames.append(gen.name)
+            for load in loads: 
+                if load.kind=='bidding': 
+                    loadsPlotted.append( load.bid[t].plot(P=value(load.power(t)),linestyle=':') )
+                    loadNames.append(load.name)        
+            plot.xlabel('P [MWh]')
+            if loadsPlotted:     plot.ylabel('Cost-Benifit [$/h]')
+            else:                plot.ylabel('Cost [$/h]')
+            legendGens=plot.legend(gensPlotted, genNames, fancybox=True,title='Generators:',loc='best')
+            if loadsPlotted:
+                plot.legend(loadsPlotted, loadNames, fancybox=True,title='Loads:',loc='best')
+                plot.gca().add_artist(legendGens) #add first legend to the axes manually bcs multiple legends get overwritten
+            
+            self.savevisualization(filename='dispatch.png')        
     def saveCSV(self,filename='dispatch.csv'):
         if not self.solved: return
         t=self.times[0]
@@ -173,8 +206,8 @@ class Solution_ED(Solution):
         
         fields,data=[],[]
         fields.append('generator name');  data.append(getattrL(generators,'name'))
-        fields.append('u');  data.append([value(g.u[t]) for g in generators])
-        fields.append('P');  data.append([value(g.P(t)) for g in generators])
+        fields.append('u');  data.append([value(g.status(t)) for g in generators])
+        fields.append('P');  data.append([value(g.power(t)) for g in generators])
         fields.append('IC');  data.append([g.incrementalcost(t) for g in generators])
         
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))        
@@ -195,7 +228,7 @@ class Solution_OPF(Solution):
         
         pos=nx.spectral_layout(G)
         Pinj=[ndata['Pinj'] for bus,ndata in G.nodes(data=True) if 'Pinj' in ndata]
-        nx.draw(G,node_color=Pinj,pos=pos,node_size=1500,alpha=.7,cmap=plot.cm.RdYlBu,fontsize=30)
+        nx.draw(G,node_color=Pinj,pos=pos,node_size=1500,alpha=.7,cmap=plot.cm.get_cmap('RdYlBu'),fontsize=30)
         cb=plot.colorbar(shrink=.8)
         cb.set_label('injected power [MW]',fontsize=15)
         
@@ -211,8 +244,8 @@ class Solution_OPF(Solution):
         
         fields,data=[],[]
         fields.append('generator name');  data.append(getattrL(generators,'name'))
-        fields.append('u');  data.append([value(g.u[t]) for g in generators])
-        fields.append('P');  data.append([value(g.P(t)) for g in generators])
+        fields.append('u');  data.append([value(g.status(t)) for g in generators])
+        fields.append('P');  data.append([value(g.power(t)) for g in generators])
         fields.append('IC');  data.append([g.incrementalcost(t) for g in generators])
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename+'-generators.csv'))           
         
@@ -230,6 +263,7 @@ class Solution_UC(Solution):
     def info_buses(self,t): pass
     def saveCSV(self,filename='commitment.csv'): 
         if not self.solved: return
+        #times=getattr(self.times,'non_overlap_times',self.times)
         times=self.times
         
         fields,data=[],[]
@@ -238,18 +272,18 @@ class Solution_UC(Solution):
         for gen in self.generators: 
             if gen.isControllable:
                 fields.append('status: '+str(gen.name))
-                data.append([value(gen.u[t]) for t in times])
+                data.append([1 if value(gen.status(t))==1 else 0 for t in times])
             fields.append('power: '+str(gen.name))
-            data.append([value(gen.P(t)) for t in times])
+            data.append([value(gen.power(t)) for t in times])
         for load in self.loads:
             fields.append('load power: '+str(load.name))
-            data.append([value(load.P(t)) for t in times])
+            data.append([value(load.power(t)) for t in times])
         
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))
     
     def vizualization(self,filename='commitment.png',withPrices=True):
         if not self.solved: return
-        if len(self.generators)<5: fewunits=True
+        if len(self.generators)<=5: fewunits=True
         else: fewunits=False
         
         times,generators,loads=self.times,self.generators,self.loads
@@ -293,9 +327,9 @@ class Solution_UC(Solution):
             for gen in generators:
                 kind=gen.kind if gen.kind in allkinds else 'other'
                 if genbykind[kind] is None:
-                    genbykind[kind]=[value(gen.P(t)) for t in times.wInitial]
+                    genbykind[kind]=[value(gen.power(t)) for t in times.wInitial]
                 else:
-                    genbykind[kind]=elementwiseAdd([value(gen.P(t)) for t in times.wInitial],genbykind[kind])
+                    genbykind[kind]=elementwiseAdd([value(gen.power(t)) for t in times.wInitial],genbykind[kind])
             
             for kind,Pgen in genbykind.iteritems():
                 if Pgen is None: continue
@@ -307,12 +341,12 @@ class Solution_UC(Solution):
             #sort generators by 1.committed hrs (and then by 2. energy)
             generators=sorted(generators,reverse=True,
                               key=lambda gen: 
-                              ( sum(value(gen.u[t]) if hasattr(gen,'u') else 0 for t in times), #committed hrs
-                               sum(value(gen.P(t)) for t in times) #energy
+                              ( sum(value(gen.status(t)) for t in times), #committed hrs
+                               sum(value(gen.power(t)) for t in times) #energy
                                ))
             colors=colormap(len(generators),colormapName='Blues')
             for g,gen in enumerate(generators):
-                Pgen=[value(gen.P(t)) for t in times.wInitial]
+                Pgen=[value(gen.power(t)) for t in times.wInitial]
                 gensPlotted,stackBottom=addtostackplot(ax,T,Pgen,colors[g], gensPlotted,stackBottom)
                 yLabels.append(gen.name)      
         
@@ -321,10 +355,10 @@ class Solution_UC(Solution):
         
         convert_to_GW=True if max(stackBottom)>20000 else False
         
-        for d,load in enumerate(loads):
+        for load in loads:
             color='.8' #gray
             if load.kind in ['shifting','bidding']:
-                Pd=[value(load.P(t)) for t in times]
+                Pd=[value(load.power(t)) for t in times]
                 stackBottom=elementwiseAdd([-1*P for P in Pd],stackBottom)
                 plt=ax.bar(T[1:],Pd,bottom=stackBottom,alpha=.5,color=color,edgecolor=color,width=barWidth,hatch="/")
                 loadsPlotted.append(plt[0])
@@ -336,15 +370,16 @@ class Solution_UC(Solution):
         #show prices
         if withPrices and any(prices):
             prices=replace_all(prices, config.cost_loadshedding, None)
-            axesPrice = plot.axes([figLeft,.75,figWidth,.2],sharex=ax)
-            plt=axesPrice.step(T[1:]+[times.End],prices+[prices[-1]],  where='post') #start from 1 past initial time
-            axesPrice.set_ylabel('price\n[$/MWh]',ha='center',**bigFont)
-            axesPrice.yaxis.set_label_coords(**yLabel_pos)
-            plot.setp(axesPrice.get_xticklabels(), visible=False)
-            #format the price axis nicely
             prices_wo_none=[p for p in prices if p is not None]
-            plot.ylim((.9*min(prices_wo_none),1.1*max(prices_wo_none)))
-            axesPrice.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(5))
+            if prices_wo_none:
+                axesPrice = plot.axes([figLeft,.75,figWidth,.2],sharex=ax)
+                plt=axesPrice.step(T[1:]+[times.End],prices+[prices[-1]],  where='post') #start from 1 past initial time
+                axesPrice.set_ylabel('price\n[$/MWh]',ha='center',**bigFont)
+                axesPrice.yaxis.set_label_coords(**yLabel_pos)
+                plot.setp(axesPrice.get_xticklabels(), visible=False)
+                #format the price axis nicely
+                plot.ylim((.9*min(prices_wo_none),1.1*max(prices_wo_none)))
+                axesPrice.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(5))
         
         ax.xaxis_date()
         plottedL=loadsPlotted[::-1]+gensPlotted[::-1]
@@ -380,9 +415,9 @@ class Solution_SCUC(Solution):
     def vizualization(self): raise NotImplementedError('need to implement vizualization for SCUC')
     def saveCSV(self,filename='commitment.csv'): raise NotImplementedError
 class Solution_multistageUC(Solution_UC):
-    def __init__(self,problemsL,times,stageTimes,buses,datadir):
+    def __init__(self,problemsL,times,stageTimes,buses,datadir='.',overlap_hours=0):
         vars(self).update(locals())
-        self.times=Timelist(flatten([list(tL) for tL in stageTimes]))
+        self.times=Timelist(flatten([list(times.non_overlap_times) for times in stageTimes]))
         self.times.setInitial(stageTimes[0].initialTime)
         
         if all([p['status'][0]==1 for p in problemsL]): 
@@ -405,7 +440,7 @@ class Solution_multistageUC(Solution_UC):
         except ZeroDivisionError: self.costerror=0       
     def calcPrices(self):    
         for n,problem in enumerate(self.problemsL):
-            for t in self.stageTimes[n]:
+            for t in self.stageTimes[n].non_overlap_times:
                 for bus in self.buses:
                     bus.price[t] = problem[t]['price_'+bus.iden(t)]
     def show(self):
@@ -413,7 +448,6 @@ class Solution_multistageUC(Solution_UC):
         if not self.solved: return
         self.info_cost()
         self.info_shedding()
-        self.vizualization()
     def info_shedding(self):
         if self.load_shed:
             print 'total load shed={}MW'.format(self.load_shed)
@@ -421,25 +455,24 @@ class Solution_multistageUC(Solution_UC):
         if self.solved: print('{stat} in total of {time:0.4f} sec'.format(stat=self.status,time=self.solveTime))
         else: print(self.solveStatus)
 
-def get_stage_solution(problem,buses,times):
+def get_stage_solution(problem,buses,times,overlap_hours=0):
     solution=dict()
     solution['objective']=float(value(problem.objective))
     solution['solve-time']=problem.solutionTime
     solution['status'] = ( problem.status,problem.statusText )
-    solution['fuelcost_generation']=sum(flatten(flatten([[[value(gen.operatingcost(t)) for t in times] for gen in bus.generators] for bus in buses]) ))
-    solution['truecost_generation']=sum(flatten(flatten([[[value(gen.truecost(t))      for t in times] for gen in bus.generators] for bus in buses]) ))
+    solution['fuelcost_generation']=sum(flatten(flatten([[[value(gen.operatingcost(t)) for t in times.non_overlap_times] for gen in bus.generators] for bus in buses]) ))
+    solution['truecost_generation']=sum(flatten(flatten([[[value(gen.truecost(t))      for t in times.non_overlap_times] for gen in bus.generators] for bus in buses]) ))
     solution['load_shed']=0
 
-    #reduce memory by setting variables to their value (instead of pulp object)
+    #reduce memory by setting variables to their value (instead of full Variable object)
     for bus in buses:
         for gen in bus.generators: gen.fix_vars(times,problem)
         for load in bus.loads: load.update_vars(times,problem)
     
-    for t in times:
+    for t in times.non_overlap_times:
         sln=dict()
         for bus in buses: 
-            sln['price_'+bus.iden(t)]=bus.getprice(t,problem)
-            
+            sln['price_'+bus.iden(t)]=bus.getprice(t,problem)            
             for load in bus.loads:
                 shed=load.shed(t)
                 if shed: 
@@ -455,8 +488,8 @@ def write_last_stage_status(buses,stagetimes):
     
     fields,data=[],[]
     fields.append('generator name');  data.append(getattrL(generators,'name'))
-    fields.append('u');  data.append([value(g.u[t]) for g in generators])
-    fields.append('P');  data.append([value(g.P(t)) for g in generators])
+    fields.append('u');  data.append([value(g.status(t)) for g in generators])
+    fields.append('P');  data.append([value(g.power(t)) for g in generators])
     fields.append('hours in status');  data.append([value(g.initialStatusHours) for g in generators])
     writeCSV(fields,transpose(data),filename='stagestatus{}.csv'.format(t.End))          
 

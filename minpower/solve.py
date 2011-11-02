@@ -3,7 +3,7 @@ Power systems optimization problem solver
 (ED, OPF, UC, and SCUC problems).
 """
 
-import sys,os,logging
+import logging
 from datetime import datetime as wallclocktime
 
 import optimization
@@ -11,17 +11,19 @@ import get_data
 import powersystems
 import results
 import config
-from commonscripts import joindir,flatten
-
-  
-def _setup_logging(fn):
-    ''' set up the logging to report on the status'''
-    logging.basicConfig( level=config.logging_level, format='%(levelname)s: %(message)s')
-    return fn
+from commonscripts import joindir
     
-@_setup_logging
-def problem(datadir='./tests/uc/',shell=True,problemfile=True,
-        vizualization=True,csv=True,solver=config.optimization_solver):
+def problem(datadir='.',
+        shell=True,
+        problemfile=True,
+        vizualization=True,
+        csv=True,
+        solver=config.optimization_solver,
+        num_breakpoints=config.default_num_breakpoints,
+        hours_commitment=config.default_hours_commitment,
+        hours_commitment_overlap=config.default_hours_commitment_overlap,
+        logging_level=config.logging_level,
+        ):
     """ Solve a optimization problem in a directory.
         Problem type is determined from the data.
             
@@ -32,34 +34,45 @@ def problem(datadir='./tests/uc/',shell=True,problemfile=True,
         :returns: :class:`~results.Solution` object
     """
     
+    setup_logging(logging_level)
+    
     buses,lines,times=get_data.parsedir(datadir)
-
-    if times.spanhrs<=24:
-        problem=create_problem(buses,lines,times)
-        optimization.solve(problem,solver)
-        if problemfile: problem.write(joindir(datadir,'problem-formulation.lp'))
+    
+    if times.spanhrs<=hours_commitment:
+        problem=create_problem(buses,lines,times,num_breakpoints)
+        optimization.solve(problem,solver,problem_filename=joindir(datadir,'problem-formulation.lp'))
         if problem.solved:
             solution=results.makeSolution(times=times,lines=lines,buses=buses,problem=problem,datadir=datadir)
         else: 
             raise optimization.OptimizationError('problem not solved')
     else: #split into multi-stage problem
-        problemsL,stageTimes=create_problem_multistage(buses,lines,times,datadir)
-        solution=results.makeMultistageSolution(problemsL=problemsL,times=times,stageTimes=stageTimes,buses=buses,lines=lines,datadir=datadir)
+        problemsL,stageTimes=create_problem_multistage(buses,lines,times,datadir,
+                                                       stageHrs=hours_commitment,
+                                                       overlap_hours=hours_commitment_overlap,
+                                                       num_breakpoints=num_breakpoints,
+                                                       )
+        solution=results.makeMultistageSolution(problemsL=problemsL,
+            buses=buses,lines=lines,
+            times=times,stageTimes=stageTimes,overlap_hours=hours_commitment_overlap,
+            datadir=datadir
+            )
         logging.info('problem solved in {}'.format(solution.solveTime))
-    
+        
     if shell: solution.show()
     if csv: solution.saveCSV()
     if vizualization: solution.vizualization()
     return solution
 
-def create_problem(buses,lines,times,load_shedding_allowed=False):
+def create_problem(buses,lines,times,
+                   num_breakpoints=config.default_num_breakpoints,
+                   load_shedding_allowed=False,
+                   dispatch_decommit_allowed=False):
     """
         Create a power systems optimization problem.
         
         :param buses: list of :class:`~powersystems.Bus` objects
         :param lines: list of :class:`~powersystems.Line` objects
         :param times: :class:`~schedule.Timelist` object
-        :param filename: (optional) create a .lp file of the problem
         
         :returns: :class:`~optimization.Problem` object
     """
@@ -73,12 +86,12 @@ def create_problem(buses,lines,times,load_shedding_allowed=False):
         if len(buses)>1: bus.add_timevars(times)
         
         for gen in bus.generators:
-            problemvars.extend(gen.add_timevars(times))
+            problemvars.extend(gen.add_timevars(times,num_breakpoints,dispatch_decommit_allowed))
             prob.addConstraints(gen.constraints(times))
             for time in times: costs.append(gen.cost(time))
 
         for load in bus.loads:
-            problemvars.extend(load.add_timevars(times,shedding_allowed=load_shedding_allowed))
+            problemvars.extend(load.add_timevars(times,load_shedding_allowed))
             prob.addConstraints(load.constraints(times))
             for time in times: costs.append(-1*load.benifit(time))
             
@@ -101,7 +114,13 @@ def create_problem(buses,lines,times,load_shedding_allowed=False):
 
 
 
-def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHrs=24,writeproblem=False, showclock=True):
+def create_problem_multistage(buses,lines,times,datadir,
+                              intervalHrs=None,
+                              stageHrs=config.default_hours_commitment,
+                              overlap_hours=config.default_hours_commitment_overlap,
+                              num_breakpoints=config.default_num_breakpoints,
+                              writeproblem=False,
+                              showclock=True):
     """
     Create a multi-stage power systems optimization problem.
     Each stage will be one optimization run. A stage's final
@@ -112,8 +131,8 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
     :param lines: list of :class:`~powersystems.Line` objects
     :param times: :class:`~schedule.Timelist` object
     :param intervalHrs: define the number of hours per interval
-    :param stageHrs: define the number of hours per stage
-    
+    :param stageHrs: define the number of hours per stage (excluding overlap)
+    :param overlap_hours: number of hours that stages overlap
     
     :returns: a list of :class:`~optimization.Problem` objects (one per stage)
     :returns: a list of :class:`~schedule.Timelist` objects (one per stage)
@@ -122,7 +141,7 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
         
     if not intervalHrs: intervalHrs=times.intervalhrs
         
-    stageTimes=times.subdivide(hrsperdivision=stageHrs,hrsinterval=intervalHrs)
+    stageTimes=times.subdivide(hrsperdivision=stageHrs,hrsinterval=intervalHrs,overlap_hrs=overlap_hours)
     problemsL=[]
 
     
@@ -135,28 +154,31 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
                 except AttributeError: pass #first stage of problem already has initial time definied
 
     def get_finalconditions(buses,times,lastproblem):
+        t_back=overlap_hours/times.intervalhrs
+        next_stage_first_time = times[-1-int(t_back)]         
         for bus in buses:
             for gen in bus.generators:
                 gen.update_vars(times, lastproblem)
-                gen.finalstatus=gen.getstatus(t=times[-1],times=times)
+                gen.finalstatus=gen.getstatus(t=next_stage_first_time,times=times)
 
 
     for t_stage in stageTimes:
-        logging.info('Stage starting at {} {}'.format(t_stage[0].Start, 'time={}'.format(wallclocktime.now()) if showclock else ''))
+        logging.info('Stage starting at {} {}'.format(t_stage[0].Start, 'clocktime={}'.format(wallclocktime.now()) if showclock else ''))
+        
         set_initialconditions(buses,t_stage.initialTime)
-        stageproblem=create_problem(buses,lines,t_stage)
+        stageproblem=create_problem(buses,lines,t_stage,num_breakpoints=num_breakpoints)
         if writeproblem: stageproblem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
         
         optimization.solve(stageproblem)
-        if stageproblem.status!=1: 
+        if not stageproblem.solved: 
             #redo stage, with shedding allowed
-            logging.warning('Stage infeasible, re-runnning with load shedding.')
-            stageproblem=create_problem(buses,lines,t_stage,load_shedding_allowed=True)
+            logging.critical('Stage infeasible, re-runnning with load shedding.')
+            stageproblem=create_problem(buses,lines,t_stage,num_breakpoints=num_breakpoints,load_shedding_allowed=True)
             optimization.solve(stageproblem)
             
-        if stageproblem.status==1:
+        if stageproblem.solved:
             get_finalconditions(buses,t_stage,stageproblem)
-            stage_sln=results.get_stage_solution(stageproblem,buses,t_stage)
+            stage_sln=results.get_stage_solution(stageproblem,buses,t_stage,overlap_hours)
             problemsL.append(stage_sln)
         else: 
             print stageproblem.status,stageproblem.statusText()
@@ -166,14 +188,7 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
             raise optimization.OptimizationError(msg)
     return problemsL,stageTimes
 
-if __name__ == "__main__": 
-    ''' command line input'''
-    _setup_logging()
-    if len(sys.argv)==1: problem()
-    elif len(sys.argv)==2: 
-        datadir=sys.argv[1]
-        if not os.path.isdir(datadir):
-            raise OSError( "data directory does not exist: '{d}'".format(d=datadir) )
-        problem(datadir=datadir)
-    else: 
-        raise IOError('solve.main() takes only one input argument (the directory). {n} inputs passed'.format(n=len(sys.argv)))
+  
+def setup_logging(level):
+    ''' set up the logging to report on the status'''
+    logging.basicConfig( level=level, format='%(levelname)s: %(message)s')

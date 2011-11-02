@@ -7,17 +7,16 @@ from the information found in the data.
 
 import powersystems
 import schedule
-from addons import * 
-from commonscripts import readCSV,csvColumn,flatten,unique,drop_case_spaces,getattrL, joindir
+from addons import *
+from commonscripts import readCSV,csvColumn,flatten,unique,drop_case_spaces,joindir
 
 import os,sys,logging
-import dateutil
-import numpy as np
 
 fields_lines={'name':'name','to':'To','from':'From','pmax':'Pmax'}
 fields_gens={
     'name':'name','type':'kind','kind':'kind','bus':'bus',
     'pmin':'Pmin','pmax':'Pmax',
+    'p':'power','pg':'power','power':'power', #for a non-controllable gen in an ED
     'rampratemin':'rampratemin','rampratemax':'rampratemax',
     'minuptime':'minuptime','mindowntime':'mindowntime',
     'costcurveequation':'costcurvestring', 
@@ -25,11 +24,18 @@ fields_gens={
     'startupcost':'startupcost','shutdowncost':'shutdowncost',
     'schedulefilename':'schedulefilename','mustrun':'mustrun'}
 fields_loads={'name':'name','bus':'bus','type':'kind','kind':'kind',
-            'p':'P','pd':'P', 'pmin':'Pmin','pmax':'Pmax',
+            'p':'P','pd':'P', 'power':'P',
+            'pmin':'Pmin','pmax':'Pmax',
             'schedulefilename':'schedulefilename',
             'bidequation':'costcurvestring','costcurveequation':'costcurvestring'}
-
-def parsedir(datadir='./tests/uc/',
+fields_initial={
+    'name':'name','generatorname':'name',
+    'status':'u','u':'u',
+    'p':'P','pg':'P','power':'P',
+    'hoursinstatus':'hoursinstatus',
+    'ic':None}
+    
+def parsedir(datadir='.',
         file_gens='generators.csv',
         file_loads='loads.csv',
         file_lines='lines.csv',
@@ -75,8 +81,7 @@ def parsedir(datadir='./tests/uc/',
 def setup_initialcond(filename,generators,times):
     '''read initial conditions from spreadsheet and add information to each :class:`powersystems.Generator`.'''
     if len(times)<=1: return generators #for UC,ED no need to set initial status
-    field_attr_map={'name':'name','status':'u','p':'P','hoursinstatus':'hoursinstatus'}
-    validFields=field_attr_map.keys()
+    validFields=fields_initial.keys()
     
     initialTime = times.initialTime
     
@@ -87,20 +92,26 @@ def setup_initialcond(filename,generators,times):
         for gen in generators: gen.setInitialCondition(time=initialTime)
         return generators
         
-    try: attributes=[field_attr_map[drop_case_spaces(f)] for f in fields]
+    try: attributes=[fields_initial[drop_case_spaces(f)] for f in fields]
     except KeyError:
         print 'Field "{f}" is not in valid fields (case insensitive): {V}.'.format(f=f,V=validFields)
         raise
     
     
-    #add info to generators
+    #set initial condition for all gens to off
+    for g in generators: g.setInitialCondition(initialTime, u=False, P=0)
+
+
+    #overwrite initial condition for generators which are specified in the initial file
     genNames=[g.name for g in generators]
     nameCol = attributes.index('name')
+    excludeCols = [nameCol]
+    if None in attributes: excludeCols.append( attributes.index(None) )
     for row in data:
         inputs=dict()
         for c,elem in enumerate(row): 
-            if c==nameCol: continue
-            elif row[c] is not None: inputs[attributes[c]]=row[c]
+            if c in excludeCols: continue
+            elif elem is not None: inputs[attributes[c]]=elem
         g=genNames.index(row[nameCol])
         generators[g].setInitialCondition(time=initialTime,**inputs)
         
@@ -125,8 +136,8 @@ def build_class_list(filename,model,field_attr_map,times=None):
     data,fields=readCSV(filename,validFields)
     try: attributes=[field_attr_map[drop_case_spaces(f)] for f in fields]
     except KeyError:
-        raise KeyError('Field "{f}" is not in list'.format(f=f)+
-            'of valid fields (case insensitive): {V}.'.format(V=validFields))
+        msg='Field "{f}" is not in list of valid fields for {m} (case insensitive): {V}.'.format(f=f,m=model,V=validFields)
+        raise KeyError(msg)
     
     def getmodel(default,name,inputs):
         model=default

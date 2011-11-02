@@ -49,4 +49,4 @@ addons/*.py
 ehthumbs.db
 Icon?
 Thumbs.db
-
+*~

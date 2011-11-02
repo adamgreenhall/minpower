@@ -156,7 +156,7 @@ if optimization_package=='coopr':
 
     def sumVars(variables): return sum(variables)
     def newProblem(): return Problem()
-    def newVar(name='',kind='Continuous',low=-1000000,high=1000000):
+    def new_variable(name='',kind='Continuous',low=-1000000,high=1000000):
         '''create an optimization variable'''
 
         kindmap = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyomo.Boolean)
@@ -232,7 +232,7 @@ elif optimization_package=='pulp':
     def newProblem(name='problem',kind=pulp.LpMinimize):
         '''create a new problem'''
         return Problem(name=name,sense=kind)
-    def newVar(name='',kind='Continuous',low=-1000000,high=1000000):
+    def new_variable(name='',kind='Continuous',low=-1000000,high=1000000):
         '''create an optimization variable'''
         #note that if binary variable, pulp will reset the bounds to (0,1)
         #note that if using glpk, bounds of -inf and inf produces error

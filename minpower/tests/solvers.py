@@ -6,8 +6,8 @@ solvers = Tests()
 
 def simple_problem():
     prob=optimization.newProblem()
-    x= optimization.newVar('x',low=0,high=3)
-    y= optimization.newVar('y',low=0,high=1)
+    x= optimization.new_variable('x',low=0,high=3)
+    y= optimization.new_variable('y',low=0,high=1)
     prob.addVariables([x,y])
     prob.addObjective(y-4*x)
     prob.addConstraints(dict(theconstr=(x+y<=2)))    

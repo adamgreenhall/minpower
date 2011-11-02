@@ -4,7 +4,7 @@ Defines models for power systems concepts:
 :class:`~powersystems.Line`, and :class:`~powersystems.Load`.
 """
 
-from optimization import newVar,value,sumVars
+from optimization import new_variable,value,sumVars
 from commonscripts import hours,drop_case_spaces,getattrL,unique,update_attributes
 import config, bidding
 from schedule import FixedSchedule
@@ -173,7 +173,7 @@ class Generator(object):
         name=self.t_id(name,time)
         short_name=self.t_id(short_name,time)
         if fixed_value is None:
-            self.variables[name] = newVar(name=short_name,low=low,high=high,kind=kind)
+            self.variables[name] = new_variable(name=short_name,low=low,high=high,kind=kind)
         else:
             self.variables[name] = fixed_value
     def add_constraint(self,name,time,expression): self.constraintsD[self.t_id(name,time)]=expression
@@ -360,7 +360,7 @@ class Line(object):
         self.P,self.price=dict(),dict()
     def add_timevars(self,times):
         for time in times: 
-            self.P[time]=newVar(name='P_'+self.iden(time))
+            self.P[time]=new_variable(name='P_'+self.iden(time))
         return self.P.values()
     def update_vars(self,times,problem):
         for time in times: self.P[time]=value(self.P[time],problem)
@@ -398,7 +398,7 @@ class Bus(object):
         self.generators,self.loads=[],[]
         self.angle,self.price=dict(),dict()
     def add_timevars(self,times):
-        for time in times: self.angle[time]=newVar(name='angle_'+self.iden(time))
+        for time in times: self.angle[time]=new_variable(name='angle_'+self.iden(time))
         return self.angle.values()
     def update_vars(self,times,problem):
         for time in times: self.angle[time]=value(self.angle[time],problem)
@@ -475,7 +475,7 @@ class Load(object):
     def shed(self,time): return self.schedule.getEnergy(time)- value(self.power(time)) #power_to_energy(value(self.power(time)),time)
     def add_timevars(self,times=None,shedding_allowed=False):
         if shedding_allowed: 
-            for t in times: self.dispatched_power[t]=newVar('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
+            for t in times: self.dispatched_power[t]=new_variable('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
         else:
             for t in times: self.dispatched_power[t]=self.schedule.getEnergy(t)
         return self.dispatched_power.values()
@@ -502,7 +502,7 @@ class Load_Fixed(Load):
     def power(self,time=None): return self.dispatched_power[time]
     def add_timevars(self,times=None,shedding_allowed=False):
         if shedding_allowed: 
-            for t in times: self.dispatched_power[t]=newVar('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
+            for t in times: self.dispatched_power[t]=new_variable('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
             return self.dispatched_power.values()
         else:
             for t in times: self.dispatched_power[t]=self.Pfixed

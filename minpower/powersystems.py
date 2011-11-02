@@ -172,7 +172,10 @@ class Generator(object):
     def status(self,time): 
         '''on/off status at time'''
         return self.variables['status'][time]
-    def status_change(self,t,times):  return self.variables['status'][times[t]] - self.variables['status'][times[t-1]]
+    def status_change(self,t,times): 
+        if t>0: previous_status=self.variables['status'][times[t-1]]
+        else:   previous_status=self.variables['status'][times.initialTime]
+        return self.variables['status'][times[t]] - previous_status
     def cost(self,time): 
         '''total cost at time (operating + startup + shutdown)'''
         return self.operatingcost(time)+self.cost_startup(time)+self.cost_shutdown(time)
@@ -224,8 +227,6 @@ class Generator(object):
                 self.variables['capacity'][time]=newVar(name='Pmax_'+iden,low=0,high=self.Pmax)
                 self.variables['startupcost'][time]=newVar(name='cost_startup_'+iden,low=0,high=self.startupcost)
                 self.variables['shutdowncost'][time]=newVar(name='cost_shutdown_'+iden,low=0,high=self.shutdowncost)
-                #self.variables['startup'][time] =newVar(name='su_'+iden,kind='Binary')
-                #self.variables['shutdown'][time]=newVar(name='sd_'+iden,kind='Binary')
             else: #ED or OPF problem, no commitments
 <<<<<<< HEAD
                 self.u[time]=True
@@ -236,9 +237,14 @@ class Generator(object):
 =======
 =======
                 self.variables['status'][time]=True
+<<<<<<< HEAD
                 #self.variables['startup'][time]=False
                 #self.variables['shutdown'][time]=False
 >>>>>>> reformulation of startup,shutdown variables according to Arroyo and Carrion 2006
+=======
+                self.variables['startupcost'][time]=0
+                self.variables['shutdowncost'][time]=0
+>>>>>>> implemented min up down times. need to add current capacity var and finish integration testing
 
             self.bid[time]=bidding.Bid(
                 model=self.costModel,
@@ -317,22 +323,19 @@ class Generator(object):
             iden='{g}_init'.format(g=str(self))
             tInitial = times.initialTime
             tEnd = len(times)
-            if self.minuptime is not None:
+            if self.minuptime>0:
                 up_intervals_remaining=roundoff((self.minuptime - self.initialStatusHours)/times.intervalhrs)
-                min_up_intervals_remaining_init =   max(0, (self.status(tInitial)==1) * min(tEnd,up_intervals_remaining ))
+                min_up_intervals_remaining_init =   min(tEnd, up_intervals_remaining*self.status(tInitial) )
             else: min_up_intervals_remaining_init=0
-            if self.mindowntime is not None:
+            if self.mindowntime>0:
                 down_intervals_remaining=roundoff((self.mindowntime - self.initialStatusHours)/times.intervalhrs)
-                min_down_intervals_remaining_init = max(0, (self.status(tInitial)==0) * min(tEnd,down_intervals_remaining ))
+                min_down_intervals_remaining_init = min(tEnd,down_intervals_remaining*(self.status(tInitial)==0))
             else: min_down_intervals_remaining_init=0
-                
             #initial up down time
             if min_up_intervals_remaining_init>0: 
                 constraintsD['minuptime_'+iden]= 0==sumVars([(1-self.status(times[t])) for t in range(min_up_intervals_remaining_init)])
             if min_down_intervals_remaining_init>0: 
                 constraintsD['mindowntime_'+iden]= 0==sumVars([self.status(times[t]) for t in range(min_down_intervals_remaining_init)])
-            #initial start up / shut down
-            #constraintsD['statusChange_'+iden]= self.startup(times[0])-self.shutdown(times[0]) == self.status(times[0]) - self.status(tInitial)
 
             #initial ramp rate
             if self.rampratemax is not None:
@@ -344,6 +347,8 @@ class Generator(object):
             
             
             #calculate up down intervals
+            if min_up_intervals_remaining_init==0: min_up_intervals_remaining_init=-1
+            if min_down_intervals_remaining_init==0: min_down_intervals_remaining_init=-1
             min_up_intervals =  roundoff(self.minuptime/times.intervalhrs)
             min_down_intervals = roundoff(self.mindowntime/times.intervalhrs)
         
@@ -358,24 +363,31 @@ class Generator(object):
                 constraintsD['min-gen-power_'+iden]= self.power(time)>=self.status(time)*self.Pmin
             constraintsD['max-gen-power_'+iden]= self.power(time)<=self.status(time)*self.Pmax
             if len(times)>1: #if UC or SCUC problem
-                #start up / shut down
-#                constraintsD['statusConstant_'+iden]=       self.startup(time)+self.shutdown(time) <= 1
-#                if t>0: constraintsD['statusChange_'+iden]= self.startup(time)-self.shutdown(time) == self.status(time)-self.status(times[t-1])
                 #up/down time minimums 
-                if t > min_up_intervals_remaining_init and self.minuptime is not None:
+                if t > min_up_intervals_remaining_init and self.minuptime>0:
                     no_shut_down=range(t,min(tEnd,t+min_up_intervals))
                     min_up_intervals_remaining=min(tEnd-t,min_up_intervals)
-                    constraintsD['minuptime_'+iden]= sumVars([self.status(times[s]) for s in no_shut_down]) >= min_up_intervals_remaining*self.status_change(t,times)
-                if t > min_down_intervals_remaining_init and self.mindowntime is not None:
+                    constraintsD['minuptime_'+iden]= \
+                        sumVars([self.status(times[s]) for s in no_shut_down]) >= \
+                        min_up_intervals_remaining*self.status_change(t,times)
+#                    if self.name=='g2':
+#                        print time
+#                        print 'minuptime',min_up_intervals
+#                        print [self.status(times[s]) for s in no_shut_down]
+#                        print min_up_intervals_remaining, repr(self.status_change(t,times))
+                if t > min_down_intervals_remaining_init and self.mindowntime>0:
                     no_start_up=range(t,min(tEnd,t+min_down_intervals))
                     min_down_intervals_remaining=min(tEnd-t,min_down_intervals)
-                    constraintsD['mindowntime_'+iden]= sumVars([1-self.status(times[s]) for s in no_start_up]) >= min_down_intervals_remaining * -1 * self.status_change(t,times)
+                    constraintsD['mindowntime_'+iden]= \
+                        sumVars([1-self.status(times[s]) for s in no_start_up]) >= \
+                        min_down_intervals_remaining * -1 * self.status_change(t,times)
+                        
                 #ramping power
                 if t>0:
                     if self.rampratemax is not None:
-                        constraintsD['rampingLimHi_'+iden]= self.power(time) - self.P(times[t-1]) <= self.rampratemax
+                        constraintsD['rampingLimHi_'+iden]= self.power(time) - self.power(times[t-1]) <= self.rampratemax
                     if self.rampratemin is not None:
-                        constraintsD['rampingLimLo_'+iden]= self.rampratemin <=     self.power(time) - self.P(times[t-1])
+                        constraintsD['rampingLimLo_'+iden]= self.rampratemin <=     self.power(time) - self.power(times[t-1])
                 #start up and shut down costs
                 if self.startupcost>0:
                     constraintsD['startup_cost_'+iden]= self.cost_startup(time)>=self.startupcost*self.status_change(t, times)

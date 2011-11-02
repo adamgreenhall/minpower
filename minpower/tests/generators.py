@@ -28,7 +28,7 @@ def power_maximum():
         ]
     solve_problem(generators,make_load(Pd))
     
-    assert generators[0].power[singletime[0]] == Pmax
+    assert generators[0].power(singletime[0]) == Pmax
     
 @generation.test
 def power_minimum():
@@ -44,7 +44,7 @@ def power_minimum():
         make_expensive_gen(Pmin=Pmin)
         ]
     solve_problem(generators,make_load(Pd))
-    assert generators[1].power[singletime[0]] == Pmin
+    assert generators[1].power(singletime[0]) == Pmin
 
 @generation.test
 def ramp_up():
@@ -62,7 +62,7 @@ def ramp_up():
     
     load=make_load(Pdt=[250,350])
     problem,times,buses=solve_problem(generators,load,gen_init=initial)
-    assert generators[0].power[times[1]] - generators[0].power[times[0]] == ramp_limit
+    assert generators[0].power(times[1]) - generators[0].power(times[0]) == ramp_limit
     
 @generation.test
 def ramp_down():
@@ -80,7 +80,7 @@ def ramp_down():
     
     load=make_load(Pdt=[550,450])
     problem,times,buses=solve_problem(generators,load,gen_init=initial)
-    ramp_rate = generators[1].power[times[1]] - generators[1].power[times[0]]
+    ramp_rate = generators[1].power(times[1]) - generators[1].power(times[0])
     assert ramp_rate == ramp_limit
 
 @generation.test
@@ -100,7 +100,7 @@ def ramp_up_initial():
     load=make_load(Pdt=[350,350])
     
     problem,times,buses=solve_problem(generators,load,gen_init=initial)
-    ramp_rate = generators[0].power[times[0]] - generators[0].power[times.initialTime]
+    ramp_rate = generators[0].power(times[0]) - generators[0].power(times.initialTime)
     assert ramp_rate == ramp_limit
 
 
@@ -119,7 +119,7 @@ def ramp_down_initial():
     
     load=make_load(Pdt=[300,300])
     problem,times,buses=solve_problem(generators,load,gen_init=initial)
-    ramp_rate = generators[1].power[times[0]] - generators[1].power[times.initialTime]
+    ramp_rate = generators[1].power(times[0]) - generators[1].power(times.initialTime)
     assert ramp_rate == ramp_limit
 
 
@@ -139,7 +139,7 @@ def min_up_time():
         dict(u=False)]
     load = make_load(Pdt=[85,120,80,80])
     problem,times,buses=solve_problem(generators,load,gen_init=initial)
-    limgen_status=[generators[1].u[t] for t in times]
+    limgen_status=[generators[1].status(t) for t in times]
     assert limgen_status == [0,1,1,0] or limgen_status == [1,1,0,0]
 
 
@@ -165,8 +165,8 @@ def min_down_time():
         dict(u=False)]
     load = make_load(Pdt=[150,10,140,140])
     problem,times,buses=solve_problem(generators,load,gen_init=initial)
-    limgen_status=Assert([generators[1].u[t] for t in times])
-    expensive_status_t2 = generators[2].u[times[2]]
+    limgen_status=Assert([generators[1].status(t) for t in times])
+    expensive_status_t2 = generators[2].status(times[2])
     assert limgen_status==[1,0,0,1] and expensive_status_t2==1
 
 
@@ -212,7 +212,7 @@ def shut_down_cost():
     obj_sdcost = problem.objective - sum( gen.operatingcost(t) for t in times for gen in generators)
     assert obj_sdcost==shutdowncost
 
-@test_new.test
+@generation.test
 def min_up_time_longer():
     '''
     Create two generators: cheap with max power limit, exp. with min up time and min power limits.
@@ -223,16 +223,16 @@ def min_up_time_longer():
         make_cheap_gen(Pmax=100),
         make_expensive_gen(minuptime=8,Pmin=5)   ]
     initial = [
-        dict(P= 80, u=True),
-        dict(u=False)]
+        dict(P= 80, u=True,hoursinstatus=1),
+        dict(u=False,hoursinstatus=0)]
     load = make_load(Pdt=[85,120,80,80,70,70,70,70,80,80])
-    problem,times,_=solve_problem(generators,load,gen_init=initial,problem_filename='uptimetest.lp')
+    problem,times,_=solve_problem(generators,load,gen_init=initial)#,problem_filename='uptimetest.lp')
     limgen_status=[generators[1].status(t) for t in times]
-    logging.critical(limgen_status)
+    #logging.critical(limgen_status)
     #logging.critical([(generators[1].startup(t),generators[1].shutdown(t)) for t in times])
     #logging.critical(problem.constraints['minuptime_g1t01'])
-    assert limgen_status == [0,1,1,1,1,1,1,1,1,0] #or limgen_status == [1,1,1,1,1,1,1,1,0,0]
+    assert limgen_status == [0,1,1,1,1,1,1,1,1,0] or limgen_status == [1,1,1,1,1,1,1,1,0,0]
 
     
 if __name__ == "__main__": 
-    test_new.run()
+    generation.run()

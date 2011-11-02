@@ -226,11 +226,11 @@ def min_up_time_longer():
         dict(P= 80, u=True),
         dict(u=False)]
     load = make_load(Pdt=[85,120,80,80,70,70,70,70,80,80])
-    problem,times,buses=solve_problem(generators,load,gen_init=initial,problem_filename='uptimetest.lp')
-    limgen_status=[generators[1].u[t] for t in times]
+    problem,times,_=solve_problem(generators,load,gen_init=initial,problem_filename='uptimetest.lp')
+    limgen_status=[generators[1].status(t) for t in times]
     logging.critical(limgen_status)
-    logging.critical([(generators[1].startup[t],generators[1].shutdown[t]) for t in times])
-    logging.critical(problem.constraints['minuptime_g1t01'])
+    #logging.critical([(generators[1].startup(t),generators[1].shutdown(t)) for t in times])
+    #logging.critical(problem.constraints['minuptime_g1t01'])
     assert limgen_status == [0,1,1,1,1,1,1,1,1,0] #or limgen_status == [1,1,1,1,1,1,1,1,0,0]
 
     

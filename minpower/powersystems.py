@@ -10,6 +10,7 @@ import bidding
 <<<<<<< HEAD
 =======
 
+<<<<<<< HEAD
 >>>>>>> add non-controllable gen to ED. added remote script- not yet working.
 from optimization import newVar,value,sumVars
 <<<<<<< HEAD
@@ -42,6 +43,9 @@ import logging,math
 from commonscripts import hours,drop_case_spaces,getattrL,unique
 >>>>>>> default name for generator based on index
 =======
+=======
+from optimization import new_variable,value,sumVars
+>>>>>>> renamed newVar to new_variable
 from commonscripts import hours,drop_case_spaces,getattrL,unique,update_attributes
 >>>>>>> added update_attributes function for classes. fixed power attr/method clash for gen_noncontrollable
 import config, bidding
@@ -220,7 +224,7 @@ class Generator(object):
         name=self.t_id(name,time)
         short_name=self.t_id(short_name,time)
         if fixed_value is None:
-            self.variables[name] = newVar(name=short_name,low=low,high=high,kind=kind)
+            self.variables[name] = new_variable(name=short_name,low=low,high=high,kind=kind)
         else:
             self.variables[name] = fixed_value
     def add_constraint(self,name,time,expression): self.constraintsD[self.t_id(name,time)]=expression
@@ -494,7 +498,7 @@ class Line(object):
         self.P,self.price=dict(),dict()
     def add_timevars(self,times):
         for time in times: 
-            self.P[time]=newVar(name='P_'+self.iden(time))
+            self.P[time]=new_variable(name='P_'+self.iden(time))
         return self.P.values()
     def update_vars(self,times,problem):
         for time in times: self.P[time]=value(self.P[time],problem)
@@ -530,8 +534,17 @@ class Bus(OptimizationObject):
         update_attributes(self,locals()) #load in inputs
         if index is None: self.index=hash(self)
         self.generators,self.loads=[],[]
+<<<<<<< HEAD
         #self.angle,self.price=dict(),dict()
         self.init_optimization()
+=======
+        self.angle,self.price=dict(),dict()
+    def add_timevars(self,times):
+        for time in times: self.angle[time]=new_variable(name='angle_'+self.iden(time))
+        return self.angle.values()
+    def update_vars(self,times,problem):
+        for time in times: self.angle[time]=value(self.angle[time],problem)
+>>>>>>> renamed newVar to new_variable
 
     def add_timevars(self,times): return self.create_variables(times)
     
@@ -640,7 +653,7 @@ class Load(object):
 >>>>>>> reformulation of startup,shutdown variables according to Arroyo and Carrion 2006
     def add_timevars(self,times=None,shedding_allowed=False):
         if shedding_allowed: 
-            for t in times: self.dispatched_power[t]=newVar('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
+            for t in times: self.dispatched_power[t]=new_variable('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
         else:
             for t in times: self.dispatched_power[t]=self.schedule.getEnergy(t)
         return self.dispatched_power.values()
@@ -673,7 +686,7 @@ class Load_Fixed(Load):
     def power(self,time=None): return self.dispatched_power[time]
     def add_timevars(self,times=None,shedding_allowed=False):
         if shedding_allowed: 
-            for t in times: self.dispatched_power[t]=newVar('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
+            for t in times: self.dispatched_power[t]=new_variable('Pd_{}'.format(self.iden(t)),low=0,high=self.schedule.getEnergy(t))
             return self.dispatched_power.values()
         else:
             for t in times: self.dispatched_power[t]=self.Pfixed

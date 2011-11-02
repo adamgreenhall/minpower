@@ -1,5 +1,5 @@
 from commonscripts import elementwiseMultiply
-from optimization import value,newVar,sumVars
+from optimization import value,new_variable,sumVars
 from config import default_num_breakpoints
 
 from scipy import linspace, polyval, polyder, interp, poly1d
@@ -149,11 +149,11 @@ class PWLmodel(object):
         #F: breakpoint weighting fraction
         for segNum in range(len(self.segments)):  
             name='{iden}_s{segNum}'.format(segNum=segNum,iden=iden)
-            variables[name] = newVar(kind='Binary', name=name)
+            variables[name] = new_variable(kind='Binary', name=name)
          
         for bpNum in range(len(self.bpInputs)):
             name='{iden}_f{bpNum}'.format( bpNum=bpNum,  iden=iden)
-            variables[name] = newVar(low=0,high=1,  name=name)
+            variables[name] = new_variable(low=0,high=1,  name=name)
         return variables 
     def constraints(self,variables,iden):
         """
@@ -248,7 +248,7 @@ class convexPWLmodel(PWLmodel):
     def add_timevars(self,iden):
         variables={}
         name = 'bidCost_'+iden
-        variables[name] = newVar(name=name,high=float(max(self.bpOutputs)))
+        variables[name] = new_variable(name=name,high=float(max(self.bpOutputs)))
         return variables
     def constraints(self,variables,iden):
         constraints=dict()

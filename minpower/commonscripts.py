@@ -180,6 +180,19 @@ def getclass_inlist(L,values,attribute='name'):
     if len(indL)==1: return L[indL[0]]
     else: return [L[ind] for ind in indL]
 
+def update_attributes(instance, variables, exclude=['self']):
+    """Update instance attributes
+ 
+    For example, update(self, locals())
+    
+    instance: Instance to update via setattr()
+    variables: Dictionary of variables
+    exclude: Variables to exclude, defaults to ['self']
+    """
+    if 'self' not in exclude: exclude.append('self')
+    for k, v in variables.iteritems():
+        if k not in exclude: setattr(instance, k, v)
+
 ####################### dict stuff ########################
 def subset(D, subsetL):
     '''subset of dictionary'''

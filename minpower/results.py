@@ -177,7 +177,7 @@ class Solution_ED(Solution):
     
     def info_lines(self,t): pass
     def info_buses(self,t): pass
-    def vizualization(self,show_cost_also=True):
+    def vizualization(self,show_cost_also=False):
         ''' economic dispatch visualization '''
         if not self.solved: return
         t=self.times[0]

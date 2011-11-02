@@ -206,7 +206,7 @@ class Schedule(object):
             self.P[t]=p*multiplier
         return self
     def __repr__(self):
-        return sorted([(str(t.Start),p) for t,p in self.P.iteritems()])    
+        return repr(sorted([(str(t),p) for t,p in self.P.iteritems()]))    
     def getEnergy(self,timeperiod):
         """
         get the amount of energy in a time period 

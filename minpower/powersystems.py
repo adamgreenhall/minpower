@@ -347,8 +347,6 @@ class Generator(object):
             
             
             #calculate up down intervals
-            if min_up_intervals_remaining_init==0: min_up_intervals_remaining_init=-1
-            if min_down_intervals_remaining_init==0: min_down_intervals_remaining_init=-1
             min_up_intervals =  roundoff(self.minuptime/times.intervalhrs)
             min_down_intervals = roundoff(self.mindowntime/times.intervalhrs)
         
@@ -364,18 +362,14 @@ class Generator(object):
             constraintsD['max-gen-power_'+iden]= self.power(time)<=self.status(time)*self.Pmax
             if len(times)>1: #if UC or SCUC problem
                 #up/down time minimums 
-                if t > min_up_intervals_remaining_init and self.minuptime>0:
+                if t >= min_up_intervals_remaining_init and self.minuptime>0:
                     no_shut_down=range(t,min(tEnd,t+min_up_intervals))
                     min_up_intervals_remaining=min(tEnd-t,min_up_intervals)
                     constraintsD['minuptime_'+iden]= \
                         sumVars([self.status(times[s]) for s in no_shut_down]) >= \
                         min_up_intervals_remaining*self.status_change(t,times)
-#                    if self.name=='g2':
-#                        print time
-#                        print 'minuptime',min_up_intervals
-#                        print [self.status(times[s]) for s in no_shut_down]
-#                        print min_up_intervals_remaining, repr(self.status_change(t,times))
-                if t > min_down_intervals_remaining_init and self.mindowntime>0:
+
+                if t >= min_down_intervals_remaining_init and self.mindowntime>0:
                     no_start_up=range(t,min(tEnd,t+min_down_intervals))
                     min_down_intervals_remaining=min(tEnd-t,min_down_intervals)
                     constraintsD['mindowntime_'+iden]= \

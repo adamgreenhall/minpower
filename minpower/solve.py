@@ -162,7 +162,7 @@ def create_problem_multistage(buses,lines,times,datadir,
 
 
     for t_stage in stageTimes:
-        logging.info('Stage starting at {} {}'.format(t_stage[0].Start, 'time={}'.format(wallclocktime.now()) if showclock else ''))
+        logging.info('Stage starting at {} {}'.format(t_stage[0].Start, 'clocktime={}'.format(wallclocktime.now()) if showclock else ''))
         
         set_initialconditions(buses,t_stage.initialTime)
         stageproblem=create_problem(buses,lines,t_stage,num_breakpoints=num_breakpoints)

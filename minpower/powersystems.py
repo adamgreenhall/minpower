@@ -5,7 +5,7 @@ Defines models for power systems concepts:
 """
 
 from optimization import newVar,value,sumVars
-from commonscripts import hours,drop_case_spaces,getattrL,unique
+from commonscripts import hours,drop_case_spaces,getattrL,unique,update_attributes
 import config, bidding
 from schedule import FixedSchedule
 import logging
@@ -106,7 +106,7 @@ class Generator(object):
         mustrun=False,
         name='',index=None,bus=None):
         
-        vars(self).update(locals()) #load in inputs
+        update_attributes(self,locals()) #load in inputs
         if index is None: self.index=hash(self)
         if name in [None, '']: self.name = self.index+1 #1 and up naming     
         if self.rampratemin is None and self.rampratemax is not None: self.rampratemin = -1*self.rampratemax
@@ -164,7 +164,7 @@ class Generator(object):
             return hours(tm-t_lastchange)
         except StopIteration: #no changes over whole time period
             h=hours(tm-times[0])
-            if value(self.u[times.initialTime]) == status: h+=self.initialStatusHours
+            if value(self.status(times.initialTime)) == status: h+=self.initialStatusHours
             return h
         
     def add_timevars(self,times,num_breakpoints=config.default_num_breakpoints,dispatch_decommit_allowed=False):
@@ -312,12 +312,11 @@ class Generator_nonControllable(Generator):
         Pmin=0,Pmax=None,
         power=None,
         name=None,index=None,bus=None,kind='wind',**kwargs):
-        vars(self).update(locals()) #load in inputs
         if power is not None and schedule is None: 
             self.schedule = FixedSchedule(P=power)
+        update_attributes(self,locals(),exclude=['power']) #load in inputs
         if Pmax is None: self.Pmax = self.schedule.maxvalue
         self.isControllable=False
-        
     def power(self,time): return self.schedule.getEnergy(time)
     def status(self,time): return True
     def setInitialCondition(self,time=None, P=None, u=None, hoursinstatus=None):
@@ -348,7 +347,7 @@ class Line(object):
       Defaults to -:attr:`Pmax` if not specified.
     """
     def __init__(self,name='',index=None,From=None,To=None,X=0.05,Pmax=9999,Pmin=None,**kwargs):
-        vars(self).update(locals()) #load in inputs
+        update_attributes(self,locals()) #load in inputs
         if index is None: self.index=hash(self)
         if self.Pmin is None: self.Pmin=-self.Pmax #reset default to be -Pmax
         self.P,self.price=dict(),dict()
@@ -387,7 +386,7 @@ class Bus(object):
       (sets the reference angle for the system)
     """
     def __init__(self,name=None,index=None,isSwing=False):
-        vars(self).update(locals()) #load in inputs
+        update_attributes(self,locals()) #load in inputs
         if index is None: self.index=hash(self)
         self.generators,self.loads=[],[]
         self.angle,self.price=dict(),dict()
@@ -459,7 +458,7 @@ class Load(object):
       by :meth:`get_data.build_class_list`)
     """
     def __init__(self,kind='varying',name=None,index=None,bus=None,schedule=None):
-        vars(self).update(locals()) #load in inputs
+        update_attributes(self,locals()) #load in inputs
         self.dispatched_power = dict()
     def power(self,time=None): return self.dispatched_power[time] #self.schedule.getEnergy(time)
     def __str__(self): return 'd{ind}'.format(ind=self.index)    
@@ -488,7 +487,7 @@ class Load_Fixed(Load):
     :param P: real power consumed by load (MW/hr)
     """
     def __init__(self,kind='fixed',name=None,index=None,bus=None,P=0):
-        vars(self).update(locals()) #load in inputs
+        update_attributes(self,locals()) #load in inputs
         if index is None: self.index=hash(self)
         self.Pfixed = self.P
         del self.P

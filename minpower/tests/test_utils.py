@@ -37,9 +37,10 @@ def solve_problem(generators,load,  gen_init=None, lines=None, solver=config.opt
     times=load['times']
     if len(times)>0: 
         for g,gen in enumerate(generators): 
+            gen.index=g
             if gen_init is None: gen.setInitialCondition(times.initialTime)
             else:                gen.setInitialCondition(times.initialTime, **gen_init[g])
-            gen.index=g
+            
         
 <<<<<<< HEAD
     buses=powersystems.make_buses_list(loads=load['load'],generators=generators)

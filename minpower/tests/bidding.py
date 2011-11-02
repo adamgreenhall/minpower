@@ -39,10 +39,10 @@ def cubic_convex():
     c=.2
     d=.1
     generators=[ Generator(costcurvestring='{}+{}P+{}P^2+{}P^3'.format(a,b,c,d)) ]
-    problem,times,buses=solve_problem(generators,make_load(Pd))
+    problem,times,buses=solve_problem(generators,make_load(Pd))#,problem_filename='bidproblem.lp')
     cost = Assert(value(generators[0].bid[times[0]].output()))
     actual_cost = a+ b*Pd+ c*Pd**2 + d*Pd**3
-    assert actual_cost <= cost <= 1.05*actual_cost
+    assert actual_cost <= cost and cost <= 1.05*actual_cost
 
 @bidding.test
 def cubic_non_convex():

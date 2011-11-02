@@ -164,27 +164,27 @@ class Generator(object):
         self.costModel=bidding.makeModel(minInput=self.Pmin, maxInput=self.Pmax,inputNm='Pg',outputNm='C',**costinputs)
     def _makeEmpties(self): 
         self.variables={}
-        self.variables['status']={}
-        self.variables['power']={}
-        self.variables['capacity']={}
-        self.variables['startupcost']={}
-        self.variables['shutdowncost']={}
+        self.constraintsD={}
         self.bid={}
     def power(self,time=None): 
         '''real power output at time'''
-        return self.variables['power'][time]
+        return self.get_variable('power',time)
     def status(self,time): 
         '''on/off status at time'''
-        return self.variables['status'][time]
+        return self.get_variable('status',time)
     def status_change(self,t,times): 
-        if t>0: previous_status=self.variables['status'][times[t-1]]
-        else:   previous_status=self.variables['status'][times.initialTime]
-        return self.variables['status'][times[t]] - previous_status
+        if t>0: previous_status=self.status(times[t-1])
+        else:   previous_status=self.status(times.initialTime)
+        return self.status(times[t]) - previous_status
+    def power_change(self,t,times):
+        if t>0: previous_power=self.power(times[t-1])
+        else:   previous_power=self.power(times.initialTime)
+        return self.power(times[t])-previous_power
     def cost(self,time): 
         '''total cost at time (operating + startup + shutdown)'''
         return self.operatingcost(time)+self.cost_startup(time)+self.cost_shutdown(time)
-    def cost_startup(self,time): return self.variables['startupcost'][time] if self.startupcost>0 else 0
-    def cost_shutdown(self,time): return self.variables['shutdowncost'][time] if self.shutdowncost>0 else 0
+    def cost_startup(self,time): return self.get_variable('startupcost',time)
+    def cost_shutdown(self,time): return self.get_variable('shutdowncost',time) 
     def operatingcost(self,time): 
         '''cost of real power production at time (based on bid model approximation).'''
         return self.bid[time].output()
@@ -213,25 +213,36 @@ class Generator(object):
             h=hours(tm-times[0])
             if value(self.status(times.initialTime)) == status: h+=self.initialStatusHours
             return h
-        
+    def t_id(self,name,time): return name.replace(' ','_')+'_'+self.iden(time)
+    def get_variable(self,name,time): return self.variables[self.t_id(name,time)]
+    def add_variable(self,name,short_name=None,time=None,kind='Continuous',low=-1000000,high=1000000,fixed_value=None):
+        if short_name is None: short_name=name
+        name=self.t_id(name,time)
+        short_name=self.t_id(short_name,time)
+        if fixed_value is None:
+            self.variables[name] = newVar(name=short_name,low=low,high=high,kind=kind)
+        else:
+            self.variables[name] = fixed_value
+    def add_constraint(self,name,time,expression): self.constraintsD[self.t_id(name,time)]=expression
+    def get_constraint(self,name,time): return self.constraintsD[self.t_id(name,time)]
+
     def add_timevars(self,times,num_breakpoints=config.default_num_breakpoints,dispatch_decommit_allowed=False):
         '''set up dicts for time-varying optimization variables
         (power,u,startup,shutdown,bid)
         '''
-        
         self.buildCostModel(num_breakpoints=num_breakpoints)
         allvars=[]
         commitment_problem= len(times)>1 or dispatch_decommit_allowed
-        for time in times:    
-            iden=self.iden(time)
-            self.variables['power'][time]=newVar(name='P_'+iden,low=0,high=self.Pmax) #even if off, Pmax>=P>=0
-            
+        for time in times:
+            self.add_variable('power','P',time,low=0,high=self.Pmax)
             if commitment_problem: #UC problem
-                self.variables['status'][time]=newVar(name='u_'+iden,kind='Binary')
-                self.variables['capacity'][time]=newVar(name='Pmax_'+iden,low=0,high=self.Pmax)
-                self.variables['startupcost'][time]=newVar(name='cost_startup_'+iden,low=0,high=self.startupcost)
-                self.variables['shutdowncost'][time]=newVar(name='cost_shutdown_'+iden,low=0,high=self.shutdowncost)
+                if not self.mustrun: self.add_variable('status', 'u', time, kind='Binary')
+                else: self.add_variable('status', 'u', time, fixed_value=True)
+                self.add_variable('capacity', 'Pmax', time, low=0,high=self.Pmax)
+                self.add_variable('startupcost','Csu',time, low=0,high=self.startupcost)
+                self.add_variable('shutdowncost','Csd',time, low=0,high=self.shutdowncost)
             else: #ED or OPF problem, no commitments
+<<<<<<< HEAD
 <<<<<<< HEAD
                 self.u[time]=True
                 self.startup[time]=False
@@ -250,6 +261,12 @@ class Generator(object):
                 self.variables['shutdowncost'][time]=0
 >>>>>>> implemented min up down times. need to add current capacity var and finish integration testing
 
+=======
+                self.add_variable('status', 'u', time,fixed_value=True)
+                self.add_variable('startupcost', 'Csu', time,fixed_value=0)
+                self.add_variable('shutdowncost', 'Csd', time,fixed_value=0)
+                
+>>>>>>> rough optimization object model for generator. unit and integration tested.
             self.bid[time]=bidding.Bid(
                 model=self.costModel,
                 inputvar=self.power(time),
@@ -257,13 +274,15 @@ class Generator(object):
                 iden=self.iden(time)
                 )
             allvars.extend(self.bid[time].add_timevars())
-        for time_vars in self.variables.values():
-            allvars.extend(time_vars.values())
+        else:
+            valid_variables=filter_optimization_objects(self.variables,times)
+            allvars.extend(valid_variables.values())
 
 >>>>>>> cleaner handling of different bid models. fix for the convex bid model, due to confusion from ugly code.
         return allvars
     
     def update_vars(self,times,problem):
+<<<<<<< HEAD
         for time in times:
             self.bid[time].update_vars()
         for nm,timevar in self.variables.items():
@@ -301,6 +320,10 @@ class Generator(object):
 >>>>>>> changed fix_timevars to fix_vars in Generator(). fixed reporting on load shedding.
 =======
                 self.variables[nm][tm]=value(var)            
+=======
+        for time in times: self.bid[time].update_vars()
+        for nm,v in self.variables.items(): self.variables[nm]=value(v)
+>>>>>>> rough optimization object model for generator. unit and integration tested.
     def fix_vars(self,times,problem):
         self.update_vars(times,problem)
         self.bid={} #wipe bid info - no longer needed
@@ -308,10 +331,9 @@ class Generator(object):
     def plotCostCurve(self,P=None,filename=None): self.costModel.plot(P,filename)
     def setInitialCondition(self,time=None, P=None, u=True, hoursinstatus=100):
         if P is None: P=(self.Pmax-self.Pmin)/2 #set default power as median output
-        self.variables['status'][time]=u
-        self.variables['power'][time]=P*u  #note: this eliminates ambiguity of off status with power non-zero output
+        self.add_variable('status', 'u', time, fixed_value=u)
+        self.add_variable('power', 'P', time, fixed_value=P*u) #note: this eliminates ambiguity of off status with power non-zero output
         self.initialStatusHours = hoursinstatus
-
     def constraints(self,times):
         '''create the optimization constraints for a generator over all times'''
         def roundoff(n):
@@ -319,12 +341,10 @@ class Generator(object):
             if n!=m: raise ValueError('min up/down times must be integer number of intervals, not {}'.format(n))
             return m
 
-        constraintsD=dict()
-        
+        all_constraints={}
         commitment_problem= len(times)>1
                 
         if commitment_problem:
-            iden='{g}_init'.format(g=str(self))
             tInitial = times.initialTime
             tEnd = len(times)
             if self.minuptime>0:
@@ -337,17 +357,21 @@ class Generator(object):
             else: min_down_intervals_remaining_init=0
             #initial up down time
             if min_up_intervals_remaining_init>0: 
-                constraintsD['minuptime_'+iden]= 0==sumVars([(1-self.status(times[t])) for t in range(min_up_intervals_remaining_init)])
+                self.add_constraint('minuptime', tInitial, 0==sumVars([(1-self.status(times[t])) for t in range(min_up_intervals_remaining_init)]))
             if min_down_intervals_remaining_init>0: 
-                constraintsD['mindowntime_'+iden]= 0==sumVars([self.status(times[t]) for t in range(min_down_intervals_remaining_init)])
+                self.add_constraint('mindowntime', tInitial, 0==sumVars([self.status(times[t]) for t in range(min_down_intervals_remaining_init)]))
+
 
             #initial ramp rate
             if self.rampratemax is not None:
                 if self.power(tInitial) + self.rampratemax < self.Pmax:
-                    constraintsD['rampingLimHi_'+iden]= self.power(times[0]) - self.power(tInitial) <= self.rampratemax
+                    E=self.power(times[0]) - self.power(tInitial) <= self.rampratemax
+                    self.add_constraint('ramp lim high', tInitial, E)
+                    
             if self.rampratemin is not None:
                 if self.power(tInitial) + self.rampratemin > self.Pmin:
-                    constraintsD['rampingLimLo_'+iden]= self.rampratemin <= self.power(times[0]) - self.power(tInitial)
+                    E=self.rampratemin <= self.power(times[0]) - self.power(tInitial)
+                    self.add_constraint('ramp lim low', tInitial, E) 
             
             
             #calculate up down intervals
@@ -355,44 +379,42 @@ class Generator(object):
             min_down_intervals = roundoff(self.mindowntime/times.intervalhrs)
         
         for t,time in enumerate(times):
-            iden=self.iden(time)
-            #must run
-            if self.mustrun: self.variables['status'][time] = True #overwrite the variable with a true
             #bid constraints
-            constraintsD.update( self.bid[time].constraints() ) 
+            
+            all_constraints.update( self.bid[time].constraints() )
             #min/max power
-            if self.Pmin>0: 
-                constraintsD['min-gen-power_'+iden]= self.power(time)>=self.status(time)*self.Pmin
-            constraintsD['max-gen-power_'+iden]= self.power(time)<=self.status(time)*self.Pmax
-            if len(times)>1: #if UC or SCUC problem
-                #up/down time minimums 
-                if t >= min_up_intervals_remaining_init and self.minuptime>0:
-                    no_shut_down=range(t,min(tEnd,t+min_up_intervals))
-                    min_up_intervals_remaining=min(tEnd-t,min_up_intervals)
-                    constraintsD['minuptime_'+iden]= \
-                        sumVars([self.status(times[s]) for s in no_shut_down]) >= \
-                        min_up_intervals_remaining*self.status_change(t,times)
+            if self.Pmin>0: self.add_constraint('min gen power', time, self.power(time)>=self.status(time)*self.Pmin)
+            self.add_constraint('max gen power', time, self.power(time)<=self.status(time)*self.Pmax)
+            
+            if len(times)==1: continue #if ED or OPF problem
+        
+            #min up time 
+            if t >= min_up_intervals_remaining_init and self.minuptime>0:
+                no_shut_down=range(t,min(tEnd,t+min_up_intervals))
+                min_up_intervals_remaining=min(tEnd-t,min_up_intervals)
+                E = sumVars([self.status(times[s]) for s in no_shut_down]) >= min_up_intervals_remaining*self.status_change(t,times)
+                self.add_constraint('min up time', time, E)
+            #min down time        
+            if t >= min_down_intervals_remaining_init and self.mindowntime>0:
+                no_start_up=range(t,min(tEnd,t+min_down_intervals))
+                min_down_intervals_remaining=min(tEnd-t,min_down_intervals)
+                E=sumVars([1-self.status(times[s]) for s in no_start_up]) >= min_down_intervals_remaining * -1 * self.status_change(t,times)
+                self.add_constraint('min down time', time, E)
+                                        
+            #ramping power
+            if self.rampratemax is not None:
+                self.add_constraint('ramp lim high', time, self.power_change(t,times) <= self.rampratemax)
+            if self.rampratemin is not None:
+                self.add_constraint('ramp lim low', time,  self.rampratemin <= self.power_change(t,times) )
 
-                if t >= min_down_intervals_remaining_init and self.mindowntime>0:
-                    no_start_up=range(t,min(tEnd,t+min_down_intervals))
-                    min_down_intervals_remaining=min(tEnd-t,min_down_intervals)
-                    constraintsD['mindowntime_'+iden]= \
-                        sumVars([1-self.status(times[s]) for s in no_start_up]) >= \
-                        min_down_intervals_remaining * -1 * self.status_change(t,times)
-                        
-                #ramping power
-                if t>0:
-                    if self.rampratemax is not None:
-                        constraintsD['rampingLimHi_'+iden]= self.power(time) - self.power(times[t-1]) <= self.rampratemax
-                    if self.rampratemin is not None:
-                        constraintsD['rampingLimLo_'+iden]= self.rampratemin <=     self.power(time) - self.power(times[t-1])
-                #start up and shut down costs
-                if self.startupcost>0:
-                    constraintsD['startup_cost_'+iden]= self.cost_startup(time)>=self.startupcost*self.status_change(t, times)
-                if self.shutdowncost>0:
-                    constraintsD['shutdown_cost_'+iden]= self.cost_shutdown(time)>=self.shutdowncost*-1*self.status_change(t, times)
-                    
-        return constraintsD        
+            #start up and shut down costs
+            if self.startupcost>0:
+                self.add_constraint('startup cost', time, self.cost_startup(time)>=self.startupcost*self.status_change(t, times))
+            if self.shutdowncost>0:
+                self.add_constraint('shutdown cost', time, self.cost_shutdown(time)>=self.shutdowncost*-1*self.status_change(t, times))
+                
+        all_constraints.update(filter_optimization_objects(self.constraintsD,times))
+        return all_constraints        
         
     def __str__(self): return 'g{ind}'.format(ind=self.index)
     def __int__(self): return self.index
@@ -687,3 +709,14 @@ class Network(object):
 def power_to_energy(P,time):
     return P*time.intervalhrs
     
+<<<<<<< HEAD
+=======
+def filter_optimization_objects(objects,times):
+    times_str=[str(t).lstrip('t') for t in times]
+    times_str.append(str(times.initialTime).lstrip('t'))
+    def valid(name,val):
+        in_time_period=name.rsplit('t',1)[1] in times_str
+        is_variable_not_fixed = getattr(val,'value',0)==None
+        return in_time_period and is_variable_not_fixed
+    return dict(filter(lambda (name,val): valid(name,val) ,objects.items()))
+>>>>>>> rough optimization object model for generator. unit and integration tested.

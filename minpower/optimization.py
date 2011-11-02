@@ -108,6 +108,7 @@ if optimization_package=='coopr':
                     
             if not self.status: return
             
+<<<<<<< HEAD
             instance.load(results)
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -249,13 +250,17 @@ if optimization_package=='coopr':
             #get solution information                     
 >>>>>>> debug polynomial models
 =======
+=======
+            #instance.load(results)
+            instance._load_solution(results.solution(0), ignore_invalid_labels=True )
+>>>>>>> rough optimization object model for generator. unit and integration tested.
             
 
             
             def resolvefixvariables(instance,results):
                 active_vars= instance.active_components(pyomo.Var)
                 need_to_resolve=False
-                for name,var in active_vars.iteritems():
+                for _,var in active_vars.items():
                     if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet):
                         var.fixed=True
                         need_to_resolve=True
@@ -270,7 +275,8 @@ if optimization_package=='coopr':
                     logging.error('coopr raised an error in solving. keep the files for debugging.')
                     results= cooprsolve(instance, keepFiles=True)    
                 
-                instance.load(results)
+                #instance.load(results)
+                instance._load_solution(results.solution(0), ignore_invalid_labels=True )
                 return instance,results
 
             try: instance,results = resolvefixvariables(instance,results)

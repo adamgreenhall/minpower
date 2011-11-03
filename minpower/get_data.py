@@ -89,7 +89,7 @@ def setup_initialcond(filename,generators,times):
     except IOError: 
         data,fields=[],[]
         logging.warning('No generation initial conditions file found. Setting to defaults.')
-        for gen in generators: gen.setInitialCondition(time=initialTime)
+        for gen in generators: gen.set_initial_condition(time=initialTime)
         return generators
         
     try: attributes=[fields_initial[drop_case_spaces(f)] for f in fields]
@@ -99,7 +99,7 @@ def setup_initialcond(filename,generators,times):
     
     
     #set initial condition for all gens to off
-    for g in generators: g.setInitialCondition(initialTime, u=False, P=0)
+    for g in generators: g.set_initial_condition(initialTime, u=False, P=0)
 
 
     #overwrite initial condition for generators which are specified in the initial file
@@ -113,7 +113,7 @@ def setup_initialcond(filename,generators,times):
             if c in excludeCols: continue
             elif elem is not None: inputs[attributes[c]]=elem
         g=genNames.index(row[nameCol])
-        generators[g].setInitialCondition(time=initialTime,**inputs)
+        generators[g].set_initial_condition(time=initialTime,**inputs)
         
     return generators
 

@@ -1,17 +1,17 @@
-from commonscripts import elementwiseMultiply
-from optimization import value,new_variable,sumVars
+from commonscripts import elementwiseMultiply,update_attributes
+from optimization import value,new_variable,sum_vars,OptimizationObject
 from config import default_num_breakpoints
 
 from scipy import linspace, polyval, polyder, interp, poly1d
 
-import matplotlib
+#import matplotlib
 #from sys import platform as osname
 #if osname=='darwin': matplotlib.use('macosx') #avoid popups when using matploblib to savefig on MacOSX
 from pylab import plot,savefig,xlabel,ylabel
 
 import re
 
-class Bid(object):
+class Bid(OptimizationObject):
     """
     Descibes a bid as modeled by :attr:model. (Bids variables change
       with time while :class:`~bidding.PWLmodel` objects do not store
@@ -22,11 +22,11 @@ class Bid(object):
     :param iden: identifying string for the bidder
     """
     def __init__(self,model,inputvar,iden,statusvar=True):
-        vars(self).update(locals())        
-    def output(self): 
-        return self.model.output(self.variables,self.iden)
-    def trueOutput(self,input_val): return self.model.trueOutput(input_val)
-    def incOutput(self,input_val):  return self.model.incOutput(input_val)
+        update_attributes(self,locals())
+        self.init_opt_object()
+    def output(self): return self.model.output(self.variables,self.iden)
+    def output_true(self,input_val): return self.model.output_true(input_val)
+    def output_incremental(self,input_val):  return self.model.output_incremental(input_val)
     def plotDeriv(self,**kwargs): return self.model.plotDeriv(**kwargs)
     def plot(self,P=None,filename=None,showPW=False):
         plotted=self.model.plot(P,showPW=showPW)
@@ -39,8 +39,8 @@ class Bid(object):
             variables=self.variables,
             iden=self.iden
             )
-    def add_timevars(self): 
-        self.variables=self.model.add_timevars(self.iden)
+    def create_variables(self): 
+        
         out=[var for nm,var in self.variables.iteritems()]
         self.variables['inputvar']=self.inputvar
         self.variables['statusvar']=self.statusvar
@@ -143,20 +143,20 @@ class PWLmodel(object):
         S = [variables['{iden}_s{segNum}'.format(segNum=s,iden=iden)] for s in range(len(self.segments))] 
         F = [variables['{iden}_f{bpNum}'.format(bpNum=f,iden=iden)] for f in range(len(self.bpInputs))]
 
-        constraints['oneActiveSegment '+iden]= ( sumVars(S)== status )
-        constraints['fractionSums '+iden]    = ( sumVars(F) == status )
-        constraints['computeInput '+iden]    = ( inputVar == sumVars( elementwiseMultiply(F,self.bpInputs) ) )
+        constraints['oneActiveSegment '+iden]= ( sum_vars(S)== status )
+        constraints['fractionSums '+iden]    = ( sum_vars(F) == status )
+        constraints['computeInput '+iden]    = ( inputVar == sum_vars( elementwiseMultiply(F,self.bpInputs) ) )
         constraints['firstSegment '+iden]    = ( F[0]<=S[0] )
         constraints['lastSegment '+iden]     = ( F[-1]<=S[-1] )
         for b in range(1,self.num_breakpoints-1): 
             name='midSegment {iden} b{bnum}'.format(iden=iden,bnum=b)
-            constraints[name]                = ( F[b] <= sumVars([S[b-1],S[b]]) )
+            constraints[name]                = ( F[b] <= sum_vars([S[b-1],S[b]]) )
         return constraints
     def output(self,variables,iden): 
         F = [variables['{iden}_f{bpNum}'.format(bpNum=f,iden=iden)] for f in range(len(self.bpInputs))]
-        return sumVars( elementwiseMultiply(F,self.bpOutputs) )
-    def trueOutput(self,inputVar): return polyval( self.polyCurve,         value(inputVar) )
-    def incOutput(self,inputVar):  return polyval( polyder(self.polyCurve),value(inputVar) )
+        return sum_vars( elementwiseMultiply(F,self.bpOutputs) )
+    def output_true(self,inputVar): return polyval( self.polyCurve,         value(inputVar) )
+    def output_incremental(self,inputVar):  return polyval( polyder(self.polyCurve),value(inputVar) )
     def texrepresentation(self,digits=3):
         '''
         Output polynomial to tex-style string.
@@ -214,8 +214,8 @@ class convexPWLmodel(PWLmodel):
             constraints[nm]= variables['bidCost_'+iden] >= line(variables['inputvar'])
         return constraints
     def output(self,variables,iden): return variables['bidCost_'+iden]
-    def trueOutput(self,inputVar): return polyval( self.polyCurve,         value(inputVar) )
-    def incOutput(self,inputVar):  return polyval( polyder(self.polyCurve),value(inputVar) )
+    def output_true(self,inputVar): return polyval( self.polyCurve,         value(inputVar) )
+    def output_incremental(self,inputVar):  return polyval( polyder(self.polyCurve),value(inputVar) )
     def plot(self,P=None,showPW=True,linestyle='-',color='k'):
         inDiscrete=linspace(self.minInput, self.maxInput, 1e6)
         outDiscrete=polyval(self.polyCurve,inDiscrete)

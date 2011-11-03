@@ -207,7 +207,7 @@ class Schedule(object):
         return self
     def __repr__(self):
         return repr(sorted([(str(t),p) for t,p in self.P.iteritems()]))    
-    def getEnergy(self,timeperiod):
+    def get_energy(self,timeperiod):
         """
         get the amount of energy in a time period 
         
@@ -216,14 +216,14 @@ class Schedule(object):
         >>> times=Timelist([Time(Start='1:00'),Time(Start='2:00'),Time(Start='3:00')])
         >>> P=[100,210,100]
         >>> s=Schedule(P=P,times=times)
-        >>> s.getEnergy(times[0])
+        >>> s.get_energy(times[0])
         100
 
         If the timeperiod spans multiple schedule times, energy should
         be summed over each schedule time which the timeperiod contains:
 
         >>> tLarger=Time(Start='1:00',End='3:00')
-        >>> s.getEnergy(tLarger)
+        >>> s.get_energy(tLarger)
         310.0
         """
         times=self.P.keys()
@@ -233,14 +233,14 @@ class Schedule(object):
                 #energy of time is sum all energy in times within
                 tstarts=timeperiod.Range(self.interval)
                 period_Times=getclass_inlist(times,tstarts,attribute='Start')
-                return sum([self.getEnergy(t) for t in period_Times]) *self.intervalhrs
+                return sum([self.get_energy(t) for t in period_Times]) *self.intervalhrs
             elif timeperiod.interval==self.interval:
                 t=getattrL(times,'Start').index(timeperiod.Start)
-                return self.getEnergy(times[t])
+                return self.get_energy(times[t])
             else: raise
 class FixedSchedule(Schedule):
     def __init__(self,times=None,P=None): self.P=P
-    def getEnergy(self,timeperiod=None): return self.P
+    def get_energy(self,timeperiod=None): return self.P
     
 def just_one_time():
     """For a single-time problem, generate a Timelist with just one time in it."""

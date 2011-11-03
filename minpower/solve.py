@@ -37,25 +37,29 @@ def problem(datadir='.',
     setup_logging(logging_level)
     
     buses,lines,times=get_data.parsedir(datadir)
+    power_system=powersystems.PowerSystem(generators,loads,lines,                 
+                num_breakpoints=num_breakpoints,
+                load_shedding_allowed=False,
+                spinning_reserve_requirement=0,
+                dispatch_decommit_allowed=False,)
     
     if times.spanhrs<=hours_commitment:
-        problem=create_problem(buses,lines,times,num_breakpoints)
+        problem=create_problem(power_system,times,num_breakpoints)
         optimization.solve(problem,solver,problem_filename=joindir(datadir,'problem-formulation.lp'))
         if problem.solved:
-            solution=results.makeSolution(times=times,lines=lines,buses=buses,problem=problem,datadir=datadir)
+            solution=results.makeSolution(power_system,times,problem,datadir=datadir)
         else: 
             raise optimization.OptimizationError('problem not solved')
     else: #split into multi-stage problem
-        problemsL,stageTimes=create_problem_multistage(buses,lines,times,datadir,
+        problemsL,stageTimes=create_problem_multistage(power_system,times,datadir,
                                                        stageHrs=hours_commitment,
                                                        overlap_hours=hours_commitment_overlap,
                                                        num_breakpoints=num_breakpoints,
                                                        )
-        solution=results.makeMultistageSolution(problemsL=problemsL,
-            buses=buses,lines=lines,
-            times=times,stageTimes=stageTimes,overlap_hours=hours_commitment_overlap,
-            datadir=datadir
-            )
+        solution=results.makeMultistageSolution(power_system,times,datadir,
+                                                problemsL,stageTimes,
+                                                overlap_hours=hours_commitment_overlap,
+                                                )
         logging.info('problem solved in {}'.format(solution.solveTime))
         
     if shell: solution.show()
@@ -63,50 +67,26 @@ def problem(datadir='.',
     if vizualization: solution.vizualization()
     return solution
 
-def create_problem(buses,lines,times,
+def create_problem(power_system,times,
                    num_breakpoints=config.default_num_breakpoints,
                    load_shedding_allowed=False,
                    dispatch_decommit_allowed=False):
     """
         Create a power systems optimization problem.
         
-        :param buses: list of :class:`~powersystems.Bus` objects
-        :param lines: list of :class:`~powersystems.Line` objects
+        :param power_system: a :class:`~powersystems.PowerSystem` object
         :param times: :class:`~schedule.Timelist` object
         
         :returns: :class:`~optimization.Problem` object
     """
-
-    Bmatrix=powersystems.Network(buses,lines).Bmatrix
+    
     prob=optimization.newProblem()
-    costs=[]
-    problemvars=[]
-    
-    for bus in buses:
-        if len(buses)>1: bus.add_timevars(times)
-        
-        for gen in bus.generators:
-            problemvars.extend(gen.add_timevars(times,num_breakpoints,dispatch_decommit_allowed))
-            prob.addConstraints(gen.constraints(times))
-            for time in times: costs.append(gen.cost(time))
-
-        for load in bus.loads:
-            problemvars.extend(load.add_timevars(times,load_shedding_allowed))
-            prob.addConstraints(load.constraints(times))
-            for time in times: costs.append(-1*load.benifit(time))
-            
-    for line in lines:
-        problemvars.extend(line.add_timevars(times))
-        prob.addConstraints(line.constraints(times,buses))
-                    
-    for bus in buses:
-        problemvars.extend([v for k,v in bus.add_timevars(times).iteritems()])
-        prob.addConstraints(bus.create_constraints(times,Bmatrix,buses))
-    
-    
-    for v in problemvars: prob.addVar(v)
-    prob.addObjective( optimization.sum_vars(costs) )
-    
+    variables =power_system.create_variables(times)
+    constraints=power_system.create_constraints(times)
+    total_cost =power_system.objective
+    for nm,v in variables.items(): prob.addVar(v)
+    for nm,c in constraints.items(): prob.addConstraint(c)
+    prob.addObjective(total_cost)
     return prob
 
 
@@ -114,7 +94,7 @@ def create_problem(buses,lines,times,
 
 
 
-def create_problem_multistage(buses,lines,times,datadir,
+def create_problem_multistage(power_system,times,datadir,
                               intervalHrs=None,
                               stageHrs=config.default_hours_commitment,
                               overlap_hours=config.default_hours_commitment_overlap,
@@ -142,6 +122,7 @@ def create_problem_multistage(buses,lines,times,datadir,
     if not intervalHrs: intervalHrs=times.intervalhrs
         
     stageTimes=times.subdivide(hrsperdivision=stageHrs,hrsinterval=intervalHrs,overlap_hrs=overlap_hours)
+    buses=power_system.buses
     problemsL=[]
 
     
@@ -166,14 +147,14 @@ def create_problem_multistage(buses,lines,times,datadir,
         logging.info('Stage starting at {} {}'.format(t_stage[0].Start, 'clocktime={}'.format(wallclocktime.now()) if showclock else ''))
         
         set_initialconditions(buses,t_stage.initialTime)
-        stageproblem=create_problem(buses,lines,t_stage,num_breakpoints=num_breakpoints)
+        stageproblem=create_problem(power_system,t_stage,num_breakpoints=num_breakpoints)
         if writeproblem: stageproblem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
         
         optimization.solve(stageproblem)
         if not stageproblem.solved: 
             #redo stage, with shedding allowed
             logging.critical('Stage infeasible, re-runnning with load shedding.')
-            stageproblem=create_problem(buses,lines,t_stage,num_breakpoints=num_breakpoints,load_shedding_allowed=True)
+            stageproblem=create_problem(power_system,t_stage,num_breakpoints=num_breakpoints,load_shedding_allowed=True)
             optimization.solve(stageproblem)
             
         if stageproblem.solved:

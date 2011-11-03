@@ -23,7 +23,7 @@ class Bid(OptimizationObject):
     """
     def __init__(self,model,owner_iden,time_iden,input_var=0,status_var=True):
         update_attributes(self,locals())
-        self.init_opt_object()
+        self.init_optimization()
     def output_true(self,input_val): return self.model.output_true(input_val)
     def output_incremental(self,input_val):  return self.model.output_incremental(input_val)
     def plot_derivative(self,**kwargs): return self.model.plot_derivative(**kwargs)

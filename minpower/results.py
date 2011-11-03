@@ -179,8 +179,8 @@ class Solution(object):
 
 
 class Solution_ED(Solution):
-    def __init__(self,**kwargs):
-        super( Solution_ED, self ).__init__(**kwargs)    
+    def __init__(self,*args,**kwargs):
+        super( Solution_ED, self ).__init__(*args,**kwargs)    
         #for ED problem there is just one price
         self.price=self.buses[0].price(self.times[0])
     

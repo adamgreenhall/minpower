@@ -38,8 +38,8 @@ def solve_problem(generators,load,  gen_init=None, lines=None, solver=config.opt
     if len(times)>0: 
         for g,gen in enumerate(generators): 
             gen.index=g
-            if gen_init is None: gen.setInitialCondition(times.initialTime)
-            else:                gen.setInitialCondition(times.initialTime, **gen_init[g])
+            if gen_init is None: gen.set_initial_condition(times.initialTime)
+            else:                gen.set_initial_condition(times.initialTime, **gen_init[g])
             
         
 <<<<<<< HEAD

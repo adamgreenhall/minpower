@@ -337,7 +337,7 @@ if optimization_package=='coopr':
             except AttributeError: return variable #just a number
             return problem.variables[varname].value
 
-    def sumVars(variables): return sum(variables)
+    def sum_vars(variables): return sum(variables)
     def newProblem(): return Problem()
     def new_variable(name='',kind='Continuous',low=-1000000,high=1000000):
         '''create an optimization variable'''
@@ -452,7 +452,7 @@ elif optimization_package=='pulp':
         try: return pulp.value(variable)
         except AttributeError: return variable
 
-    def sumVars(variables):
+    def sum_vars(variables):
         '''sums a list of optimization variables'''
         return pulp.lpSum(variables)
     def newProblem(name='problem',kind=pulp.LpMinimize):
@@ -489,6 +489,7 @@ class OptimizationObject(object):
         self.constraints=dict()
         self.objective  =0 #cost
         if self.index is None: self.index=hash(self)
+        if self.name in [None, '']: self.name = self.index+1 #1 and up naming
         
     def create_variables(self, *args,**kwargs):
         ''' 
@@ -541,15 +542,32 @@ class OptimizationObject(object):
         '''
         name=self._t_id(name,time)
         self.constraintsD[name]=new_constraint(name,expression)
-    
-    #FIX add_component shouldnt have to have a time - should be able to specify compontents at init 
-    #        and then call component.add_variables(times) inside self.add_variables(times) 
-    def add_component(self,name,time,obj): self.children[self._t_id(name,time)]=obj
-    
+
     def get_variable(self,name,time): return self.variables[self._t_id(name,time)]
     def get_constraint(self,name,time): return self.constraintsD[self._t_id(name,time)]
-    def get_component(self,name,time): return self.children[self._t_id(name,time)]
-    def get_cost(self): return self.objective+sum([child.get_cost() for child in self.children])
+    
+    def add_components(self,objL,name):
+        self.children[name]=objL 
+        setattr(self,name,objL)
+    def add_component(self,obj,name,time): self.children[self._t_id(name,time)]=obj    
+    def get_component(self,name,index=None,time=None):
+        if time is None: return self.children[name+str(index)]
+        else: return self.children[self._t_id(name,time)]
+    def get_components(self,name):
+        return dict(filter(lambda (comp_name,comp): comp_name.startswith(name),self.children.items()))
+    
+    
+    #FIX add_component shouldnt have to have a time - should be able to specify compontents at init 
+    #        and then call component.add_variables(times) inside self.add_variables(times)     
+#    def add_component(self,obj,name,time=None):
+#        if time is None: self.children[name+str(obj.index)]=obj
+#        else:            self.children[self._t_id(name,time)]=obj    
+#    def get_component(self,name,index=None,time=None):
+#        if time is None: return self.children[name+str(index)]
+#        else: return self.children[self._t_id(name,time)]
+#    def get_components(self,name):
+#        return dict(filter(lambda (comp_name,comp): comp_name.startswith(name),self.children.items()))
+    def get_cost(self,times): return self.objective+sum([child.get_cost(times) for child in self.children])
     def iden(self,time):
         msg='the optimization object template identifier method must be overwritten'
         raise NotImplementedError(msg)
@@ -563,12 +581,18 @@ class OptimizationObject(object):
     def all_variables(self,times):
         '''return variables from object and children within times'''
         variables=filter_optimization_objects(self.variables,times)
-        for child in self.children.values(): variables.extend(child.all_variables(times))
+        for child in self.children.values(): 
+            try: variables.extend(child.all_variables(times))
+            except AttributeError:
+                [variables.extend(c.all_variables(times)) for c in child]
         return variables
     def all_constraints(self,times): 
         '''return constraints from object and children within times'''
         constraints=filter_optimization_objects(self.constraints,times)
-        for child in self.children.values(): constraints.extend(child.all_constraints(times))
+        for child in self.children.values(): 
+            try: constraints.extend(child.all_constraints(times))
+            except AttributeError:
+                [constraints.extend(c.all_constraints(times)) for c in child]
         return constraints
 
 

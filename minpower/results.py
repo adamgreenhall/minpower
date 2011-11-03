@@ -191,7 +191,7 @@ class Solution_ED(Solution):
         #save a plot of the price space - illustrating equal IC
         for gen in generators:
             if gen.status(t):
-                gensPlotted.append( gen.costModel.plotDeriv(P=value(gen.power(t)),linestyle='-') )
+                gensPlotted.append( gen.cost_model.plotDeriv(P=value(gen.power(t)),linestyle='-') )
                 genNames.append(gen.name)
         for load in loads: 
             if load.kind=='bidding': 
@@ -224,7 +224,7 @@ class Solution_ED(Solution):
             gensPlotted,genNames,loadsPlotted,loadNames=[],[],[],[]
             for g,gen in enumerate(generators):
                 if gen.status(t):
-                    gensPlotted.append( gen.costModel.plot(P=value(gen.power(t)),linestyle='-',color=gensPlotted_price[g].get_color()) )
+                    gensPlotted.append( gen.cost_model.plot(P=value(gen.power(t)),linestyle='-',color=gensPlotted_price[g].get_color()) )
                     genNames.append(gen.name)
             for load in loads: 
                 if load.kind=='bidding': 

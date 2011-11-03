@@ -146,8 +146,12 @@ def create_problem(buses,lines,times,
     
     
     for v in problemvars: prob.addVar(v)
+<<<<<<< HEAD
 >>>>>>> this is going to be a major refactor. putting on hold for now.
     prob.addObjective( optimization.sumVars(costs) )
+=======
+    prob.addObjective( optimization.sum_vars(costs) )
+>>>>>>> refactored powersystems. moving on to bidding
     
 <<<<<<< HEAD
 =======
@@ -207,7 +211,7 @@ def create_problem_multistage(buses,lines,times,datadir,
         for bus in buses:
             for gen in bus.generators:
                 try: 
-                    gen.setInitialCondition(time=initTime,**gen.finalstatus)
+                    gen.set_initial_condition(time=initTime,**gen.finalstatus)
                     del gen.finalstatus
                 except AttributeError: pass #first stage of problem already has initial time definied
 

@@ -534,7 +534,10 @@ class OptimizationObject(object):
         This method shouldn't need overwriting.
         '''
         for name,var in self.variables.items(): self.variables[name]=value(var)
-        for child in self.children.values():    child.update_variables() 
+        for child in self.children.values(): 
+            try: child.update_variables()
+            except AttributeError:
+                for c in child: c.update_variables() 
     def _t_id(self,name,time): return name.replace(' ','_')+'_'+self.iden(time)
     
     def add_variable(self,name,short_name=None,time=None,fixed_value=None,**kwargs):

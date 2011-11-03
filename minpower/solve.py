@@ -47,7 +47,7 @@ def problem(datadir='.',
         problem=create_problem(power_system,times,num_breakpoints)
         optimization.solve(problem,solver,problem_filename=joindir(datadir,'problem-formulation.lp'))
         if problem.solved:
-            solution=results.makeSolution(power_system,times,problem,datadir=datadir)
+            solution=results.makeSolution(power_system,times,problem=problem,datadir=datadir)
         else: 
             raise optimization.OptimizationError('problem not solved')
     else: #split into multi-stage problem

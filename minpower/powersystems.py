@@ -672,7 +672,12 @@ class Bus(OptimizationObject):
             
 =======
     def angle(self,time): return self.get_variable('angle',time)
-    def price(self,time): return self.get_constraint('power balance',time).dual
+    def price(self,time):
+#        print dir(self.get_constraint('power balance',time))
+#        print self.get_constraint('power balance',time).name 
+#        print self.get_constraint('power balance',time).type()
+#        print self.get_constraint('power balance',time).display()
+        return self.get_constraint('power balance',time).dual
     def Pgen(self,t):   return sum_vars([gen.power(t) for gen in self.generators])
     def Pload(self,t):  return sum_vars([ ld.power(t) for ld in self.loads])
     def power_balance(self,t,Bmatrix,allBuses):

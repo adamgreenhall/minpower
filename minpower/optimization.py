@@ -312,8 +312,11 @@ if optimization_package=='coopr':
                 return getattr(self.model,name).value
             except TypeError: #name is not a string
                 return name.value
+<<<<<<< HEAD
         
 >>>>>>> testing of ramp rates. added conditional initial ramp rates.
+=======
+>>>>>>> cleared up dual problem (old coopr solution index=None)
         def __getattr__(self,name):
             try: return getattr(self.model,name)
             except AttributeError:
@@ -345,7 +348,8 @@ if optimization_package=='coopr':
             try: varname=variable.name
             except AttributeError: return variable #just a number
             return problem.variables[varname].value
-
+    def dual(constraint,index=None):
+        return constraint[index].dual
     def sum_vars(variables): return sum(variables)
     def newProblem(): return Problem()
     def new_variable(name='',kind='Continuous',low=-1000000,high=1000000):
@@ -460,7 +464,8 @@ elif optimization_package=='pulp':
         '''value of an optimization variable'''
         try: return pulp.value(variable)
         except AttributeError: return variable
-
+    def dual(constraint,index=None):
+        return constraint.pi
     def sum_vars(variables):
         '''sums a list of optimization variables'''
         return pulp.lpSum(variables)

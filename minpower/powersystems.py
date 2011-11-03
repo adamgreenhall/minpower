@@ -13,6 +13,7 @@ import bidding
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> add non-controllable gen to ED. added remote script- not yet working.
 from optimization import newVar,value,sumVars
 <<<<<<< HEAD
@@ -54,6 +55,9 @@ from optimization import new_variable,value,sum_vars,OptimizationObject
 =======
 from optimization import value,sum_vars,OptimizationObject
 >>>>>>> first working pass through solver (results still needs major rework
+=======
+from optimization import value,dual,sum_vars,OptimizationObject
+>>>>>>> cleared up dual problem (old coopr solution index=None)
 from commonscripts import hours,drop_case_spaces,getattrL,unique,update_attributes
 >>>>>>> added update_attributes function for classes. fixed power attr/method clash for gen_noncontrollable
 import config, bidding
@@ -600,7 +604,7 @@ class Line(OptimizationObject):
     def power(self,time): return self.get_variable('power',time)
     def price(self,time):
         '''congestion price on line'''
-        return self.get_constraint('line Flow',time).dual
+        return dual(self.get_constraint('line Flow',time))
     def create_variables(self,times):
         for time in times: self.add_variable('power',time)
         return self.all_variables(times)
@@ -677,7 +681,7 @@ class Bus(OptimizationObject):
 #        print self.get_constraint('power balance',time).name 
 #        print self.get_constraint('power balance',time).type()
 #        print self.get_constraint('power balance',time).display()
-        return self.get_constraint('power balance',time).dual
+        return dual(self.get_constraint('power balance',time))
     def Pgen(self,t):   return sum_vars([gen.power(t) for gen in self.generators])
     def Pload(self,t):  return sum_vars([ ld.power(t) for ld in self.loads])
     def power_balance(self,t,Bmatrix,allBuses):

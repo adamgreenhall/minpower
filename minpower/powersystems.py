@@ -337,7 +337,8 @@ class Generator(OptimizationObject):
 >>>>>>> refactored powersystems. moving on to bidding
                     inputvar=self.power(time),
                     statusvar=self.status(time),
-                    iden=self.iden(time))
+                    owner_iden=str(self),
+                    time_iden=str(time))
             bid.create_variables(times,num_breakpoints)
             self.add_component('bid',time,bid)
             

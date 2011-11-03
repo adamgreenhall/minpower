@@ -191,11 +191,11 @@ class Solution_ED(Solution):
         #save a plot of the price space - illustrating equal IC
         for gen in generators:
             if gen.status(t):
-                gensPlotted.append( gen.cost_model.plotDeriv(P=value(gen.power(t)),linestyle='-') )
+                gensPlotted.append( gen.cost_model.plot_derivative(P=value(gen.power(t)),linestyle='-') )
                 genNames.append(gen.name)
         for load in loads: 
             if load.kind=='bidding': 
-                loadsPlotted.append( load.bid[t].plotDeriv(P=value(load.power(t)),linestyle=':') )
+                loadsPlotted.append( load.bid[t].plot_derivative(P=value(load.power(t)),linestyle=':') )
                 loadNames.append(load.name)
         if price is not None: 
             grayColor='.75'

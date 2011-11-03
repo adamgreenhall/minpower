@@ -27,6 +27,7 @@ if optimization_package=='coopr':
 <<<<<<< HEAD
             self.model=pyomo.ConcreteModel()
             self.solved=False
+<<<<<<< HEAD
         def addObjective(self,expression,sense=pyomo.minimize):
 <<<<<<< HEAD
 =======
@@ -49,20 +50,28 @@ if optimization_package=='coopr':
         def addVariables(self,variables): [self.addVar(v) for v in variables]
 >>>>>>> cleanup
         def addVar(self,var):
+=======
+        def add_objective(self,expression,sense=pyomo.minimize):
+            '''add an objective to the problem'''            
+            self.model.objective=pyomo.Objective(name='objective',rule=expression,sense=sense)
+#        def addVariables(self,variables): [self.add_variable(v) for v in variables]
+        def add_variable(self,variable):
+>>>>>>> first working pass through solver (results still needs major rework
             '''add a single variable to the problem'''
-            try: setattr(self.model, var.name, var)
+            try: self._add_component(variable.name,variable) #setattr(self.model, var.name, var)
             except AttributeError: pass #just a number, don't add to vars
-
-        def addConstraints(self,constraintsD):
-            '''add a dictionary of constraints (keyed by name) to the problem'''
-            try:
-                for name,expression in constraintsD.iteritems(): self.addConstraint(name,expression)
-            except AttributeError:
-                if constraintsD is None: pass
-                else: raise AttributeError('addConstraints takes a dictionary of constraints argument')
-        def addConstraint(self,name,expression):
+        def add_constraint(self,constraint):
             '''add a single constraint to the problem'''
-            setattr(self.model, name, pyomo.Constraint(name=name,rule=expression))
+            self._add_component(constraint.name,constraint)
+            #setattr(self.model, constraint.name, constraint)
+
+#        def addConstraints(self,constraintsD):
+#            '''add a dictionary of constraints (keyed by name) to the problem'''
+#            try:
+#                for name,expression in constraintsD.iteritems(): self.add_constraint(name,expression)
+#            except AttributeError:
+#                if constraintsD is None: pass
+#                else: raise AttributeError('addConstraints takes a dictionary of constraints argument')
         def dual(self,constraintname,index=None):
             '''dual value of an optimization constraint'''
             return self.constraints[constraintname][index].dual
@@ -354,16 +363,16 @@ elif optimization_package=='pulp':
     class Problem(pulp.LpProblem):
         '''an optimization problem'''
 
-        def addObjective(self,expression,name='objective'):
+        def add_objective(self,expression,name='objective'):
             '''add an objective to the problem'''
             self+=expression,name
-        def addVar(self,var):
+        def add_variable(self,var):
             #no need to add variables to the model for puLP
             pass
         def addConstraints(self, constraintsD):
             '''add a dictionary of constraints (keyed by name) to the problem'''
             try:
-                for name,expression in constraintsD.iteritems(): self.addConstraint(expression,name)
+                for name,expression in constraintsD.iteritems(): self.add_constraint(expression,name)
             except AttributeError:
                 if constraintsD is None: pass
                 else: raise AttributeError('addConstraints takes a dictionary of constraints argument')
@@ -488,10 +497,16 @@ class OptimizationObject(object):
         self.variables=dict()
         self.constraints=dict()
         self.objective  =0 #cost
+<<<<<<< HEAD
         if self.index is None: self.index=hash(self)
         if self.name in [None, '']: self.name = self.index+1 #1 and up naming
+=======
+        self.children=dict()
+        if getattr(self,'index',None) is None: self.index=hash(self)
+        if getattr(self,'name',None)=='': self.name = self.index+1 #1 and up naming
+>>>>>>> first working pass through solver (results still needs major rework
         
-    def create_variables(self, *args,**kwargs):
+    def create_variables(self, times,*args,**kwargs):
         ''' 
         Here we would create the variables.
         Variables should not belong to the :class:`OptimizationObject` directly, 
@@ -500,9 +515,9 @@ class OptimizationObject(object):
         
         :returns: dictionary of variables
         '''
-        return self.all_variables()
+        return self.all_variables(times)
 
-    def create_constraints(self, *args,**kwargs):
+    def create_constraints(self, times,*args,**kwargs):
         ''' 
         Here we would create the constraints.
         Constraints should not belong to the :class:`OptimizationObject` directly, 
@@ -511,7 +526,7 @@ class OptimizationObject(object):
         
         :returns: dictionary of constraints
         '''
-        return self.all_constraints()
+        return self.all_constraints(times)
  
     def update_variables(self):
         '''
@@ -541,21 +556,19 @@ class OptimizationObject(object):
         This method shouldn't need overwriting.
         '''
         name=self._t_id(name,time)
-        self.constraintsD[name]=new_constraint(name,expression)
+        self.constraints[name]=new_constraint(name,expression)
 
     def get_variable(self,name,time): return self.variables[self._t_id(name,time)]
-    def get_constraint(self,name,time): return self.constraintsD[self._t_id(name,time)]
+    def get_constraint(self,name,time): return self.constraints[self._t_id(name,time)]
     
     def add_components(self,objL,name):
         self.children[name]=objL 
         setattr(self,name,objL)
     def add_component(self,obj,name,time): self.children[self._t_id(name,time)]=obj    
-    def get_component(self,name,index=None,time=None):
-        if time is None: return self.children[name+str(index)]
-        else: return self.children[self._t_id(name,time)]
-    def get_components(self,name):
-        return dict(filter(lambda (comp_name,comp): comp_name.startswith(name),self.children.items()))
-    
+    def get_component(self,name,time=None): return self.children[self._t_id(name,time)]
+#    def get_components(self,name):
+#        return dict(filter(lambda (comp_name,comp): comp_name.startswith(name),self.children.items()))
+#    
     
     #FIX add_component shouldnt have to have a time - should be able to specify compontents at init 
     #        and then call component.add_variables(times) inside self.add_variables(times)     
@@ -569,7 +582,7 @@ class OptimizationObject(object):
 #        return dict(filter(lambda (comp_name,comp): comp_name.startswith(name),self.children.items()))
     def get_cost(self,times): return self.objective+sum([child.get_cost(times) for child in self.children])
     def iden(self,time):
-        msg='the optimization object template identifier method must be overwritten'
+        msg='the iden() method must be overwritten for an OptimizationObject class'
         raise NotImplementedError(msg)
         return 'some unique identifying string'
     def __str__(self): 
@@ -582,17 +595,17 @@ class OptimizationObject(object):
         '''return variables from object and children within times'''
         variables=filter_optimization_objects(self.variables,times)
         for child in self.children.values(): 
-            try: variables.extend(child.all_variables(times))
+            try: variables.update(child.all_variables(times))
             except AttributeError:
-                [variables.extend(c.all_variables(times)) for c in child]
+                [variables.update(c.all_variables(times)) for c in child]
         return variables
     def all_constraints(self,times): 
         '''return constraints from object and children within times'''
         constraints=filter_optimization_objects(self.constraints,times)
         for child in self.children.values(): 
-            try: constraints.extend(child.all_constraints(times))
+            try: constraints.update(child.all_constraints(times))
             except AttributeError:
-                [constraints.extend(c.all_constraints(times)) for c in child]
+                [constraints.update(c.all_constraints(times)) for c in child]
         return constraints
 
 

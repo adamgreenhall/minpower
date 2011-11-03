@@ -27,6 +27,7 @@ class Bid(OptimizationObject):
     """
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     def __init__(self,model,iden):
         vars(self).update(locals())
@@ -62,6 +63,9 @@ class Bid(OptimizationObject):
 =======
     def __init__(self,model,owner_iden,time_iden,input_var=0,status_var=True):
 >>>>>>> first draft of refactor
+=======
+    def __init__(self,model,time,owner_iden,time_iden,input_var=0,status_var=True):
+>>>>>>> first working pass through solver (results still needs major rework
         update_attributes(self,locals())
         self.init_optimization()
     def output_true(self,input_val): return self.model.output_true(input_val)
@@ -79,14 +83,15 @@ class Bid(OptimizationObject):
 
     def create_variables(self):
         self.variables=self.model.get_time_variables(self.input_var,self.status_var,self.owner_iden,self.time_iden)
-        return self.variables     
     def create_constraints(self):
         '''Create the constraints for a bid by calling its 
         model.constraint() method.'''
-        self.constraints= self.model.get_time_constraints(self.variables,self.input_var,self.status_var,self.owner_iden,self.time_iden)
+        constraintD=self.model.get_time_constraints(self.variables,self.input_var,self.status_var,self.owner_iden,self.time_iden)
+        for nm,expr in constraintD.items(): self.add_constraint(nm,self.time,expr)
         return self.constraints
-    def output(self): return self.model.output(self.input_var,self.status_var,self.owner_iden,self.time_iden)        
-    def __str__(self): return 'bid {i}'.format(i=self.iden)
+    def output(self): return self.model.output(self.variables,self.input_var,self.status_var,self.owner_iden,self.time_iden)        
+    def __str__(self): return 'bid{t}'.format(t=str(self.time))
+    def iden(self,*args): return 'bid{t}'.format(t=str(self.time))
 
 
 def makeModel(polyText,multiplier=1, **kwargs):

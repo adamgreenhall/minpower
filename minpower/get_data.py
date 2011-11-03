@@ -52,7 +52,7 @@ def parsedir(datadir='.',
         (not required for ED,OPF problems. Defaults will be used
         for UC problems if not specified.)
     
-    :returns: buses, lines, times (lists of objects)
+    :returns: generators,loads,lines,times (lists of objects)
     """
     if not os.path.isdir(datadir): raise OSError('data directory "{d}" does not exist'.format(d=datadir) )
     [file_gens,file_loads,file_lines,file_init]=[joindir(datadir,filename) for filename in (file_gens,file_loads,file_lines,file_init)]
@@ -73,10 +73,7 @@ def parsedir(datadir='.',
     try: lines=build_class_list(file_lines,model=powersystems.Line,field_attr_map=fields_lines)
     except IOError: lines=[]
     
-    #create buses list    
-    buses=powersystems.make_buses_list(loads,generators)
-    
-    return buses,lines,times
+    return generators,loads,lines,times
 
 def setup_initialcond(filename,generators,times):
     '''read initial conditions from spreadsheet and add information to each :class:`powersystems.Generator`.'''

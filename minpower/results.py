@@ -15,48 +15,54 @@ import config
 import matplotlib
 import matplotlib.pyplot as plot
 
-def classifyProblem(times=None,lines=None):
-    if not lines and len(times)==1: kind='ED'
-    elif len(times)==1:    kind='OPF'
-    elif not lines:        kind='UC'
-    else: kind='SCUC'    
+def classifyProblem(times,power_system):
+    if not power_system.lines and len(times)==1: kind='ED'
+    elif len(times)==1: kind='OPF'
+    elif not power_system.lines: kind='UC'
+    else: kind='SCUC'
     return kind
 
-def makeSolution(lines=None,times=None,**kwargs):
+def makeSolution(power_system,times,**kwargs):
     kindMap=dict(ED=Solution_ED, OPF=Solution_OPF, UC=Solution_UC, SCUC=Solution_SCUC)
-    kind=classifyProblem(times,lines)
+    kind=classifyProblem(times,power_system)
     classMaker=kindMap[kind]
-    return classMaker(lines=lines,times=times,**kwargs)
+    return classMaker(power_system,times,**kwargs)
 
 def makeMultistageSolution(lines,**kwargs):
     if lines: raise NotImplementedError('no visualization for multistage SCUC yet')
     return Solution_multistageUC(**kwargs)
 
 class Solution(object):
-    def __init__(self,problem,buses,lines,times,datadir='.'):
-        vars(self).update(subset(locals(),['buses','lines','times','datadir']))
-        self.generators=flatten( [[gen for gen in bus.generators] for bus in buses] )
-        self.loads     =flatten( [[ld  for ld   in bus.loads]     for bus in buses] )
-        self.constraints= problem.constraints
+    def __init__(self,power_system,times,datadir='.',problem=None):
+        power_system.update_variables()
+        self.power_system=power_system
+        self.times=times
+        self.datadir=datadir
+        
+        self.buses=power_system.buses
+        self.generators=flatten( [[gen for gen in bus.generators] for bus in self.buses] )
+        self.loads     =flatten( [[ld  for ld   in bus.loads]     for bus in self.buses] )
+        self.constraints=problem.constraints
         self.solveTime  =problem.solutionTime
         self.status     =problem.statusText
-        self.solved        =problem.status==1
-        for g in self.generators: g.update_vars(times,problem)
-        for l in self.loads: l.update_vars(times,problem)
-        for b in self.buses: b.update_vars(times,problem)
-        for l in self.lines: l.update_vars(times,problem)
+        self.solved     =problem.solved
         
         if not self.solved: 
             logging.error('Problem solve was not completed. Status {s}.'.format(s=self.status))
             return
         
         self.objective  =float(value(problem.objective))
-        self.activeConstraints = sum([problem.dual(nm)!=0 for nm,c in problem.constraints.iteritems()])
+#        for c in problem.constraints.values():
+#            print c, getattr(c,'dual',None)
+#        self.activeConstraints = sum([c.dual!=0 for c in problem.constraints.values()])
         self.totalConstraints = len(problem.constraints)
         self.calcCosts()
-        self.calcPrices(problem)
-    def show(self):
+    def savevisualization(self,filename=None):
         if not self.solved: return
+        if filename is None: plot.show()
+        else: plot.savefig(joindir(self.datadir,filename),bbox_inches='tight')
+        plot.close()
+    def show(self):
         print '\nSolution information:\n----------------------'
         for t in self.times:
             print '{tm}: {start}'.format(tm=t,start=t.Start)
@@ -65,26 +71,15 @@ class Solution(object):
             self.info_loads(t)
             self.info_buses(t)
             self.info_lines(t)
-        self.info_cost()               
-    
-    def savevisualization(self,filename=None):
-        if not self.solved: return
-        if filename is None: plot.show()
-        else: plot.savefig(joindir(self.datadir,filename),bbox_inches='tight')
-        plot.close()
-    
-    def info_status(self):
-        if self.solved: print('{stat} in {time:0.4f} sec'.format(stat=self.status,time=self.solveTime))
-        else: print(self.solveStatus)
-    def info_price(self,t):
-        print ' price=', [ bus.price[t] for bus in self.buses ]    
+        self.info_cost()
+    def info_status(self): print('{stat} in {time:0.4f} sec'.format(stat=self.status,time=self.solveTime))
+    def info_price(self,t): print ' price=', [ bus.price(t) for bus in self.buses ]    
     def info_generators(self,t):
         print ' generator info:'
         if len(self.generators)<10:
             if len(self.buses)>1: print '  bus={L}'.format(L=getattrL(self.generators,'bus'))
             print '  name=', getattrL(self.generators,'name')
             print '  u=',   [value(gen.status(t)) if gen.isControllable else ' ' for gen in self.generators]
-            #if len(self.times)>1: print '  du=', [value(gen.startup[t]) or value(gen.shutdown[t]) if gen.isControllable else ' ' for gen in self.generators]
             print '  Pg=',  [value(gen.power(t)) for gen in self.generators]
             print '  IC=', [gen.incrementalcost(t) for gen in self.generators]
         else: #lots of generators
@@ -106,22 +101,15 @@ class Solution(object):
     def info_lines(self,t):
         print ' line info:'
         print '  connecting=', zip(getattrL(self.lines,'From'),getattrL(self.lines,'To'))            
-        print '  Pk =', [value(line.P[t]) for line in self.lines]
-        print '  mu=', [line.price[t] for line in self.lines]
+        print '  Pk =', [value(line.power(t)) for line in self.lines]
+        print '  mu=', [line.price(t) for line in self.lines]
     def calcCosts(self):
         gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t)) for t in self.times] for gen in self.generators]
         gen_fuel_costs_polynomial = [[gen.truecost(t) for t in self.times] for gen in self.generators]
-        #print gen_fuel_costs_pwlmodel
-        #print gen_fuel_costs_polynomial
         self.fuelcost_generation=float(sum( [c for c in flatten(gen_fuel_costs_pwlmodel) if c is not None] ))
         self.truecost_generation=float(sum( [c for c in flatten(gen_fuel_costs_polynomial) if c is not None] ))
         try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
         except ZeroDivisionError: self.costerror=0
-    def calcPrices(self,problem):
-        for t in self.times:    
-            for bus in self.buses:  bus.price[t] = bus.getprice(t,problem)
-            for line in self.lines: line.price[t] = line.getprice(t,problem)
-    
     def info_cost(self):
         print 'objective cost=',self.objective
         print 'linearized fuelcost of generation=',self.fuelcost_generation
@@ -133,7 +121,7 @@ class Solution_ED(Solution):
     def __init__(self,**kwargs):
         super( Solution_ED, self ).__init__(**kwargs)    
         #for ED problem there is just one price
-        self.price=self.buses[0].price[self.times[0]]
+        self.price=self.buses[0].price(self.times[0])
     
     def info_lines(self,t): pass
     def info_buses(self,t): pass
@@ -155,7 +143,7 @@ class Solution_ED(Solution):
                 genNames.append(gen.name)
         for load in loads: 
             if load.kind=='bidding': 
-                loadsPlotted.append( load.bid[t].plot_derivative(P=value(load.power(t)),linestyle=':') )
+                loadsPlotted.append( load.bid(t).plot_derivative(P=value(load.power(t)),linestyle=':') )
                 loadNames.append(load.name)
         if price is not None: 
             grayColor='.75'
@@ -188,7 +176,7 @@ class Solution_ED(Solution):
                     genNames.append(gen.name)
             for load in loads: 
                 if load.kind=='bidding': 
-                    loadsPlotted.append( load.bid[t].plot(P=value(load.power(t)),linestyle=':') )
+                    loadsPlotted.append( load.bid(t).plot(P=value(load.power(t)),linestyle=':') )
                     loadNames.append(load.name)        
             plot.xlabel('P [MWh]')
             if loadsPlotted:     plot.ylabel('Cost-Benifit [$/h]')
@@ -254,7 +242,7 @@ class Solution_OPF(Solution):
         fields.append('to');  data.append(getattrL(lines,'To'))
         fields.append('power'); data.append([value(line.P[t]) for line in lines])
         
-        fields.append('congestion shadow price'); data.append([line.price[t] for line in self.lines])
+        fields.append('congestion shadow price'); data.append([line.price(t) for line in self.lines])
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename+'-lines.csv'))        
     
     def info_price(self,t): pass #built into bus info
@@ -268,7 +256,7 @@ class Solution_UC(Solution):
         
         fields,data=[],[]
         fields.append('times');  data.append([t.Start for t in times])
-        fields.append('prices'); data.append([self.buses[0].price[t] for t in times])
+        fields.append('prices'); data.append([self.buses[0].price(t) for t in times])
         for gen in self.generators: 
             if gen.isControllable:
                 fields.append('status: '+str(gen.name))
@@ -287,13 +275,13 @@ class Solution_UC(Solution):
         else: fewunits=False
         
         times,generators,loads=self.times,self.generators,self.loads
-        prices=[self.buses[0].price[t] for t in self.times]
+        prices=[self.buses[0].price(t) for t in self.times]
         
         bigFont={'fontsize':15}
         figWidth=.85; figLeft=(1-figWidth)/2
         yLabel_pos={'x':-0.09,'y':0.5}
         
-        fig=plot.figure(figsize=(10, 4), dpi=120)
+        plot.figure(figsize=(10, 4), dpi=120)
         ax=plot.axes([figLeft,.1,figWidth,.6])
         ax.set_ylabel('energy [MWh]',ha='center',**bigFont)
         ax.yaxis.set_label_coords(**yLabel_pos)
@@ -431,18 +419,14 @@ class Solution_multistageUC(Solution_UC):
         self.generators=flatten( [[gen for gen in bus.generators] for bus in buses] )
         self.loads     =flatten( [[ld  for ld   in bus.loads]     for bus in buses] )
         self.calcCosts()
-        self.calcPrices()        
+         
     def calcCosts(self):
         self.fuelcost_generation=float(sum( [p['fuelcost_generation'] for p in self.problemsL] ))
         self.truecost_generation=float(sum( [p['truecost_generation'] for p in self.problemsL] ))
         self.load_shed=float(sum( [value(p['load_shed']) for p in self.problemsL] ))
         try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
         except ZeroDivisionError: self.costerror=0       
-    def calcPrices(self):    
-        for n,problem in enumerate(self.problemsL):
-            for t in self.stageTimes[n].non_overlap_times:
-                for bus in self.buses:
-                    bus.price[t] = problem[t]['price_'+bus.iden(t)]
+
     def show(self):
         self.info_status()
         if not self.solved: return
@@ -467,7 +451,7 @@ def get_stage_solution(problem,buses,times,overlap_hours=0):
     #reduce memory by setting variables to their value (instead of full Variable object)
     for bus in buses:
         for gen in bus.generators: gen.fix_vars(times,problem)
-        for load in bus.loads: load.update_vars(times,problem)
+        for load in bus.loads: load.update_variables(times,problem)
     
     for t in times.non_overlap_times:
         sln=dict()

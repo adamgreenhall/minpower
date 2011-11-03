@@ -18,6 +18,7 @@ elif optimization_package=='coopr':
 else: raise ImportError('optimization library must be coopr or pulp.')
 import logging,time
 import config
+from commonscripts import update_attributes 
 
 if optimization_package=='coopr':
     class Problem(object):
@@ -476,7 +477,7 @@ class OptimizationObject(object):
         all of the keyword arguments to self.
         You should also call the :meth:`~OptimizationObject.init_optimization` method.
         '''
-        vars(self).update(locals()) #load in inputs
+        update_attributes(self,locals()) #load in inputs
         self.init_opt_object()
         
     def init_optimization(self):
@@ -498,7 +499,7 @@ class OptimizationObject(object):
         
         :returns: dictionary of variables
         '''
-        return self.variables
+        return self.all_variables()
 
     def create_constraints(self, *args,**kwargs):
         ''' 
@@ -509,30 +510,47 @@ class OptimizationObject(object):
         
         :returns: dictionary of constraints
         '''
-        return self.constraints
+        return self.all_constraints()
  
     def update_variables(self):
         '''
         Replace the object's variables with their numeric value.
         This method shouldn't need overwriting.
         '''
-        for name,var in self.variables.iteritems(): self.variables[name]=value(var)
-    def add_variable(self,name,time=None,**kwargs):
+        for name,var in self.variables.items(): self.variables[name]=value(var)
+        for child in self.children.values():    child.update_variables() 
+    def _t_id(self,name,time): return name.replace(' ','_')+'_'+self.iden(time)
+    
+    def add_variable(self,name,short_name=None,time=None,fixed_value=None,**kwargs):
         '''
         Create a new variable and add it to the variables dictionary.
+        Parameters include those for `meth:optimization.new_variable`.
         This method shouldn't need overwriting.
-        '''
-        if time is not None: name=name+'_'+self.iden(time)
-        self.variables[name]=newVar(name,**kwargs)
-    def add_constraint(self,name,time=None,expression=None):
+        '''        
+        if short_name is None: short_name=name
+        name=self._t_id(name,time)
+        short_name=self._t_id(short_name,time)
+        if fixed_value is None:
+            self.variables[name] = new_variable(name=short_name,**kwargs)
+        else:
+            self.variables[name] = fixed_value
+    def add_constraint(self,name,time,expression): 
         '''
         Create a new constraint and add it to the constraints dictionary.
         This method shouldn't need overwriting.
         '''
-        if time is not None: name=name+'_'+self.iden(time)
-        self.constraints[name]=new_constraint(name,expression)    
+        name=self._t_id(name,time)
+        self.constraintsD[name]=new_constraint(name,expression)
     
-    def iden(self,*args,**kwargs):
+    #FIX add_component shouldnt have to have a time - should be able to specify compontents at init 
+    #        and then call component.add_variables(times) inside self.add_variables(times) 
+    def add_component(self,name,time,obj): self.children[self._t_id(name,time)]=obj
+    
+    def get_variable(self,name,time): return self.variables[self._t_id(name,time)]
+    def get_constraint(self,name,time): return self.constraintsD[self._t_id(name,time)]
+    def get_component(self,name,time): return self.children[self._t_id(name,time)]
+    def get_cost(self): return self.objective+sum([child.get_cost() for child in self.children])
+    def iden(self,time):
         msg='the optimization object template identifier method must be overwritten'
         raise NotImplementedError(msg)
         return 'some unique identifying string'
@@ -542,6 +560,26 @@ class OptimizationObject(object):
         You probably want to override this one with a more descriptive string.
         '''
         return 'opt_obj{ind}'.format(ind=self.index)
+    def all_variables(self,times):
+        '''return variables from object and children within times'''
+        variables=filter_optimization_objects(self.variables,times)
+        for child in self.children.values(): variables.extend(child.all_variables(times))
+        return variables
+    def all_constraints(self,times): 
+        '''return constraints from object and children within times'''
+        constraints=filter_optimization_objects(self.constraints,times)
+        for child in self.children.values(): constraints.extend(child.all_constraints(times))
+        return constraints
+
+
+def filter_optimization_objects(objects,times):
+    times_str=[str(t).lstrip('t') for t in times]
+    times_str.append(str(times.initialTime).lstrip('t'))
+    def valid(name,val):
+        in_time_period=name.rsplit('t',1)[1] in times_str
+        is_variable_not_fixed = getattr(val,'value',0)==None
+        return in_time_period and is_variable_not_fixed
+    return dict(filter(lambda (name,val): valid(name,val) ,objects.items()))
 
 
 def solve(problem,solver=config.optimization_solver,problem_filename=False): return problem.solve(solver,problem_filename)

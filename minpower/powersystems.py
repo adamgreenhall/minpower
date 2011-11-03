@@ -115,7 +115,7 @@ def makeLoad(kind='varying',**kwargs):
     if 'P' in kwargs.keys(): return Load_Fixed(kind=kind, **kwargs)
     else: return Load(kind=kind,**kwargs)
         
-class Generator(object):
+class Generator(OptimizationObject):
     """
     A generator model. 
     
@@ -153,9 +153,10 @@ class Generator(object):
         if index is None: self.index=hash(self)
         if name in [None, '']: self.name = self.index+1 #1 and up naming     
         if self.rampratemin is None and self.rampratemax is not None: self.rampratemin = -1*self.rampratemax
-        
-        self._makeEmpties()
         self.isControllable=True
+        
+        self.init_opt_object()
+        
     def buildCostModel(self,num_breakpoints):
         ''' create a cost model for bidding with :meth:`~bidding.makeModel` '''
         if getattr(self,'heatratestring',None) is not None: 
@@ -166,10 +167,6 @@ class Generator(object):
             self.fuelcost=1
         costinputs['num_breakpoints']=num_breakpoints
         self.costModel=bidding.makeModel(minInput=self.Pmin, maxInput=self.Pmax,inputNm='Pg',outputNm='C',**costinputs)
-    def _makeEmpties(self): 
-        self.variables={}
-        self.constraintsD={}
-        self.bid={}
     def power(self,time=None): 
         '''real power output at time'''
         return self.get_variable('power',time)
@@ -205,7 +202,10 @@ class Generator(object):
 >>>>>>> reformulation of startup,shutdown variables according to Arroyo and Carrion 2006
     def incrementalcost(self,time): 
         '''change in cost with change in power at time (based on exact bid polynomial).'''
-        return self.bid[time].incOutput(self.power(time)) if value(self.status(time)) else None
+        return self.bid(time).incOutput(self.power(time)) if value(self.status(time)) else None
+    def bid(self,time):
+        '''class:`~bidding.Bid` object for time'''
+        return self.get_component('bid', time) 
     def getstatus(self,t,times): return dict(u=value(self.status(t)),P=value(self.power(t)),hoursinstatus=self.gethrsinstatus(t,times))
     def gethrsinstatus(self,tm,times):
         status=value(self.status(tm))
@@ -217,25 +217,13 @@ class Generator(object):
             h=hours(tm-times[0])
             if value(self.status(times.initialTime)) == status: h+=self.initialStatusHours
             return h
-    def t_id(self,name,time): return name.replace(' ','_')+'_'+self.iden(time)
-    def get_variable(self,name,time): return self.variables[self.t_id(name,time)]
-    def add_variable(self,name,short_name=None,time=None,kind='Continuous',low=-1000000,high=1000000,fixed_value=None):
-        if short_name is None: short_name=name
-        name=self.t_id(name,time)
-        short_name=self.t_id(short_name,time)
-        if fixed_value is None:
-            self.variables[name] = new_variable(name=short_name,low=low,high=high,kind=kind)
-        else:
-            self.variables[name] = fixed_value
-    def add_constraint(self,name,time,expression): self.constraintsD[self.t_id(name,time)]=expression
-    def get_constraint(self,name,time): return self.constraintsD[self.t_id(name,time)]
 
-    def add_timevars(self,times,num_breakpoints=config.default_num_breakpoints,dispatch_decommit_allowed=False):
+
+    def create_variables(self,times,num_breakpoints=config.default_num_breakpoints,dispatch_decommit_allowed=False):
         '''set up dicts for time-varying optimization variables
         (power,u,startup,shutdown,bid)
         '''
         self.buildCostModel(num_breakpoints=num_breakpoints)
-        allvars=[]
         commitment_problem= len(times)>1 or dispatch_decommit_allowed
         for time in times:
             self.add_variable('power','P',time,low=0,high=self.Pmax)
@@ -270,6 +258,7 @@ class Generator(object):
                 self.add_variable('startupcost', 'Csu', time,fixed_value=0)
                 self.add_variable('shutdowncost', 'Csd', time,fixed_value=0)
                 
+<<<<<<< HEAD
 >>>>>>> rough optimization object model for generator. unit and integration tested.
             self.bid[time]=bidding.Bid(
                 model=self.costModel,
@@ -328,6 +317,17 @@ class Generator(object):
         for time in times: self.bid[time].update_vars()
         for nm,v in self.variables.items(): self.variables[nm]=value(v)
 >>>>>>> rough optimization object model for generator. unit and integration tested.
+=======
+            self.add_component('bid',time,
+                bidding.Bid(
+                    model=self.costModel,
+                    inputvar=self.power(time),
+                    statusvar=self.status(time),
+                    iden=self.iden(time)
+                ))
+        return self.filtered_variables(times)
+    
+>>>>>>> working on the big refactor to opt.obj. model
     def fix_vars(self,times,problem):
         self.update_vars(times,problem)
         self.bid={} #wipe bid info - no longer needed
@@ -338,16 +338,14 @@ class Generator(object):
         self.add_variable('status', 'u', time, fixed_value=u)
         self.add_variable('power', 'P', time, fixed_value=P*u) #note: this eliminates ambiguity of off status with power non-zero output
         self.initialStatusHours = hoursinstatus
-    def constraints(self,times):
+    def create_constraints(self,times):
         '''create the optimization constraints for a generator over all times'''
         def roundoff(n):
             m=int(n)
             if n!=m: raise ValueError('min up/down times must be integer number of intervals, not {}'.format(n))
             return m
 
-        all_constraints={}
-        commitment_problem= len(times)>1
-                
+        commitment_problem= len(times)>1        
         if commitment_problem:
             tInitial = times.initialTime
             tEnd = len(times)
@@ -383,9 +381,8 @@ class Generator(object):
             min_down_intervals = roundoff(self.mindowntime/times.intervalhrs)
         
         for t,time in enumerate(times):
-            #bid constraints
-            
-            all_constraints.update( self.bid[time].constraints() )
+            #bid curve constraints
+            self.get_component('bid', time).create_constraints(time)
             #min/max power
             if self.Pmin>0: self.add_constraint('min gen power', time, self.power(time)>=self.status(time)*self.Pmin)
             self.add_constraint('max gen power', time, self.power(time)<=self.status(time)*self.Pmax)
@@ -417,8 +414,8 @@ class Generator(object):
             if self.shutdowncost>0:
                 self.add_constraint('shutdown cost', time, self.cost_shutdown(time)>=self.shutdowncost*-1*self.status_change(t, times))
                 
-        all_constraints.update(filter_optimization_objects(self.constraintsD,times))
-        return all_constraints        
+        
+        return self.all_constraints(times)        
         
     def __str__(self): return 'g{ind}'.format(ind=self.index)
     def __int__(self): return self.index
@@ -595,31 +592,6 @@ class Bus(OptimizationObject):
         #return problem.dual('powerBalance_'+self.iden(time))
 >>>>>>> this is going to be a major refactor. putting on hold for now.
         
-def make_buses_list(loads,generators):
-    """Create list of :class:`powersystems.Bus` objects 
-        from the load and generator bus names. Otherwise
-        (as in ED,UC) create just one (system)
-        :class:`powersystems.Bus` instance.
-        
-        :param loads: a list of :class:`powersystems.Load` objects
-        :param generators: a list of :class:`powersystems.Generator` objects
-        :returns: a list of :class:`powersystems.Bus` objects
-    """
-    busNameL=[]
-    busNameL.extend(getattrL(generators,'bus'))
-    busNameL.extend(getattrL(loads,'bus'))
-    busNameL=unique(busNameL)
-    buses=[]
-    swingHasBeenSet=False
-    for b,busNm in enumerate(busNameL):
-        newBus=Bus(name=busNm,index=b)
-        for gen in generators: 
-            if gen.bus==newBus.name: newBus.generators.append(gen) 
-            if not swingHasBeenSet: newBus.isSwing=swingHasBeenSet=True
-        for ld in loads: 
-            if ld.bus==newBus.name: newBus.loads.append(ld)             
-        buses.append(newBus)
-    return buses
 
 
 class Load(object):
@@ -694,20 +666,58 @@ class Load_Fixed(Load):
         
     def benifit(self,time=None): return (self.power(time) - self.Pfixed)*config.cost_loadshedding
     
-class Network(object):
-    """
-    Creates and contains the admittance matrix (B)
-    used in calculating the power balance for OPF problems.
-    
-    :param buses: list of :class:`~powersystems.Line` objects
-    :param lines: list of :class:`~powersystems.Bus` objects
-    """
-    def __init__(self,buses,lines):
+
+
+        
+
+
+class PowerSystem(OptimizationObject):
+    def __init__(self,
+                 generators,loads,lines=None,
+                 num_breakpoints=config.default_num_breakpoints,
+                 load_shedding_allowed=False,
+                 spinning_reserve_requirement=0,
+                 dispatch_decommit_allowed=False,
+                 ):
+        update_attributes(self,locals()) #load in inputs
+        if lines is None: self.lines=[]
+        self.make_buses_list(loads,generators)
+        self.create_admittance_matrix()
+        self.init_opt_object()
+    def make_buses_list(self,loads,generators):
+        """Create list of :class:`powersystems.Bus` objects 
+            from the load and generator bus names. Otherwise
+            (as in ED,UC) create just one (system)
+            :class:`powersystems.Bus` instance.
+            
+            :param loads: a list of :class:`powersystems.Load` objects
+            :param generators: a list of :class:`powersystems.Generator` objects
+            :returns: a list of :class:`powersystems.Bus` objects
+        """
+        busNameL=[]
+        busNameL.extend(getattrL(generators,'bus'))
+        busNameL.extend(getattrL(loads,'bus'))
+        busNameL=unique(busNameL)
+        buses=[]
+        swingHasBeenSet=False
+        for b,busNm in enumerate(busNameL):
+            newBus=Bus(name=busNm,index=b)
+            for gen in generators: 
+                if gen.bus==newBus.name: newBus.generators.append(gen) 
+                if not swingHasBeenSet: newBus.isSwing=swingHasBeenSet=True
+            for ld in loads: 
+                if ld.bus==newBus.name: newBus.loads.append(ld)             
+            buses.append(newBus)
         self.buses=buses
-        self.lines=lines
-        self.createBmatrix()
-    def createBmatrix(self):
-        '''create the matrix B: total admittance from bus i to j'''
+    def create_admittance_matrix(self):
+        """
+        Creates and contains the admittance matrix (B), 
+        with elements = total admittance of line from bus i to j.
+        Used in calculating the power balance for OPF problems.
+        
+        :param buses: list of :class:`~powersystems.Line` objects
+        :param lines: list of :class:`~powersystems.Bus` objects
+        """
         nB=len(self.buses)
         self.Bmatrix=numpy.zeros((nB,nB))
         namesL=[bus.name for bus in self.buses]
@@ -718,10 +728,13 @@ class Network(object):
             self.Bmatrix[busTo.index,busFrom.index]+=-1/line.X
         for i in range(0,nB): 
             self.Bmatrix[i,i]=-1*sum(self.Bmatrix[i,:])
-
+    def create_variables(self,times):
+        self.
+        return self.all_variables(times)
 def power_to_energy(P,time):
     return P*time.intervalhrs
     
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 def filter_optimization_objects(objects,times):
@@ -733,3 +746,5 @@ def filter_optimization_objects(objects,times):
         return in_time_period and is_variable_not_fixed
     return dict(filter(lambda (name,val): valid(name,val) ,objects.items()))
 >>>>>>> rough optimization object model for generator. unit and integration tested.
+=======
+>>>>>>> working on the big refactor to opt.obj. model

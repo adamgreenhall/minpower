@@ -4,7 +4,7 @@ Defines models for power systems concepts:
 :class:`~powersystems.Line`, and :class:`~powersystems.Load`.
 """
 
-from optimization import value,sum_vars,OptimizationObject
+from optimization import value,dual,sum_vars,OptimizationObject
 from commonscripts import hours,drop_case_spaces,getattrL,unique,update_attributes
 import config, bidding
 from schedule import FixedSchedule
@@ -395,7 +395,7 @@ class Line(OptimizationObject):
     def power(self,time): return self.get_variable('power',time)
     def price(self,time):
         '''congestion price on line'''
-        return self.get_constraint('line Flow',time).dual
+        return dual(self.get_constraint('line Flow',time))
     def create_variables(self,times):
         for time in times: self.add_variable('power',time)
         return self.all_variables(times)
@@ -434,7 +434,7 @@ class Bus(OptimizationObject):
 #        print self.get_constraint('power balance',time).name 
 #        print self.get_constraint('power balance',time).type()
 #        print self.get_constraint('power balance',time).display()
-        return self.get_constraint('power balance',time).dual
+        return dual(self.get_constraint('power balance',time))
     def Pgen(self,t):   return sum_vars([gen.power(t) for gen in self.generators])
     def Pload(self,t):  return sum_vars([ ld.power(t) for ld in self.loads])
     def power_balance(self,t,Bmatrix,allBuses):

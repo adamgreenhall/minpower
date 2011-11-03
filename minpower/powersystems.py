@@ -4,7 +4,7 @@ Defines models for power systems concepts:
 :class:`~powersystems.Line`, and :class:`~powersystems.Load`.
 """
 
-from optimization import new_variable,value,sum_vars,OptimizationObject
+from optimization import value,sum_vars,OptimizationObject
 from commonscripts import hours,drop_case_spaces,getattrL,unique,update_attributes
 import config, bidding
 from schedule import FixedSchedule
@@ -132,7 +132,7 @@ class Generator(OptimizationObject):
     def cost_shutdown(self,time): return self.get_variable('shutdowncost',time) 
     def operatingcost(self,time): 
         '''cost of real power production at time (based on bid model approximation).'''
-        return self.bid[time].output()
+        return self.bid(time).output()
     def truecost(self,time):
         '''exact cost of real power production at time (based on exact bid polynomial).'''
         return value(self.status(time))*self.cost_model.output_true(self.power(time))
@@ -189,13 +189,22 @@ class Generator(OptimizationObject):
             
             bid=bidding.Bid(
                     model=self.cost_model,
-                    inputvar=self.power(time),
-                    statusvar=self.status(time),
+                    time=time,
+                    input_var=self.power(time),
+                    status_var=self.status(time),
                     owner_iden=str(self),
                     time_iden=str(time))
-            bid.create_variables(times,num_breakpoints)
-            self.add_component('bid',time,bid)
-            
+            bid.create_variables()
+            self.add_component(bid,'bid',time)
+#        print str(self)
+#        print self.children
+##        print [c.variables for c in self.children.values()]
+#        print [c.all_variables(times) for c in self.children.values()]
+#        
+#        test={}
+#        for child in self.children.values(): 
+#            test.update(child.all_constraints(times))
+#        print test
         self.objective=sum_vars(self.cost(time) for time in times)
         return self.all_variables(times)
     
@@ -244,7 +253,7 @@ class Generator(OptimizationObject):
         
         for t,time in enumerate(times):
             #bid curve constraints
-            self.get_component('bid', time).create_constraints(time)
+            self.get_component('bid', time).create_constraints()
             #min/max power
             if self.Pmin>0: self.add_constraint('min gen power', time, self.power(time)>=self.status(time)*self.Pmin)
             self.add_constraint('max gen power', time, self.power(time)<=self.status(time)*self.Pmax)
@@ -291,28 +300,28 @@ class Generator_nonControllable(Generator):
         mustrun=False,
         Pmin=0,Pmax=None,
         power=None,
-        name=None,index=None,bus=None,kind='wind',**kwargs):
+        name='',index=None,bus=None,kind='wind',**kwargs):
         if power is not None and schedule is None: 
             self.schedule = FixedSchedule(P=power)
         update_attributes(self,locals(),exclude=['power']) #load in inputs
         if Pmax is None: self.Pmax = self.schedule.maxvalue
         self.isControllable=False
+        self.init_optimization()
     def power(self,time): return self.schedule.get_energy(time)
     def status(self,time): return True
     def set_initial_condition(self,time=None, P=None, u=None, hoursinstatus=None):
         if P is None: P=self.schedule.get_energy(time) #set default power as first scheduled power output
         self.schedule.P[time]=P
     def getstatus(self,t,times): return dict()
-    def add_timevars(self,times,num_break_points=config.default_num_breakpoints,dispatch_decommit_allowed=False):
+    def create_variables(self,times,num_break_points=config.default_num_breakpoints,dispatch_decommit_allowed=False):
         self.build_cost_model(num_break_points)
-        return []
-    def update_vars(self,times=None,problem=None): return
-    def fix_timevars(self,times=None): return
+        return {}
+    def create_constraints(self,times): return {}
     def cost(self,time): return self.operatingcost(time)
     def operatingcost(self,time): return self.cost_model.output_true( self.power(time) )
     def truecost(self,time): return self.cost(time)
     def incrementalcost(self,time): return self.fuelcost*self.cost_model.output_incremental(self.power(time))
-    def constraints(self,times): return #no constraints
+    def constraints(self,times): return {} #no constraints
 
         
 
@@ -328,20 +337,19 @@ class Load(OptimizationObject):
       (generally created automatically from file
       by :meth:`get_data.build_class_list`)
     """
-    def __init__(self,kind='varying',name=None,index=None,bus=None,schedule=None):
+    def __init__(self,kind='varying',name='',index=None,bus=None,schedule=None):
         update_attributes(self,locals()) #load in inputs
         self.init_optimization()
     def power(self,time=None): return self.get_variable('power',time)
     def shed(self,time): return self.schedule.get_energy(time)- value(self.power(time)) #power_to_energy(value(self.power(time)),time)
     def cost(self,time,cost_loadshedding=config.cost_loadshedding): return cost_loadshedding*(self.shed(time)) 
-    def add_variables(self,times=None,shedding_allowed=False,cost_loadshedding=config.cost_loadshedding):
+    def create_variables(self,times=None,shedding_allowed=False,cost_loadshedding=config.cost_loadshedding,**kwargs):
         for time in times: 
             if shedding_allowed: 
                 self.add_variable('power','Pd',time,low=0,high=self.schedule.get_energy(time))
             else:
                 self.add_variable('power','Pd',time,fixed_value=self.schedule.get_energy(time))
-        self.objective=sum_vars([ self.cost(time,cost_loadshedding) for time in times]) 
-        return self.all_variables(times)
+        self.objective=sum_vars([ self.cost(time,cost_loadshedding) for time in times])
 
     def __str__(self): return 'd{ind}'.format(ind=self.index)    
     def __int__(self): return self.index
@@ -355,19 +363,18 @@ class Load_Fixed(Load):
     
     :param P: real power consumed by load (MW/hr)
     """
-    def __init__(self,kind='fixed',name=None,index=None,bus=None,P=0):
+    def __init__(self,kind='fixed',name='',index=None,bus=None,P=0):
         update_attributes(self,locals(),exclude=['p']) #load in inputs
         self.Pfixed = P
         self.init_optimization()
-        
-    def add_variables(self,times=None,shedding_allowed=False,cost_loadshedding=config.cost_loadshedding):
+    def shed(self,time): return self.Pfixed- value(self.power(time)) 
+    def create_variables(self,times=None,shedding_allowed=False,cost_loadshedding=config.cost_loadshedding,**kwargs):
         for time in times: 
             if shedding_allowed: 
                 self.add_variable('power','Pd',time,low=0,high=self.Pfixed)
             else:
                 self.add_variable('power','Pd',time,fixed_value=self.Pfixed)
-        self.objective=sum_vars([self.cost(time) for time in times])
-        return self.all_variables(times)
+        self.objective=sum_vars([self.cost(time,cost_loadshedding) for time in times])
         
 class Line(OptimizationObject):
     """
@@ -425,15 +432,17 @@ class Bus(OptimizationObject):
     def price(self,time): return self.get_constraint('power balance',time).dual
     def Pgen(self,t):   return sum_vars([gen.power(t) for gen in self.generators])
     def Pload(self,t):  return sum_vars([ ld.power(t) for ld in self.loads])
-    def powerBalance(self,t,Bmatrix,allBuses):
+    def power_balance(self,t,Bmatrix,allBuses):
         if len(allBuses)==1: lineFlowsFromBus=0
         else: lineFlowsFromBus=sum_vars([Bmatrix[self.index][otherBus.index]*otherBus.angle(t) for otherBus in allBuses]) #P_{ij}=sum_{i} B_{ij}*theta_j ???
         return sum_vars([ -lineFlowsFromBus,-self.Pload(t),self.Pgen(t) ])
-    def create_variables(self,times,num_breakpoints,dispatch_decommit_allowed):
+    def create_variables(self,times,num_breakpoints,dispatch_decommit_allowed,load_shedding_allowed):
         self.add_components(self.generators,'generators')
         self.add_components(self.loads,'loads')
         for gen in self.generators: 
             gen.create_variables(times,num_breakpoints,dispatch_decommit_allowed)
+        for load in self.loads:
+            load.create_variables(times,load_shedding_allowed,num_breakpoints=num_breakpoints)
         for time in times: self.add_variable('angle',time=time)
         
         self.objective=sum_vars([gen.objective for gen in self.generators])+sum_vars([ld.objective for ld in self.loads])
@@ -443,10 +452,10 @@ class Bus(OptimizationObject):
         for load in self.loads: load.create_constraints(times)
         nBus=len(buses)
         for time in times:
-            self.add_constraint('power balance',time, self.powerBalance(time,Bmatrix,buses)==0) #power balance must be zero
+            self.add_constraint('power balance',time, self.power_balance(time,Bmatrix,buses)==0) #power balance must be zero
             if nBus>1 and self.isSwing: 
                 self.add_constraint('swing bus',time, self.angle(time)==0)#swing bus has angle=0
-        return self.all_constraints(time)
+        return self.all_constraints(times)
     def iden(self,t):   return str(self)+str(t)
     def __str__(self):  return 'i{ind}'.format(ind=self.index)
 class PowerSystem(OptimizationObject):
@@ -512,8 +521,11 @@ class PowerSystem(OptimizationObject):
             self.Bmatrix[i,i]=-1*sum(self.Bmatrix[i,:])
     def create_variables(self,times):
         for bus in self.buses: 
-            bus.create_variables(times,num_breakpoints=self.num_breakpoints,dispatch_decommit_allowed=self.dispatch_decommit_allowed)
-        for line in self.lines(): line.create_variables(times)
+            bus.create_variables(times,num_breakpoints=self.num_breakpoints,
+                                 dispatch_decommit_allowed=self.dispatch_decommit_allowed,
+                                 load_shedding_allowed=self.load_shedding_allowed
+                                 )
+        for line in self.lines: line.create_variables(times)
         self.objective=sum_vars(bus.objective for bus in self.buses)
         return self.all_variables(times)
     def create_constraints(self,times):

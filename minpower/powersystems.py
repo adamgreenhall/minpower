@@ -156,7 +156,7 @@ class Generator(OptimizationObject):
         update_attributes(self,locals()) #load in inputs     
         if self.rampratemin is None and self.rampratemax is not None: self.rampratemin = -1*self.rampratemax
         self.isControllable=True
-        self.init_opt_object()
+        self.init_optimization()
         
     def power(self,time=None): 
         '''real power output at time'''
@@ -790,7 +790,7 @@ class PowerSystem(OptimizationObject):
         if lines is None: lines=[]
         buses=self.make_buses_list(loads,generators)
         self.create_admittance_matrix(buses,lines)
-        self.init_opt_object()
+        self.init_optimization()
         
         self.add_components(buses,'buses')
         self.add_components(lines,'lines')

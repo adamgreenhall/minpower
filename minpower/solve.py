@@ -47,7 +47,7 @@ def problem(datadir='.',
         problem=create_problem(power_system,times,num_breakpoints)
         optimization.solve(problem,solver,problem_filename=joindir(datadir,'problem-formulation.lp'))
         if problem.solved:
-            solution=results.makeSolution(power_system,times,problem=problem,datadir=datadir)
+            solution=results.make_solution(power_system,times,problem=problem,datadir=datadir)
         else: 
             raise optimization.OptimizationError('problem not solved')
     else: #split into multi-stage problem
@@ -73,6 +73,7 @@ def problem(datadir='.',
                                                        overlap_hours=hours_commitment_overlap,
                                                        num_breakpoints=num_breakpoints,
                                                        )
+<<<<<<< HEAD
 <<<<<<< HEAD
         solution=results.makeMultistageSolution(problemsL=problemsL,
             buses=buses,lines=lines,
@@ -100,6 +101,13 @@ def problem(datadir='.',
         print t,[g.startup[t] for g in generators],[g.shutdown[t] for g in generators]
     
 =======
+=======
+        solution=results.make_multistage_solution(power_system,times,datadir,
+                                                problemsL,stageTimes,
+                                                overlap_hours=hours_commitment_overlap,
+                                                )
+        logging.info('problem solved in {}'.format(solution.solve_time))
+>>>>>>> major cleanup of results.py. still need to tackle the multistage commitments
         
 >>>>>>> fix for linear cost curves - now: cost=a*u+b*P
     if shell: solution.show()

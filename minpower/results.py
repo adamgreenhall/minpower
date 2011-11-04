@@ -1,38 +1,38 @@
 """
     Solution models, output, and display for power system
     optimization problems. Matplotlib and networkx are used for
-    vizualization.
-    """
+    visualization.
+"""
 
 import logging
 from collections import OrderedDict
 
-from commonscripts import flatten,transpose,elementwiseAdd, getattrL,within,writeCSV,joindir,replace_all
+from commonscripts import flatten,transpose,elementwiseAdd, getattrL,within,writeCSV,joindir,replace_all,update_attributes
 from schedule import Timelist
-from optimization import value
+from optimization import value,dual
 import config
 
 import matplotlib
 import matplotlib.pyplot as plot
 
-def classifyProblem(times,power_system):
+def classify_problem(times,power_system):
     if not power_system.lines and len(times)==1: kind='ED'
     elif len(times)==1: kind='OPF'
     elif not power_system.lines: kind='UC'
     else: kind='SCUC'
     return kind
 
-def makeSolution(power_system,times,**kwargs):
-    kindMap=dict(ED=Solution_ED, OPF=Solution_OPF, UC=Solution_UC, SCUC=Solution_SCUC)
-    kind=classifyProblem(times,power_system)
-    classMaker=kindMap[kind]
-    return classMaker(power_system,times,**kwargs)
+def make_solution(power_system,times,**kwargs):
+    problem_type=dict(ED=Solution_ED, OPF=Solution_OPF, UC=Solution_UC, SCUC=Solution_SCUC)
+    kind=classify_problem(times,power_system)
+    return problem_type[kind](power_system,times,**kwargs)
 
-def makeMultistageSolution(lines,**kwargs):
-    if lines: raise NotImplementedError('no visualization for multistage SCUC yet')
+def make_multistage_solution(lines,**kwargs):
+    if lines: logging.warning('no visualization for multistage SCUC yet')
     return Solution_multistageUC(**kwargs)
 
 class Solution(object):
+<<<<<<< HEAD
     def __init__(self,power_system,times,datadir='.',problem=None):
         power_system.update_variables()
         self.power_system=power_system
@@ -62,10 +62,16 @@ class Solution(object):
 =======
         self.solved     =problem.solved
 >>>>>>> redo of results. now problem with duals
+=======
+    def __init__(self,power_system,times,problem,datadir='.'):
+        update_attributes(self,locals(),exclude=['problem'])
+        self.power_system.update_variables()
+>>>>>>> major cleanup of results.py. still need to tackle the multistage commitments
         
-        if not self.solved: 
-            logging.error('Problem solve was not completed. Status {s}.'.format(s=self.status))
+        if not problem.solved: 
+            logging.error('Problem solve was not completed. Status {s}.'.format(s=problem.status))
             return
+<<<<<<< HEAD
         
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -99,46 +105,76 @@ class Solution(object):
     def savevisualization(self,filename=None):
 >>>>>>> redo of results. now problem with duals
         if not self.solved: return
+=======
+        self._get_problem_info(problem)
+        self._get_costs()
+
+    def _get_problem_info(self,problem):
+        self.status     =problem.statusText
+        self.solve_time  =problem.solutionTime
+        self.objective  =float(value(problem.objective))
+        self.active_constraints = sum([dual(c)!=0 for c in problem.constraints.values()])
+        self.total_constraints = len(problem.constraints)
+    def _get_costs(self):
+        generators=self.generators()
+        gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t)) for t in self.times] for gen in generators]
+        gen_fuel_costs_polynomial = [[gen.truecost(t) for t in self.times] for gen in generators]
+        self.fuelcost_generation=float(sum( [c for c in flatten(gen_fuel_costs_pwlmodel) if c is not None] ))
+        self.truecost_generation=float(sum( [c for c in flatten(gen_fuel_costs_polynomial) if c is not None] ))
+        try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
+        except ZeroDivisionError: self.costerror=0
+    def buses(self): return self.power_system.buses
+    def lines(self): return self.power_system.lines
+    def generators(self): return flatten( [[gen for gen in bus.generators] for bus in self.buses()] )
+    def loads(self): return flatten( [[ld for ld in bus.loads] for bus in self.buses()] )
+    def get_values(self,kind='generators',attrib='power',time=None):
+        method={'generators':self.generators,'loads':self.loads,'lines':self.lines,'buses':self.buses}
+        if time is not None: return [getattr(obj, attrib)(time) for obj in method[kind]()]
+        else: return [getattr(obj, attrib) for obj in method[kind]()]
+        
+    def savevisualization(self,filename=None):
+>>>>>>> major cleanup of results.py. still need to tackle the multistage commitments
         if filename is None: plot.show()
         else: plot.savefig(joindir(self.datadir,filename),bbox_inches='tight')
         plot.close()
     def show(self):
-        print '\nSolution information:\n----------------------'
+        out=['']
+        out.extend(['Solution information','-'*10,''])
         for t in self.times:
-            print '{tm}: {start}'.format(tm=t,start=t.Start)
-            self.info_price(t)
-            self.info_generators(t)
-            self.info_loads(t)
-            self.info_buses(t)
-            self.info_lines(t)
-        self.info_cost()
-    def info_status(self): print('{stat} in {time:0.4f} sec'.format(stat=self.status,time=self.solveTime))
-    def info_price(self,t): print ' price=', [ bus.price(t) for bus in self.buses ]    
+            out.append('{tm}: {start}'.format(tm=t,start=t.Start))
+            out.extend(self.info_price(t))
+            out.extend(self.info_generators(t))
+            out.extend(self.info_loads(t))
+            out.extend(self.info_buses(t))
+            out.extend(self.info_lines(t))
+        else:
+            out.extend(self.info_cost())
+            print '\n'.join(out)
+    def info_status(self): return ['solved in {time:0.4f} sec'.format(time=self.solve_time)]
+    def info_price(self,t): return ['price={}'.format(self.get_values('buses','price',t))]    
     def info_generators(self,t):
-        print ' generator info:'
-        if len(self.generators)<10:
-            if len(self.buses)>1: print '  bus={L}'.format(L=getattrL(self.generators,'bus'))
-            print '  name=', getattrL(self.generators,'name')
-            print '  u=',   [value(gen.status(t)) if gen.isControllable else ' ' for gen in self.generators]
-            print '  Pg=',  [value(gen.power(t)) for gen in self.generators]
-            print '  IC=', [gen.incrementalcost(t) for gen in self.generators]
-        else: #lots of generators
-            activeGens = [gen for gen in self.generators if hasattr(gen,'u') or not gen.isControllable]
-            print '  name=', [gen.name for gen in activeGens]
-            print '  Pg=',  [value(gen.power(t)) for gen in activeGens]
-            print '  IC=', [gen.incrementalcost(t) for gen in activeGens]    
+        out=['generator info:']
+        if len(self.buses())>1: out.append('bus={}'.format(self.get_values('generators','bus')))
+        out.extend(['name={}'.format(self.get_values('generators','name')),
+                    'u={}'.format(self.get_values('generators','status',t)),
+                    'P={}'.format(self.get_values('generators','power',t)),
+                    'IC={}'.format(self.get_values('generators','incrementalcost',t))])
+        return out
     def info_loads(self,t):
-        print ' load info:'
-        print '  bus={}'.format(getattrL(self.loads,'bus')) if len(self.buses)>1 else ''
-        print '  name=', getattrL(self.loads,'name')
-        print '  Pd=',   [value(load.power(t)) for load in self.loads]
+        return ['load info:',
+                'bus={}'.format(self.get_values('loads','bus')) if len(self.buses())>1 else '',
+                'name={}'.format(self.get_values('loads','name')),
+                'Pd={}'.format(self.get_values('generators','power',t))]
     def info_buses(self,t):
-        print ' bus info:'
-        print '  name =', getattrL(self.buses,'name')
-        print '  Pinj =', [ value(bus.Pgen(t)) - value(bus.Pload(t)) for bus in self.buses]
-        if len(self.buses)>1: print '  angle =', [ value(bus.angle[t]) for bus in self.buses]
-        print '  LMP  =', [ bus.price[t] for bus in self.buses ]        
+        buses=self.buses()
+        out=['bus info:',
+             'name={}'.format(getattrL(buses,'name')),
+             'Pinj={}'.format([ bus.Pgen(t) - bus.Pload(t) for bus in buses]),
+             'angle={}'.format(self.get_values('buses','angle',t)),
+             'LMP={}'.format(self.get_values('buses','price',t))]    
+        return out    
     def info_lines(self,t):
+<<<<<<< HEAD
         print ' line info:'
         print '  connecting=', zip(getattrL(self.lines,'From'),getattrL(self.lines,'To'))            
         print '  Pk =', [value(line.power(t)) for line in self.lines]
@@ -171,27 +207,29 @@ class Solution(object):
 >>>>>>> working coopr and pulp mix
 =======
 >>>>>>> redo of results. now problem with duals
+=======
+        lines=self.lines()
+        return ['line info:',
+             'connecting={}'.format(zip(getattrL(lines,'From'),getattrL(lines,'To'))),       
+             'Pk={}'.format(self.get_values('lines','power',t)),
+             'price={}'.format(self.get_values('lines','price',t))]            
+>>>>>>> major cleanup of results.py. still need to tackle the multistage commitments
     def info_cost(self):
-        print 'objective cost=',self.objective
-        print 'linearized fuelcost of generation=',self.fuelcost_generation
-        print 'non-linearized cost of generation=',self.truecost_generation
-        print 'percentage difference\t\t={diff:.2%}'.format(diff=self.costerror)
+        return ['objective cost={}'.format(self.objective),
+        'linearized fuel cost of generation={}'.format(self.fuelcost_generation),
+        ' non-linearized cost of generation={}'.format(self.truecost_generation),
+        'percentage difference\t\t={diff:.2%}'.format(diff=self.costerror),
+        ]
 
 
 class Solution_ED(Solution):
-    def __init__(self,*args,**kwargs):
-        super( Solution_ED, self ).__init__(*args,**kwargs)    
-        #for ED problem there is just one price
-        self.price=self.buses[0].price(self.times[0])
-    
-    def info_lines(self,t): pass
-    def info_buses(self,t): pass
+    def info_lines(self,t): return []
+    def info_buses(self,t): return []
     def vizualization(self,show_cost_also=False):
         ''' economic dispatch visualization '''
-        if not self.solved: return
         t=self.times[0]
-        price=self.price
-        generators,loads=self.generators,self.loads
+        price=self.buses()[0].price(t)
+        generators,loads=self.generators(),self.loads()
         
         gensPlotted,genNames,loadsPlotted,loadNames=[],[],[],[]
         minGen=min(getattrL(generators,'Pmin'))
@@ -249,22 +287,20 @@ class Solution_ED(Solution):
             
             self.savevisualization(filename='dispatch.png')        
     def saveCSV(self,filename='dispatch.csv'):
-        if not self.solved: return
         t=self.times[0]
-        generators,loads=self.generators,self.loads
+        generators=self.generators()
         
         fields,data=[],[]
         fields.append('generator name');  data.append(getattrL(generators,'name'))
         fields.append('u');  data.append([value(g.status(t)) for g in generators])
         fields.append('P');  data.append([value(g.power(t)) for g in generators])
         fields.append('IC');  data.append([g.incrementalcost(t) for g in generators])
-        
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))        
 class Solution_OPF(Solution): 
     def vizualization(self,filename='powerflow.png'): 
         if not self.solved: return
         import networkx as nx
-        buses,lines,t=self.buses,self.lines,self.times[0]
+        buses,lines,t=self.buses(),self.lines(),self.times[0]
         
         G=nx.DiGraph()
         for bus in buses:
@@ -281,59 +317,56 @@ class Solution_OPF(Solution):
         cb=plot.colorbar(shrink=.8)
         cb.set_label('injected power [MW]',fontsize=15)
         
-        Plines=[edata['P'] for f,t,edata in G.edges(data=True) if 'P' in edata]
+        Plines=[edata['P'] for _,t,edata in G.edges(data=True) if 'P' in edata]
         atLimLines=[(f,t) for f,t,edata in G.edges(data=True) if within(edata['P'],val=edata['Plim'],eps=1e-3) ]
         nx.draw_networkx_edges(G,edge_color='0.6',pos=pos,width=Plines,alpha=0.5)
         nx.draw_networkx_edges(G,edgelist=atLimLines,edge_color='r',pos=pos,width=Plines,alpha=0.5)
-        
         self.savevisualization(filename)
+        
     def saveCSV(self,filename='powerflow'): 
         t=self.times[0]
-        generators,loads,lines=self.generators,self.loads,self.lines
         
         fields,data=[],[]
-        fields.append('generator name');  data.append(getattrL(generators,'name'))
-        fields.append('u');  data.append([value(g.status(t)) for g in generators])
-        fields.append('P');  data.append([value(g.power(t)) for g in generators])
-        fields.append('IC');  data.append([g.incrementalcost(t) for g in generators])
+        fields.append('generator name');  data.append(self.get_values('generators','name'))
+        fields.append('u');  data.append(self.get_values('generators','status',t))
+        fields.append('P');  data.append(self.get_values('generators','power',t))
+        fields.append('IC');  data.append(self.get_values('generators','incrementalcost',t))
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename+'-generators.csv'))           
         
         fields,data=[],[]
-        fields.append('from');  data.append(getattrL(lines,'From'))
-        fields.append('to');  data.append(getattrL(lines,'To'))
-        fields.append('power'); data.append([value(line.P[t]) for line in lines])
-        
-        fields.append('congestion shadow price'); data.append([line.price(t) for line in self.lines])
+        fields.append('from');  data.append(self.get_values('lines','From'))
+        fields.append('to');  data.append(self.get_values('lines','To'))
+        fields.append('power'); data.append(self.get_values('lines','power',t))
+        fields.append('congestion shadow price'); data.append(self.get_values('lines','price',t))
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename+'-lines.csv'))        
     
     def info_price(self,t): pass #built into bus info
 class Solution_UC(Solution):
-    def info_lines(self,t): pass
-    def info_buses(self,t): pass
+    def info_lines(self,t): return []
+    def info_buses(self,t): return []
     def saveCSV(self,filename='commitment.csv'): 
-        if not self.solved: return
-        #times=getattr(self.times,'non_overlap_times',self.times)
         times=self.times
-        
+        bus=self.buses()[0]
         fields,data=[],[]
         fields.append('times');  data.append([t.Start for t in times])
-        fields.append('prices'); data.append([self.buses[0].price(t) for t in times])
-        for gen in self.generators: 
+        fields.append('prices'); data.append([bus.price(t) for t in times])
+        for gen in self.generators(): 
             if gen.isControllable:
                 fields.append('status: '+str(gen.name))
                 data.append([1 if value(gen.status(t))==1 else 0 for t in times])
             fields.append('power: '+str(gen.name))
             data.append([value(gen.power(t)) for t in times])
-        for load in self.loads:
+        for load in self.loads():
             fields.append('load power: '+str(load.name))
             data.append([value(load.power(t)) for t in times])
         
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))
     
     def vizualization(self,filename='commitment.png',withPrices=True):
-        if not self.solved: return
-        if len(self.generators)<=5: fewunits=True
+        times,generators,loads=self.times,self.generators(),self.loads()
+        if len(generators)<=5: fewunits=True
         else: fewunits=False
+<<<<<<< HEAD
 <<<<<<< HEAD
     
         times,generators,loads=self.times,self.generators,self.loads
@@ -343,6 +376,9 @@ class Solution_UC(Solution):
         
         times,generators,loads=self.times,self.generators,self.loads
         prices=[self.buses[0].price(t) for t in self.times]
+=======
+        prices=[self.buses()[0].price(t) for t in self.times]
+>>>>>>> major cleanup of results.py. still need to tackle the multistage commitments
         
 >>>>>>> duals and variables now working with coopr. tests are still failing.
         bigFont={'fontsize':15}
@@ -505,10 +541,10 @@ class Solution_UC(Solution):
         ax.autoscale_view()        
         self.savevisualization(filename)
 
-class Solution_SCUC(Solution):
-    def info_price(self,t): pass #built into bus info
-    def vizualization(self): raise NotImplementedError('need to implement vizualization for SCUC')
-    def saveCSV(self,filename='commitment.csv'): raise NotImplementedError
+class Solution_SCUC(Solution_UC):
+    def vizualization(self): logging.warning('no visualization for SCUC. Spreadsheet output is valid, except for the price column is the price on first bus only.')
+    
+    
 class Solution_multistageUC(Solution_UC):
     def __init__(self,problemsL,times,stageTimes,buses,datadir='.',overlap_hours=0):
         vars(self).update(locals())
@@ -520,14 +556,14 @@ class Solution_multistageUC(Solution_UC):
             self.solved = True
         
         self.objective = float(value(sum([p['objective'] for p in problemsL])))
-        self.solveTime = sum([p['solve-time'] for p in problemsL])
-        #self.activeConstraints = sum([dual(c)!=0 for nm,c in constraints.items()])
-        #self.totalConstraints = len(constraints)
+        self.solve_time = sum([p['solve-time'] for p in problemsL])
+        #self.active_constraints = sum([dual(c)!=0 for nm,c in constraints.items()])
+        #self.total_constraints = len(constraints)
         self.generators=flatten( [[gen for gen in bus.generators] for bus in buses] )
         self.loads     =flatten( [[ld  for ld   in bus.loads]     for bus in buses] )
-        self.calcCosts()
+        self.get_costs()
          
-    def calcCosts(self):
+    def get_costs(self):
         self.fuelcost_generation=float(sum( [p['fuelcost_generation'] for p in self.problemsL] ))
         self.truecost_generation=float(sum( [p['truecost_generation'] for p in self.problemsL] ))
         self.load_shed=float(sum( [value(p['load_shed']) for p in self.problemsL] ))
@@ -543,7 +579,7 @@ class Solution_multistageUC(Solution_UC):
         if self.load_shed:
             print 'total load shed={}MW'.format(self.load_shed)
     def info_status(self):
-        if self.solved: print('{stat} in total of {time:0.4f} sec'.format(stat=self.status,time=self.solveTime))
+        if self.solved: print('{stat} in total of {time:0.4f} sec'.format(stat=self.status,time=self.solve_time))
         else: print(self.solveStatus)
 
 <<<<<<< HEAD

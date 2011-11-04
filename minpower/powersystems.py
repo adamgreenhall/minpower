@@ -104,11 +104,13 @@ class Generator(OptimizationObject):
         heatratestring=None,fuelcost=1,
         startupcost=0,shutdowncost=0,
         mustrun=False,
-        name='',index=None,bus=None):
+        name='',index=None,bus=None,
+        dispatch_decommit_allowed=False):
         
         update_attributes(self,locals()) #load in inputs     
         if self.rampratemin is None and self.rampratemax is not None: self.rampratemin = -1*self.rampratemax
         self.isControllable=True
+        self.build_cost_model()
         self.init_optimization()
         
     def power(self,time=None): 
@@ -160,7 +162,7 @@ class Generator(OptimizationObject):
         self.add_variable('status', 'u', time, fixed_value=u)
         self.add_variable('power', 'P', time, fixed_value=P*u) #note: this eliminates ambiguity of off status with power non-zero output
         self.initialStatusHours = hoursinstatus
-    def build_cost_model(self,num_breakpoints):
+    def build_cost_model(self):
         ''' create a cost model for bidding with :meth:`~bidding.makeModel` '''
         if getattr(self,'heatratestring',None) is not None: 
             costinputs=dict(polyText=self.heatratestring,multiplier=self.fuelcost)
@@ -168,12 +170,12 @@ class Generator(OptimizationObject):
         else: 
             costinputs=dict(polyText=self.costcurvestring)
             self.fuelcost=1
-        costinputs['num_breakpoints']=num_breakpoints
+        
         self.cost_model=bidding.makeModel(minInput=self.Pmin, maxInput=self.Pmax,inputNm='Pg',outputNm='C',**costinputs)
 
-    def create_variables(self,times,num_breakpoints=config.default_num_breakpoints,dispatch_decommit_allowed=False):
-        self.build_cost_model(num_breakpoints=num_breakpoints)
-        commitment_problem= len(times)>1 or dispatch_decommit_allowed
+    def create_variables(self,times):
+        
+        commitment_problem= len(times)>1 or self.dispatch_decommit_allowed
         for time in times:
             self.add_variable('power','P',time,low=0,high=self.Pmax)
             if commitment_problem: #UC problem
@@ -307,22 +309,20 @@ class Generator_nonControllable(Generator):
         update_attributes(self,locals(),exclude=['power']) #load in inputs
         if Pmax is None: self.Pmax = self.schedule.maxvalue
         self.isControllable=False
+        self.build_cost_model()
         self.init_optimization()
     def power(self,time): return self.schedule.get_energy(time)
     def status(self,time): return True
     def set_initial_condition(self,time=None, P=None, u=None, hoursinstatus=None):
         if P is None: P=self.schedule.get_energy(time) #set default power as first scheduled power output
         self.schedule.P[time]=P
-    def getstatus(self,t,times): return dict()
-    def create_variables(self,times,num_break_points=config.default_num_breakpoints,dispatch_decommit_allowed=False):
-        self.build_cost_model(num_break_points)
-        return {}
+    def getstatus(self,t,times): return {}
+    def create_variables(self,times): return {}
     def create_constraints(self,times): return {}
     def cost(self,time): return self.operatingcost(time)
     def operatingcost(self,time): return self.cost_model.output_true( self.power(time) )
     def truecost(self,time): return self.cost(time)
     def incrementalcost(self,time): return self.fuelcost*self.cost_model.output_incremental(self.power(time))
-    def constraints(self,times): return {} #no constraints
 
         
 
@@ -338,7 +338,10 @@ class Load(OptimizationObject):
       (generally created automatically from file
       by :meth:`get_data.build_class_list`)
     """
-    def __init__(self,kind='varying',name='',index=None,bus=None,schedule=None):
+    def __init__(self,kind='varying',name='',index=None,bus=None,schedule=None,
+                 load_shedding_allowed=False,
+                 cost_load_shedding=config.cost_load_shedding
+                 ):
         update_attributes(self,locals()) #load in inputs
         self.init_optimization()
     def power(self,time): return self.get_variable('power',time) if self.shedding_allowed else self.schedule.get_energy(time)
@@ -360,11 +363,14 @@ class Load_Fixed(Load):
     """
     Describes a load that does not vary with time.
     This can be an easy way to add a load for an ED/OPF problem,
-    or a system baseload.
+    or a system base load.
     
     :param P: real power consumed by load (MW/hr)
     """
-    def __init__(self,kind='fixed',name='',index=None,bus=None,P=0):
+    def __init__(self,kind='fixed',name='',index=None,bus=None,P=0,
+                 load_shedding_allowed=False,
+                 cost_load_shedding=config.cost_load_shedding
+                 ):
         update_attributes(self,locals(),exclude=['p']) #load in inputs
         self.Pfixed = P
         self.init_optimization()
@@ -466,6 +472,7 @@ class Bus(OptimizationObject):
         return self.all_constraints(times)
     def iden(self,t):   return str(self)+str(t)
     def __str__(self):  return 'i{ind}'.format(ind=self.index)
+    
 class PowerSystem(OptimizationObject):
     def __init__(self,
                  generators,loads,lines=None,
@@ -477,10 +484,19 @@ class PowerSystem(OptimizationObject):
                  ):
         update_attributes(self,locals(),exclude=['generators','loads','lines']) #load in inputs
         if lines is None: lines=[]
+        
+        #add system mode parameters to relevant components
         for load in loads:
             load.load_shedding_allowed=load_shedding_allowed 
             load.cost_load_shedding=cost_load_shedding
-        
+            try: load.cost_model.num_breakpoints=num_breakpoints
+            except AttributeError: pass #load has no cost model
+        for gen in generators:
+            gen.dispatch_decommit_allowed=dispatch_decommit_allowed
+            try: gen.cost_model.num_breakpoints=num_breakpoints
+            except AttributeError: pass #gen has no cost model
+            
+            
         buses=self.make_buses_list(loads,generators)
         self.create_admittance_matrix(buses,lines)
         self.init_optimization()
@@ -533,15 +549,11 @@ class PowerSystem(OptimizationObject):
         for i in range(0,nB): 
             self.Bmatrix[i,i]=-1*sum(self.Bmatrix[i,:])
     def create_variables(self,times):
-        for bus in self.buses: 
-            bus.create_variables(times,num_breakpoints=self.num_breakpoints,
-                                 dispatch_decommit_allowed=self.dispatch_decommit_allowed,
-                                 load_shedding_allowed=self.load_shedding_allowed
-                                 )
+        for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
         return self.all_variables(times)
     def create_objective(self,times):
-        self.objective=sum_vars(bus.create_objective(times) for bus in self.buses)
+        self.objective=sum_vars(bus.create_objective(times) for bus in self.buses) + sum_vars(line.create_objective(times) for line in self.lines)
         return self.objective
     def create_constraints(self,times):
         for bus in self.buses: bus.create_constraints(times,self.Bmatrix,self.buses)

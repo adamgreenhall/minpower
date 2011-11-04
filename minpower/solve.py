@@ -82,16 +82,17 @@ def create_problem(power_system,times,
     
     prob=optimization.newProblem()
     variables =power_system.create_variables(times)
+    objective=power_system.create_objective(times)
     constraints=power_system.create_constraints(times)
-    total_cost =power_system.objective
+    
     for nm,v in variables.items(): prob.add_variable(v)
+    prob.add_objective(objective)
     for nm,c in constraints.items(): 
         try: prob.add_constraint(c)
         except TypeError:
             print 'error in adding constraint',nm
             print 'expression is: ',c
             raise
-    prob.add_objective(total_cost)
     return prob
 
 

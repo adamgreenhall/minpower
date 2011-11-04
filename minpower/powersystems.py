@@ -66,7 +66,7 @@ def makeLoad(kind='varying',**kwargs):
     """
     Create a :class:`~powersystems.Load` object (if a power 
     :class:`~schedule.Schedule` is specified) or a
-    :class:`~powersystems.Load_Fixed` object (if a single
+cost_load_sheddingrsystems.Load_Fixed` object (if a single
     power value :attr:`P` is specified).
     """
     if 'P' in kwargs.keys(): return Load_Fixed(kind=kind, **kwargs)
@@ -205,9 +205,10 @@ class Generator(OptimizationObject):
 #        for child in self.children.values(): 
 #            test.update(child.all_constraints(times))
 #        print test
-        self.objective=sum_vars(self.cost(time) for time in times)
         return self.all_variables(times)
-    
+    def create_objective(self,times):
+        self.objective=sum_vars(self.cost(time) for time in times)
+        return self.objective
 
     def create_constraints(self,times):
         '''create the optimization constraints for a generator over all times'''
@@ -340,16 +341,16 @@ class Load(OptimizationObject):
     def __init__(self,kind='varying',name='',index=None,bus=None,schedule=None):
         update_attributes(self,locals()) #load in inputs
         self.init_optimization()
-    def power(self,time=None): return self.get_variable('power',time)
-    def shed(self,time): return self.schedule.get_energy(time)- value(self.power(time)) #power_to_energy(value(self.power(time)),time)
-    def cost(self,time,cost_loadshedding=config.cost_loadshedding): return cost_loadshedding*(self.shed(time)) 
-    def create_variables(self,times=None,shedding_allowed=False,cost_loadshedding=config.cost_loadshedding,**kwargs):
-        for time in times: 
-            if shedding_allowed: 
-                self.add_variable('power','Pd',time,low=0,high=self.schedule.get_energy(time))
-            else:
-                self.add_variable('power','Pd',time,fixed_value=self.schedule.get_energy(time))
-        self.objective=sum_vars([ self.cost(time,cost_loadshedding) for time in times])
+    def power(self,time): return self.get_variable('power',time) if self.shedding_allowed else self.schedule.get_energy(time)
+    def shed(self,time): return self.schedule.get_energy(time) - value(self.power(time)) #power_to_energy(value(self.power(time)),time)
+    def cost(self,time): return self.cost_load_shedding*self.shed(time) 
+    def create_variables(self,times):
+        if self.shedding_allowed:
+            for time in times: self.add_variable('power','Pd',time,low=0,high=self.schedule.get_energy(time))
+
+    def create_objective(self,times):
+        self.objective=sum_vars([ self.cost(time) for time in times])
+        return self.objective
 
     def __str__(self): return 'd{ind}'.format(ind=self.index)    
     def __int__(self): return self.index
@@ -367,14 +368,11 @@ class Load_Fixed(Load):
         update_attributes(self,locals(),exclude=['p']) #load in inputs
         self.Pfixed = P
         self.init_optimization()
-    def shed(self,time): return self.Pfixed- value(self.power(time)) 
-    def create_variables(self,times=None,shedding_allowed=False,cost_loadshedding=config.cost_loadshedding,**kwargs):
-        for time in times: 
-            if shedding_allowed: 
-                self.add_variable('power','Pd',time,low=0,high=self.Pfixed)
-            else:
-                self.add_variable('power','Pd',time,fixed_value=self.Pfixed)
-        self.objective=sum_vars([self.cost(time,cost_loadshedding) for time in times])
+    def shed(self,time): return self.Pfixed- value(self.power(time))
+    def power(self,time=None): return self.get_variable('power',time) if self.shedding_allowed else self.Pfixed 
+    def create_variables(self,times=None):
+        if self.shedding_allowed:
+            for time in times: self.add_variable('power','Pd',time,low=0,high=self.Pfixed)
         
 class Line(OptimizationObject):
     """
@@ -452,6 +450,11 @@ class Bus(OptimizationObject):
         
         self.objective=sum_vars([gen.objective for gen in self.generators])+sum_vars([ld.objective for ld in self.loads])
         return self.all_variables(times)
+    def create_objective(self,times):
+        self.objective= \
+            sum_vars(gen.create_objective(times) for gen in self.generator) + \
+            sum_vars(load.create_objective(times) for load in self.loads)
+        return self.objective
     def create_constraints(self,times,Bmatrix,buses):
         for gen in self.generators: gen.create_constraints(times)
         for load in self.loads: load.create_constraints(times)
@@ -468,11 +471,16 @@ class PowerSystem(OptimizationObject):
                  generators,loads,lines=None,
                  num_breakpoints=config.default_num_breakpoints,
                  load_shedding_allowed=False,
+                 cost_load_shedding=config.cost_load_shedding,
                  spinning_reserve_requirement=0,
                  dispatch_decommit_allowed=False,
                  ):
         update_attributes(self,locals(),exclude=['generators','loads','lines']) #load in inputs
         if lines is None: lines=[]
+        for load in loads:
+            load.load_shedding_allowed=load_shedding_allowed 
+            load.cost_load_shedding=cost_load_shedding
+        
         buses=self.make_buses_list(loads,generators)
         self.create_admittance_matrix(buses,lines)
         self.init_optimization()
@@ -531,8 +539,10 @@ class PowerSystem(OptimizationObject):
                                  load_shedding_allowed=self.load_shedding_allowed
                                  )
         for line in self.lines: line.create_variables(times)
-        self.objective=sum_vars(bus.objective for bus in self.buses)
         return self.all_variables(times)
+    def create_objective(self,times):
+        self.objective=sum_vars(bus.create_objective(times) for bus in self.buses)
+        return self.objective
     def create_constraints(self,times):
         for bus in self.buses: bus.create_constraints(times,self.Bmatrix,self.buses)
         #a system reserve constraint would go here

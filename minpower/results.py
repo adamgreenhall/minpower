@@ -7,7 +7,7 @@
 import logging
 from collections import OrderedDict
 
-from commonscripts import flatten,transpose,elementwiseAdd, getattrL,within,subset,writeCSV,joindir,replace_all
+from commonscripts import flatten,transpose,elementwiseAdd, getattrL,within,writeCSV,joindir,replace_all
 from schedule import Timelist
 from optimization import value
 import config
@@ -357,7 +357,7 @@ class Solution_UC(Solution):
         
         #show prices
         if withPrices and any(prices):
-            prices=replace_all(prices, config.cost_loadshedding, None)
+            prices=replace_all(prices, config.cost_load_shedding, None)
             prices_wo_none=[p for p in prices if p is not None]
             if prices_wo_none:
                 axesPrice = plot.axes([figLeft,.75,figWidth,.2],sharex=ax)

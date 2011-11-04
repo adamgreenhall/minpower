@@ -145,7 +145,7 @@ def create_problem_multistage(power_system,times,datadir,
         next_stage_first_time = times[-1-int(t_back)]         
         for bus in buses:
             for gen in bus.generators:
-                gen.update_vars(times, lastproblem)
+                gen.update_variables()
                 gen.finalstatus=gen.getstatus(t=next_stage_first_time,times=times)
 
 

@@ -559,14 +559,14 @@ class Load(OptimizationObject):
       by :meth:`get_data.build_class_list`)
     """
     def __init__(self,kind='varying',name='',index=None,bus=None,schedule=None,
-                 load_shedding_allowed=False,
-                 cost_load_shedding=config.cost_load_shedding
+                 shedding_allowed=False,
+                 cost_shedding=config.cost_load_shedding
                  ):
         update_attributes(self,locals()) #load in inputs
         self.init_optimization()
     def power(self,time): return self.get_variable('power',time) if self.shedding_allowed else self.schedule.get_energy(time)
     def shed(self,time): return self.schedule.get_energy(time) - value(self.power(time)) #power_to_energy(value(self.power(time)),time)
-    def cost(self,time): return self.cost_load_shedding*self.shed(time) 
+    def cost(self,time): return self.cost_shedding*self.shed(time) 
     def create_variables(self,times):
         if self.shedding_allowed:
             for time in times: self.add_variable('power','Pd',time,low=0,high=self.schedule.get_energy(time))
@@ -588,7 +588,7 @@ class Load_Fixed(Load):
     :param P: real power consumed by load (MW/hr)
     """
     def __init__(self,kind='fixed',name='',index=None,bus=None,P=0,
-                 load_shedding_allowed=False,
+                 shedding_allowed=False,
                  cost_load_shedding=config.cost_load_shedding
                  ):
         update_attributes(self,locals(),exclude=['p']) #load in inputs
@@ -703,20 +703,16 @@ class Bus(OptimizationObject):
         if len(allBuses)==1: lineFlowsFromBus=0
         else: lineFlowsFromBus=sum_vars([Bmatrix[self.index][otherBus.index]*otherBus.angle(t) for otherBus in allBuses]) #P_{ij}=sum_{i} B_{ij}*theta_j ???
         return sum_vars([ -lineFlowsFromBus,-self.Pload(t),self.Pgen(t) ])
-    def create_variables(self,times,num_breakpoints,dispatch_decommit_allowed,load_shedding_allowed):
+    def create_variables(self,times):
         self.add_components(self.generators,'generators')
         self.add_components(self.loads,'loads')
-        for gen in self.generators: 
-            gen.create_variables(times,num_breakpoints,dispatch_decommit_allowed)
-        for load in self.loads:
-            load.create_variables(times,load_shedding_allowed,num_breakpoints=num_breakpoints)
+        for gen in self.generators: gen.create_variables(times)
+        for load in self.loads: load.create_variables(times)
         for time in times: self.add_variable('angle',time=time)
-        
-        self.objective=sum_vars([gen.objective for gen in self.generators])+sum_vars([ld.objective for ld in self.loads])
         return self.all_variables(times)
     def create_objective(self,times):
         self.objective= \
-            sum_vars(gen.create_objective(times) for gen in self.generator) + \
+            sum_vars(gen.create_objective(times) for gen in self.generators) + \
             sum_vars(load.create_objective(times) for load in self.loads)
         return self.objective
     def create_constraints(self,times,Bmatrix,buses):
@@ -856,8 +852,8 @@ class PowerSystem(OptimizationObject):
         
         #add system mode parameters to relevant components
         for load in loads:
-            load.load_shedding_allowed=load_shedding_allowed 
-            load.cost_load_shedding=cost_load_shedding
+            load.shedding_allowed=load_shedding_allowed 
+            load.cost_shedding=cost_load_shedding
             try: load.cost_model.num_breakpoints=num_breakpoints
             except AttributeError: pass #load has no cost model
         for gen in generators:

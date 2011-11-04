@@ -177,7 +177,9 @@ def create_problem(power_system,times,
     
     prob=optimization.newProblem()
     variables =power_system.create_variables(times)
+    objective=power_system.create_objective(times)
     constraints=power_system.create_constraints(times)
+<<<<<<< HEAD
     total_cost =power_system.objective
 <<<<<<< HEAD
     for nm,v in variables.items(): prob.addVar(v)
@@ -185,15 +187,22 @@ def create_problem(power_system,times,
     prob.addObjective(total_cost)
 >>>>>>> refactor solve()
 =======
+=======
+    
+>>>>>>> added create_objective method across opt obj classes. need to test.
     for nm,v in variables.items(): prob.add_variable(v)
+    prob.add_objective(objective)
     for nm,c in constraints.items(): 
         try: prob.add_constraint(c)
         except TypeError:
             print 'error in adding constraint',nm
             print 'expression is: ',c
             raise
+<<<<<<< HEAD
     prob.add_objective(total_cost)
 >>>>>>> first working pass through solver (results still needs major rework
+=======
+>>>>>>> added create_objective method across opt obj classes. need to test.
     return prob
 
 

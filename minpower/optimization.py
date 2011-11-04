@@ -521,7 +521,12 @@ class OptimizationObject(object):
         :returns: dictionary of variables
         '''
         return self.all_variables(times)
-
+    def create_objective(self,times):
+        '''
+        Create the objective (cost) expression.
+        :returns: an expression  
+        '''
+        return self.objective
     def create_constraints(self, times,*args,**kwargs):
         ''' 
         Here we would create the constraints.
@@ -558,6 +563,7 @@ class OptimizationObject(object):
             self.variables[name] = new_variable(name=short_name,**kwargs)
         else:
             self.variables[name] = fixed_value
+    def add_fixed_variable(self,name,short_name=None,time=None,):
     def add_constraint(self,name,time,expression): 
         '''
         Create a new constraint and add it to the constraints dictionary.

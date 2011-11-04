@@ -275,11 +275,15 @@ def create_problem_multistage(power_system,times,datadir,
 
 =======
             for gen in bus.generators:
+<<<<<<< HEAD
                 gen.update_vars(times, lastproblem)
 <<<<<<< HEAD
                 gen.finalstatus=gen.getstatus(t=times[-1],times=times)
 >>>>>>> update_vars changed to just require problem (variables are embbeded in problem instead of solution)
 =======
+=======
+                gen.update_variables()
+>>>>>>> minor changes for multistage
                 gen.finalstatus=gen.getstatus(t=next_stage_first_time,times=times)
 
 >>>>>>> working rolling UC overlap hours

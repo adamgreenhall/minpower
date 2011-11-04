@@ -314,7 +314,7 @@ class LinearModel(PWLmodel):
         self.inputNm=inputNm
         self.outputNm=outputNm
     def get_time_variables(self,*args,**kwargs): return {}
-    def get_time_constraints(self,*args,**kwargs): {}
+    def get_time_constraints(self,*args,**kwargs): return {}
     def output(self,variables,input_var,status_var,owner_iden,time_iden):
         fixed_term=self.polyCurve.c[1]*status_var
         linear_term = self.polyCurve.c[0]*input_var

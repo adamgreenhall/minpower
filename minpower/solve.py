@@ -47,7 +47,7 @@ def problem(datadir='.',
         problem=create_problem(power_system,times,num_breakpoints)
         optimization.solve(problem,solver,problem_filename=joindir(datadir,'problem-formulation.lp'))
         if problem.solved:
-            solution=results.makeSolution(power_system,times,problem=problem,datadir=datadir)
+            solution=results.make_solution(power_system,times,problem=problem,datadir=datadir)
         else: 
             raise optimization.OptimizationError('problem not solved')
     else: #split into multi-stage problem
@@ -56,11 +56,11 @@ def problem(datadir='.',
                                                        overlap_hours=hours_commitment_overlap,
                                                        num_breakpoints=num_breakpoints,
                                                        )
-        solution=results.makeMultistageSolution(power_system,times,datadir,
+        solution=results.make_multistage_solution(power_system,times,datadir,
                                                 problemsL,stageTimes,
                                                 overlap_hours=hours_commitment_overlap,
                                                 )
-        logging.info('problem solved in {}'.format(solution.solveTime))
+        logging.info('problem solved in {}'.format(solution.solve_time))
         
     if shell: solution.show()
     if csv: solution.saveCSV()

@@ -112,7 +112,6 @@ def problem(datadir='.',
         stage_solutions,stage_times=solve_multistage(power_system,times,datadir,
                                                        stage_hours=hours_commitment,
                                                        overlap_hours=hours_commitment_overlap,
-                                                       num_breakpoints=num_breakpoints,
                                                        )
         solution=results.make_multistage_solution(power_system,stage_times,datadir,stage_solutions)
 >>>>>>> rework of multistage results - testing

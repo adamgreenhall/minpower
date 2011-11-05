@@ -57,9 +57,13 @@ from optimization import value,sum_vars,OptimizationObject
 >>>>>>> first working pass through solver (results still needs major rework
 =======
 from optimization import value,dual,sum_vars,OptimizationObject
+<<<<<<< HEAD
 >>>>>>> cleared up dual problem (old coopr solution index=None)
 from commonscripts import hours,drop_case_spaces,getattrL,unique,update_attributes
 >>>>>>> added update_attributes function for classes. fixed power attr/method clash for gen_noncontrollable
+=======
+from commonscripts import hours,drop_case_spaces,flatten,getattrL,unique,update_attributes
+>>>>>>> had to add line constraints to PowerSystems object. line constraints needed slight notation debug.
 import config, bidding
 from schedule import FixedSchedule
 import logging
@@ -565,7 +569,7 @@ class Load(OptimizationObject):
         update_attributes(self,locals()) #load in inputs
         self.init_optimization()
     def power(self,time): return self.get_variable('power',time) if self.shedding_allowed else self.schedule.get_energy(time)
-    def shed(self,time): return self.schedule.get_energy(time) - value(self.power(time)) #power_to_energy(value(self.power(time)),time)
+    def shed(self,time): return self.schedule.get_energy(time) - self.power(time) #power_to_energy(value(self.power(time)),time)
     def cost(self,time): return self.cost_shedding*self.shed(time) 
     def create_variables(self,times):
         if self.shedding_allowed:
@@ -619,16 +623,16 @@ class Line(OptimizationObject):
     def power(self,time): return self.get_variable('power',time)
     def price(self,time):
         '''congestion price on line'''
-        return dual(self.get_constraint('line Flow',time))
+        return dual(self.get_constraint('line flow',time))
     def create_variables(self,times):
-        for time in times: self.add_variable('power',time)
+        for time in times: self.add_variable('power','P',time)
         return self.all_variables(times)
     def create_constraints(self,times,buses):
         '''create the constraints for a line over all times'''
         for t in times:
             busNames=getattrL(buses,'name')
             iFrom,iTo=busNames.index(self.From),busNames.index(self.To)
-            line_flow_ij=self.P[t] == (1/self.X) * (buses[iFrom].angle(t) - buses[iTo].angle(t))
+            line_flow_ij=self.power(t) == (1/self.X) * (buses[iFrom].angle(t) - buses[iTo].angle(t))
             self.add_constraint('line flow',t,line_flow_ij)
             self.add_constraint('line limit high',t,self.power(t)<=self.Pmax)
             self.add_constraint('line limit low',t,self.Pmin<=self.power(t))
@@ -917,6 +921,8 @@ class PowerSystem(OptimizationObject):
             self.Bmatrix[busTo.index,busFrom.index]+=-1/line.X
         for i in range(0,nB): 
             self.Bmatrix[i,i]=-1*sum(self.Bmatrix[i,:])
+            
+    def loads(self): return flatten(bus.loads for bus in self.buses)
     def create_variables(self,times):
         for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
@@ -926,6 +932,7 @@ class PowerSystem(OptimizationObject):
         return self.objective
     def create_constraints(self,times):
         for bus in self.buses: bus.create_constraints(times,self.Bmatrix,self.buses)
+        for line in self.lines: line.create_constraints(times,self.buses)
         #a system reserve constraint would go here
         return self.all_constraints(times)
     

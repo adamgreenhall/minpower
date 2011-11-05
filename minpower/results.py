@@ -421,7 +421,7 @@ class Solution_UC(Solution):
         if not fewunits:
             #group generators by kind
             allkinds=['nuclear','coal','naturalgas','wind','other']
-            colors = dict(nuclear='LightSlateGrey',coal='DarkGrey',naturalgas='Gainsboro',wind='LightGreen',other='Beige')
+            colors = dict(nuclear='PowderBlue',coal='SkyBlue',naturalgas='LightSlateGray',wind='SteelBlue',other='Aquamarine')
             genbykind=OrderedDict(zip(allkinds,[None]*len(allkinds)))
             for gen in generators:
                 kind=gen.kind if gen.kind in allkinds else 'other'
@@ -527,7 +527,7 @@ class Solution_UC(Solution):
         if filename is not None:
             if 24*7>times.spanhrs>48:
                 ax.xaxis.set_major_locator(matplotlib.dates.DayLocator())
-                ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%d-%m-%Y'))
+                ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y-%m-%d'))
                 ax.xaxis.set_minor_locator(matplotlib.dates.HourLocator())
             elif times.spanhrs<48:
                 ax.xaxis.set_major_locator(matplotlib.dates.HourLocator())

@@ -74,5 +74,5 @@ default_hours_commitment_overlap=0
 optimization_package='coopr' #'pulp'
 
 optimization_solver='gurobi'
-available_solvers = ['glpk','gurobi','cplex']
+available_solvers = ['glpk','gurobi']#['glpk','gurobi','cplex']
 logging_level= logging.INFO

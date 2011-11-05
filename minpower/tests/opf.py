@@ -29,7 +29,7 @@ def line_limit_high():
     ]    
     lines=[powersystems.Line(Pmax=Pmax, From='A',To='B')]
     power_system,times=solve_problem(generators,lines=lines,**make_loads_times(Pd=225,bus='B'))
-    Pline = lines[0].P[times[0]]
+    Pline = lines[0].power(times[0])
     lmps=[b.price(times[0]) for b in power_system.buses]
     congestion_price = lines[0].price(times[0])
     assert Pline==Pmax and congestion_price == (lmps[1] - lmps[0])
@@ -51,8 +51,8 @@ def line_limit_low():
         make_expensive_gen(bus='B')
     ]    
     lines=[powersystems.Line(Pmin=Pmin, From='B',To='A')]
-    power_system,times=solve_problem(generators,lines=lines,**make_loads_times(Pd=225,bus='B'))
-    Pline = lines[0].P[times[0]]
+    power_system,times=solve_problem(generators,lines=lines,problem_filename='opf-test.lp',**make_loads_times(Pd=225,bus='B'))
+    Pline = lines[0].power(times[0])
     lmps=[b.price(times[0]) for b in power_system.buses]
     congestion_price = lines[0].price(times[0])
     assert Pline==Pmin and congestion_price == -1*(lmps[1] - lmps[0])

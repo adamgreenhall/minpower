@@ -50,16 +50,13 @@ def problem(datadir='.',
             solution=results.make_solution(power_system,times,problem=problem,datadir=datadir)
         else: 
             raise optimization.OptimizationError('problem not solved')
-    else: #split into multi-stage problem
-        problemsL,stageTimes=create_problem_multistage(power_system,times,datadir,
-                                                       stageHrs=hours_commitment,
+    else: #split into multiple stages and solve
+        stage_solutions,stage_times=solve_multistage(power_system,times,datadir,
+                                                       stage_hours=hours_commitment,
                                                        overlap_hours=hours_commitment_overlap,
                                                        num_breakpoints=num_breakpoints,
                                                        )
-        solution=results.make_multistage_solution(power_system,times,datadir,
-                                                problemsL,stageTimes,
-                                                overlap_hours=hours_commitment_overlap,
-                                                )
+        solution=results.make_multistage_solution(power_system,stage_times,datadir,stage_solutions)
         logging.info('problem solved in {}'.format(solution.solve_time))
         
     if shell: solution.show()
@@ -100,9 +97,9 @@ def create_problem(power_system,times,
 
 
 
-def create_problem_multistage(power_system,times,datadir,
-                              intervalHrs=None,
-                              stageHrs=config.default_hours_commitment,
+def solve_multistage(power_system,times,datadir,
+                              interval_hours=None,
+                              stage_hours=config.default_hours_commitment,
                               overlap_hours=config.default_hours_commitment_overlap,
                               num_breakpoints=config.default_num_breakpoints,
                               writeproblem=False,
@@ -116,8 +113,8 @@ def create_problem_multistage(power_system,times,datadir,
     :param buses: list of :class:`~powersystems.Bus` objects
     :param lines: list of :class:`~powersystems.Line` objects
     :param times: :class:`~schedule.Timelist` object
-    :param intervalHrs: define the number of hours per interval
-    :param stageHrs: define the number of hours per stage (excluding overlap)
+    :param interval_hours: define the number of hours per interval
+    :param stage_hours: define the number of hours per stage (excluding overlap)
     :param overlap_hours: number of hours that stages overlap
     
     :returns: a list of :class:`~optimization.Problem` objects (one per stage)
@@ -125,11 +122,11 @@ def create_problem_multistage(power_system,times,datadir,
     
     """
         
-    if not intervalHrs: intervalHrs=times.intervalhrs
+    if not interval_hours: interval_hours=times.intervalhrs
         
-    stageTimes=times.subdivide(hrsperdivision=stageHrs,hrsinterval=intervalHrs,overlap_hrs=overlap_hours)
+    stage_times=times.subdivide(hrsperdivision=stage_hours,hrsinterval=interval_hours,overlap_hrs=overlap_hours)
     buses=power_system.buses
-    problemsL=[]
+    stage_solutions=[]
 
     
     def set_initialconditions(buses,initTime):
@@ -138,42 +135,43 @@ def create_problem_multistage(power_system,times,datadir,
                 try: 
                     gen.set_initial_condition(time=initTime,**gen.finalstatus)
                     del gen.finalstatus
-                except AttributeError: pass #first stage of problem already has initial time definied
+                except AttributeError: pass #first stage of problem already has initial time defined
 
-    def get_finalconditions(buses,times,lastproblem):
+    def get_finalconditions(power_system,times,lastproblem):
         t_back=overlap_hours/times.intervalhrs
         next_stage_first_time = times[-1-int(t_back)]         
-        for bus in buses:
+        for bus in power_system.buses:
             for gen in bus.generators:
                 gen.update_variables()
                 gen.finalstatus=gen.getstatus(t=next_stage_first_time,times=times)
 
 
-    for t_stage in stageTimes:
-        logging.info('Stage starting at {} {}'.format(t_stage[0].Start, 'clocktime={}'.format(wallclocktime.now()) if showclock else ''))
+    for t_stage in stage_times:
+        logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, 'clock time={}'.format(wallclocktime.now()) if showclock else ''))
         
         set_initialconditions(buses,t_stage.initialTime)
-        stageproblem=create_problem(power_system,t_stage,num_breakpoints=num_breakpoints)
-        if writeproblem: stageproblem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
+        stage_problem=create_problem(power_system,t_stage,num_breakpoints=num_breakpoints)
+        if writeproblem: stage_problem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
+        optimization.solve(stage_problem)
         
-        optimization.solve(stageproblem)
-        if not stageproblem.solved: 
-            #redo stage, with shedding allowed
-            logging.critical('Stage infeasible, re-runnning with load shedding.')
-            stageproblem=create_problem(power_system,t_stage,num_breakpoints=num_breakpoints,load_shedding_allowed=True)
-            optimization.solve(stageproblem)
+        if not stage_problem.solved: 
+            #re-do stage, with load shedding allowed
+            logging.critical('Stage infeasible, re-running with load shedding.')
+            stage_problem=create_problem(power_system,t_stage,num_breakpoints=num_breakpoints,load_shedding_allowed=True)
+            optimization.solve(stage_problem)
             
-        if stageproblem.solved:
-            get_finalconditions(buses,t_stage,stageproblem)
-            stage_sln=results.get_stage_solution(stageproblem,buses,t_stage,overlap_hours)
-            problemsL.append(stage_sln)
+        if stage_problem.solved:
+            get_finalconditions(power_system,t_stage,stage_problem)
+            #stage_sln=results.get_stage_solution(stage_problem,power_system,t_stage,overlap_hours)
+            stage_sln=results.make_solution(power_system,t_stage,problem=stage_problem)
+            stage_solutions.append(stage_sln)
         else: 
-            print stageproblem.status,stageproblem.statusText()
-            stageproblem.write('infeasible-problem.lp')
+            #print stage_problem.status,stage_problem.statusText()
+            stage_problem.write('infeasible-problem.lp')
             results.write_last_stage_status(buses,t_stage)
             msg='Infeasible problem - writing to .lp file for examination.'
             raise optimization.OptimizationError(msg)
-    return problemsL,stageTimes
+    return stage_solutions,stage_times
 
   
 def setup_logging(level):

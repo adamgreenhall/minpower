@@ -22,8 +22,10 @@ class Bid(OptimizationObject):
     :param iden: identifying string for the bidder
     """
     def __init__(self,model,time,owner_iden,time_iden,input_var=0,status_var=True):
-        update_attributes(self,locals())
+        update_attributes(self,locals(),exclude=['input_var','status_var'])
         self.init_optimization()
+        self.variables['input'] = input_var
+        self.variables['status']= status_var 
     def output_true(self,input_val): return self.model.output_true(input_val)
     def output_incremental(self,input_val):  return self.model.output_incremental(input_val)
     def plot_derivative(self,**kwargs): return self.model.plot_derivative(**kwargs)
@@ -31,16 +33,18 @@ class Bid(OptimizationObject):
         plotted=self.model.plot(P,showPW=showPW)
         if filename is not None: savefig(filename)
         return plotted
-
+    
     def create_variables(self):
-        self.variables=self.model.get_time_variables(self.input_var,self.status_var,self.owner_iden,self.time_iden)
+        self.variables.update(self.model.get_time_variables(self.variables['input'],
+                                                            self.variables['status'],
+                                                            self.owner_iden,self.time_iden))
     def create_constraints(self):
         '''Create the constraints for a bid by calling its 
         model.constraint() method.'''
-        constraintD=self.model.get_time_constraints(self.variables,self.input_var,self.status_var,self.owner_iden,self.time_iden)
+        constraintD=self.model.get_time_constraints(self.variables,self.owner_iden,self.time_iden)
         for nm,expr in constraintD.items(): self.add_constraint(nm,self.time,expr)
         return self.constraints
-    def output(self): return self.model.output(self.variables,self.input_var,self.status_var,self.owner_iden,self.time_iden)        
+    def output(self): return self.model.output(self.variables,self.owner_iden,self.time_iden)   
     def __str__(self): return 'bid{t}'.format(t=str(self.time))
     def iden(self,*args): return 'bid{t}'.format(t=str(self.time))
 
@@ -72,34 +76,34 @@ class PWLmodel(object):
     """
     def __init__(self,
         polyText='2+10P+0.1P^2',multiplier=1,
-        minInput=0,maxInput=10000,
+        min_input=0,max_input=10000,
         num_breakpoints=default_num_breakpoints,
-        inputNm='x',outputNm='y'):
+        input_name='x',output_name='y'):
                 
-        vars(self).update(locals()) #set the input vars above to be part of class
-        self.polyCurve=multiplier * parsePolynomial(polyText) #parse curve
-        if isLinear(self.polyCurve): self.num_breakpoints=2 #linear models only need 2 breakpoints
-        inDiscrete=linspace(self.minInput, self.maxInput, 1e6) #fine discretization of the curve
-        outDiscrete=polyval(self.polyCurve,inDiscrete)
-        self.bpInputs = [float(bpi) for bpi in linspace(self.minInput, self.maxInput, self.num_breakpoints)] #interpolation to get pwl breakpoints
-        self.bpOutputs= [float(bpo) for bpo in interp(self.bpInputs,inDiscrete,outDiscrete)]
-        self.segments=range(1,len(self.bpInputs))
+        update_attributes(self,locals(),exclude=['polyText','multiplier'])
+        self.poly_curve=multiplier * parsePolynomial(polyText) #parse curve
+        if isLinear(self.poly_curve): self.num_breakpoints=2 #linear models only need 2 breakpoints
+        inDiscrete=linspace(self.min_input, self.max_input, 1e6) #fine discretization of the curve
+        outDiscrete=polyval(self.poly_curve,inDiscrete)
+        self.bp_inputs = [float(bpi) for bpi in linspace(self.min_input, self.max_input, self.num_breakpoints)] #interpolation to get pwl breakpoints
+        self.bp_outputs= [float(bpo) for bpo in interp(self.bp_inputs,inDiscrete,outDiscrete)]
+        self.segments=range(1,len(self.bp_inputs))
         
     def plot(self,P=None,linestyle='-',showPW=True,color=None):
-        inDiscrete=linspace(self.minInput, self.maxInput, 1e6)
-        outDiscrete=polyval(self.polyCurve,inDiscrete)
+        inDiscrete=linspace(self.min_input, self.max_input, 1e6)
+        outDiscrete=polyval(self.poly_curve,inDiscrete)
         if showPW:
-            try: plot(self.bpInputs,self.bpOutputs,linestyle='.--') #show piecewise linearization
+            try: plot(self.bp_inputs,self.bp_outputs,linestyle='.--') #show piecewise linearization
             except AttributeError: pass                             #this is a linear model - dont need to show the linearization
         linePlotted, = plot(inDiscrete,outDiscrete,linestyle=linestyle) #show continuous curve
         
         xlabel(self.inputNm)
         ylabel(self.outputNm)
-        if P is not None: plot(P,polyval(self.polyCurve,P), 'o', c=linePlotted.get_color(), markersize=8, linewidth=2, alpha=0.7) 
+        if P is not None: plot(P,polyval(self.poly_curve,P), 'o', c=linePlotted.get_color(), markersize=8, linewidth=2, alpha=0.7) 
         return linePlotted
     def plot_derivative(self,P=None,linestyle='-',color=None):
-        deriv=polyder(self.polyCurve)
-        inDiscrete=linspace(self.minInput, self.maxInput, 1e6)
+        deriv=polyder(self.poly_curve)
+        inDiscrete=linspace(self.min_input, self.max_input, 1e6)
         outDiscrete=polyval(deriv,inDiscrete)
         if color is None: 
             linePlotted, = plot(inDiscrete,outDiscrete,linestyle=linestyle)          #show continuous curve
@@ -118,11 +122,11 @@ class PWLmodel(object):
             name=self._s_name(segNum,owner_iden,time_iden)
             variables[name] = new_variable(kind='Binary', name=name)
          
-        for bpNum in range(len(self.bpInputs)):
+        for bpNum in range(len(self.bp_inputs)):
             name=self._f_name(bpNum,owner_iden,time_iden)
             variables[name] = new_variable(low=0,high=1,  name=name)
         return variables 
-    def get_time_constraints(self,variables,input_var,status_var,owner_iden,time_iden):
+    def get_time_constraints(self,variables,owner_iden,time_iden):
         """
         Create the constraints for a single time instance of 
           a piecewise linear model. 
@@ -134,25 +138,27 @@ class PWLmodel(object):
         """
         constraints=dict()
         iden=owner_iden+time_iden
+        input_var=variables['input']
+        status_var=variables['status']
         if status_var in (True,False): status_var=1 if status_var else 0 #convert bool to integer for coopr 
         
         S = [variables[self._s_name(s,owner_iden,time_iden)] for s in range(len(self.segments))] 
-        F = [variables[self._f_name(f,owner_iden,time_iden)] for f in range(len(self.bpInputs))]
+        F = [variables[self._f_name(f,owner_iden,time_iden)] for f in range(len(self.bp_inputs))]
 
         constraints['oneActiveSegment '+iden]= sum_vars(S)== status_var 
         constraints['fractionSums '+iden]    = sum_vars(F) == status_var 
-        constraints['computeInput '+iden]    = input_var == sum_vars( elementwiseMultiply(F,self.bpInputs) )
+        constraints['computeInput '+iden]    = input_var == sum_vars( elementwiseMultiply(F,self.bp_inputs) )
         constraints['firstSegment '+iden]    = F[0]<=S[0]
         constraints['lastSegment '+iden]     = F[-1]<=S[-1]
         for b in range(1,self.num_breakpoints-1): 
             name='midSegment {iden} b{bnum}'.format(iden=iden,bnum=b)
             constraints[name]                = ( F[b] <= sum_vars([S[b-1],S[b]]) )
         return constraints
-    def output(self,variables,input_var,status_var,owner_iden,time_iden): 
-        F = [variables[self._f_name(f,owner_iden,time_iden)] for f in range(len(self.bpInputs))]
-        return sum_vars( elementwiseMultiply(F,self.bpOutputs) )
-    def output_true(self,input_var): return polyval( self.polyCurve, value(input_var) )
-    def output_incremental(self,input_var):  return polyval( polyder(self.polyCurve),value(input_var) )
+    def output(self,variables,owner_iden,time_iden): 
+        F = [variables[self._f_name(f,owner_iden,time_iden)] for f in range(len(self.bp_inputs))]
+        return sum_vars( elementwiseMultiply(F,self.bp_outputs) )
+    def output_true(self,input_val): return polyval( self.poly_curve, value(input_val) )
+    def output_incremental(self,input_var):  return polyval( polyder(self.poly_curve),value(input_var) )
     def texrepresentation(self,digits=3):
         '''
         Output polynomial to tex-style string.
@@ -162,7 +168,7 @@ class PWLmodel(object):
         '''        
         texstr=''
         exp=0
-        for n in reversed(self.polyCurve.c):
+        for n in reversed(self.poly_curve.c):
             if round(n,digits)==0 and exp!=0: continue
             addChar='+' if n>0 else ''
             if exp>1: texstr+='{pm}{n:0.{d}f}P^{exp}'.format(pm=addChar,n=n,exp=exp,d=digits)
@@ -176,9 +182,9 @@ class PWLmodel(object):
 class convexPWLmodel(PWLmodel):
     def __init__(self,
         polyText='2+10P+0.1P^2',multiplier=1,
-        minInput=0,maxInput=10000,
+        min_input=0,max_input=10000,
         num_breakpoints=default_num_breakpoints,
-        inputNm='x',outputNm='y'):
+        input_name='x',output_name='y'):
         
         def linear_equation(x,m,b): return m*x+b
         def make_lineareq(x1,y1,x2,y2):
@@ -186,61 +192,58 @@ class convexPWLmodel(PWLmodel):
             b=y1-x1*m
             return lambda x: linear_equation(x,m,b)
         
-        vars(self).update(locals()) #set the input vars above to be part of class
-        self.polyCurve=multiplier * parsePolynomial(polyText) #parse curve
-        inDiscrete=linspace(self.minInput, self.maxInput, 1e6) #fine discretization of the curve
-        outDiscrete=polyval(self.polyCurve,inDiscrete)
-        self.bpInputs = [float(bpi) for bpi in linspace(self.minInput, self.maxInput, self.num_breakpoints)] #interpolation to get pwl breakpoints
-        self.bpOutputs= [float(bpo) for bpo in interp(self.bpInputs,inDiscrete,outDiscrete)]
+        update_attributes(self,locals(),exclude=['polyText','multiplier'])
+        self.poly_curve=multiplier * parsePolynomial(polyText) #parse curve
+        inDiscrete=linspace(self.min_input, self.max_input, 1e6) #fine discretization of the curve
+        outDiscrete=polyval(self.poly_curve,inDiscrete)
+        self.bp_inputs = [float(bpi) for bpi in linspace(self.min_input, self.max_input, self.num_breakpoints)] #interpolation to get pwl breakpoints
+        self.bp_outputs= [float(bpo) for bpo in interp(self.bp_inputs,inDiscrete,outDiscrete)]
         self.segment_lines=[]
-        for b,x1 in enumerate(self.bpInputs[:-1]):
-            x2,y2=self.bpInputs[b+1],self.bpOutputs[b+1]
-            y1=self.bpOutputs[b]
+        for b,x1 in enumerate(self.bp_inputs[:-1]):
+            x2,y2=self.bp_inputs[b+1],self.bp_outputs[b+1]
+            y1=self.bp_outputs[b]
             self.segment_lines.append(make_lineareq(x1,y1,x2,y2))
     
-    def output_true(self,inputVar): return polyval( self.polyCurve,         value(inputVar) )
-    def output_incremental(self,inputVar):  return polyval( polyder(self.polyCurve),value(inputVar) )
+    def output_true(self,input_val): return polyval( self.poly_curve, value(input_val) )
+    def output_incremental(self,input_val):  return polyval( polyder(self.poly_curve),value(input_val) )
     def plot(self,P=None,showPW=True,linestyle='-',color='k'):
-        inDiscrete=linspace(self.minInput, self.maxInput, 1e6)
-        outDiscrete=polyval(self.polyCurve,inDiscrete)
+        inDiscrete=linspace(self.min_input, self.max_input, 1e6)
+        outDiscrete=polyval(self.poly_curve,inDiscrete)
         plot(inDiscrete,outDiscrete,linestyle=linestyle,alpha=0.5,color='gray')          #show continuous curve
                
         if showPW: 
-            x=linspace(self.minInput, self.maxInput, 1e6)
+            x=linspace(self.min_input, self.max_input, 1e6)
             for line in self.segment_lines: linePlotted, = plot(x,line(x),linestyle='--',alpha=0.4,color=color) #show piecewise linearization
         xlabel(self.inputNm)
         ylabel(self.outputNm)
-        if P is not None: plot(P,polyval(self.polyCurve,P), 'o', c=linePlotted.get_color(), markersize=8, linewidth=2, alpha=0.7) 
+        if P is not None: plot(P,polyval(self.poly_curve,P), 'o', c=linePlotted.get_color(), markersize=8, linewidth=2, alpha=0.7) 
         return linePlotted
     def get_time_variables(self,input_var,status_var,owner_iden,time_iden):
         variables={}
         name = 'bidCost_'+owner_iden+time_iden
-        variables[name] = new_variable(name=name,high=float(max(self.bpOutputs)))
+        variables[name] = new_variable(name=name,high=float(max(self.bp_outputs)))
         return variables
-    def get_time_constraints(self,variables,input_var,status_var,owner_iden,time_iden):
+    def get_time_constraints(self,variables,owner_iden,time_iden):
         constraints=dict()
         for b,line in enumerate(self.segment_lines): 
             nm='cost_linearized_{oi}_b{b}_{ti}'.format(oi=owner_iden,b=b,ti=time_iden)
-            constraints[nm]= variables['bidCost_'+owner_iden+time_iden] >= line(input_var)
+            constraints[nm]= variables['bidCost_'+owner_iden+time_iden] >= line(variables['input'])
         return constraints
-    def output(self,variables,input_var,status_var,iden_owner,iden_time): return variables['bidCost_'+iden_owner+iden_time]
+    def output(self,variables,iden_owner,iden_time): return variables['bidCost_'+iden_owner+iden_time]
 class LinearModel(PWLmodel):
     def __init__(self,
         polyText='2+10*P',multiplier=1,
-        minInput=0,maxInput=10000,
+        min_input=0,max_input=10000,
         num_breakpoints=None,
-        inputNm='x',outputNm='y'):
-        
-        self.polyCurve = multiplier * parsePolynomial(polyText)
-        self.minInput=minInput
-        self.maxInput=maxInput
-        self.inputNm=inputNm
-        self.outputNm=outputNm
+        input_name='x',output_name='y'):
+        update_attributes(self,locals(),exclude=['polyText','multiplier'])
+        self.poly_curve = multiplier * parsePolynomial(polyText)
+
     def get_time_variables(self,*args,**kwargs): return {}
     def get_time_constraints(self,*args,**kwargs): return {}
-    def output(self,variables,input_var,status_var,owner_iden,time_iden):
-        fixed_term=self.polyCurve.c[1]*status_var
-        linear_term = self.polyCurve.c[0]*input_var
+    def output(self,variables,owner_iden,time_iden):
+        fixed_term=self.poly_curve.c[1]*variables['status']
+        linear_term = self.poly_curve.c[0]*variables['input']
         return fixed_term + linear_term
     
     

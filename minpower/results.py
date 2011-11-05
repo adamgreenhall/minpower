@@ -52,6 +52,8 @@ class Solution(object):
         generators=self.generators()
         gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t)) for t in self.times] for gen in generators]
         
+        print generators[0].power(self.times[0])
+        print generators[0].bid(self.times[0]).variables['input']
         #print [generators[0].operatingcost(t) for t in self.times[:3]]
         gen_fuel_costs_polynomial = [[gen.truecost(t) for t in self.times] for gen in generators]
         self.fuelcost_generation=sum( c for c in flatten(gen_fuel_costs_pwlmodel) )

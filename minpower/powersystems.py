@@ -171,7 +171,7 @@ class Generator(OptimizationObject):
             costinputs=dict(polyText=self.costcurvestring)
             self.fuelcost=1
         
-        self.cost_model=bidding.makeModel(minInput=self.Pmin, maxInput=self.Pmax,inputNm='Pg',outputNm='C',**costinputs)
+        self.cost_model=bidding.makeModel(min_input=self.Pmin, max_input=self.Pmax,input_name='Pg',output_name='C',**costinputs)
 
     def create_variables(self,times):
         

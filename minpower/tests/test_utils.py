@@ -1,8 +1,5 @@
-import logging
-
 from minpower import optimization,powersystems,schedule,solve,config
 from minpower.powersystems import Generator
-from minpower.optimization import value
 
 singletime=schedule.just_one_time()
 

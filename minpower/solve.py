@@ -314,7 +314,7 @@ def solve_multistage(power_system,times,datadir,
 >>>>>>> working rolling UC overlap hours
 
     for t_stage in stage_times:
-        logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, 'clock time={}'.format(wallclocktime.now()) if showclock else ''))
+        logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, 'clock time={}'.format(wallclocktime.now().strftime('%H:%M:%S')) if showclock else ''))
         
         set_initialconditions(buses,t_stage.initialTime)
         stage_problem=create_problem(power_system,t_stage,num_breakpoints=num_breakpoints)

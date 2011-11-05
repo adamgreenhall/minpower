@@ -330,7 +330,7 @@ def solve_multistage(power_system,times,datadir,
         if stage_problem.solved:
             get_finalconditions(power_system,t_stage,stage_problem)
             #stage_sln=results.get_stage_solution(stage_problem,power_system,t_stage,overlap_hours)
-            stage_sln=results.make_solution(power_system,t_stage,problem=stage_problem)
+            stage_sln=results.make_solution(power_system,t_stage.non_overlap_times,problem=stage_problem)
             stage_solutions.append(stage_sln)
         else: 
             #print stage_problem.status,stage_problem.statusText()

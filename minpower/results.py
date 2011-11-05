@@ -27,9 +27,9 @@ def make_solution(power_system,times,**kwargs):
     kind=classify_problem(times,power_system)
     return problem_type[kind](power_system,times,**kwargs)
 
-def make_multistage_solution(*args,**kwargs):
-    if kwargs['power_system'].lines: logging.warning('no visualization for multistage SCUC yet')
-    return Solution_UC_multistage(**kwargs)
+def make_multistage_solution(power_system,*args,**kwargs):
+    if power_system.lines: logging.warning('no visualization for multistage SCUC yet')
+    return Solution_UC_multistage(power_system,*args,**kwargs)
 
 class Solution(object):
 <<<<<<< HEAD
@@ -118,10 +118,6 @@ class Solution(object):
     def _get_costs(self):
         generators=self.generators()
         gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t)) for t in self.times] for gen in generators]
-        
-        print generators[0].power(self.times[0])
-        print generators[0].bid(self.times[0]).variables['input']
-        #print [generators[0].operatingcost(t) for t in self.times[:3]]
         gen_fuel_costs_polynomial = [[gen.truecost(t) for t in self.times] for gen in generators]
         self.fuelcost_generation=sum( c for c in flatten(gen_fuel_costs_pwlmodel) )
         self.truecost_generation=sum( c for c in flatten(gen_fuel_costs_polynomial) )
@@ -560,7 +556,7 @@ class Solution_UC_multistage(Solution_UC):
         self.times.setInitial(stage_times[0].initialTime)
         
         self.objective = self._sum_over('objective',stage_solutions)
-        self.solve_time = self._sum_over('solve time',stage_solutions)
+        self.solve_time = self._sum_over('solve_time',stage_solutions)
         #self.active_constraints = sum([dual(c)!=0 for nm,c in constraints.items()])
         #self.total_constraints = len(constraints)
         
@@ -574,14 +570,14 @@ class Solution_UC_multistage(Solution_UC):
 
     def show(self):
         out=[]
-        out.extend([self.info_status(),
-                    self.info_cost(),
-                    self.info_shedding()])
-        print out
+        out.extend(self.info_status())
+        out.extend(self.info_cost())
+        out.extend(self.info_shedding())
+        print '\n'.join(out)
     def info_status(self):
-        return '{stat} in total of {time:0.4f} sec'.format(stat=self.status,time=self.solve_time)
+        return ['solved multistage problem in a in total of {time:0.4f} sec'.format(time=self.solve_time)]
     def info_shedding(self):
-        return 'total load shed={}MW'.format(self.load_shed)
+        return ['total load shed={}MW'.format(self.load_shed) if self.load_shed>0 else '']
 
 <<<<<<< HEAD
 <<<<<<< HEAD

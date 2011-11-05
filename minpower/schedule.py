@@ -144,8 +144,13 @@ class Timelist(object):
             if overlap!=int(overlap): raise ValueError('overlap size for time subdivision from {n} to {nr} not allowed'.format(n=overlap,nr=round(overlap)))
             n=int(n)
             overlap=int(overlap)
-            for i in xrange(0, len(L), n): yield Timelist(L[i:i+n+overlap])
-            
+            stages=[]
+            for i in xrange(0, len(L), n): 
+                stages.append( Timelist(L[i:i+n+overlap]) )
+            else:
+                #the last stage has no overlap and can contain less than the full n intervals
+                stages[-1]=Timelist(L[i:])
+            return stages
         def timeslice(tStart,tEnd,index): return Time(Start=tStart,End=tEnd,index=index)
         
         if hrsinterval is None: hrsinterval=self.intervalhrs
@@ -155,19 +160,22 @@ class Timelist(object):
         
         if hrsinterval==self.intervalhrs and hrsperdivision==self.intervalhrs: return self
         elif hrsinterval==self.intervalhrs: 
-            newtimesL=list(chunks(self,n=hrsperdivision/self.intervalhrs,overlap=overlap_intervals))
+            newtimesL=chunks(self,n=hrsperdivision/self.intervalhrs,overlap=overlap_intervals)
         elif hrsinterval>self.intervalhrs:
             steps=hrsinterval/self.intervalhrs
             if steps==int(steps): steps=int(steps)
             else: raise ValueError('Native Timelist interval is i={i}, while proposed interval is j={j}. j/i must be an integer.'.format(i=self.intervalhrs,j=hrsinterval))
             
             longertimeL = Timelist([timeslice(self[i].Start, self[i+steps-1].End,i) for i in range(0,len(self)-steps+1,steps)])
-            newtimesL = list(chunks(longertimeL,hrsperdivision/hrsinterval,overlap_intervals))
+            newtimesL = chunks(longertimeL,hrsperdivision/hrsinterval,overlap_intervals)
 
         for t,stage in enumerate(newtimesL): 
             if t>0:        stage.setInitial( newtimesL[t-1][-1-int(overlap_hrs/hrsinterval)] )
             elif t==0: stage.setInitial( self.initialTime )
-            stage.non_overlap_times = stage[:-1-int(overlap_intervals)+1] if overlap_intervals>0 else stage   
+            stage.non_overlap_times = stage[:-1-int(overlap_intervals)+1] if overlap_intervals>0 else stage
+        else:
+            #the last stage has no overlap and may not cover the whole division
+            stage.non_overlap_times = stage
         return newtimesL
         
         

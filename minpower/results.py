@@ -27,9 +27,9 @@ def make_solution(power_system,times,**kwargs):
     kind=classify_problem(times,power_system)
     return problem_type[kind](power_system,times,**kwargs)
 
-def make_multistage_solution(lines,**kwargs):
-    if lines: logging.warning('no visualization for multistage SCUC yet')
-    return Solution_multistageUC(**kwargs)
+def make_multistage_solution(*args,**kwargs):
+    if kwargs['power_system'].lines: logging.warning('no visualization for multistage SCUC yet')
+    return Solution_UC_multistage(**kwargs)
 
 class Solution(object):
 <<<<<<< HEAD
@@ -118,9 +118,14 @@ class Solution(object):
     def _get_costs(self):
         generators=self.generators()
         gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t)) for t in self.times] for gen in generators]
+        
+        #print [generators[0].operatingcost(t) for t in self.times[:3]]
         gen_fuel_costs_polynomial = [[gen.truecost(t) for t in self.times] for gen in generators]
-        self.fuelcost_generation=float(sum( [c for c in flatten(gen_fuel_costs_pwlmodel) if c is not None] ))
-        self.truecost_generation=float(sum( [c for c in flatten(gen_fuel_costs_polynomial) if c is not None] ))
+        self.fuelcost_generation=sum( c for c in flatten(gen_fuel_costs_pwlmodel) )
+        self.truecost_generation=sum( c for c in flatten(gen_fuel_costs_polynomial) )
+        self.load_shed = sum( sum(load.shed(t) for load in self.loads()) for t in self.times )
+        self._get_cost_error()
+    def _get_cost_error(self):
         try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
         except ZeroDivisionError: self.costerror=0
     def buses(self): return self.power_system.buses
@@ -545,43 +550,38 @@ class Solution_SCUC(Solution_UC):
     def vizualization(self): logging.warning('no visualization for SCUC. Spreadsheet output is valid, except for the price column is the price on first bus only.')
     
     
-class Solution_multistageUC(Solution_UC):
-    def __init__(self,problemsL,times,stageTimes,buses,datadir='.',overlap_hours=0):
-        vars(self).update(locals())
-        self.times=Timelist(flatten([list(times.non_overlap_times) for times in stageTimes]))
-        self.times.setInitial(stageTimes[0].initialTime)
+class Solution_UC_multistage(Solution_UC):
+    #def __init__(self,problemsL,times,stageTimes,buses,datadir='.',overlap_hours=0):
+    def __init__(self,power_system,stage_times,datadir,stage_solutions):
+        update_attributes(self,locals(),exclude=['stage_solutions','stage_times'])
+        self.times=Timelist(flatten([list(times.non_overlap_times) for times in stage_times]))
+        self.times.setInitial(stage_times[0].initialTime)
         
-        if all([p['status'][0]==1 for p in problemsL]): 
-            self.status = p['status'][1]
-            self.solved = True
-        
-        self.objective = float(value(sum([p['objective'] for p in problemsL])))
-        self.solve_time = sum([p['solve-time'] for p in problemsL])
+        self.objective = self._sum_over('objective',stage_solutions)
+        self.solve_time = self._sum_over('solve time',stage_solutions)
         #self.active_constraints = sum([dual(c)!=0 for nm,c in constraints.items()])
         #self.total_constraints = len(constraints)
-        self.generators=flatten( [[gen for gen in bus.generators] for bus in buses] )
-        self.loads     =flatten( [[ld  for ld   in bus.loads]     for bus in buses] )
-        self.get_costs()
-         
-    def get_costs(self):
-        self.fuelcost_generation=float(sum( [p['fuelcost_generation'] for p in self.problemsL] ))
-        self.truecost_generation=float(sum( [p['truecost_generation'] for p in self.problemsL] ))
-        self.load_shed=float(sum( [value(p['load_shed']) for p in self.problemsL] ))
-        try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
-        except ZeroDivisionError: self.costerror=0       
+        
+        self._get_costs(stage_solutions)
+    def _sum_over(self,attrib,stage_solutions): return sum(getattr(sln, attrib) for sln in stage_solutions)     
+    def _get_costs(self,stage_solutions):
+        self.fuelcost_generation=self._sum_over('fuelcost_generation',stage_solutions)
+        self.truecost_generation=self._sum_over('truecost_generation',stage_solutions)
+        self.load_shed=          self._sum_over('load_shed',stage_solutions)
+        self._get_cost_error()       
 
     def show(self):
-        self.info_status()
-        if not self.solved: return
-        self.info_cost()
-        self.info_shedding()
-    def info_shedding(self):
-        if self.load_shed:
-            print 'total load shed={}MW'.format(self.load_shed)
+        out=[]
+        out.extend([self.info_status(),
+                    self.info_cost(),
+                    self.info_shedding()])
+        print out
     def info_status(self):
-        if self.solved: print('{stat} in total of {time:0.4f} sec'.format(stat=self.status,time=self.solve_time))
-        else: print(self.solveStatus)
+        return '{stat} in total of {time:0.4f} sec'.format(stat=self.status,time=self.solve_time)
+    def info_shedding(self):
+        return 'total load shed={}MW'.format(self.load_shed)
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 def get_stage_solution(problem,buses,times):
 <<<<<<< HEAD
@@ -641,6 +641,36 @@ def get_stage_solution(problem,buses,times,overlap_hours=0):
         solution[t]=sln
     return solution
 >>>>>>> duals and variables now working with coopr. tests are still failing.
+=======
+
+#def get_stage_solution(problem,power_system,times,overlap_hours=0):
+#    solution=dict()
+#    solution['objective']=float(value(problem.objective))
+#    solution['solve time']=problem.solutionTime
+#    solution['status'] = ( problem.status,problem.statusText )
+#    solution['fuel cost generation']=sum(flatten(flatten([[[value(gen.operatingcost(t)) for t in times.non_overlap_times] for gen in bus.generators] for bus in buses]) ))
+#    solution['true cost generation']=sum(flatten(flatten([[[value(gen.truecost(t))      for t in times.non_overlap_times] for gen in bus.generators] for bus in buses]) ))
+#    solution['load shed']=0
+#
+#    #reduce memory by setting variables to their value (instead of full Variable object)
+#    for bus in buses:
+#        for gen in bus.generators: gen.fix_vars(times,problem)
+#        for load in bus.loads: load.update_variables(times,problem)
+#    
+#    for t in times.non_overlap_times:
+#        sln=dict()
+#        for bus in buses: 
+#            sln['price_'+bus.iden(t)]=bus.getprice(t,problem)            
+#            for load in bus.loads:
+#                shed=load.shed(t)
+#                if shed: 
+#                    logging.warning('Load shedding of {} MWh occured at {}.'.format(shed,str(t.Start)))
+#                    solution['load_shed']+=shed
+#        
+#        solution[t]=sln
+#    return solution
+
+>>>>>>> rework of multistage results - testing
 def write_last_stage_status(buses,stagetimes):
     t=stagetimes.initialTime
     logging.warning('saving stage status for its initial time: {}'.format(t.Start))

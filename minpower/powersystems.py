@@ -848,19 +848,7 @@ class PowerSystem(OptimizationObject):
                  dispatch_decommit_allowed=False,
                  ):
         update_attributes(self,locals(),exclude=['generators','loads','lines']) #load in inputs
-        if lines is None: lines=[]
-        
-        #add system mode parameters to relevant components
-        for load in loads:
-            load.shedding_allowed=load_shedding_allowed 
-            load.cost_shedding=cost_load_shedding
-            try: load.cost_model.num_breakpoints=num_breakpoints
-            except AttributeError: pass #load has no cost model
-        for gen in generators:
-            gen.dispatch_decommit_allowed=dispatch_decommit_allowed
-            try: gen.cost_model.num_breakpoints=num_breakpoints
-            except AttributeError: pass #gen has no cost model
-            
+        if lines is None: lines=[]    
             
         buses=self.make_buses_list(loads,generators)
         self.create_admittance_matrix(buses,lines)
@@ -869,6 +857,22 @@ class PowerSystem(OptimizationObject):
         self.add_components(buses,'buses')
         self.add_components(lines,'lines')
         
+        #add system mode parameters to relevant components
+        self.set_load_shedding(load_shedding_allowed) #set load shedding
+        for load in loads:
+                try: load.cost_model.num_breakpoints=num_breakpoints
+                except AttributeError: pass #load has no cost model   
+        for gen in generators:
+            gen.dispatch_decommit_allowed=dispatch_decommit_allowed
+            try: gen.cost_model.num_breakpoints=num_breakpoints
+            except AttributeError: pass #gen has no cost model
+            
+    def set_load_shedding(self,is_allowed):
+        for bus in self.buses:
+            for load in bus.loads:
+                load.shedding_allowed=is_allowed 
+                load.cost_shedding=self.cost_load_shedding
+             
     def make_buses_list(self,loads,generators):
         """Create list of :class:`powersystems.Bus` objects 
             from the load and generator bus names. Otherwise

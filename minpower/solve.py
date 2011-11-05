@@ -126,10 +126,7 @@ def problem(datadir='.',
 >>>>>>> option handling now flat input instead of dict
     return solution
 
-def create_problem(power_system,times,
-                   num_breakpoints=config.default_num_breakpoints,
-                   load_shedding_allowed=False,
-                   dispatch_decommit_allowed=False):
+def create_problem(power_system,times):
     """
         Create a power systems optimization problem.
         
@@ -243,7 +240,6 @@ def solve_multistage(power_system,times,datadir,
                               interval_hours=None,
                               stage_hours=config.default_hours_commitment,
                               overlap_hours=config.default_hours_commitment_overlap,
-                              num_breakpoints=config.default_num_breakpoints,
                               writeproblem=False,
                               showclock=True):
 >>>>>>> fix for multistage with rbeakpoint option
@@ -317,15 +313,17 @@ def solve_multistage(power_system,times,datadir,
         logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, 'clock time={}'.format(wallclocktime.now().strftime('%H:%M:%S')) if showclock else ''))
         
         set_initialconditions(buses,t_stage.initialTime)
-        stage_problem=create_problem(power_system,t_stage,num_breakpoints=num_breakpoints)
+        stage_problem=create_problem(power_system,t_stage)
         if writeproblem: stage_problem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
         optimization.solve(stage_problem)
         
         if not stage_problem.solved: 
             #re-do stage, with load shedding allowed
             logging.critical('Stage infeasible, re-running with load shedding.')
-            stage_problem=create_problem(power_system,t_stage,num_breakpoints=num_breakpoints,load_shedding_allowed=True)
+            power_system.set_load_shedding(True)
+            stage_problem=create_problem(power_system,t_stage)
             optimization.solve(stage_problem)
+            power_system.set_load_shedding(False)
             
         if stage_problem.solved:
             get_finalconditions(power_system,t_stage,stage_problem)

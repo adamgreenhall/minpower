@@ -88,11 +88,20 @@ if optimization_package=='coopr':
                 self.solutionTime =elapsed #results.Solver[0]['Wallclock time']
                 logging.info('Problem solved in {}s.'.format(self.solutionTime))
             
-            if problem_filename: self.write(problem_filename)
+            
+            if problem_filename:
+                #logger=logging.getLogger()
+#                normal_level=logger.getLevel()
+#                logger.setLevel(logging.CRITICAL)
+                logging.disable(logging.CRITICAL) 
+                self.write(problem_filename)
+                logging.disable(config.logging_level)
+#                logger.setLevel(normal_level)
                     
             if not self.status: return
             
             #instance.load(results)
+            
             instance._load_solution(results.solution(0), ignore_invalid_labels=True )
             
 

@@ -198,7 +198,6 @@ class Solution_ED(Solution):
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))        
 class Solution_OPF(Solution): 
     def vizualization(self,filename='powerflow.png'): 
-        if not self.solved: return
         import networkx as nx
         buses,lines,t=self.buses(),self.lines(),self.times[0]
         
@@ -207,7 +206,7 @@ class Solution_OPF(Solution):
             Pinj=value(bus.Pgen(t)) - value(bus.Pload(t))
             G.add_node(bus.name, Pinj=Pinj)
         for line in lines:
-            P=value(line.P[t])
+            P=line.power(t)
             if P>=0: G.add_edge(line.From,line.To,P=P,Plim=line.Pmax)
             else: G.add_edge(line.To,line.From,P=-P,Plim=-line.Pmin)
         
@@ -240,7 +239,7 @@ class Solution_OPF(Solution):
         fields.append('congestion shadow price'); data.append(self.get_values('lines','price',t))
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename+'-lines.csv'))        
     
-    def info_price(self,t): pass #built into bus info
+    def info_price(self,t): return [] #built into bus info
 class Solution_UC(Solution):
     def info_lines(self,t): return []
     def info_buses(self,t): return []

@@ -44,7 +44,7 @@ def problem(datadir='.',
                 dispatch_decommit_allowed=False,)
     
     if times.spanhrs<=hours_commitment:
-        problem=create_problem(power_system,times,num_breakpoints)
+        problem=create_problem(power_system,times)
         optimization.solve(problem,solver,problem_filename=joindir(datadir,'problem-formulation.lp'))
         if problem.solved:
             solution=results.make_solution(power_system,times,problem=problem,datadir=datadir)

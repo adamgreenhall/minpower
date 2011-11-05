@@ -8,7 +8,7 @@ from minpower import optimization,powersystems,schedule,solve,config,bidding
 from minpower.powersystems import Generator
 from minpower.optimization import value
 
-from test_utils import *
+from test_utils import solve_problem,make_loads_times
 
 bidding = Tests()
 
@@ -23,8 +23,8 @@ def linear():
     b=30
     Pd=221
     generators=[ Generator(costcurvestring='{}+{}P'.format(a,b)) ]
-    problem,times,buses=solve_problem(generators,make_load(Pd))
-    cost = Assert(generators[0].bid[times[0]].output())
+    _,times=solve_problem(generators,**make_loads_times(Pd))
+    cost = Assert(generators[0].bid(times[0]).output())
     assert cost == a+b*Pd
 
 @bidding.test
@@ -39,8 +39,8 @@ def cubic_convex():
     c=.2
     d=.1
     generators=[ Generator(costcurvestring='{}+{}P+{}P^2+{}P^3'.format(a,b,c,d)) ]
-    problem,times,buses=solve_problem(generators,make_load(Pd))#,problem_filename='bidproblem.lp')
-    cost = Assert(value(generators[0].bid[times[0]].output()))
+    _,times=solve_problem(generators,**make_loads_times(Pd))#,problem_filename='bidproblem.lp')
+    cost = Assert(value(generators[0].bid(times[0]).output()))
     actual_cost = a+ b*Pd+ c*Pd**2 + d*Pd**3
     assert actual_cost <= cost and cost <= 1.05*actual_cost
 
@@ -56,9 +56,9 @@ def cubic_non_convex():
     c=.2
     d=.0001
     generators=[ Generator(costcurvestring='{}+{}P+{}P^2 - {}P^3'.format(a,b,c,d)) ]
-    problem,times,buses=solve_problem(generators,make_load(Pd))
+    _,times=solve_problem(generators,**make_loads_times(Pd))
     
-    cost = Assert(generators[0].bid[times[0]].output())
+    cost = Assert(generators[0].bid(times[0]).output())
     actual_cost = a+ b*Pd+ c*Pd**2 + -1*d*Pd**3
     assert actual_cost <= cost <= 1.05*actual_cost
 

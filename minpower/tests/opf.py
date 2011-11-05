@@ -7,7 +7,7 @@ logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s'
 from minpower import optimization,powersystems,schedule,solve,config
 from minpower.optimization import value
 
-from test_utils import *
+from test_utils import solve_problem,make_loads_times,make_cheap_gen,make_mid_gen,make_expensive_gen,singletime
 
 opf = Tests()
 
@@ -27,13 +27,11 @@ def line_limit_high():
         make_cheap_gen(bus='A'),
         make_expensive_gen(bus='B')
     ]    
-    load=make_load(Pd=225,bus='B')
     lines=[powersystems.Line(Pmax=Pmax, From='A',To='B')]
-    problem,times,buses=solve_problem(generators,load,lines=lines)
+    power_system,times=solve_problem(generators,lines=lines,**make_loads_times(Pd=225,bus='B'))
     Pline = lines[0].P[times[0]]
-    lmps=[b.getprice(times[0], problem) for b in buses]
-    congestion_price = lines[0].getprice(times[0],problem)
-    #logging.critical('cong={}, Pmax={}'.format(lines[0].getprice(times[0],problem),Pmax))
+    lmps=[b.price(times[0]) for b in power_system.buses]
+    congestion_price = lines[0].price(times[0])
     assert Pline==Pmax and congestion_price == (lmps[1] - lmps[0])
     
 @opf.test
@@ -52,12 +50,11 @@ def line_limit_low():
         make_cheap_gen(bus='A'),
         make_expensive_gen(bus='B')
     ]    
-    load=make_load(Pd=225,bus='B')
     lines=[powersystems.Line(Pmin=Pmin, From='B',To='A')]
-    problem,times,buses=solve_problem(generators,load,lines=lines)
+    power_system,times=solve_problem(generators,lines=lines,**make_loads_times(Pd=225,bus='B'))
     Pline = lines[0].P[times[0]]
-    lmps=[b.getprice(times[0], problem) for b in buses]
-    congestion_price = lines[0].getprice(times[0],problem)
+    lmps=[b.price(times[0]) for b in power_system.buses]
+    congestion_price = lines[0].price(times[0])
     assert Pline==Pmin and congestion_price == -1*(lmps[1] - lmps[0])
 
 
@@ -91,15 +88,9 @@ def three_buses():
         powersystems.Line(From='A',To='C', Pmax=Pmax),
         powersystems.Line(From='B',To='C', Pmax=Pmax),
         ]
-    times=singletime
-    buses=powersystems.make_buses_list(loads,generators)
-    problem=solve.create_problem(buses,lines,times)
-    problem.solve()
-    if problem.solved:
-        for g in generators: g.update_vars(times,problem)
-    
-    num_lmps=len(set(b.getprice(times[0], problem) for b in buses))
-    total_load = value(sum(b.Pload(times[0]) for b in buses))
+    power_system,times=solve_problem(generators,times=singletime,loads=loads,lines=lines)
+    num_lmps=len(set(b.price(times[0]) for b in power_system.buses))
+    total_load = value(sum(b.Pload(times[0]) for b in power_system.buses))
     assert total_load==sum(Pd) and num_lmps>1
 
 

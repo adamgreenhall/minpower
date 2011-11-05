@@ -22,33 +22,36 @@ def make_mid_gen(**kwargs):
     return Generator(name='middle-range gen', costcurvestring='{}P'.format(gen_costs['mid']), **kwargs)    
 def make_expensive_gen(**kwargs):
     return Generator(name='expensive gen', costcurvestring='{}P'.format(gen_costs['expensive']), **kwargs)    
-def make_load(Pd=200,Pdt=None,**kwargs):
-    if Pdt is None: 
-        return dict(load=[powersystems.Load_Fixed(P=Pd,**kwargs)],times=singletime)
+def make_loads_times(Pd=200,Pdt=None,**kwargs):
+    if Pdt is None:
+        loads=[powersystems.Load_Fixed(P=Pd,**kwargs)]
+        times=singletime
     else: 
         times = schedule.make_times_basic(N=len(Pdt))
         #logging.critical([unicode(t) for t in times])
         sched = schedule.Schedule(times=times, P=Pdt)
-        return dict(load=[powersystems.Load(schedule=sched,**kwargs)],times=times)
-
-def solve_problem(generators,load,  gen_init=None, lines=None, solver=config.optimization_solver,load_shedding_allowed=False,problem_filename=False):
-    if lines is None: lines=[]
+        loads=[powersystems.Load(schedule=sched,**kwargs)]
     
-    times=load['times']
+        return dict(loads=loads,times=times)
+
+def solve_problem(generators,loads=None,times=None, gen_init=None, lines=None, solver=config.optimization_solver,load_shedding_allowed=False,problem_filename=False):
+    if lines is None: lines=[]
+
     if len(times)>0: 
         for g,gen in enumerate(generators): 
             gen.index=g
             if gen_init is None: gen.set_initial_condition(times.initialTime)
             else:                gen.set_initial_condition(times.initialTime, **gen_init[g])
             
-        
-    buses=powersystems.make_buses_list(loads=load['load'],generators=generators)
-    problem=solve.create_problem(buses,lines,times,load_shedding_allowed=load_shedding_allowed)
+    
+    
+    power_system=powersystems.PowerSystem(generators,loads,lines,load_shedding_allowed=load_shedding_allowed)
+    problem=solve.create_problem(power_system,times)
     problem.solve(solver=solver,problem_filename=problem_filename)
     if problem.solved:
-        for g in generators: g.update_vars(times,problem)
+        power_system.update_variables()
     else:
         #logging.critical( [g.power[times.initialTime] for g in generators] )
         problem.write('problem.lp')
         raise optimization.OptimizationError('infeasible problem, wrote to problem.lp')
-    return problem,times,buses
+    return power_system,times

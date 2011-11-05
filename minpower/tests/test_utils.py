@@ -32,7 +32,7 @@ def make_loads_times(Pd=200,Pdt=None,**kwargs):
         sched = schedule.Schedule(times=times, P=Pdt)
         loads=[powersystems.Load(schedule=sched,**kwargs)]
     
-        return dict(loads=loads,times=times)
+    return dict(loads=loads,times=times)
 
 def solve_problem(generators,loads=None,times=None, gen_init=None, lines=None, solver=config.optimization_solver,load_shedding_allowed=False,problem_filename=False):
     if lines is None: lines=[]

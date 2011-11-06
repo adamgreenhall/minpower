@@ -116,13 +116,9 @@ if optimization_package=='coopr':
             
             
             if problem_filename:
-                #logger=logging.getLogger()
-#                normal_level=logger.getLevel()
-#                logger.setLevel(logging.CRITICAL)
-                logging.disable(logging.CRITICAL) 
+                logging.disable(logging.CRITICAL) #disable coopr's funny loggings when writing lp files.  
                 self.write(problem_filename)
                 logging.disable(config.logging_level)
-#                logger.setLevel(normal_level)
                     
             if not self.status: return
             

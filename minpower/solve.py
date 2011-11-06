@@ -34,7 +34,7 @@ def problem(datadir='.',
         :returns: :class:`~results.Solution` object
     """
     
-    setup_logging(logging_level)
+    _setup_logging(logging_level)
     
     generators,loads,lines,times=get_data.parsedir(datadir)
     power_system=powersystems.PowerSystem(generators,loads,lines,                 
@@ -171,6 +171,6 @@ def solve_multistage(power_system,times,datadir,
     return stage_solutions,stage_times
 
   
-def setup_logging(level):
+def _setup_logging(level):
     ''' set up the logging to report on the status'''
     logging.basicConfig( level=level, format='%(levelname)s: %(message)s')

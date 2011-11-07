@@ -15,7 +15,7 @@ import os,sys,logging
 fields_lines={'name':'name','to':'To','from':'From','pmax':'Pmax'}
 fields_gens={
     'name':'name','type':'kind','kind':'kind','bus':'bus',
-    'pmin':'Pmin','pmax':'Pmax',
+    'pmin':'Pmin','pmax':'Pmax','powermin':'Pmin','powermax':'Pmax',
     'p':'power','pg':'power','power':'power', #for a non-controllable gen in an ED
     'rampratemin':'rampratemin','rampratemax':'rampratemax',
     'minuptime':'minuptime','mindowntime':'mindowntime',

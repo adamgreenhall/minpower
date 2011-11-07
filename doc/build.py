@@ -6,6 +6,7 @@ def main(publish=False):
     if publish:
         os.system('make gh-pages')
     else:
+        os.system('compass compile')
         os.system('make html')
         #os.system('make latexpdf')
         for f in glob.glob('*.log'): os.remove(f)

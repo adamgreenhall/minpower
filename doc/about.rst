@@ -1,10 +1,10 @@
 About minpower
 ================
 
-**minpower** is an :ref:`open source<license>` toolkit for :doc:`students<students>` and :doc:`researchers<researchers>` in power systems. It is designed to make working with :doc:`ED <economic-dispatch>`, :doc:`OPF <optimal-power-flow>`, and :doc:`UC <unit-commitment>` problems :doc:`simple and beautiful<why-minpower>`. The goal is to foster :doc:`collaboration<collaborate>` with other :doc:`researchers<researchers>` and to make learning easier for :doc:`students<students>`.
+**Minpower** is an :ref:`open source<license>` toolkit for :doc:`students<students>` and :doc:`researchers<researchers>` in power systems. It is designed to make working with :doc:`ED <economic-dispatch>`, :doc:`OPF <optimal-power-flow>`, and :doc:`UC <unit-commitment>` problems :doc:`simple and intuitive<why-minpower>`. The goal is to foster :doc:`collaboration<collaborate>` with other :doc:`researchers<researchers>` and to make learning easier for :doc:`students<students>`.
 
 
-**minpower** is currently :ref:`under development <development>`.
+**Minpower** is currently :ref:`under development <development>`.
  
 
 .. _authors:
@@ -49,7 +49,7 @@ Development
 
 ..  container:: halfwidth
     
-    **minpower** is actively and openly developed on `github <http://github.com/adamgreenhall/minpower>`_, a social code 
+    **Minpower** is actively and openly developed on `github <http://github.com/adamgreenhall/minpower>`_, a social code 
     hosting site that allows for collaboration by many people and change tracking. 
 
 Development is simple:
@@ -64,13 +64,13 @@ Development is simple:
 License
 ---------
 
-**minpower** is distributed under the `MIT license <http://www.opensource.org/licenses/mit-license>`_. This basically means:
+**Minpower** is distributed under the `MIT license <http://www.opensource.org/licenses/mit-license>`_. This basically means:
 
 Copyright 2011 by Adam Greenhall and contributors, minpowertoolkit.com
 
 Redistribution and use with or without modification, are ok provided that: redistributions of code must retain the copyright above, this list of conditions, and the disclaimer below.
 
-If you use **minpower** in published research, please cite minpowertoolkit.com. If you use this code and modify it for the better, please share your improvements. But you are not required to. 
+If you use **Minpower** in published research, please cite minpowertoolkit.com. If you use this code and modify it for the better, please share your improvements. But you are not required to. 
 
 
 

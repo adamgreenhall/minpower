@@ -3,13 +3,6 @@ Unit Commitment
 
 :abbr:`UC (Unit Commitment)` tries to schedule generation to meet the system load for the next :abbr:`several hours (generally 12 or 24hrs)` at lowest cost. :abbr:`UC (Unit Commitment)`  adds a dimension of time to the :abbr:`ED (Economic Dispatch)` problem, with the additional choice of turning generators on or off. The classic text is `Wood & Wollenburg <http://amzn.to/wood-wollenburg>`_.
 
-..  toctree::
-    :hidden:
-    :maxdepth: 1
-    
-    data-input
-
-
 
 
 The problem
@@ -101,7 +94,7 @@ and in this case we just have one schedule file (``small-changing-load.csv``):
     .. literalinclude:: ./_static/demos/commitment/small-changing-load.csv
 
 
-.. note:: For more information about what options you can specify in each spreadsheet see: :doc:`data-input`.
+.. note:: For more information about what options you can specify in each spreadsheet see: :doc:`creating-problems`.
 
 
 .. rubric:: Footnotes

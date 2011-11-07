@@ -4,11 +4,6 @@ Optimal Power Flow
 
 :abbr:`OPF (Optimal Power Flow)` tries to allocate available generation to meet the current load while keeping transmission lines within :abbr:`the limits (governed in reality by stability and sag concerns)` of what they can carry. :abbr:`OPF (Optimal Power Flow)` adds a dimension of space to the :abbr:`ED (Economic Dispatch)` problem. Currently **minpower** performs the simplest version of power flow, called decoupled :abbr:`OPF (Optimal Power Flow)` and considers only real power [#f1]_. The classic text is `Bergen & Vittal <http://bitly.com/bergen-vittal>`_.
 
-..  toctree::
-    :hidden:
-    :maxdepth: 1
-    
-    data-input
 
 The problem
 ------------
@@ -99,7 +94,7 @@ the lines file (``lines.csv``):
     
     .. literalinclude:: ./_static/demos/powerflow/lines.csv
     
-.. note:: For more information about what options you can specify in each spreadsheet see: :doc:`data-input`.
+.. note:: For more information about what options you can specify in each spreadsheet see: :doc:`creating-problems`.
 
 
 

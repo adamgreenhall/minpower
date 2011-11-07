@@ -1,12 +1,6 @@
 Economic Dispatch
 ==================
 
-..  toctree::
-    :hidden:
-    :maxdepth: 1
-    
-    data-input
-
 
 :abbr:`ED (Economic Dispatch)` tries to allocate available generation to meet the current system load at lowest cost. The classic text is `Wood & Wollenburg <http://amzn.to/wood-wollenburg>`_.
 
@@ -74,4 +68,4 @@ and load file (``loads.csv``):
 
     .. literalinclude:: ./_static/demos/dispatch/loads.csv
 
-.. note:: For more information about what options you can specify in each spreadsheet see: :doc:`data-input`.
+.. note:: For more information about what options you can specify in each spreadsheet see: :doc:`creating-problems`.

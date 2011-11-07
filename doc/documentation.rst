@@ -3,14 +3,7 @@ Documentation
 
 This is a listing of all of **minpower**'s modules, which are roughly organized by content. Note the ``[source]`` link next to each module/function - this provides a quick way to see the source code. Because Python code is so readable this will often answer your question. Use the tree and search box on the sidebar liberally. 
 
-What :abbr:`inputs (field names)` are allowed for spreadsheets? How do these relate to the code? See the :doc:`guide on how to specify your problem in spreadsheets <data-input>`. 
-
-
-..  toctree::
-    :hidden:
-    :maxdepth: 1
-    
-    data-input
+What fields are allowed for spreadsheets? See the :doc:`creating-problems`. 
 
 
 =======================================
@@ -103,10 +96,10 @@ The tests module contains unit tests and a directory structure full of example c
     :members:
     :undoc-members:    
 
-:mod:`tests.testall_integration_demos`
+:mod:`tests.testall_integration`
 ---------------------------------------
 
-.. automodule:: tests.testall_integration_demos
+.. automodule:: tests.testall_integration
     :members:
     :undoc-members:    
     
@@ -142,11 +135,11 @@ The tests module contains unit tests and a directory structure full of example c
         :members:
         :undoc-members:    
 
-:mod:`tests.test_utils`
------------------------------
-.. automodule:: tests.test_utils
-    :members:
-    :undoc-members:  
+    :mod:`tests.test_utils`
+    -----------------------------
+    .. automodule:: tests.test_utils
+        :members:
+        :undoc-members:  
 
 
 

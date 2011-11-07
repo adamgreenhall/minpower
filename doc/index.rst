@@ -9,23 +9,35 @@ It is designed to make working with :doc:`ED <economic-dispatch>`,
 with other :doc:`researchers<researchers>` and to make learning easier for :doc:`students<students>`.
 
 
-
-Solving problems is as easy as one command::
-
-    minpower mycommitment/
+    
+To solve a problem:
+    
+    ``minpower mycommitment/``
+    
 
 **Minpower** creates great visualizations too, like this one for a :doc:`UC problem <unit-commitment>`:
     
     ..  image:: ./_static/commitment-demo.png
         :width: 500 px
 
-**Minpower** is also :doc:`powerful<researchers>`, :doc:`easy to install<install>`, and has complete :doc:`documentation<documentation>`.
+..  container:: installation-homepage
+
+    Installation:
+
+    * ``pip install minpower``
+    * use with your favorite solver
+
+
 
 .. toctree::
     :maxdepth: 3
     
     why-minpower
     install
+
+.. toctree::
+    
+    creating-problems
 
 .. toctree::
     

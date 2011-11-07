@@ -1,10 +1,12 @@
-// to autobuild run: sass --watch _static/default.css.sass:_build/html/_static/default.css
-// to build run: sass  _static/default.css.sass:_static/default.css
+// to autobuild run: compass watch .
+
 // @import url("basic.css") //skip importing the standard sphinx styling
 
 /* Fonts
 
 @import url("http://fonts.googleapis.com/css?family=Ubuntu:r,i,b|Arvo|Cousine:r,i,b")
+@import "compass"
+@import "compass/reset"
 
 body
   font-family: 'Ubuntu', sans-serif
@@ -13,18 +15,23 @@ body
   color: #404040
   background: white
 
+    
 .body
   p
     text-align: justify
+    &:last-child
+      margin-bottom: 4ex
   ul
     list-style-type: circle
 
+p
+  margin-top: 1ex
       
 h1, h2, h3, h4, h5, h6
   font-family: 'Arvo', serif
   font-weight: normal
   color: SteelBlue
-  margin-top: 2em
+  margin-top: 1.5ex
 
 
 h1
@@ -78,17 +85,22 @@ pre
   background: CornSilk
   font-size: medium
   line-height: 130%
-  width: 130%
   overflow: auto
   // word-wrap: break-word
   #problem.viewcode-block
     background: white
+    padding: 10px
     overflow: auto
+    +opacity(0.9)
+    +border-radius(10px)
   // a.viewcode-back
   border-left: 
     color: SlateGray
     width: 3px
     style: solid
+
+.highlight
+  width: 130%
 
 .admonition
   background: CornSilk
@@ -148,7 +160,8 @@ dt:target
     h1
       &:first-child
         margin-top: 20px
-
+    .toctree-wrapper //don't display the toc on the index page
+      display: none
   .sphinxsidebar
     position: absolute
     left: -120px
@@ -164,6 +177,10 @@ dt:target
         font-weight: bold
     ul
       padding-left: 0
+      list-style-type: none
+      ul
+        padding-left: 15px
+        
     input
       border-color: DarkSlateGray
 
@@ -183,5 +200,22 @@ dt:target
   margin-bottom: 4ex
   margin-left: 3em
 
-.toctree-wrapper //don't display the toc on the index page
-  display: none
+.installation-homepage
+  padding: 10px
+  width: 15em
+  background: lightblue
+  +border-radius(10px)
+  border: 
+    style: solid
+    color: DarkSlateGray
+    width: 3px
+  position: absolute
+  top: 80px
+  right: -20em
+  ul
+    padding-left: 20px
+    list-style-type: circle
+    
+
++alternating-rows-and-columns(lightgray,white, lightgray) //, $dark-intersection, $header-color, $footer-color)
+  

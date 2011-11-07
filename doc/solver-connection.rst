@@ -1,5 +1,5 @@
-Connecting
-^^^^^^^^^^^
+Solver Connection
+-------------------
 
 Python has to know where to find your solver to be able to use it. Here are operating system dependent instructions for how to make that happen:
 

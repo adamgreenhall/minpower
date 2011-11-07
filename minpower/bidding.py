@@ -2,7 +2,7 @@ from commonscripts import elementwiseMultiply,update_attributes
 from optimization import value,new_variable,sum_vars,OptimizationObject
 from config import default_num_breakpoints
 
-from scipy import linspace, polyval, polyder, interp, poly1d
+from scipy import linspace, polyval, polyder, interp, poly1d, optimize
 
 #import matplotlib
 #from sys import platform as osname
@@ -82,6 +82,7 @@ class PWLmodel(object):
                 
         update_attributes(self,locals(),exclude=['polyText','multiplier'])
         self.poly_curve=multiplier * parsePolynomial(polyText) #parse curve
+    def do_segmentation(self):
         if isLinear(self.poly_curve): self.num_breakpoints=2 #linear models only need 2 breakpoints
         inDiscrete=linspace(self.min_input, self.max_input, 1e6) #fine discretization of the curve
         outDiscrete=polyval(self.poly_curve,inDiscrete)
@@ -116,6 +117,7 @@ class PWLmodel(object):
     def _s_name(self,segNum,owner_iden,time_iden): return '{oi}_s{segNum}_{ti}'.format(segNum=segNum,oi=owner_iden,ti=time_iden)
     def get_time_variables(self,input_var,status_var,owner_iden,time_iden):
         variables={}
+        self.do_segmentation()
         #S: segment of cost curve is active
         #F: breakpoint weighting fraction
         for segNum in range(len(self.segments)):
@@ -186,14 +188,15 @@ class convexPWLmodel(PWLmodel):
         num_breakpoints=default_num_breakpoints,
         input_name='x',output_name='y'):
         
+        update_attributes(self,locals(),exclude=['polyText','multiplier'])
+        self.poly_curve=multiplier * parsePolynomial(polyText) #parse curve
+    def do_segmentation(self):
         def linear_equation(x,m,b): return m*x+b
         def make_lineareq(x1,y1,x2,y2):
             m=(y2-y1)/(x2-x1)
             b=y1-x1*m
             return lambda x: linear_equation(x,m,b)
         
-        update_attributes(self,locals(),exclude=['polyText','multiplier'])
-        self.poly_curve=multiplier * parsePolynomial(polyText) #parse curve
         inDiscrete=linspace(self.min_input, self.max_input, 1e6) #fine discretization of the curve
         outDiscrete=polyval(self.poly_curve,inDiscrete)
         self.bp_inputs = [float(bpi) for bpi in linspace(self.min_input, self.max_input, self.num_breakpoints)] #interpolation to get pwl breakpoints
@@ -218,8 +221,30 @@ class convexPWLmodel(PWLmodel):
         ylabel(self.outputNm)
         if P is not None: plot(P,polyval(self.poly_curve,P), 'o', c=linePlotted.get_color(), markersize=8, linewidth=2, alpha=0.7) 
         return linePlotted
+    def plot_derivative(self,P=None,linestyle='-',color=None):
+        power,IC=[],[]
+        x_low=self.min_input
+        x_high=x_low
+        for i,line in enumerate(self.segment_lines):
+            x_low=x_high
+            try: 
+                next_line=self.segment_lines[i+1]
+                x_high=find_intersection(line,next_line)[0]
+            except IndexError: 
+                x_high=self.max_input
+            power.append(x_low)
+            IC.append(get_slope(line))
+        else:
+            power.append(x_high)
+            IC.append(get_slope(line))
+        
+        linePlotted,=plot(power,IC,drawstyle='steps-post')
+         
+        if P is not None: plot(P,polyval(polyder(self.poly_curve),P), 'o', c=linePlotted.get_color(), markersize=8, linewidth=2, alpha=0.7)
+        return linePlotted
     def get_time_variables(self,input_var,status_var,owner_iden,time_iden):
         variables={}
+        self.do_segmentation()
         name = 'bidCost_'+owner_iden+time_iden
         variables[name] = new_variable(name=name,high=float(max(self.bp_outputs)))
         return variables
@@ -308,3 +333,20 @@ def parsePolynomial(s):
     for key,value in res_dict.items(): res[key] = value
     res.reverse() #reverse the order of the polynomial
     return poly1d(res,variable=varLetter)
+
+def find_intersection(A,B):
+    '''Get the intersection point of two line objects'''
+    #http://en.wikipedia.org/wiki/Line-line_intersection
+    x1,x2=0,5
+    x3,x4=0,5
+    y1,y2=A(x1),A(x2)
+    y3,y4=B(x3),B(x4)
+    
+    x=((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4))
+    y=((x1*y2-y1*x2)*(y3-y4)-(y1-y1)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4))
+    return (x,y)
+def get_slope(line):
+    x1,x2=0,1
+    y1,y2=line(x1),line(x2)
+    m=(y2-y1)/(x2-x1)
+    return m

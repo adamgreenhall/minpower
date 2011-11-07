@@ -1,0 +1,187 @@
+// to autobuild run: sass --watch _static/default.css.sass:_build/html/_static/default.css
+// to build run: sass  _static/default.css.sass:_static/default.css
+// @import url("basic.css") //skip importing the standard sphinx styling
+
+/* Fonts
+
+@import url("http://fonts.googleapis.com/css?family=Ubuntu:r,i,b|Arvo|Cousine:r,i,b")
+
+body
+  font-family: 'Ubuntu', sans-serif
+  font-size: 110%
+  line-height: 160%
+  color: #404040
+  background: white
+
+.body
+  p
+    text-align: justify
+  ul
+    list-style-type: circle
+
+      
+h1, h2, h3, h4, h5, h6
+  font-family: 'Arvo', serif
+  font-weight: normal
+  color: SteelBlue
+  margin-top: 2em
+
+
+h1
+  font-size: 180%
+
+h2
+  font-size: 160%
+
+h3
+  font-size: 140%
+
+tt
+  font-family: 'Cousine', monospace
+  font-size: medium
+  &.descname
+    font-family: 'Cousine', monospace
+    font-size: medium
+
+a
+  color: SlateGray
+  border-color: DarkSlateGray
+  text-decoration: none
+  border-bottom-width: 1px
+  border-bottom-style: dashed
+  img, &:link img
+    border-bottom: 0px
+  &.image-reference
+    border-bottom-width: 0px
+  &.viewcode-link, &.viewcode-back
+    color: LightSlateGray
+    text-decoration: none
+    border: none
+  &.reference.internal em // dont italicize links to pages w/in sphinx  
+    font-style: normal
+  &.headerlink
+    display: none //dont show the silly paragraph marks next to headers
+
+abbr
+  border-bottom-width: 1px
+  border-bottom-style: dashed
+  border-color: DarkSlateGray
+
+pre, .admonition
+  margin: 1em -40px
+  padding: 1em 40px
+
+
+pre
+  font-family: 'Cousine', monospace
+  font-size: 80%
+  background: CornSilk
+  font-size: medium
+  line-height: 130%
+  width: 130%
+  overflow: auto
+  // word-wrap: break-word
+  #problem.viewcode-block
+    background: white
+    overflow: auto
+  // a.viewcode-back
+  border-left: 
+    color: SlateGray
+    width: 3px
+    style: solid
+
+.admonition
+  background: CornSilk
+  border-color: ForestGreen
+  border-top-width: 5px
+  border-top-style: solid
+  &.warning
+    border-top-width: 5px
+    border-top-style: solid
+    border-color: FireBrick
+  &.note p.admonition-title
+    display: none
+
+
+dt:target, .highlighted
+  background: #f2ffc4
+
+/* Positions, Sizes, &c.
+
+.body, .related
+  max-width: 630px
+  // margin-right: 270px
+
+.halfwidth
+  max-width: 500px
+  margin-bottom: 3ex
+.related
+  margin-bottom: 100px
+  margin-top: 50px
+  
+.plusone
+  margin-bottom: 4ex
+
+
+.section
+  > dl
+    padding-top: 2em
+  h2 + dl
+    padding-top: inherit
+
+dt:target
+  margin-left: -10px
+  margin-right: -40px
+  padding-left: 10px
+  padding-right: 40px
+
+
+.document
+  margin: 0 auto
+  padding: 0 1em
+  max-width: 900px
+  position: relative
+  .documentwrapper
+    position: absolute
+    left: 180px
+    top: 0px
+    h1
+      &:first-child
+        margin-top: 20px
+
+  .sphinxsidebar
+    position: absolute
+    left: -120px
+    top: 0px
+    width: 200px
+    h3
+      &:first-child
+        margin-top: 20px
+    a
+      text-decoration: none
+      border: none
+      &.current
+        font-weight: bold
+    ul
+      padding-left: 0
+    input
+      border-color: DarkSlateGray
+
+    #searchbox
+      h3
+        margin-bottom: 0px
+      .searchtip
+        display: none
+
+
+.license
+  font-size: 60%
+  max-width: 500px
+  margin-left: 60px
+
+.optimizationproblem
+  margin-bottom: 4ex
+  margin-left: 3em
+
+.toctree-wrapper //don't display the toc on the index page
+  display: none

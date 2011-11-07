@@ -1,38 +1,42 @@
 Installation
 ============
 
+#. `ActivePython 2.7 <http://activestate.com/activepython/downloads>`_
+#. pypm install minpower
+#. `GLPK <http://www.gnu.org/s/glpk>`_ (`Win <http://gnuwin32.sourceforge.net/packages/glpk.htm>`_, `Mac <http://www.arnab-deka.com/posts/2010/02/installing-glpk-on-a-mac/>`_)
 
 
+1. Get Python
+-----------
+For new-to-Python folks, install `ActivePython 2.7 <http://activestate.com/activepython/downloads>`_. It makes the installation of a bunch of scientific :abbr:`packages (add-ons in Python terms)` very easy - the way it should be. 
 
-Honestly, installation can be a pain - *Windows and CPLEX are the toughest* - but it is worth it. 
-The initial time investment will pay off quickly. 
+For experienced Python users, `pip <http://www.pip-installer.org/>`_ will work just fine. 
 
-If you are already a Python user or an optimization person you have probably
-done some of these steps before. :doc:`Basic install on Linux <install-linux>` should take under 5min.
-**minpower** is platform and :doc:`solver <solvers>` independant.
+2. Get Minpower
+-------------
 
-Choose your platform for instructions:
-
-..  image:: ./_static/linux.png
-    :width: 120 px
-    :target: install-linux.html
+Simply run::
     
-..  image:: ./_static/mac.jpg
-    :width: 150 px
-    :target: install-mac.html
-    
-..  image:: ./_static/windows.png
-    :width: 130 px
-    :target: install-windows.html
+    pypm install minpower
 
+3. Get a Solver
+--------------
 
+The choice is yours for which solver you'd like to use. Minpower has been tested with `GLPK <http://www.gnu.org/s/glpk>`_, `Gurboi <http://gurobi.com>`_, and `CPLEX <http://www.ibm.com/software/integration/optimization/cplex-optimizer>`_
+
+But you can almost certainly use your favorite - here's `the full list <https://software.sandia.gov/trac/coopr/wiki/GettingStarted/Solvers>`_.
+
+Not sure which to try: here's a quick rundown of our :doc:`experience with solvers <solvers>`.
+
+Test it out
+------------
+
+Go ahead and try to solve built in test case first, like::
+
+    minpower uc
+
+If you get an error about the problem not being solved - Python doesn't know where your solver is. To fix this here's a :doc:`guide to solver-to-Python connection<solver-connection>`. 
 
 .. toctree::
-    :hidden:
-    
-    install-linux
-    install-mac
-    install-windows
-    install-python-packages
     solvers
-    install-testing
+    solver-connection

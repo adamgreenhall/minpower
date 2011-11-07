@@ -1,146 +1,163 @@
-@import url("basic.css");
+/* Fonts */
+@import url("http://fonts.googleapis.com/css?family=Ubuntu:r,i,b|Arvo|Cousine:r,i,b");
+body {
+  font-family: "Ubuntu", sans-serif;
+  font-size: 110%;
+  line-height: 160%;
+  color: #404040;
+  background: white; }
 
+.body p {
+  text-align: justify; }
+.body ul {
+  list-style-type: circle; }
 
-/* Fonts*/
-@import
-url("http://fonts.googleapis.com/css?family=Ubuntu:r,i,b|Arvo|Cousine:r,i,b|Josefin+Slab:r,i,b|IM+Fell+Double+Pica|IM+Fell+Double+Pica+SC");
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Arvo", serif;
+  font-weight: normal;
+  color: SteelBlue;
+  margin-top: 2em; }
 
-body
-  { font-family: 'Ubuntu', sans-serif; font-size: 110%; line-height: 160%; }
+h1 {
+  font-size: 180%; }
 
-h1, h2, h3, h4, h5, h6
-  { font-family: 'Arvo', serif; font-weight: normal; }
+h2 {
+  font-size: 160%; }
 
-h1 { font-size: 180%; }
-h2 { font-size: 160%; }
-h3 { font-size: 140%; }
+h3 {
+  font-size: 140%; }
 
-pre, tt, tt.descname
-  { font-family: 'Cousine', monospace; font-size: medium; }
+tt {
+  font-family: "Cousine", monospace;
+  font-size: medium; }
+  tt.descname {
+    font-family: "Cousine", monospace;
+    font-size: medium; }
 
-pre
-  { line-height: 130%; }
+a {
+  color: SlateGray;
+  border-color: DarkSlateGray;
+  text-decoration: none;
+  border-bottom-width: 1px;
+  border-bottom-style: dashed; }
+  a img, a:link img {
+    border-bottom: 0px; }
+  a.image-reference {
+    border-bottom-width: 0px; }
+  a.viewcode-link, a.viewcode-back {
+    color: LightSlateGray;
+    text-decoration: none;
+    border: none; }
+  a.reference.internal em {
+    font-style: normal; }
+  a.headerlink {
+    display: none; }
 
-div.dictionary-entry dd
-  { font-style: italic; }
+abbr {
+  border-bottom-width: 1px;
+  border-bottom-style: dashed;
+  border-color: DarkSlateGray; }
 
-a.reference.internal em
-  { font-style: normal; }
+pre, .admonition {
+  margin: 1em -40px;
+  padding: 1em 40px; }
 
-div.sphinxsidebar a.current
-  { font-weight: bold; }
+pre {
+  font-family: "Cousine", monospace;
+  font-size: 80%;
+  background: CornSilk;
+  font-size: medium;
+  line-height: 130%;
+  width: 130%;
+  overflow: auto;
+  border-left-color: SlateGray;
+  border-left-width: 3px;
+  border-left-style: solid; }
+  pre #problem.viewcode-block {
+    background: white;
+    overflow: auto; }
 
-div.sphinxsidebar a, a.headerlink, div.toctree-wrapper a, a.viewcode-link, a.viewcode-back
-  { text-decoration: none; border: none; }
+.admonition {
+  background: CornSilk;
+  border-color: ForestGreen;
+  border-top-width: 5px;
+  border-top-style: solid; }
+  .admonition.warning {
+    border-top-width: 5px;
+    border-top-style: solid;
+    border-color: FireBrick; }
+  .admonition.note p.admonition-title {
+    display: none; }
 
+dt:target, .highlighted {
+  background: #f2ffc4; }
 
-/* Colors
- *********/
+/* Positions, Sizes, &c. */
+.body, .related {
+  max-width: 630px; }
 
-body
-  { color: #404040; background: white; }
+.halfwidth {
+  max-width: 500px;
+  margin-bottom: 3ex; }
 
-h1, h2, h3, h4, h5, h6
-  { color: SteelBlue; }
-h2 a
-  { color: SteelBlue;}
-a
-  { color: SlateGray; border-color: DarkSlateGray; }
+.related {
+  margin-bottom: 100px;
+  margin-top: 50px; }
 
-a.viewcode-link
-  { color: LightSlateGray; }
+.plusone {
+  margin-bottom: 4ex; }
 
-pre, div.admonition
-  { background: CornSilk;}
+.section > dl {
+  padding-top: 2em; }
+.section h2 + dl {
+  padding-top: inherit; }
 
-pre
-  { border-color: SlateGray; }
+dt:target {
+  margin-left: -10px;
+  margin-right: -40px;
+  padding-left: 10px;
+  padding-right: 40px; }
 
-div.admonition
-  { border-color: ForestGreen;}
+.document {
+  margin: 0 auto;
+  padding: 0 1em;
+  max-width: 900px;
+  position: relative; }
+  .document .documentwrapper {
+    position: absolute;
+    left: 180px;
+    top: 0px; }
+    .document .documentwrapper h1:first-child {
+      margin-top: 20px; }
+  .document .sphinxsidebar {
+    position: absolute;
+    left: -120px;
+    top: 0px;
+    width: 200px; }
+    .document .sphinxsidebar h3:first-child {
+      margin-top: 20px; }
+    .document .sphinxsidebar a {
+      text-decoration: none;
+      border: none; }
+      .document .sphinxsidebar a.current {
+        font-weight: bold; }
+    .document .sphinxsidebar ul {
+      padding-left: 0; }
+    .document .sphinxsidebar input {
+      border-color: DarkSlateGray; }
+    .document .sphinxsidebar #searchbox h3 {
+      margin-bottom: 0px; }
+    .document .sphinxsidebar #searchbox .searchtip {
+      display: none; }
 
-div.admonition.warning
-  { border-color: FireBrick; }
+.license {
+  font-size: 60%;
+  max-width: 500px;
+  margin-left: 60px; }
 
-div.sphinxsidebar input
-  { border-color: DarkSlateGray; }
+.optimizationproblem {
+  margin-bottom: 4ex;
+  margin-left: 3em; }
 
-dt:target, .highlighted
-  { background: #f2ffc4; }
-
-
-/* Positions, Sizes, &c.
- ***********************/
-
-div.document
-  { margin: 0 auto; padding: 0 1em; max-width: 900px; position: relative; }
-
-div.body, div.related
-  { max-width: 630px; margin-right: 270px; }
-
-div.halfwidth
-  {max-width:500px; margin-bottom: 3ex;}
-
-div.sphinxsidebar
-  { position: absolute; right: 0; }
-
-div.sphinxsidebarwrapper
-  { position: fixed; max-width: 250px; top: 2em; bottom: 0; overflow: auto; }
-
-div.related
-  { margin-bottom: 100px; margin-top: 50px; }
-
-h1, h2, h3, h4, h5, h6
-  { margin-top: 2em; }
-
-a
-  { text-decoration: none; border-bottom-width: 1px; border-bottom-style: dashed; }
-
-a img, a:link img {border-bottom: 0px solid #FFFFFF;
-}
-
-a.image-reference {border-bottom-width: 0px}
-
-.plusone{margin-bottom: 4ex}
-
-pre, div.admonition
-  { margin: 1em -40px; padding: 1em 40px; }
-
-pre
-  { border-right-width: 3px; border-right-style: solid; }
-
-div.admonition
-  { border-top-width: 5px; border-top-style: solid; }
-
-div.admonition.warning
-  { border-top-width: 5px; border-top-style: solid; }
-
-div.admonition.note p.admonition-title
-  { display: none; }
-
-
-div.dictionary-entry dl
-  { text-align: center; }
-
-div.body p
-  { text-align: justify; }
-
-div.body ul
-  { list-style-type: circle; }
-
-div.sphinxsidebar ul
-  { padding-left: 0; }
-
-div.section > dl
-  { padding-top: 2em; }
-
-div.section h2 + dl
-  { padding-top: inherit; }
-
-dt:target
-  { margin-left: -10px; margin-right: -40px; padding-left: 10px; padding-right: 40px; }
-
-div.reference internal image-reference{}
-div.license{ font-family: "IM Fell Double Pica" serif; font-size: 60%; max-width:500px; margin-left:60px;}
-
-div.optimizationproblem{margin-bottom: 4ex; margin-left: 3em;}
+.toctree-wrapper {
+  display: none; }

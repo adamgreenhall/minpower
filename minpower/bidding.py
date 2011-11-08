@@ -2,7 +2,7 @@ from commonscripts import elementwiseMultiply,update_attributes
 from optimization import value,new_variable,sum_vars,OptimizationObject
 from config import default_num_breakpoints
 
-from scipy import linspace, polyval, polyder, interp, poly1d, optimize
+from scipy import linspace, polyval, polyder, interp, poly1d
 
 #import matplotlib
 #from sys import platform as osname

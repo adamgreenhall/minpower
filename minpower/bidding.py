@@ -3,6 +3,7 @@ from optimization import value,new_variable,sum_vars,OptimizationObject
 from config import default_num_breakpoints
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 from scipy import linspace, polyval, polyder, interp, poly1d
 <<<<<<< HEAD
 #from pylab import plot,show,savefig,xlabel,ylabel
@@ -10,6 +11,9 @@ from scipy import linspace, polyval, polyder, interp, poly1d
 =======
 from scipy import linspace, polyval, polyder, interp, poly1d, optimize
 >>>>>>> fix for setting breakpoints post init. convex polynomial price visualization now shows linearization effects (stepwise ICs)
+=======
+from scipy import linspace, polyval, polyder, interp, poly1d
+>>>>>>> got rid of unneeded scipy imports
 
 #import matplotlib
 #from sys import platform as osname

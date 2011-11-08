@@ -1,9 +1,11 @@
 Documentation
-=================================
+===============
 
-This is a listing of all of **minpower**'s modules, which are roughly organized by content. Note the ``[source]`` link next to each module/function - this provides a quick way to see the source code. Because Python code is so readable this will often answer your question. Use the tree and search box on the sidebar liberally. 
+This is an API for **Minpower**. Note the ``[source]`` link next to each module/function - this provides a quick way to see the source code. Because Python code is so readable this will often answer your question. Use the tree and search box on the sidebar liberally. 
 
-What fields are allowed for spreadsheets? See the :doc:`creating-problems`. 
+..  note:: 
+    
+    For basic use of the Minpower script, see :doc:`basic-use`. For a guide to creating problems using spreadsheets see :doc:`creating-problems`. 
 
 
 =======================================

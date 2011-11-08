@@ -8,14 +8,23 @@ You are probably learning about :doc:`ED <economic-dispatch>`, :doc:`OPF <optima
 Solve a problem
 -----------------
 
-    * :doc:`economic-dispatch`
-    * :doc:`optimal-power-flow`
-    * :doc:`unit-commitment`
+Get started by solving the one of the problems built into **Minpower**::
+    
+    minpower uc
+
+
+Or check out the tutorials: 
+
+* :doc:`economic-dispatch`
+* :doc:`optimal-power-flow`
+* :doc:`unit-commitment`
+
+Or check the full reference on how to :doc:`creating-problems`.
+
 
 
 Help
 ------
-
 Perhaps you are unfamiliar with Python? Check out :doc:`python-intro` to get up to speed.
 
 Check out `Stackoverflow <http://stackoverflow.com/questions/tagged/python>`_ for general Python help. Hashtag any **Minpower** questions you post with `#minpower <http://stackoverflow.com/questions/tagged/minpower>`_. 

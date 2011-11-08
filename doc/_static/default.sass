@@ -217,5 +217,12 @@ dt:target
     list-style-type: circle
     
 
-+alternating-rows-and-columns(lightgray,white, lightgray) //, $dark-intersection, $header-color, $footer-color)
-  
+// +alternating-rows-and-columns(lightgray,white, lightgray) //, $dark-intersection, $header-color, $footer-color)
+table.docutils
+  width: 140%
+  tbody
+    tr:first-child
+      font-weight: bold
+  td
+    padding: 10px
+  +alternating-rows-and-columns(#EEE,#FFF,#EEE)

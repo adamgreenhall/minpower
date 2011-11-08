@@ -36,7 +36,8 @@ To solve a problem:
     install
 
 .. toctree::
-    
+
+    basic-use
     creating-problems
 
 .. toctree::

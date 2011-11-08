@@ -1,6 +1,6 @@
 /* Fonts */
 @import url("http://fonts.googleapis.com/css?family=Arvo|Cousine:r,i,b");
-/* line 17, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
+/* line 17, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
@@ -22,45 +22,45 @@ time, mark, audio, video {
   vertical-align: baseline;
 }
 
-/* line 20, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
+/* line 20, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
 body {
   line-height: 1;
 }
 
-/* line 22, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
+/* line 22, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
 ol, ul {
   list-style: none;
 }
 
-/* line 24, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
+/* line 24, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
 table {
   border-collapse: collapse;
   border-spacing: 0;
 }
 
-/* line 26, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
+/* line 26, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
 caption, th, td {
   text-align: left;
   font-weight: normal;
   vertical-align: middle;
 }
 
-/* line 28, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
+/* line 28, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
 q, blockquote {
   quotes: none;
 }
-/* line 101, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
+/* line 101, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
 q:before, q:after, blockquote:before, blockquote:after {
   content: "";
   content: none;
 }
 
-/* line 30, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
+/* line 30, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
 a img {
   border: none;
 }
 
-/* line 114, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
+/* line 114, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/reset/_utilities.scss */
 article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section, summary {
   display: block;
 }
@@ -365,38 +365,47 @@ dt:target {
   list-style-type: circle;
 }
 
-/* line 2, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
-th {
+/* line 221, default.sass */
+table.docutils {
+  width: 140%;
+}
+/* line 224, default.sass */
+table.docutils tbody tr:first-child {
+  font-weight: bold;
+}
+/* line 226, default.sass */
+table.docutils td {
+  padding: 10px;
+}
+/* line 2, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
+table.docutils th {
   background-color: white;
 }
-/* line 4, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
-th.even, th:nth-child(2n) {
-  background-color: white-lightgray;
+/* line 4, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
+table.docutils th.even, table.docutils th:nth-child(2n) {
+  background-color: #111111;
 }
-
-/* line 7, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
-tr.odd td {
+/* line 7, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
+table.docutils tr.odd td {
   background-color: white;
 }
-/* line 9, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
-tr.odd td.even, tr.odd td:nth-child(2n) {
-  background-color: white-lightgray;
+/* line 9, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
+table.docutils tr.odd td.even, table.docutils tr.odd td:nth-child(2n) {
+  background-color: #111111;
 }
-
-/* line 12, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
-tr.even td {
-  background-color: lightgray;
+/* line 12, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
+table.docutils tr.even td {
+  background-color: #eeeeee;
 }
-/* line 14, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
-tr.even td.even, tr.even td:nth-child(2n) {
-  background-color: lightgray-lightgray;
+/* line 14, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
+table.docutils tr.even td.even, table.docutils tr.even td:nth-child(2n) {
+  background-color: black;
 }
-
-/* line 17, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
-tfoot th, tfoot td {
+/* line 17, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
+table.docutils tfoot th, table.docutils tfoot td {
   background-color: white;
 }
-/* line 19, /var/lib/gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
-tfoot th.even, tfoot th:nth-child(2n), tfoot td.even, tfoot td:nth-child(2n) {
-  background-color: white-lightgray;
+/* line 19, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
+table.docutils tfoot th.even, table.docutils tfoot th:nth-child(2n), table.docutils tfoot td.even, table.docutils tfoot td:nth-child(2n) {
+  background-color: #111111;
 }

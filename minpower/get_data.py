@@ -7,12 +7,12 @@ from the information found in the data.
 
 import powersystems
 import schedule
-from addons import *
+from minpower.addons import *
 from commonscripts import readCSV,csvColumn,flatten,unique,drop_case_spaces,joindir
 
 import os,sys,logging
 
-fields_lines={'name':'name','to':'To','from':'From','pmax':'Pmax'}
+fields_lines={'name':'name','to':'To','from':'From','reactance':'X','pmax':'Pmax'}
 fields_gens={
     'name':'name','type':'kind','kind':'kind','bus':'bus',
     'pmin':'Pmin','pmax':'Pmax','powermin':'Pmin','powermax':'Pmax',

@@ -28,35 +28,57 @@ For :abbr:`DCOPF (De-Coupled Optimal Power Flow)`, the real power flow on a line
 
 
 
+Example Problem
+-----------------
 
+To define a simple :abbr:`OPF (Optimal Power Flow)` problem, **Minpower** requires three spreadsheets. The first describes the generator parameters and location (`generators.csv <https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/opf/generators.csv>`_):
 
-The basics
--------------
+.. literalinclude:: ../minpower/tests/opf/generators.csv
 
-Let's say you have made a folder called ``mypowerflow`` and put :ref:`the information <powerflow-inputs-example>`
-about your problem in the folder. Then if you run the script::
+The second describes the load at each bus (`loads.csv <https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/opf/loads.csv>`_):
+
+.. literalinclude:: ../minpower/tests/opf/loads.csv
+
+The third describes the lines between buses (`lines.csv <https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/opf/lines.csv>`_):
+
+.. literalinclude:: ../minpower/tests/opf/lines.csv
+
+.. note:: For more information about what options you can specify in each spreadsheet see: :doc:`creating-problems`.
+
+Solving
+---------
+Save the three spreadsheets above into into a folder (call it ``mypowerflow``) and run::
     
-    from minpower import solve
-    solve.problem('mypowerflow/')
+    minpower mypowerflow
 
-:abbr:`OPF (Optimal Power Flow)` is difficult to visualize (please `send suggestions <mailto:minpower@adamgreenhall.com>`_), but here is what **minpower** creates:
+This particular problem is also **Minpower** built-in test case, so if you haven't been following along, to solve it, call::
 
-    .. image:: ./_static/demos/powerflow/powerflow.png
+    minpower opf
+
+
+Example Solution
+-------------------
+
+The result is a plot (``powerflow.png``):
+
+    .. image:: ../minpower/tests/opf/powerflow.png
        :width: 500 px
+
+
+:abbr:`OPF (Optimal Power Flow)` is difficult to visualize (please `send suggestions <mailto:minpower@adamgreenhall.com>`_). 
 
 * A red colored transmission line indicates a limit on that line, while gray lines are below their limits. *The Tacoma* :math:`\rightarrow` *Seattle line is at its limit. The other two gray colored lines are running below their limits.* 
 * The width of the line indicates the amount of power flow. *The Olympia-Seattle line has the largest flow*. 
 * The :abbr:`stubs (arrows would be nicer, but this is what networkx gives)` at one end indicate direction of flow. *Flow direction is Olympia* :math:`\rightarrow` *Seattle*. 
 * :abbr:`Injected power (generation minus load for the bus)` is shown by the color of the bus. *Olympia is injecting power into the system while Seattle is pulling power*. 
 
-There are also spreadsheet outputs of generator and line information:
+There are also spreadsheet outputs of generator information (``powerflow-generators.csv``):
 
-    .. literalinclude:: ./_static/demos/powerflow/powerflow-generators.csv
+.. literalinclude:: ../minpower/tests/opf/powerflow-generators.csv
 
-Each generator's real power output (``P``) and incremental cost (``IC``) is output. 
-Because this is a power flow each generator is on (``u=True``) unless specified in the input spreadssheet.
+and line information (``powerflow-lines.csv``):
 
-    .. literalinclude:: ./_static/demos/powerflow/powerflow-lines.csv
+.. literalinclude:: ../minpower/tests/opf/powerflow-lines.csv
 
 Each line's real power flow is output. Lines that have congestion will show a positive shadow price. 
 *Because the flow is Tacoma* :math:`\rightarrow` *Seattle and the from/to fields of the
@@ -64,43 +86,7 @@ spreadsheet are the other way around, we see a negative power flow. The Seattle-
 line is at its limit, so there is an extra cost to the system from the congestion and the line has a
 positive shadow price.*
 
-
-
-These outputs are saved in the ``mypowerflow`` folder as ``powerflow.png``, ``powerflow-generators.csv``, and ``powerflow-lines.csv``.
-
-What's actually going on?
--------------------------
-
-
-It's easy once you get the hang of it. **minpower** will:
-    #. read in your files (see :mod:`get_data`)
-    #. set up an optimization problem (see :func:`solve.create_problem`)
-    #. send it off to a :doc:`solver<solvers>` (see :func:`optimization.solve`)
-    #. show you the results (see :class:`results.Solution_OPF`)
-
-**minpower** just looks for the files in the ``mypowerflow`` directory that describe the generators, loads, and lines.
-
-.. _powerflow-inputs-example:
-
-Tell it the specifics of your problem by editing the generator file (``generators.csv``):
-
-    .. literalinclude:: ./_static/demos/powerflow/generators.csv
-    
-the loads file (``loads.csv``):
-
-    .. literalinclude:: ./_static/demos/powerflow/loads.csv
-
-the lines file (``lines.csv``):
-    
-    .. literalinclude:: ./_static/demos/powerflow/lines.csv
-    
-.. note:: For more information about what options you can specify in each spreadsheet see: :doc:`creating-problems`.
-
-
-
-
-
 .. rubric:: Footnotes
  
-.. [#f1] Modern power systems often have reactive power issues. While :abbr:`DCOPF (Decoupled Optimal Power Flow)` is a decent approximate solution with reactive power considered, your results may vary significantly from reality without it.
+.. [#f1] Modern power systems often have reactive power issues. While :abbr:`DCOPF (Decoupled Optimal Power Flow)` is a decent approximate solution with reactive power considered, your results may vary significantly from real operations without it.
 

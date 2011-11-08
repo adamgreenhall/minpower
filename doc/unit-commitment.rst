@@ -25,24 +25,45 @@ In this mathematical formulation generators are indexed by :math:`g` and time is
 * each generator must be within its real power :abbr:`ramping (think acceleration in a car - you can't go from 0-60mph in one second. Similarly most generators cannot change their power output too quickly.)` limits
 * each generator must be within its :abbr:`up/down time limits (Nuclear and coal plants generally have especially long power up and cool down time constraints.)`
 
-.. note:: The last constraint is not shown in the formulation above :abbr:`due to complexity (it is a pain to show mathematically and is confusing to read. If you are interested, see the formulation used in the code.)`. It requires keeping track of how many hours a generator has been on/off. For the actual formulation in use, see :meth:`powersystems.Generator.constraints`.
+.. note:: The last constraint is not shown in the formulation above :abbr:`due to complexity (it is a pain to show mathematically and is confusing to read. If you are interested, see the formulation used in the code.)`. For the actual formulation in use, see :meth:`powersystems.Generator.create_constraints`.
 
+Example Problem
+-----------------
 
-The basics
------------
-   
-Let's say you have made a folder called ``mycommitment`` and put :ref:`the information <commitment-inputs-example>`
-about your problem in the folder. Then if you run the script::
+To define a simple :abbr:`UC (Unit Commitment)` problem, **Minpower** requires at least three spreadsheets. The first describes the generator parameters (`generators.csv <https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/uc-WW-5-2/generators.csv>`_):
+
+.. literalinclude:: ../minpower/tests/uc-WW-5-2/generators.csv
+
+The second simply describes which loads exist on the system and where there schedule files are (`loads.csv <https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/uc-WW-5-2/loads.csv>`_):
+
+.. literalinclude:: ../minpower/tests/uc-WW-5-2/loads.csv
+
+The other spreadsheets describe the load (or non-controllable generation) energy schedules. In this case (`load-pattern.csv <https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/uc-WW-5-2/load-pattern.csv>`_): 
+
+.. literalinclude:: ../minpower/tests/uc-WW-5-2/load-pattern.csv
+
+.. note:: For more information about what options you can specify in each spreadsheet see: :doc:`creating-problems`.
+
+Solving
+---------
+
+Save the two spreadsheets above into into a folder (call it ``mycommitment``) and run::
     
-    from minpower import solve
-    solve.directory('mycommitment/')
+    minpower mycommitment
 
-You get a plot:
+This particular problem is also **Minpower** built-in test case (based on `Wood & Wollenburg <http://amzn.to/wood-wollenburg>`_ Problem 5.2), so if you haven't been following along, to solve it, call::
 
-    .. image:: ./_static/demos/commitment/commitment.png
+    minpower uc-WW-5-2
+
+Example Solution
+-------------------
+
+The result is a plot (``commitment.png``):
+
+    .. image:: ../minpower/tests/uc-WW-5-2/commitment.png
        :width: 500 px
 
-This figure has two plots that share the same time axis. The top plot shows the :abbr:`price of energy (The system price is generally determined by the most expensive committed generator and is in $/MWh. If you multiply the system load by the system price you get the cost to the system in $.)` for the system. The bottom plot shows the energy that each generator produces. 
+This figure has two axes that share the same time axis. The top axes shows the :abbr:`price of energy (The system price is generally determined by the dual of the energy constraint in the optimization problem and is in $/MWh.)` for the system. The bottom axes shows the energy that each generator produces. 
 
 .. note:: For only a few generators, :meth:`results.Solution_UC.vizualization` displays a stack plot showing power for each generator. For more generators, the display is grouped by :attr:`~powersystems.Generator.kind` (so that all the coal plants as one color, all the wind as another color, ...).
 
@@ -51,51 +72,11 @@ For this example we have two generators, one named ``cheap`` (which produces ene
 But why doesn't the expensive generator turn back off at 6:00, when the load goes back down? It can't turn off that quickly - it has a minimum up time of 2hrs and a minimum output of 20MW. But why does the price go back down? It's complicated [#f1]_. 
 
 
-The data from the graph is also output in spreadsheet form:
+The data from the graph is also output in spreadsheet form (``commitment.csv``):
 
-    .. literalinclude:: ./_static/demos/commitment/commitment.csv
+    .. literalinclude:: ../minpower/tests/uc-WW-5-2/commitment.csv
 
 Unlike :doc:`ED <economic-dispatch>` and :doc:`OPF <optimal-power-flow>` results, this spreadsheet is not particularly easy to read. It is meant more for machines than for humans. The spreadsheet gives status and energy output for each generator, along with the system energy price, for each time.
-
-These outputs are saved in the ``mycommitment`` folder as ``commitment.png`` and ``commitment.csv``.
-
-
-What's actually going on?
--------------------------
-
-It's easy once you get the hang of it. **minpower** will:
-    #. read in your files (see :mod:`get_data`)
-    #. set up an optimization problem (see :func:`solve.create_problem`)
-    #. send it off to a :doc:`solver<solvers>` (see :func:`optimization.solve`)
-    #. show you the results (see :class:`results.Solution_UC`)
-
-**minpower** just looks for the files in the ``mycommitment`` directory that describe the generators and load.
-
-.. _commitment-inputs-example:
-
-Tell it the specifics of your problem by editing the generator file (``generators.csv``):
-
-    .. literalinclude:: ./_static/demos/commitment/generators.csv
-
-.. note:: Cost curves don't have to be linear. See an example of polynomial cost curves in the :ref:`ED example <dispatch-inputs-example>` or see the documentation in :func:`bidding.parsePolynomial`.
-
-the initial generator state file (``initial.csv``):
-    
-    .. literalinclude:: ./_static/demos/commitment/initial.csv
-    
-the loads file (``loads.csv``):
-
-    .. literalinclude:: ./_static/demos/commitment/loads.csv
-
-.. note:: You specify each changing load by a schedule file. You can also have loads with fixed power values, which are specified by ``P``. For :abbr:`UC (Unit Commitment)`, all loads are summed together to get the system load.
-
-and in this case we just have one schedule file (``small-changing-load.csv``):
-
-    .. literalinclude:: ./_static/demos/commitment/small-changing-load.csv
-
-
-.. note:: For more information about what options you can specify in each spreadsheet see: :doc:`creating-problems`.
-
 
 .. rubric:: Footnotes
 

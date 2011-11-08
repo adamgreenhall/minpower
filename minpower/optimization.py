@@ -261,7 +261,7 @@ class OptimizationObject(object):
         You should also call the :meth:`~OptimizationObject.init_optimization` method.
         '''
         update_attributes(self,locals()) #load in inputs
-        self.init_opt_object()
+        self.init_optimization()
         
     def init_optimization(self):
         '''

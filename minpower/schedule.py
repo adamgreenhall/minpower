@@ -3,7 +3,6 @@ Time and schedule related models.
 """
 
 import dateutil
-import logging
 from commonscripts import hours,parseTime, readCSV,getclass_inlist, drop_case_spaces,transpose,frange,getattrL,getTimeFormat
 
 
@@ -70,10 +69,14 @@ class Timelist(object):
     """
     A container for :class:`schedule.Time` objects.
     
+    :param inittuple: a tuple, list, or existing :class:`~schedule.Timelist` object
+    :param Start: a :py:class:`datetime.datetime` object
+    :param End: a :py:class:`datetime.datetime` object
+    :param interval: a :py:class:`datetime.timedelta` object
+    
     If `Start`, `End`, `interval` are specified as 
     :py:class:`datetime.datetime` and :py:class:`datetime.timedelta` 
     objects then a uniformly spaced list of times is generated.
-    
     """
     def __init__(self, inittuple=None,initialTime=None,Start=None,End=None,interval=None):
         if Start and End and interval:
@@ -112,14 +115,15 @@ class Timelist(object):
         if initialTime: self.initialTime= initialTime
         else: self.initialTime = Time(Start=self.Start-self.interval, interval=self.interval,index='Init')
         self.wInitial = tuple([self.initialTime] + list(self.times))
-    def subdivide(self,hrsperdivision=24,hrsinterval=None,overlap_hrs=0,offset_hrs=0):
+    def subdivide(self,hrsperdivision=24,hrsinterval=None,overlap_hrs=0): #offset_hrs=0
         """
-        Subdivide a list of times into serval lists,  each list
+        Subdivide a list of times into serval stages,  each stage
         spanning `hrsperdivision` with intervals of `hrsinterval`.
         
-        :param hoursperdivision: time span of each sub-list 
+        :param hoursperdivision: time span of each stage (excluding overlap)
         :param hrsinterval: (optional) time span of each interval
-          for each sub-list. If not specified, `intervalhrs` is used.
+          for each stage. If not specified, `intervalhrs` is used.
+        :param overlap_hrs: (optional) overlap between time stages, default is 0 
         
         typical use:
         
@@ -196,7 +200,7 @@ def makeSchedule(filename,times):
 class Schedule(object):
     """
     Describes a schedule of times and corresponding power values.
-    Mostly a container for a dictionary keyed by
+    A container for a dictionary keyed by
     :py:class:`~schedule.Time` objects.
     """
     def __init__(self,times=None,P=None):
@@ -247,6 +251,7 @@ class Schedule(object):
                 return self.get_energy(times[t])
             else: raise
 class FixedSchedule(Schedule):
+    '''A simple "schedule" which has only one power output''' 
     def __init__(self,times=None,P=None): self.P=P
     def get_energy(self,timeperiod=None): return self.P
     

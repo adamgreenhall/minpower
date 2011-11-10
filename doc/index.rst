@@ -54,7 +54,7 @@ To solve a problem:
 .. toctree::
     :maxdepth: 2
     
-    documentation
+    api/index
 
 .. toctree::
     

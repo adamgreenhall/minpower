@@ -1,6 +1,8 @@
 """
 Power systems optimization problem solver
-(ED, OPF, UC, and SCUC problems).
+for ED, OPF, UC, and SCUC problems. The :mod:`solve`
+module contains the top-level commands for creating
+problems and solving them.
 """
 
 import logging
@@ -24,14 +26,23 @@ def problem(datadir='.',
         hours_commitment_overlap=config.default_hours_commitment_overlap,
         logging_level=config.logging_level,
         ):
-    """ Solve a optimization problem in a directory.
-        Problem type is determined from the data.
-            
-        :param datadir: directory of data files, see :mod:`get_data`
-        :param outputs: dictionary of outputs flags: {shell, problemfile, vizualization,csv}
-        :param solver:  choice of solver
+    """ 
+    Solve a optimization problem specified by spreadsheets in a directory.
+    For a guide to creating spreadsheets, see :doc:`creating-problems`.
+    Read in data, create and solve the problem, and return solution.
+    The problem type is determined by the data.
         
-        :returns: :class:`~results.Solution` object
+    :param datadir: directory of data files, see :mod:`get_data`
+    :param shell: output solution information to the command line
+    :param problemfile: write the problem formulation to a problem-formulation.lp file
+    :param vizualization: create a chart of the solution and save it to a file
+    :param csv: create a spreadsheet of the solution
+    :param solver:  choice of solver, see :doc:`solvers`
+    :param num_breakpoints: number of break points to use in linearization of bid (or cost) polynomials (equal to number of segments + 1)
+    :param hours_commitment: maximum length of a single unit commitment, times beyond this will be divided into multiple problems and solved in a rolling commitment
+    :param hours_commitment_overlap: overlap of commitments for rolling commitments
+    
+    :returns: :class:`~results.Solution` object
     """
     
     _setup_logging(logging_level)
@@ -127,12 +138,12 @@ def problem(datadir='.',
 
 def create_problem(power_system,times):
     """
-        Create a power systems optimization problem.
-        
-        :param power_system: a :class:`~powersystems.PowerSystem` object
-        :param times: :class:`~schedule.Timelist` object
-        
-        :returns: :class:`~optimization.Problem` object
+    Create an optimization problem.
+    
+    :param power_system: a :class:`~powersystems.PowerSystem` object
+    :param times: :class:`~schedule.Timelist` object
+    
+    :returns: :class:`~optimization.Problem` object
     """
 <<<<<<< HEAD
 
@@ -203,6 +214,7 @@ def create_problem(power_system,times):
 =======
 =======
     
+<<<<<<< HEAD
 >>>>>>> added create_objective method across opt obj classes. need to test.
     for nm,v in variables.items(): prob.add_variable(v)
     prob.add_objective(objective)
@@ -235,6 +247,13 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
 >>>>>>> moved savestage() meth. to results. added wallclock timer display for multistage problems. added write_last_stage_status call for debugging multistage fails.
 =======
 
+=======
+    for v in variables.values(): prob.add_variable(v)
+    for c in constraints.values(): prob.add_constraint(c)
+    prob.add_objective(objective)
+    return prob
+
+>>>>>>> documentation overhaul - up to schedule
 def solve_multistage(power_system,times,datadir,
                               interval_hours=None,
                               stage_hours=config.default_hours_commitment,
@@ -243,19 +262,20 @@ def solve_multistage(power_system,times,datadir,
                               showclock=True):
 >>>>>>> fix for multistage with rbeakpoint option
     """
-    Create a multi-stage power systems optimization problem.
+    Solve a rolling or multi-stage power systems optimization problem.
     Each stage will be one optimization run. A stage's final
     conditions will be the next stage's initial condition.
-    Multi-stage problems are generally used for UCs over many days.
     
-    :param buses: list of :class:`~powersystems.Bus` objects
-    :param lines: list of :class:`~powersystems.Line` objects
-    :param times: :class:`~schedule.Timelist` object
-    :param interval_hours: define the number of hours per interval
-    :param stage_hours: define the number of hours per stage (excluding overlap)
-    :param overlap_hours: number of hours that stages overlap
+    :param power_system: :class:`~powersystems.PowerSystem` object
+    :param datadir: directory of spreadsheets 
+    :param times: :class:`~schedule.Timelist` object. Will be split up into stages
+    :param interval_hours: number of hours per interval
+    :param stage_hours: number of hours per stage (e.g. run one commitment every stage_hours)
+    :param overlap_hours: number of hours that stages overlap (e.g. run a 36hr commitment every 24hrs)
+    :param writeproblem: save the formulation of each stage to a file
+    :param showclock: show the current system time at the start of each stage
     
-    :returns: a list of :class:`~optimization.Problem` objects (one per stage)
+    :returns: a list of :class:`~results.Solution_UC` objects (one per stage)
     :returns: a list of :class:`~schedule.Timelist` objects (one per stage)
     
     """

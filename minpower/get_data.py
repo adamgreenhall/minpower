@@ -1,8 +1,9 @@
 """
-Get data from csv files and parse it into lists of power systems class instances
-(:class:`~powersystems.Generator`, :class:`~powersystems.Line`, and :class:`~powersystems.Load`). 
-Create lists of :class:`~powersystems.Bus` and :class:`~powersystems.Line` instances
-from the information found in the data.
+Get data from spreadsheet files and parse it into 
+:class:`~powersystems.Generator`, :class:`~powersystems.Load`,
+:class:`~powersystems.Bus`, and :class:`~powersystems.Line` objects.
+Also extract the time information and create a :class:`~schedule.Timelist`
+object.
 """
 
 import powersystems
@@ -52,7 +53,10 @@ def parsedir(datadir='.',
         (not required for ED,OPF problems. Defaults will be used
         for UC problems if not specified.)
     
-    :returns: generators,loads,lines,times (lists of objects)
+    :returns: generators, list of :class:`~powersystems.Generator` objects 
+    :returns: loads, list of :class:`~Load` objects
+    :returns: lines, list of :class:`~powersystems.Line` objects
+    :returns: times, list of :class:`~schedule.Timelist` object
     """
     if not os.path.isdir(datadir): raise OSError('data directory "{d}" does not exist'.format(d=datadir) )
     [file_gens,file_loads,file_lines,file_init]=[joindir(datadir,filename) for filename in (file_gens,file_loads,file_lines,file_init)]
@@ -76,7 +80,11 @@ def parsedir(datadir='.',
     return generators,loads,lines,times
 
 def setup_initialcond(filename,generators,times):
-    '''read initial conditions from spreadsheet and add information to each :class:`powersystems.Generator`.'''
+    '''
+    Read initial conditions from a spreadsheet and
+    add information to each :class:`~powersystems.Generator` 
+    object.
+    '''
     if len(times)<=1: return generators #for UC,ED no need to set initial status
     validFields=fields_initial.keys()
     
@@ -165,16 +173,17 @@ def build_class_list(filename,model,field_attr_map,times=None):
     return classL
 
 def setup_times(file_gens,file_loads,datadir):
-    """ Create list of :class:`~schedule.Time` objects 
-        from the schedule files. If there are no schedule
-        files (as in ED,OPF), create just a single
-        :class:`~schedule.Time` instance.
-        
-        :param file_gens:    spreadsheet of generator data
-        :param file_loads:   spreadsheet of load data
-        :param datadir:      directory of data
-        
-        :returns: a :class:`~schedule.Timelist` object
+    """ 
+    Create list of :class:`~schedule.Time` objects 
+    from the schedule files. If there are no schedule
+    files (as in ED,OPF), create just a single
+    :class:`~schedule.Time` instance.
+    
+    :param file_gens:    spreadsheet of generator data
+    :param file_loads:   spreadsheet of load data
+    :param datadir:      directory of data
+    
+    :returns: a :class:`~schedule.Timelist` object
     """
 
 
@@ -229,8 +238,3 @@ def setup_times(file_gens,file_loads,datadir):
 >>>>>>> improved error messages for schedule errors
     return times
 
-if __name__ == "__main__": 
-    if len(sys.argv)==1: parsedir()
-    else: 
-        datadir=sys.argv[1]
-        parsedir(datadir=datadir)

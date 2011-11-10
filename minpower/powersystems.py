@@ -1,7 +1,9 @@
 """
-Defines models for power systems concepts: 
-:class:`~powersystems.Bus`, :class:`~powersystems.Generator`, 
-:class:`~powersystems.Line`, and :class:`~powersystems.Load`.
+Defines models for power systems components, including 
+:class:`~powersystems.PowerSystem`, :class:`~powersystems.Bus`, 
+:class:`~powersystems.Generator`, :class:`~powersystems.Load`,
+and  :class:`~powersystems.Line`. Each of these objects inherits
+an optimization framework from :class:`~optimization.OptimizationObject`.
 """
 <<<<<<< HEAD
 import bidding
@@ -67,17 +69,20 @@ from commonscripts import hours,drop_case_spaces,flatten,getattrL,unique,update_
 import config, bidding
 from schedule import FixedSchedule
 import logging
+<<<<<<< HEAD
 >>>>>>> add non-controllable gen to ED. added remote script- not yet working.
 
 #from dateutil.relativedelta import relativedelta
+=======
+>>>>>>> documentation overhaul - up to schedule
 import numpy 
 
 def makeGenerator(kind='generic',**kwargs):
     """
     Create a :class:`~powersystems.Generator` object 
     (or a :class:`~powersystems.Generator_nonControllable`
-    object depending on the kind). First parses defaults
-    from :mod:`config`, depending on the kind.
+    object depending on the kind). Set defaults
+    depending on the kind (default values come from :mod:`config`).
     
     :param kind: define the kind of generator (all 
         kinds are defined in :data:`config.generator_kinds`)
@@ -125,7 +130,7 @@ def makeLoad(kind='varying',**kwargs):
     """
     Create a :class:`~powersystems.Load` object (if a power 
     :class:`~schedule.Schedule` is specified) or a
-cost_load_sheddingrsystems.Load_Fixed` object (if a single
+    cost_load_sheddingrsystems.Load_Fixed` object (if a single
     power value :attr:`P` is specified).
     """
     if 'P' in kwargs.keys(): return Load_Fixed(kind=kind, **kwargs)
@@ -179,10 +184,12 @@ class Generator(OptimizationObject):
         '''on/off status at time'''
         return self.get_variable('status',time)
     def status_change(self,t,times): 
+        '''is the unit changing status between t and t-1'''
         if t>0: previous_status=self.status(times[t-1])
         else:   previous_status=self.status(times.initialTime)
         return self.status(times[t]) - previous_status
     def power_change(self,t,times):
+        '''change in output between power between t and t-1'''
         if t>0: previous_power=self.power(times[t-1])
         else:   previous_power=self.power(times.initialTime)
         return self.power(times[t])-previous_power
@@ -229,6 +236,7 @@ class Generator(OptimizationObject):
             return h
     
     def set_initial_condition(self,time=None, P=None, u=True, hoursinstatus=100):
+        '''Set the initial condition at time.'''
         if P is None: P=(self.Pmax-self.Pmin)/2 #set default power as median output
         self.add_variable('status', 'u', time, fixed_value=u)
         self.add_variable('power', 'P', time, fixed_value=P*u) #note: this eliminates ambiguity of off status with power non-zero output
@@ -245,7 +253,10 @@ class Generator(OptimizationObject):
         self.cost_model=bidding.makeModel(min_input=self.Pmin, max_input=self.Pmax,input_name='Pg',output_name='C',**costinputs)
 
     def create_variables(self,times):
-        
+        '''
+        Create the optimization variables for a generator over all times. 
+        Also create the :class:`bidding.Bid` objects.
+        '''
         commitment_problem= len(times)>1 or self.dispatch_decommit_allowed
         for time in times:
             self.add_variable('power','P',time,low=0,high=self.Pmax)
@@ -478,7 +489,10 @@ class Generator(OptimizationObject):
 
 
 class Generator_nonControllable(Generator):
-    """ Describes a generator with a fixed schedule."""
+    """
+    Describes a generator with a fixed schedule.
+    The scedule is defined by a :class:`~schedule.Schedule` object.
+    """
     def __init__(self,schedule=None,
         fuelcost=1,costcurvestring='0',
         mustrun=False,
@@ -561,6 +575,8 @@ class Load(OptimizationObject):
     :param schedule: :class:`~schedule.Schedule` object
       (generally created automatically from file
       by :meth:`get_data.build_class_list`)
+    :param shedding_allowed: if this load is allowed to be turned off 
+    :param cost_shedding: the price of shedding 1MWh of this load
     """
     def __init__(self,kind='varying',name='',index=None,bus=None,schedule=None,
                  shedding_allowed=False,
@@ -843,12 +859,24 @@ class Load_Fixed(Load):
     
 >>>>>>> set all system level parameters as attributes of relevant objects within powersystem init
 class PowerSystem(OptimizationObject):
+    '''
+    Power systems object which is the container for all other components.
+    
+    :param generators: list of :class:`~powersystem.Generator` objects
+    :param loads: list of :class:`~powersystem.Load` objects
+    :param lines: list of :class:`~powersystem.Line` objects
+    :param num_breakpoints: number of break points to use in linearization
+      of a generator's bid (or cost) polynomials (equal to number of segments + 1)
+    :param load_shedding_allowed: flag - whether load shedding is allowed
+    :param cost_load_shedding: price of load shedding [$/MWh]
+    :param dispatch_decommit_allowed: flag - if generators can be decommitted during dispatch 
+    '''
     def __init__(self,
                  generators,loads,lines=None,
                  num_breakpoints=config.default_num_breakpoints,
                  load_shedding_allowed=False,
                  cost_load_shedding=config.cost_load_shedding,
-                 spinning_reserve_requirement=0,
+                 #spinning_reserve_requirement=0,
                  dispatch_decommit_allowed=False,
                  ):
         update_attributes(self,locals(),exclude=['generators','loads','lines']) #load in inputs
@@ -872,20 +900,22 @@ class PowerSystem(OptimizationObject):
             except AttributeError: pass #gen has no cost model
             
     def set_load_shedding(self,is_allowed):
+        '''set system mode for load shedding'''
         for bus in self.buses:
             for load in bus.loads:
                 load.shedding_allowed=is_allowed 
                 load.cost_shedding=self.cost_load_shedding
              
     def make_buses_list(self,loads,generators):
-        """Create list of :class:`powersystems.Bus` objects 
-            from the load and generator bus names. Otherwise
-            (as in ED,UC) create just one (system)
-            :class:`powersystems.Bus` instance.
-            
-            :param loads: a list of :class:`powersystems.Load` objects
-            :param generators: a list of :class:`powersystems.Generator` objects
-            :returns: a list of :class:`powersystems.Bus` objects
+        """
+        Create list of :class:`powersystems.Bus` objects 
+        from the load and generator bus names. Otherwise
+        (as in ED,UC) create just one (system)
+        :class:`powersystems.Bus` instance.
+        
+        :param loads: a list of :class:`powersystems.Load` objects
+        :param generators: a list of :class:`powersystems.Generator` objects
+        :returns: a list of :class:`powersystems.Bus` objects
         """
         busNameL=[]
         busNameL.extend(getattrL(generators,'bus'))
@@ -904,7 +934,7 @@ class PowerSystem(OptimizationObject):
         return buses
     def create_admittance_matrix(self,buses,lines):
         """
-        Creates and contains the admittance matrix (B), 
+        Creates the admittance matrix (B), 
         with elements = total admittance of line from bus i to j.
         Used in calculating the power balance for OPF problems.
         
@@ -923,6 +953,7 @@ class PowerSystem(OptimizationObject):
             self.Bmatrix[i,i]=-1*sum(self.Bmatrix[i,:])
             
     def loads(self): return flatten(bus.loads for bus in self.buses)
+    def generators(self): return flatten(bus.generators for bus in self.buses)
     def create_variables(self,times):
         for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
@@ -936,8 +967,8 @@ class PowerSystem(OptimizationObject):
         #a system reserve constraint would go here
         return self.all_constraints(times)
     
-def power_to_energy(P,time):
-    return P*time.intervalhrs
+#def power_to_energy(P,time):
+#    return P*time.intervalhrs
     
 <<<<<<< HEAD
 <<<<<<< HEAD

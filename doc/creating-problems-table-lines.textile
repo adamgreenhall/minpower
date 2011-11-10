@@ -2,5 +2,5 @@
 |name|line name| | |
 |to|name of bus where line originates| | |
 |from|name of bus where line terminates| | |
-|reactance|total electrical reactance of line|0.05|Ohms|
+|reactance|total electrical reactance of line|0.05|p.u.|
 |P max|maximum power limit of line| |MW|

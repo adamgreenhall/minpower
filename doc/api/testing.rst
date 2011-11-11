@@ -1,7 +1,7 @@
 Testing
 ===========
 
-The tests directory contains unit tests and a directory structure full of example cases (for integration testing) as well as modules for unit testing a series of related constraints individually.
+The :mod:`test` subpackage has both unit tests (of individual constraints) and a directory structure full of example cases (for integration testing).
 
 :mod:`tests.testall`
 ^^^^^^^^^^^^^^^^^^^^^^

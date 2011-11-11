@@ -8,6 +8,11 @@
 @import "compass"
 @import "compass/reset"
 
+@mixin mono
+  font-family: 'Cousine', monospace
+  
+
+
 body
   font-family: "Museo Sans", Verdana, sans
   font-size: 110%
@@ -44,10 +49,10 @@ h3
   font-size: 140%
 
 tt
-  font-family: 'Cousine', monospace
+  +mono
   font-size: medium
   &.descname
-    font-family: 'Cousine', monospace
+    +mono
     font-size: medium
 
 a
@@ -60,10 +65,6 @@ a
     border-bottom: 0px
   &.image-reference
     border-bottom-width: 0px
-  &.viewcode-link, &.viewcode-back
-    color: LightSlateGray
-    text-decoration: none
-    border: none
   &.reference.internal em // dont italicize links to pages w/in sphinx  
     font-style: normal
   &.headerlink
@@ -80,7 +81,7 @@ pre, .admonition
 
 
 pre
-  font-family: 'Cousine', monospace
+  +mono
   font-size: 80%
   background: CornSilk
   font-size: medium
@@ -226,3 +227,41 @@ table.docutils
   td
     padding: 10px
   +alternating-rows-and-columns(#EEE,#FFF,#EEE)
+
+table.docutils.field-list
+  margin-top: 30px
+  th.field-name
+    display: block
+    font-weight: bold
+  td.field-body
+    display: block
+    margin-left: 20px
+    strong
+      +mono
+      color: dimgray
+
+tt.descname //function name
+  font-weight: bold
+
+dl
+  dd
+    margin-left: 20px
+
+dl.function //function inputs
+  em
+    +mono
+    color: dimgray
+dl.class //class inputs
+  em
+    +mono
+    color: dimgray
+dl.method //class inputs
+  em
+    +mono
+    color: dimgray
+    
+.viewcode-link //&.viewcode-back
+  color: LightSlateGray
+  text-decoration: none
+  border: none
+  font-size: small

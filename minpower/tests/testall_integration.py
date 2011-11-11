@@ -1,12 +1,12 @@
 """ 
-Testing for minpower development. 
-Runs solve.problem() on all directories in ./tests
-These tests include ED,OPF,UC tests designed to ensure that
-inputs parse correctly, constraints are active, 
-and vizualizations and solution output work.
+Integration testing. Runs solve.problem() on all directories 
+in the tests subpackage directory. These tests include ED,OPF,UC
+tests designed to ensure that inputs parse correctly, 
+constraints are active, and vizualizations and solution
+output work.
 
 Chances are good that if you make major modifications 
-to the minpower code you will break something here. 
+to the Minpower code you will break something here. 
 Just fix it before you push your change.
 """
 

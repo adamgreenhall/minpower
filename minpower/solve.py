@@ -51,7 +51,7 @@ def problem(datadir='.',
     power_system=powersystems.PowerSystem(generators,loads,lines,                 
                 num_breakpoints=num_breakpoints,
                 load_shedding_allowed=False,
-                spinning_reserve_requirement=0,
+                #spinning_reserve_requirement=0,
                 dispatch_decommit_allowed=False,)
     
     if times.spanhrs<=hours_commitment:

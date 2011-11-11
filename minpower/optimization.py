@@ -629,11 +629,16 @@ class OptimizationObject(object):
     def get_constraint(self,name,time): return self.constraints[self._t_id(name,time)]
     
     def add_components(self,objL,name):
+        '''Add a child :class:`~optimization.OptimizationObject` to this object.''' 
         self.children[name]=objL 
         setattr(self,name,objL)
-    def add_component(self,obj,name,time): self.children[self._t_id(name,time)]=obj    
-    def get_component(self,name,time=None): return self.children[self._t_id(name,time)]
-    def get_cost(self,times): return self.objective+sum([child.get_cost(times) for child in self.children])
+    def add_component(self,obj,name,time): 
+        '''Add a child :class:`~optimization.OptimizationObject` dependent on time to this object.'''
+        self.children[self._t_id(name,time)]=obj    
+    def get_component(self,name,time=None): 
+        '''Get a child :class:`~optimization.OptimizationObject` dependent on time from this object.'''
+        return self.children[self._t_id(name,time)]
+    #def get_cost(self,times): return self.objective+sum([child.get_cost(times) for child in self.children])
     def iden(self,time):
         '''
         Individual class defined.

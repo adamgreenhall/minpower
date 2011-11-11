@@ -440,19 +440,31 @@ dl.function em {
   color: dimgray;
 }
 
+/* line 254, default.sass */
+dl.class {
+  background: FloralWhite;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -o-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -khtml-border-radius: 10px;
+  border-radius: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
 /* line 255, default.sass */
 dl.class em {
   font-family: "Cousine", monospace;
   color: dimgray;
 }
 
-/* line 259, default.sass */
+/* line 264, default.sass */
 dl.method em {
   font-family: "Cousine", monospace;
   color: dimgray;
 }
 
-/* line 263, default.sass */
+/* line 268, default.sass */
 .viewcode-link {
   color: LightSlateGray;
   text-decoration: none;

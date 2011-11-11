@@ -449,8 +449,9 @@ dl.class {
   -ms-border-radius: 10px;
   -khtml-border-radius: 10px;
   border-radius: 10px;
-  margin-left: 10px;
-  margin-right: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 5px;
 }
 /* line 255, default.sass */
 dl.class em {
@@ -458,13 +459,13 @@ dl.class em {
   color: dimgray;
 }
 
-/* line 264, default.sass */
+/* line 265, default.sass */
 dl.method em {
   font-family: "Cousine", monospace;
   color: dimgray;
 }
 
-/* line 268, default.sass */
+/* line 269, default.sass */
 .viewcode-link {
   color: LightSlateGray;
   text-decoration: none;

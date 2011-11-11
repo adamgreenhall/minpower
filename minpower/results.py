@@ -18,6 +18,7 @@ import matplotlib.pyplot as plot
 def classify_problem(times,power_system):
     '''
     Classify the type of problem: ED, OPF, UC, or SCUC.
+    
     :param times: a :class:`~schedule.Timelist` object
     :param power_system: a :class:`~powersystems.PowerSystem` object
     ''' 
@@ -30,6 +31,7 @@ def classify_problem(times,power_system):
 def make_solution(power_system,times,**kwargs):
     '''
     Create a :class:`solution.Solution` object for a power system over times.
+    
     :param times: a :class:`~schedule.Timelist` object
     :param power_system: a :class:`~powersystems.PowerSystem` object    
     '''

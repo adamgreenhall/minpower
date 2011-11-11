@@ -10,11 +10,8 @@ The :mod:`test` subpackage has both unit tests (of individual constraints) and a
     :members:
     :undoc-members:    
 
+:mod:`tests.testall_integration`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. 
-.. :mod:`tests.testall_integration`
-.. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. 
-.. .. automodule:: tests.testall_integration
-..     :members:
-..     :undoc-members:    
+.. automodule:: tests.testall_integration
+    :members:

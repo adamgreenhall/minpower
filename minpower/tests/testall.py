@@ -1,7 +1,12 @@
 """
-Run all of the unit tests, currently: 
-bidding, generation, opf, solvers, unit commitment
- 
+Run all of the unit tests in  
+    :mod:`tests.solvers`,
+    :mod:`tests.generators`,
+    :mod:`tests.unit_commitment`,
+    :mod:`tests.opf`, and
+    :mod:`tests.bidding`
+    
+Most unit tests are designed to ensure that a single constraint is working.  
 This module uses the Attest package testing framework.
 """
 

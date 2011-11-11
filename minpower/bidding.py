@@ -25,13 +25,17 @@ import re
 
 class Bid(OptimizationObject):
     """
-    Descibes a bid as modeled by :attr:model. (Bids variables change
-      with time while :class:`~bidding.PWLmodel` objects do not store
-      time dependent information.)
+    Descibes a bid as modeled by :attr:model. Bids contain variables
+    which are dependent on time while :class:`~bidding.PWLmodel` objects
+    do not store time dependent information.
     
-    :param model: model for the bid (currently just supports
-      :class:`~bidding.PWLmodel` objects).
-    :param iden: identifying string for the bidder
+    :param model: model for the bid, either :class:`~bidding.PWLmodel`,
+        :class:`~bidding.convexPWLmodel`, or :class:`~bidding.LinearModel`  
+    :param time: :class:`~schedule.Time` object bid takes place over 
+    :param owner_iden: identifying string for the bidder
+    :param time_iden: identifying string for the time
+    :param input_var: input variable for owner at time period of bid
+    :param status_var: status of owner at time period of bid
     """
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -82,12 +86,21 @@ class Bid(OptimizationObject):
         self.init_optimization()
         self.variables['input'] = input_var
         self.variables['status']= status_var 
+<<<<<<< HEAD
     def output_true(self,input_val): return self.model.output_true(input_val)
     def output_incremental(self,input_val):  return self.model.output_incremental(input_val)
 <<<<<<< HEAD
 >>>>>>> refactored powersystems. moving on to bidding
     def plotDeriv(self,**kwargs): return self.model.plotDeriv(**kwargs)
 =======
+=======
+    def output_true(self,input_val): 
+        '''true output value of bid'''
+        return self.model.output_true(input_val)
+    def output_incremental(self,input_val):
+        '''incremental output value of bid'''
+        return self.model.output_incremental(input_val)
+>>>>>>> doc overhaul bidding
     def plot_derivative(self,**kwargs): return self.model.plot_derivative(**kwargs)
 >>>>>>> first draft of refactor
     def plot(self,P=None,filename=None,showPW=False):
@@ -96,21 +109,27 @@ class Bid(OptimizationObject):
         return plotted
     
     def create_variables(self):
+        '''Call the :attr:model and get any additional variables from it.'''
         self.variables.update(self.model.get_time_variables(self.variables['input'],
                                                             self.variables['status'],
                                                             self.owner_iden,self.time_iden))
     def create_constraints(self):
-        '''Create the constraints for a bid by calling its 
-        model.constraint() method.'''
+        '''
+        Create the constraints for a bid by calling its model's :meth:`get_time_constraint` method.
+        :return: a dictionary of the bid's constraints 
+        '''
         constraintD=self.model.get_time_constraints(self.variables,self.owner_iden,self.time_iden)
         for nm,expr in constraintD.items(): self.add_constraint(nm,self.time,expr)
         return self.constraints
-    def output(self): return self.model.output(self.variables,self.owner_iden,self.time_iden)   
+    def output(self): 
+        '''The output of the bid, given an input.'''
+        return self.model.output(self.variables,self.owner_iden,self.time_iden)   
     def __str__(self): return 'bid{t}'.format(t=str(self.time))
     def iden(self,*args): return 'bid{t}'.format(t=str(self.time))
 
 
 def makeModel(polyText,multiplier=1, **kwargs):
+    '''Create a model for a polynomial. Decide which model to use based on the polynomial.'''
     polyCurve=multiplier * parsePolynomial(polyText)
     if isLinear(polyCurve):
         return LinearModel(polyText,multiplier,**kwargs)
@@ -123,7 +142,7 @@ def makeModel(polyText,multiplier=1, **kwargs):
     
 class PWLmodel(object):
     """
-    Describes a piecewise linear model of a polynomial curve.
+    A piecewise linear model of a polynomial.
     
     :param polyText: a string defining the polynomial 
       (see :meth:`~bidding.parsePolynomial` for more on parsing)
@@ -144,6 +163,7 @@ class PWLmodel(object):
         update_attributes(self,locals(),exclude=['polyText','multiplier'])
         self.poly_curve=multiplier * parsePolynomial(polyText) #parse curve
     def do_segmentation(self):
+        '''Create the segmentation of the polynomial with num_breakpoints-1 segments.'''
         if isLinear(self.poly_curve): self.num_breakpoints=2 #linear models only need 2 breakpoints
         inDiscrete=linspace(self.min_input, self.max_input, 1e6) #fine discretization of the curve
         outDiscrete=polyval(self.poly_curve,inDiscrete)
@@ -279,6 +299,11 @@ class PWLmodel(object):
 
 
 class convexPWLmodel(PWLmodel):
+    '''
+    A piecewise linear model for a monotonically increasing polynomial.
+    This formulation results in no additional binary variables (in constrast to the more 
+    general :class:`~bidding.PWLmodel`). A objective minimization problem is assumed.
+    '''
     def __init__(self,
         polyText='2+10P+0.1P^2',multiplier=1,
         min_input=0,max_input=10000,
@@ -353,6 +378,11 @@ class convexPWLmodel(PWLmodel):
         return constraints
     def output(self,variables,iden_owner,iden_time): return variables['bidCost_'+iden_owner+iden_time]
 class LinearModel(PWLmodel):
+    '''
+    A simple linear model for a linear polynomial.
+    This class exists to keep the calling conventions the same 
+    as those in :class:`~bidding.PWLmodel`.
+    '''    
     def __init__(self,
         polyText='2+10*P',multiplier=1,
         min_input=0,max_input=10000,
@@ -432,7 +462,7 @@ def parsePolynomial(s):
     return poly1d(res,variable=varLetter)
 
 def find_intersection(A,B):
-    '''Get the intersection point of two line objects'''
+    '''Get the intersection point of two line functions'''
     #http://en.wikipedia.org/wiki/Line-line_intersection
     x1,x2=0,5
     x3,x4=0,5
@@ -443,6 +473,7 @@ def find_intersection(A,B):
     y=((x1*y2-y1*x2)*(y3-y4)-(y1-y1)*(x3*y4-y3*x4))/((x1-x2)*(y3-y4)-(y1-y2)*(x3-x4))
     return (x,y)
 def get_slope(line):
+    '''Get the intersection a line function'''
     x1,x2=0,1
     y1,y2=line(x1),line(x2)
     m=(y2-y1)/(x2-x1)

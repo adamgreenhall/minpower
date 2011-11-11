@@ -48,7 +48,7 @@ class Time(object):
         return unicode(self.Start)+' to '+unicode(self.End)
     def __repr__(self): return repr(self.Start)
 def makeTimes(datetimeL):
-    '''convert list of datetime objects to Timelist() class'''
+    '''convert list of :py:class:`datetime.datetime` objects to :class:`~schedule.Timelist` object'''
     S=datetimeL[0]
     I=datetimeL[1] - S #interval
     E=datetimeL[-1] + I #one past the last time
@@ -69,16 +69,16 @@ class Timelist(object):
     """
     A container for :class:`schedule.Time` objects.
     
-    :param inittuple: a tuple, list, or existing :class:`~schedule.Timelist` object
+    :param list_of_times: a tuple, list, or existing :class:`~schedule.Timelist` object
     :param Start: a :py:class:`datetime.datetime` object
     :param End: a :py:class:`datetime.datetime` object
     :param interval: a :py:class:`datetime.timedelta` object
     
-    If `Start`, `End`, `interval` are specified as 
-    :py:class:`datetime.datetime` and :py:class:`datetime.timedelta` 
-    objects then a uniformly spaced list of times is generated.
+    If ``Start``, ``End``, ``interval`` are specified as 
+    then a uniformly spaced list of times is generated. 
+    Otherwise the list is created from ``list_of_times``.
     """
-    def __init__(self, inittuple=None,initialTime=None,Start=None,End=None,interval=None):
+    def __init__(self, list_of_times=None,initialTime=None,Start=None,End=None,interval=None):
         if Start and End and interval:
             steps=hours(End-Start)/hours(interval)
             if steps==int(steps): steps=int(steps)
@@ -86,10 +86,10 @@ class Timelist(object):
             self.times=[Time(Start=Start+i*interval,interval=interval,index=i) for i in range(steps)]
         else:                 
             self.times = ()
-            if inittuple is not None:
-                if type(inittuple) == type(self.times): self.times = inittuple
-                elif isinstance(inittuple, Timelist): self.times = inittuple.times[:]
-                else: self.times = tuple(inittuple)
+            if list_of_times is not None:
+                if type(list_of_times) == type(self.times): self.times = list_of_times
+                elif isinstance(list_of_times, Timelist): self.times = list_of_times.times[:]
+                else: self.times = tuple(list_of_times)
         
         interval=self.times[0].interval
         

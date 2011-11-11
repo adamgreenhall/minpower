@@ -53,10 +53,10 @@ def parsedir(datadir='.',
         (not required for ED,OPF problems. Defaults will be used
         for UC problems if not specified.)
     
-    :returns: generators, list of :class:`~powersystems.Generator` objects 
-    :returns: loads, list of :class:`~Load` objects
-    :returns: lines, list of :class:`~powersystems.Line` objects
-    :returns: times, list of :class:`~schedule.Timelist` object
+    :return generators:, list of :class:`~powersystems.Generator` objects 
+    :return loads:, list of :class:`~Load` objects
+    :return lines:, list of :class:`~powersystems.Line` objects
+    :return times:, list of :class:`~schedule.Timelist` object
     """
     if not os.path.isdir(datadir): raise OSError('data directory "{d}" does not exist'.format(d=datadir) )
     [file_gens,file_loads,file_lines,file_init]=[joindir(datadir,filename) for filename in (file_gens,file_loads,file_lines,file_init)]

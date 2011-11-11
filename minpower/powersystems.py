@@ -220,7 +220,7 @@ class Generator(OptimizationObject):
         '''change in cost with change in power at time (based on exact bid polynomial).'''
         return self.bid(time).output_incremental(self.power(time)) if value(self.status(time)) else None
     def bid(self,time):
-        '''class:`~bidding.Bid` object for time'''
+        ''':class:`~bidding.Bid` object for time'''
         return self.get_component('bid', time) 
     def getstatus(self,t,times): return dict(u=value(self.status(t)),P=value(self.power(t)),hoursinstatus=self.gethrsinstatus(t,times))
     def plot_cost_curve(self,P=None,filename=None): self.cost_model.plot(P,filename)

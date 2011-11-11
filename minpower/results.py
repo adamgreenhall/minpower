@@ -16,6 +16,11 @@ import matplotlib
 import matplotlib.pyplot as plot
 
 def classify_problem(times,power_system):
+    '''
+    Classify the type of problem: ED, OPF, UC, or SCUC.
+    :param times: a :class:`~schedule.Timelist` object
+    :param power_system: a :class:`~powersystems.PowerSystem` object
+    ''' 
     if not power_system.lines and len(times)==1: kind='ED'
     elif len(times)==1: kind='OPF'
     elif not power_system.lines: kind='UC'
@@ -23,15 +28,22 @@ def classify_problem(times,power_system):
     return kind
 
 def make_solution(power_system,times,**kwargs):
+    '''
+    Create a :class:`solution.Solution` object for a power system over times.
+    :param times: a :class:`~schedule.Timelist` object
+    :param power_system: a :class:`~powersystems.PowerSystem` object    
+    '''
     problem_type=dict(ED=Solution_ED, OPF=Solution_OPF, UC=Solution_UC, SCUC=Solution_SCUC)
     kind=classify_problem(times,power_system)
     return problem_type[kind](power_system,times,**kwargs)
 
 def make_multistage_solution(power_system,*args,**kwargs):
+    '''Create a multi stage solution object.'''
     if power_system.lines: logging.warning('no visualization for multistage SCUC yet')
     return Solution_UC_multistage(power_system,*args,**kwargs)
 
 class Solution(object):
+<<<<<<< HEAD
 <<<<<<< HEAD
     def __init__(self,power_system,times,datadir='.',problem=None):
         power_system.update_variables()
@@ -63,6 +75,13 @@ class Solution(object):
         self.solved     =problem.solved
 >>>>>>> redo of results. now problem with duals
 =======
+=======
+    '''
+    Solution information template for a power system over times.
+    Each problem type has its own class for visualization and 
+    spreadsheet output, e.g. :class:`~solution.Solution_ED`. 
+    '''
+>>>>>>> doc overhaul bidding
     def __init__(self,power_system,times,problem,datadir='.'):
         update_attributes(self,locals(),exclude=['problem'])
         self.power_system.update_variables()
@@ -131,16 +150,22 @@ class Solution(object):
     def generators(self): return flatten( [[gen for gen in bus.generators] for bus in self.buses()] )
     def loads(self): return flatten( [[ld for ld in bus.loads] for bus in self.buses()] )
     def get_values(self,kind='generators',attrib='power',time=None):
+        '''Get the attributes of all objects of a certain kind at a given time.'''
         method={'generators':self.generators,'loads':self.loads,'lines':self.lines,'buses':self.buses}
         if time is not None: return [getattr(obj, attrib)(time) for obj in method[kind]()]
         else: return [getattr(obj, attrib) for obj in method[kind]()]
         
     def savevisualization(self,filename=None):
+<<<<<<< HEAD
 >>>>>>> major cleanup of results.py. still need to tackle the multistage commitments
+=======
+        '''Save the visualization to a file'''
+>>>>>>> doc overhaul bidding
         if filename is None: plot.show()
         else: plot.savefig(joindir(self.datadir,filename),bbox_inches='tight')
         plot.close()
     def show(self):
+        '''Display the solution information to the terminal'''
         out=['']
         out.extend(['Solution information','-'*10,''])
         for t in self.times:
@@ -229,7 +254,7 @@ class Solution_ED(Solution):
     def info_lines(self,t): return []
     def info_buses(self,t): return []
     def vizualization(self,show_cost_also=False):
-        ''' economic dispatch visualization '''
+        ''' economic dispatch visualization of linearized incremental cost'''
         t=self.times[0]
         price=self.buses()[0].price(t)
         generators,loads=self.generators(),self.loads()
@@ -290,6 +315,7 @@ class Solution_ED(Solution):
             
             self.savevisualization(filename='dispatch-cost.png')        
     def saveCSV(self,filename='dispatch.csv'):
+        '''economic dispatch generator solution values in spreadsheet form'''
         t=self.times[0]
         generators=self.generators()
         
@@ -301,6 +327,7 @@ class Solution_ED(Solution):
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))        
 class Solution_OPF(Solution): 
     def vizualization(self,filename='powerflow.png'): 
+        '''power flow visualization'''
         import networkx as nx
         buses,lines,t=self.buses(),self.lines(),self.times[0]
         
@@ -325,7 +352,8 @@ class Solution_OPF(Solution):
         nx.draw_networkx_edges(G,edgelist=atLimLines,edge_color='r',pos=pos,width=Plines,alpha=0.5)
         self.savevisualization(filename)
         
-    def saveCSV(self,filename='powerflow'): 
+    def saveCSV(self,filename='powerflow'):
+        '''OPF generator and line power values in spreadsheet form''' 
         t=self.times[0]
         
         fields,data=[],[]
@@ -346,7 +374,8 @@ class Solution_OPF(Solution):
 class Solution_UC(Solution):
     def info_lines(self,t): return []
     def info_buses(self,t): return []
-    def saveCSV(self,filename='commitment.csv'): 
+    def saveCSV(self,filename='commitment.csv'):
+        '''generator power values and statuses for unit commitment'''
         times=self.times
         bus=self.buses()[0]
         fields,data=[],[]
@@ -365,6 +394,7 @@ class Solution_UC(Solution):
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))
     
     def vizualization(self,filename='commitment.png',withPrices=True):
+        '''generator output visualization for unit commitment'''
         times,generators,loads=self.times,self.generators(),self.loads()
         if len(generators)<=5: fewunits=True
         else: fewunits=False
@@ -472,7 +502,7 @@ class Solution_UC(Solution):
                               ( sum(value(gen.status(t)) for t in times), #committed hrs
                                sum(value(gen.power(t)) for t in times) #energy
                                ))
-            colors=colormap(len(generators),colormapName='Blues')
+            colors=_colormap(len(generators),colormapName='Blues')
             for g,gen in enumerate(generators):
                 Pgen=[value(gen.power(t)) for t in times.wInitial]
                 gensPlotted,stackBottom=addtostackplot(ax,T,Pgen,colors[g], gensPlotted,stackBottom)
@@ -548,7 +578,11 @@ class Solution_SCUC(Solution_UC):
     
     
 class Solution_UC_multistage(Solution_UC):
-    #def __init__(self,problemsL,times,stageTimes,buses,datadir='.',overlap_hours=0):
+    '''
+    Muti-stage unit commitment. Each stage represents one optimization problem.
+    Each element of the list :param:stage_solutions is a :class:`~results.Solution_UC` object.
+    
+    '''
     def __init__(self,power_system,stage_times,datadir,stage_solutions):
         update_attributes(self,locals(),exclude=['stage_solutions','stage_times'])
         self.times=Timelist(flatten([list(times.non_overlap_times) for times in stage_times]))
@@ -578,6 +612,7 @@ class Solution_UC_multistage(Solution_UC):
     def info_shedding(self):
         return ['total load shed={}MW'.format(self.load_shed) if self.load_shed>0 else '']
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 def get_stage_solution(problem,buses,times):
@@ -681,5 +716,8 @@ def write_last_stage_status(buses,stagetimes):
     writeCSV(fields,transpose(data),filename='stagestatus{}.csv'.format(t.End))          
 
 def colormap(numcolors,colormapName='gist_rainbow',mincolor=1):
+=======
+def _colormap(numcolors,colormapName='gist_rainbow',mincolor=1):
+>>>>>>> doc overhaul bidding
     cm = matplotlib.cm.get_cmap(colormapName)
     return [cm(1.*i/numcolors) for i in range(mincolor,numcolors+mincolor)]      

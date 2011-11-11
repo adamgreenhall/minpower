@@ -352,7 +352,8 @@ def solve_multistage(power_system,times,datadir,
         else: 
             #print stage_problem.status,stage_problem.statusText()
             stage_problem.write('infeasible-problem.lp')
-            results.write_last_stage_status(buses,t_stage)
+            try: stage_sln.saveCSV('last-stage-solved.csv')
+            except: logging.critical('could not write last stage solution to spreadsheet')
             msg='Infeasible problem - writing to .lp file for examination.'
             raise optimization.OptimizationError(msg)
     return stage_solutions,stage_times

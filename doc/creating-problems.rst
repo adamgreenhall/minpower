@@ -97,7 +97,7 @@ Lines
 | P max         | maximum power limit of line          |           | MW      |
 +---------------+--------------------------------------+-----------+---------+
 
-.. literalinclude:: ../minpower/tests/opf-3bus/lines.csv
+.. literalinclude:: ../minpower/tests/opf/lines.csv
 
 
 Schedules

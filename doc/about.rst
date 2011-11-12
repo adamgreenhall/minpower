@@ -57,7 +57,7 @@ Development is simple:
     #. Get on github and `fork minpower <http://github.com/adamgreenhall/minpower>`_
     #. Make it better
     #. Test it out (use  :mod:`tests.testall` and :mod:`tests.testall_integration`)
-    #. Make a pull request to get your version in
+    #. Make a `pull request <https://github.com/adamgreenhall/minpower/pulls>`_ to get your version in
 
 .. _license:
 

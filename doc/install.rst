@@ -12,7 +12,7 @@ Basic full installation:
 --------------
 For new-to-Python folks, install `ActivePython 2.7 <http://activestate.com/activepython/downloads>`_. It makes the installation of a bunch of scientific :abbr:`packages (add-ons in Python terms)` very easy - the way it should be. 
 
-For experienced Python users, `pip <http://www.pip-installer.org/>`_ will work just fine. 
+For experienced Python users, ``pip install minpower`` should work just fine. If that command doesn't work, it is probably a failure to build scipy/numpy from source - try downloading the pre-built binary for your system from `SciPy <http://www.scipy.org/Download>_.
 
 2. Get Minpower
 -----------------

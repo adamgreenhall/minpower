@@ -16,7 +16,7 @@ extensions = [
           'sphinx.ext.doctest',
           'sphinx.ext.intersphinx',
           'sphinx.ext.viewcode',
-
+          'sphinx.ext.mathjax',
           'matplotlib.sphinxext.mathmpl',
           'matplotlib.sphinxext.only_directives',
           'matplotlib.sphinxext.plot_directive',
@@ -26,7 +26,7 @@ extensions = [
           #'inheritance_diagram',
           #'numpydoc'
           ]
-extensions.append('mathjax')
+# extensions.append('mathjax')
 mathjax_path = 'http://mathjax.connectmv.com/MathJax.js'
 
 intersphinx_mapping = {'python': ('http://docs.python.org/release/2.7.1/', None)}

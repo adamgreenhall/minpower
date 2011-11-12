@@ -28,7 +28,6 @@ def problem(datadir='.',
         ):
     """ 
     Solve a optimization problem specified by spreadsheets in a directory.
-    For a guide to creating spreadsheets, see :doc:`creating-problems`.
     Read in data, create and solve the problem, and return solution.
     The problem type is determined by the data.
         
@@ -37,7 +36,7 @@ def problem(datadir='.',
     :param problemfile: write the problem formulation to a problem-formulation.lp file
     :param vizualization: create a chart of the solution and save it to a file
     :param csv: create a spreadsheet of the solution
-    :param solver:  choice of solver, see :doc:`solvers`
+    :param solver: choice of solver, a lowercase string
     :param num_breakpoints: number of break points to use in linearization of bid (or cost) polynomials (equal to number of segments + 1)
     :param hours_commitment: maximum length of a single unit commitment, times beyond this will be divided into multiple problems and solved in a rolling commitment
     :param hours_commitment_overlap: overlap of commitments for rolling commitments

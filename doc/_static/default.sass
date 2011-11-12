@@ -23,14 +23,16 @@ body
     
 .body
   p
+    margin-top: 2ex
     text-align: justify
     &:last-child
       margin-bottom: 4ex
   ul
     list-style-type: circle
 
-p
-  margin-top: 1ex
+.body, .related
+  max-width: 630px
+  
       
 h1, h2, h3, h4, h5, h6
   font-family: 'Arvo', serif
@@ -121,9 +123,7 @@ dt:target, .highlighted
 
 /* Positions, Sizes, &c.
 
-.body, .related
-  max-width: 630px
-  // margin-right: 270px
+
 
 .halfwidth
   max-width: 500px
@@ -132,9 +132,14 @@ dt:target, .highlighted
   margin-bottom: 100px
   margin-top: 50px
   
-.plusone
-  margin-bottom: 4ex
-
+.social
+  margin-top: 2ex
+  margin-left: 1em
+  .plusone
+    display: table-cell
+    padding: 5px 
+  .twitter
+    display: table-cell
 
 .section
   > dl
@@ -211,22 +216,41 @@ dt:target
     color: DarkSlateGray
     width: 3px
   position: absolute
-  top: 80px
+  top: 200px
   right: -20em
   ul
     padding-left: 20px
     list-style-type: circle
     
+.solution-homepage
+  padding: 10px
+  width: 15em
+  background: SkyBlue
+  +border-radius(10px)
+  border: 
+    style: solid
+    color: DarkSlateGray
+    width: 3px
+  position: absolute
+  top: 80px
+  right: -20em
 
-// +alternating-rows-and-columns(lightgray,white, lightgray) //, $dark-intersection, $header-color, $footer-color)
+
+=alternating-rows($even-row-color, $odd-row-color)
+  tr.row-odd
+    td
+      background-color: $odd-row-color
+  tr.row-even
+    td
+      background-color: $even-row-color
 table.docutils
   width: 140%
   tbody
-    tr:first-child
-      font-weight: bold
+    tr.row-odd:first-child
+      color: dimgray
   td
     padding: 10px
-  +alternating-rows-and-columns(#EEE,#FFF,#EEE)
+  +alternating-rows(#ffffff, #eeeeee)
 
 table.docutils.field-list
   margin-top: 30px
@@ -271,3 +295,10 @@ dl.method //class inputs
   text-decoration: none
   border: none
   font-size: small
+
+ul
+  list-style-position: inside
+ol.arabic.simple
+  list-style-type: decimal
+  list-style-position: inside
+  

@@ -10,6 +10,7 @@ Why Minpower
 What's good
 ^^^^^^^^^^^^
 **Minpower** 
+
     * is written in `Python <http://www.python.org/about/>`_
     * is :ref:`free <license>` and :ref:`open source <development>`
     * can use many :doc:`solvers <solvers>`

@@ -8,7 +8,7 @@ object.
 
 import powersystems
 import schedule
-from minpower.addons import *
+from addons import *
 from commonscripts import readCSV,csvColumn,flatten,unique,drop_case_spaces,joindir
 
 import os,sys,logging

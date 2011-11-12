@@ -88,7 +88,12 @@ body {
   list-style-type: circle;
 }
 
-/* line 35, default.sass */
+/* line 33, default.sass */
+.body, .related {
+  max-width: 630px;
+}
+
+/* line 37, default.sass */
 h1, h2, h3, h4, h5, h6 {
   font-family: "Arvo", serif;
   font-weight: normal;
@@ -96,33 +101,33 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 1.5ex;
 }
 
-/* line 42, default.sass */
+/* line 44, default.sass */
 h1 {
   font-size: 180%;
 }
 
-/* line 45, default.sass */
+/* line 47, default.sass */
 h2 {
   font-size: 160%;
 }
 
-/* line 48, default.sass */
+/* line 50, default.sass */
 h3 {
   font-size: 140%;
 }
 
-/* line 51, default.sass */
+/* line 53, default.sass */
 tt {
   font-family: "Cousine", monospace;
   font-size: medium;
 }
-/* line 54, default.sass */
+/* line 56, default.sass */
 tt.descname {
   font-family: "Cousine", monospace;
   font-size: medium;
 }
 
-/* line 58, default.sass */
+/* line 60, default.sass */
 a {
   color: SlateGray;
   border-color: DarkSlateGray;
@@ -130,37 +135,37 @@ a {
   border-bottom-width: 1px;
   border-bottom-style: dashed;
 }
-/* line 64, default.sass */
+/* line 66, default.sass */
 a img, a:link img {
   border-bottom: 0px;
 }
-/* line 66, default.sass */
+/* line 68, default.sass */
 a.image-reference {
   border-bottom-width: 0px;
 }
-/* line 68, default.sass */
+/* line 70, default.sass */
 a.reference.internal em {
   font-style: normal;
 }
-/* line 70, default.sass */
+/* line 72, default.sass */
 a.headerlink {
   display: none;
 }
 
-/* line 73, default.sass */
+/* line 75, default.sass */
 abbr {
   border-bottom-width: 1px;
   border-bottom-style: dashed;
   border-color: DarkSlateGray;
 }
 
-/* line 78, default.sass */
+/* line 80, default.sass */
 pre, .admonition {
   margin: 1em -40px;
   padding: 1em 40px;
 }
 
-/* line 83, default.sass */
+/* line 85, default.sass */
 pre {
   font-family: "Cousine", monospace;
   font-size: 80%;
@@ -172,7 +177,7 @@ pre {
   border-left-width: 3px;
   border-left-style: solid;
 }
-/* line 91, default.sass */
+/* line 93, default.sass */
 pre #problem.viewcode-block {
   background: white;
   padding: 10px;
@@ -187,40 +192,35 @@ pre #problem.viewcode-block {
   border-radius: 10px;
 }
 
-/* line 103, default.sass */
+/* line 105, default.sass */
 .highlight {
   width: 130%;
 }
 
-/* line 106, default.sass */
+/* line 108, default.sass */
 .admonition {
   background: CornSilk;
   border-color: ForestGreen;
   border-top-width: 5px;
   border-top-style: solid;
 }
-/* line 111, default.sass */
+/* line 113, default.sass */
 .admonition.warning {
   border-top-width: 5px;
   border-top-style: solid;
   border-color: FireBrick;
 }
-/* line 115, default.sass */
+/* line 117, default.sass */
 .admonition.note p.admonition-title {
   display: none;
 }
 
-/* line 119, default.sass */
+/* line 121, default.sass */
 dt:target, .highlighted {
   background: #f2ffc4;
 }
 
 /* Positions, Sizes, &c. */
-/* line 124, default.sass */
-.body, .related {
-  max-width: 630px;
-}
-
 /* line 128, default.sass */
 .halfwidth {
   max-width: 500px;

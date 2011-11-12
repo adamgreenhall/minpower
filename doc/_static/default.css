@@ -76,20 +76,16 @@ body {
 
 /* line 25, default.sass */
 .body p {
+  margin-top: 2ex;
   text-align: justify;
 }
-/* line 27, default.sass */
+/* line 28, default.sass */
 .body p:last-child {
   margin-bottom: 4ex;
 }
-/* line 29, default.sass */
+/* line 30, default.sass */
 .body ul {
   list-style-type: circle;
-}
-
-/* line 32, default.sass */
-p {
-  margin-top: 1ex;
 }
 
 /* line 35, default.sass */
@@ -238,20 +234,30 @@ dt:target, .highlighted {
 }
 
 /* line 135, default.sass */
-.plusone {
-  margin-bottom: 4ex;
+.social {
+  margin-top: 2ex;
+  margin-left: 1em;
+}
+/* line 138, default.sass */
+.social .plusone {
+  display: table-cell;
+  padding: 5px;
+}
+/* line 141, default.sass */
+.social .twitter {
+  display: table-cell;
 }
 
-/* line 140, default.sass */
+/* line 145, default.sass */
 .section > dl {
   padding-top: 2em;
 }
-/* line 142, default.sass */
+/* line 147, default.sass */
 .section h2 + dl {
   padding-top: inherit;
 }
 
-/* line 145, default.sass */
+/* line 150, default.sass */
 dt:target {
   margin-left: -10px;
   margin-right: -40px;
@@ -259,83 +265,83 @@ dt:target {
   padding-right: 40px;
 }
 
-/* line 152, default.sass */
+/* line 157, default.sass */
 .document {
   margin: 0 auto;
   padding: 0 1em;
   max-width: 900px;
   position: relative;
 }
-/* line 157, default.sass */
+/* line 162, default.sass */
 .document .documentwrapper {
   position: absolute;
   left: 180px;
   top: 0px;
 }
-/* line 162, default.sass */
+/* line 167, default.sass */
 .document .documentwrapper h1:first-child {
   margin-top: 20px;
 }
-/* line 164, default.sass */
+/* line 169, default.sass */
 .document .documentwrapper .toctree-wrapper {
   display: none;
 }
-/* line 166, default.sass */
+/* line 171, default.sass */
 .document .sphinxsidebar {
   position: absolute;
   left: -120px;
   top: 0px;
   width: 200px;
 }
-/* line 172, default.sass */
+/* line 177, default.sass */
 .document .sphinxsidebar h3:first-child {
   margin-top: 20px;
 }
-/* line 174, default.sass */
+/* line 179, default.sass */
 .document .sphinxsidebar a {
   text-decoration: none;
   border: none;
 }
-/* line 177, default.sass */
+/* line 182, default.sass */
 .document .sphinxsidebar a.current {
   font-weight: bold;
 }
-/* line 179, default.sass */
+/* line 184, default.sass */
 .document .sphinxsidebar ul {
   padding-left: 0;
   list-style-type: none;
 }
-/* line 182, default.sass */
+/* line 187, default.sass */
 .document .sphinxsidebar ul ul {
   padding-left: 15px;
 }
-/* line 185, default.sass */
+/* line 190, default.sass */
 .document .sphinxsidebar input {
   border-color: DarkSlateGray;
 }
-/* line 189, default.sass */
+/* line 194, default.sass */
 .document .sphinxsidebar #searchbox h3 {
   margin-bottom: 0px;
 }
-/* line 191, default.sass */
+/* line 196, default.sass */
 .document .sphinxsidebar #searchbox .searchtip {
   display: none;
 }
 
-/* line 195, default.sass */
+/* line 200, default.sass */
 .license {
   font-size: 60%;
   max-width: 500px;
   margin-left: 60px;
 }
 
-/* line 200, default.sass */
+/* line 205, default.sass */
 .optimizationproblem {
   margin-bottom: 4ex;
   margin-left: 3em;
 }
 
-/* line 204, default.sass */
+/* line 209, default.sass */
 .installation-homepage {
   padding: 10px;
   width: 15em;
@@ -350,97 +356,92 @@ dt:target {
   border-color: DarkSlateGray;
   border-width: 3px;
   position: absolute;
-  top: 80px;
+  top: 200px;
   right: -20em;
 }
-/* line 216, default.sass */
+/* line 221, default.sass */
 .installation-homepage ul {
   padding-left: 20px;
   list-style-type: circle;
 }
 
-/* line 222, default.sass */
+/* line 225, default.sass */
+.solution-homepage {
+  padding: 10px;
+  width: 15em;
+  background: SkyBlue;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -o-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -khtml-border-radius: 10px;
+  border-radius: 10px;
+  border-style: solid;
+  border-color: DarkSlateGray;
+  border-width: 3px;
+  position: absolute;
+  top: 80px;
+  right: -20em;
+}
+
+/* line 246, default.sass */
 table.docutils {
   width: 140%;
 }
-/* line 225, default.sass */
-table.docutils tbody tr:first-child {
-  font-weight: bold;
+/* line 249, default.sass */
+table.docutils tbody tr.row-odd:first-child {
+  color: dimgray;
 }
-/* line 227, default.sass */
+/* line 251, default.sass */
 table.docutils td {
   padding: 10px;
 }
-/* line 2, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
-table.docutils th {
-  background-color: white;
-}
-/* line 4, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
-table.docutils th.even, table.docutils th:nth-child(2n) {
-  background-color: #111111;
-}
-/* line 7, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
-table.docutils tr.odd td {
-  background-color: white;
-}
-/* line 9, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
-table.docutils tr.odd td.even, table.docutils tr.odd td:nth-child(2n) {
-  background-color: #111111;
-}
-/* line 12, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
-table.docutils tr.even td {
+/* line 241, default.sass */
+table.docutils tr.row-odd td {
   background-color: #eeeeee;
 }
-/* line 14, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
-table.docutils tr.even td.even, table.docutils tr.even td:nth-child(2n) {
-  background-color: black;
-}
-/* line 17, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
-table.docutils tfoot th, table.docutils tfoot td {
+/* line 244, default.sass */
+table.docutils tr.row-even td {
   background-color: white;
 }
-/* line 19, ../../../../../Library/Ruby/Gems/1.8/gems/compass-0.11.5/frameworks/compass/stylesheets/compass/utilities/tables/_alternating-rows-and-columns.scss */
-table.docutils tfoot th.even, table.docutils tfoot th:nth-child(2n), table.docutils tfoot td.even, table.docutils tfoot td:nth-child(2n) {
-  background-color: #111111;
-}
 
-/* line 231, default.sass */
+/* line 255, default.sass */
 table.docutils.field-list {
   margin-top: 30px;
 }
-/* line 233, default.sass */
+/* line 257, default.sass */
 table.docutils.field-list th.field-name {
   display: block;
   font-weight: bold;
 }
-/* line 236, default.sass */
+/* line 260, default.sass */
 table.docutils.field-list td.field-body {
   display: block;
   margin-left: 20px;
 }
-/* line 239, default.sass */
+/* line 263, default.sass */
 table.docutils.field-list td.field-body strong {
   font-family: "Cousine", monospace;
   color: dimgray;
 }
 
-/* line 243, default.sass */
+/* line 267, default.sass */
 tt.descname {
   font-weight: bold;
 }
 
-/* line 247, default.sass */
+/* line 271, default.sass */
 dl dd {
   margin-left: 20px;
 }
 
-/* line 251, default.sass */
+/* line 275, default.sass */
 dl.function em {
   font-family: "Cousine", monospace;
   color: dimgray;
 }
 
-/* line 254, default.sass */
+/* line 278, default.sass */
 dl.class {
   background: FloralWhite;
   -moz-border-radius: 10px;
@@ -453,22 +454,33 @@ dl.class {
   padding-right: 10px;
   padding-top: 5px;
 }
-/* line 255, default.sass */
+/* line 279, default.sass */
 dl.class em {
   font-family: "Cousine", monospace;
   color: dimgray;
 }
 
-/* line 265, default.sass */
+/* line 289, default.sass */
 dl.method em {
   font-family: "Cousine", monospace;
   color: dimgray;
 }
 
-/* line 269, default.sass */
+/* line 293, default.sass */
 .viewcode-link {
   color: LightSlateGray;
   text-decoration: none;
   border: none;
   font-size: small;
+}
+
+/* line 299, default.sass */
+ul {
+  list-style-position: inside;
+}
+
+/* line 301, default.sass */
+ol.arabic.simple {
+  list-style-type: decimal;
+  list-style-position: inside;
 }

@@ -56,8 +56,8 @@ Development is simple:
     
     #. Get on github and `fork minpower <http://github.com/adamgreenhall/minpower>`_
     #. Make it better
-    #. Test it out (:abbr:`use (I broke the whole package many times. So I wrote a basic set of test cases to make sure data loads, constraints still work, and outputs don't break...)` :mod:`tests.testall` and :mod:`tests.testall_integration_demos`)
-    #. Merge your version back
+    #. Test it out (use  :mod:`tests.testall` and :mod:`tests.testall_integration`)
+    #. Make a pull request to get your version in
 
 .. _license:
 

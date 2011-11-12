@@ -9,16 +9,19 @@ It is designed to make working with :doc:`ED <economic-dispatch>`,
 with other :doc:`researchers<researchers>` and to make learning easier for :doc:`students<students>`.
 
 
+.. container:: solution-homepage     
     
-To solve a problem:
+    To solve a problem:
     
-    ``minpower mycommitment/``
+        ``minpower mycommitment/``
     
 
-**Minpower** creates great visualizations too, like this one for a :doc:`UC problem <unit-commitment>`:
+**Minpower** creates great visualizations too, like this one for :doc:`UC <unit-commitment>`:
     
     ..  image:: ./_static/commitment-demo.png
         :width: 500 px
+
+
 
 ..  container:: installation-homepage
 

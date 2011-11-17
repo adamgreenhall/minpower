@@ -70,8 +70,10 @@ generator_defaults=dict(
     fuelcost=dict(
         generic=    1,
         coal=       2.5,
-        naturalgas= 5,
-        nuclear =   0.65, 
+        nuclear =   0.65,
+        ngst=         5,
+        ngcc=         5,
+        nggt=         5,
         ),
     
     #from Henry Louie thesis

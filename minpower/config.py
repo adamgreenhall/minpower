@@ -15,7 +15,7 @@ generator_kinds=[
     ]
 
 generator_defaults=dict(
-    Pmin=0,
+    Pmin=dict(generic=0),
 
     costcurvestring=dict(
         generic=            '3000+25P+.005P^2',
@@ -25,8 +25,8 @@ generator_defaults=dict(
         combustionturbine=  '9586+42.75P+.0012P^2',
         wind=               '0'
         ),
-    isControllable=True,
-    power=None,
+    isControllable=dict(generic=True,wind=False),
+    power=dict(generic=None),
     
     Pmax=dict(
         generic=             500,
@@ -34,8 +34,7 @@ generator_defaults=dict(
         nuclear=            1117, 
         nggt=                 90,
         ngcc=                420,
-        
-        ngst   = 450,
+        ngst   =             550,#assume equal to coal fired steam
         ),
     
     minuptime=dict(
@@ -44,8 +43,7 @@ generator_defaults=dict(
         nuclear=120,
         nggt=0,
         ngcc=6,
-        
-        ngst=4,
+        ngst=24, #assume equal to coal fired steam
         ),
     
     mindowntime=dict(
@@ -54,40 +52,34 @@ generator_defaults=dict(
         nuclear=18,
         nggt=0,
         ngcc=12,
-        
-        ngst=2,
+        ngst=12,#assume equal to coal fired steam
         ),
-#    ramprate_percent=dict(
-#        generic=None,        
-#        nuclear=0.10,
-#        coal=0.30,
-#        nggt=6.0,
-#        ngcc=1.0,
-#        
-#        ngst=0.5,
-#        ),
     
     fuelcost=dict(
         generic=    1,
-        coal=       2.5,
-        nuclear =   0.65,
-        ngst=         5,
-        ngcc=         5,
-        nggt=         5,
+        coal=       2.5,   #from EIA national average coal price
+        naturalgas= 4.0,   #midrange forecast from NWPP plan: http://www.nwcouncil.org/energy/powerplan/6/
+        nuclear =   0.65,  #from NWPP plan - Table I-34: Forecast nuclear fuel prices (2006$/MMBtu)
+        wind=       0,
         ),
     
-    #from Henry Louie thesis
+    
     startupcost=dict(
         generic=              0, #if kind not specified, no startup cost 
-        coal=            107800,
-        nuclear=         283500,
-        ngst=             73500,
-        nggt=             36750,
-        wind=                 0,
-        
-        ngcc=             73500,
-        )    
-    
+##from Henry Louie thesis
+#        coal=            107800,
+#        nuclear=         283500,
+#        ngst=             73500,
+#        nggt=             36750,
+#        wind=                 0,
+#        ngcc=             73500, #assume same as NG ST
+##from WECC Planning Study, via B.Palmintier - http://www.eia.gov/oiaf/beck_plantcosts/
+        coal=     3581,
+        nuclear=100000,
+        ngst   =  3581,
+        nggt   =  7811,
+        ngcc   =  9250,
+        )
     )
 
 

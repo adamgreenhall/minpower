@@ -32,7 +32,7 @@ def makeGenerator(kind='generic',**kwargs):
         '''check kind pull defaults from the config file'''
         kind=drop_case_spaces(kind)
         if kind not in config.generator_kinds:
-            logging.warning('"k" is an unknown kind of generator, using generic defaults.'.format(k=kind))
+            logging.info('"{k}" is an unknown kind of generator, using generic defaults.'.format(k=kind))
             kind='generic'
         
         #get defaults from config file
@@ -307,24 +307,24 @@ class Generator_nonControllable(Generator):
     Describes a generator with a fixed schedule.
     The scedule is defined by a :class:`~schedule.Schedule` object.
     """
-    def __init__(self,schedule=None,
-        fuelcost=1,costcurvestring='0',
-        mustrun=False,
-        Pmin=0,Pmax=None,
-        power=None,
-        name='',index=None,bus=None,kind='wind',**kwargs):
+    def __init__(self,
+                 schedule=None,
+                 power=None,
+                 fuelcost=1,costcurvestring='0',
+                 mustrun=False,
+                 Pmin=0,Pmax=None,
+                 name='',index=None,bus=None,kind='wind',**kwargs):
+        update_attributes(self,locals(),exclude=['power']) #load in inputs
         if power is not None and schedule is None: 
             self.schedule = FixedSchedule(P=power)
-        update_attributes(self,locals(),exclude=['power']) #load in inputs
+
         if Pmax is None: self.Pmax = self.schedule.maxvalue
         self.isControllable=False
         self.build_cost_model()
         self.init_optimization()
     def power(self,time): return self.schedule.get_energy(time)
     def status(self,time): return True
-    def set_initial_condition(self,time=None, P=None, u=None, hoursinstatus=None):
-        if P is None: P=self.schedule.get_energy(time) #set default power as first scheduled power output
-        self.schedule.P[time]=P
+    def set_initial_condition(self,time=None, P=None, u=None, hoursinstatus=None): pass
     def getstatus(self,t,times): return {}
     def create_variables(self,times): return {}
     def create_constraints(self,times): return {}
@@ -444,12 +444,7 @@ class Bus(OptimizationObject):
         self.init_optimization()
     
     def angle(self,time): return self.get_variable('angle',time)
-    def price(self,time):
-#        print dir(self.get_constraint('power balance',time))
-#        print self.get_constraint('power balance',time).name 
-#        print self.get_constraint('power balance',time).type()
-#        print self.get_constraint('power balance',time).display()
-        return dual(self.get_constraint('power balance',time))
+    def price(self,time): return dual(self.get_constraint('power balance',time))
     def Pgen(self,t):   return sum_vars([gen.power(t) for gen in self.generators])
     def Pload(self,t):  return sum_vars([ ld.power(t) for ld in self.loads])
     def power_balance(self,t,Bmatrix,allBuses):

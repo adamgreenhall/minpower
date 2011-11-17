@@ -120,7 +120,7 @@ class Solution(object):
         return ['load info:',
                 'bus={}'.format(self.get_values('loads','bus')) if len(self.buses())>1 else '',
                 'name={}'.format(self.get_values('loads','name')),
-                'Pd={}'.format(self.get_values('generators','power',t))]
+                'Pd={}'.format(self.get_values('loads','power',t))]
     def info_buses(self,t):
         buses=self.buses()
         out=['bus info:',
@@ -146,7 +146,7 @@ class Solution(object):
 class Solution_ED(Solution):
     def info_lines(self,t): return []
     def info_buses(self,t): return []
-    def vizualization(self,show_cost_also=False):
+    def visualization(self,show_cost_also=False):
         ''' economic dispatch visualization of linearized incremental cost'''
         t=self.times[0]
         price=self.buses()[0].price(t)
@@ -209,17 +209,20 @@ class Solution_ED(Solution):
             self.savevisualization(filename='dispatch-cost.png')        
     def saveCSV(self,filename='dispatch.csv'):
         '''economic dispatch generator solution values in spreadsheet form'''
+        def niceTF(value): return 0 if value==0 else 1
+        def nice_zeros(value): return 0 if value==0 else value
+        
         t=self.times[0]
         generators=self.generators()
         
         fields,data=[],[]
         fields.append('generator name');  data.append(getattrL(generators,'name'))
-        fields.append('u');  data.append([value(g.status(t)) for g in generators])
-        fields.append('P');  data.append([value(g.power(t)) for g in generators])
-        fields.append('IC');  data.append([g.incrementalcost(t) for g in generators])
+        fields.append('u');  data.append([niceTF(g.status(t)) for g in generators])
+        fields.append('P');  data.append([nice_zeros(g.power(t)) for g in generators])
+        fields.append('IC');  data.append([nice_zeros(g.incrementalcost(t)) for g in generators])
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))        
 class Solution_OPF(Solution): 
-    def vizualization(self,filename='powerflow.png'): 
+    def visualization(self,filename='powerflow.png'): 
         '''power flow visualization'''
         import networkx as nx
         buses,lines,t=self.buses(),self.lines(),self.times[0]
@@ -286,7 +289,7 @@ class Solution_UC(Solution):
         
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))
     
-    def vizualization(self,filename='commitment.png',withPrices=True):
+    def visualization(self,filename='commitment.png',withPrices=True):
         '''generator output visualization for unit commitment'''
         times,generators,loads=self.times,self.generators(),self.loads()
         if len(generators)<=5: fewunits=True
@@ -415,7 +418,7 @@ class Solution_UC(Solution):
         self.savevisualization(filename)
 
 class Solution_SCUC(Solution_UC):
-    def vizualization(self): logging.warning('no visualization for SCUC. Spreadsheet output is valid, except for the price column is the price on first bus only.')
+    def visualization(self): logging.warning('no visualization for SCUC. Spreadsheet output is valid, except for the price column is the price on first bus only.')
     
     
 class Solution_UC_multistage(Solution_UC):

@@ -254,7 +254,7 @@ class FixedSchedule(Schedule):
     '''A simple "schedule" which has only one power output''' 
     def __init__(self,times=None,P=None): self.P=P
     def get_energy(self,timeperiod=None): return self.P
-    
+    def __repr__(self): return 'FixedSchedule<P={}>'.format(self.P)
 def just_one_time():
     """For a single-time problem, generate a Timelist with just one time in it."""
     return Timelist([Time(Start='0:00',index=0)])

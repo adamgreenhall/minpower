@@ -19,7 +19,8 @@ fields_gens={
     'pmin':'Pmin','pmax':'Pmax','powermin':'Pmin','powermax':'Pmax',
     'p':'power','pg':'power','power':'power', #for a non-controllable gen in an ED
     'rampratemin':'rampratemin','rampratemax':'rampratemax',
-    'minuptime':'minuptime','mindowntime':'mindowntime',
+    'minuptime':'minuptime','uptimemin':'minuptime',
+    'mindowntime':'mindowntime','downtimemin':'mindowntime',
     'costcurveequation':'costcurvestring', 
     'heatrateequation':'heatratestring','fuelcost':'fuelcost',
     'startupcost':'startupcost','shutdowncost':'shutdowncost',

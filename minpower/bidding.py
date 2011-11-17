@@ -292,7 +292,8 @@ class LinearModel(PWLmodel):
     def get_time_variables(self,*args,**kwargs): return {}
     def get_time_constraints(self,*args,**kwargs): return {}
     def output(self,variables,owner_iden,time_iden):
-        fixed_term=self.poly_curve.c[1]*variables['status']
+        try: fixed_term=self.poly_curve.c[1]*variables['status']
+        except IndexError: fixed_term=0 #constant cost
         linear_term = self.poly_curve.c[0]*variables['input']
         return fixed_term + linear_term
     

@@ -17,13 +17,14 @@ from commonscripts import joindir
     
 def problem(datadir='.',
         shell=True,
-        problemfile=True,
-        vizualization=True,
+        problemfile=False,
+        visualization=True,
         csv=True,
         solver=config.optimization_solver,
         num_breakpoints=config.default_num_breakpoints,
         hours_commitment=config.default_hours_commitment,
         hours_commitment_overlap=config.default_hours_commitment_overlap,
+        dispatch_decommit_allowed=False,
         logging_level=config.logging_level,
         ):
     """ 
@@ -34,13 +35,13 @@ def problem(datadir='.',
     :param datadir: directory of data files, see :mod:`get_data`
     :param shell: output solution information to the command line
     :param problemfile: write the problem formulation to a problem-formulation.lp file
-    :param vizualization: create a chart of the solution and save it to a file
+    :param visualization: create a visualization of the solution and save it to a file
     :param csv: create a spreadsheet of the solution
     :param solver: choice of solver, a lowercase string
     :param num_breakpoints: number of break points to use in linearization of bid (or cost) polynomials (equal to number of segments + 1)
     :param hours_commitment: maximum length of a single unit commitment, times beyond this will be divided into multiple problems and solved in a rolling commitment
     :param hours_commitment_overlap: overlap of commitments for rolling commitments
-    
+    :param dispatch_decommit_allowed: allow de-commitment of units in an ED -- useful for getting initial conditions for UCs  
     :returns: :class:`~results.Solution` object
     """
     
@@ -51,11 +52,13 @@ def problem(datadir='.',
                 num_breakpoints=num_breakpoints,
                 load_shedding_allowed=False,
                 #spinning_reserve_requirement=0,
-                dispatch_decommit_allowed=False,)
+                dispatch_decommit_allowed=dispatch_decommit_allowed,)
     
     if times.spanhrs<=hours_commitment:
         problem=create_problem(power_system,times)
-        optimization.solve(problem,solver,problem_filename=joindir(datadir,'problem-formulation.lp'))
+        if problemfile: problemfile=joindir(datadir,'problem-formulation.lp')
+        optimization.solve(problem,solver,problem_filename=problemfile)
+        
         if problem.solved:
             solution=results.make_solution(power_system,times,problem=problem,datadir=datadir)
         else: 
@@ -70,7 +73,7 @@ def problem(datadir='.',
         
     if shell: solution.show()
     if csv: solution.saveCSV()
-    if vizualization: solution.vizualization()
+    if visualization: solution.visualization()
     return solution
 
 def create_problem(power_system,times):

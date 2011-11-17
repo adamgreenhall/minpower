@@ -7,38 +7,16 @@ import logging
 
 generator_kinds=[
     'generic',
-    'baseload', 'coal','nuclear',
-    'shoulder','naturalgas','steamturbine',
-    'peaker','combustionturbine',
-    'wind'
+    'coal','nuclear',
+    'ngst','ngcc',
+    'nggt',
+    'wind',
+    'chp'
     ]
 
 generator_defaults=dict(
     Pmin=0,
-    Pmax=dict(
-        generic=             500,
-        baseload=           2000,
-        coal=               2000,
-        nuclear=            2000,
-        shoulder=            500, 
-        naturalgas=          500,
-        steamturbine=       1050,
-        peaker=              100, 
-        combustionturbine=  2100,
-        wind=                 80
-        ),
-    minuptime=dict(generic=0),
-    mindowntime=dict(
-        generic=0,
-        baseload=2,coal=2,nuclear=18
-        ),
-    rampratemax=dict(
-        generic=None,
-        baseload=200,   coal=200,nuclear=100,
-        shoulder=500, naturalgas=500, steamturbine=500,
-        peaker=3000, combustionturbine=3000,
-        wind=None
-        ),
+
     costcurvestring=dict(
         generic=            '3000+25P+.005P^2',
         coal=               '3011+20.14P+.0084P^2',
@@ -47,22 +25,67 @@ generator_defaults=dict(
         combustionturbine=  '9586+42.75P+.0012P^2',
         wind=               '0'
         ),
+    isControllable=True,
+    power=None,
+    
+    Pmax=dict(
+        generic=             500,
+        coal=                550,
+        nuclear=            1117, 
+        nggt=                 90,
+        ngcc=                420,
+        
+        ngst   = 450,
+        ),
+    
+    minuptime=dict(
+        generic=0,
+        coal=24,
+        nuclear=120,
+        nggt=0,
+        ngcc=6,
+        
+        ngst=4,
+        ),
+    
+    mindowntime=dict(
+        generic=0,
+        coal=2,
+        nuclear=18,
+        nggt=0,
+        ngcc=12,
+        
+        ngst=2,
+        ),
+#    ramprate_percent=dict(
+#        generic=None,        
+#        nuclear=0.10,
+#        coal=0.30,
+#        nggt=6.0,
+#        ngcc=1.0,
+#        
+#        ngst=0.5,
+#        ),
+    
     fuelcost=dict(
         generic=    1,
         coal=       2.5,
-        naturalgas= 5
+        naturalgas= 5,
+        nuclear =   0.65, 
         ),
+    
+    #from Henry Louie thesis
     startupcost=dict(
-        #from Henry Louie thesis
         generic=              0, #if kind not specified, no startup cost 
         coal=            107800,
         nuclear=         283500,
-        steamturbine=     73500,
-        combustionturbine=36750,
-        wind=                 0
-        ),
-    isControllable=True,
-    power=None
+        ngst=             73500,
+        nggt=             36750,
+        wind=                 0,
+        
+        ngcc=             73500,
+        )    
+    
     )
 
 

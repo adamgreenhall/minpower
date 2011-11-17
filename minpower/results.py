@@ -398,7 +398,7 @@ class Solution_UC(Solution):
         
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))
     
-    def visualization(self,filename='commitment.png',withPrices=True):
+    def visualization(self,filename='commitment.png',withPrices=True,withInitial=False):
         '''generator output visualization for unit commitment'''
         times,generators,loads=self.times,self.generators(),self.loads()
         if len(generators)<=5: fewunits=True
@@ -439,7 +439,8 @@ class Solution_UC(Solution):
         
         def addtostackplot(ax,time,power,color, gensPlotted,stackBottom):
             #add initial time to stackplot
-            ax.bar(time[0],power[0],bottom=stackBottom[0],color=color, edgecolor=color, alpha=alpha_initialTime, width=initWidth)
+            if withInitial:
+                ax.bar(time[0],power[0],bottom=stackBottom[0],color=color, edgecolor=color, alpha=alpha_initialTime, width=initWidth)
             #add commitment times to stackplot
             plt=ax.bar(time[1:],power[1:],bottom=stackBottom[1:],color=color, edgecolor=color,width=barWidth)
             #add power to stack bottom
@@ -509,9 +510,9 @@ class Solution_UC(Solution):
                                ))
             colors=_colormap(len(generators),colormapName='Blues')
             for g,gen in enumerate(generators):
-                Pgen=[value(gen.power(t)) for t in times.wInitial]
+                Pgen=[gen.power(t) for t in times.wInitial]
                 gensPlotted,stackBottom=addtostackplot(ax,T,Pgen,colors[g], gensPlotted,stackBottom)
-                yLabels.append(gen.name)      
+                yLabels.append(gen.name)
         
         #show demand response loads
         stackBottom=stackBottom[1:] #loads don't have initial time info

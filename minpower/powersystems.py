@@ -105,7 +105,10 @@ def makeGenerator(kind='generic',**kwargs):
             try: defaults[name]=val[kind]
             except KeyError:
                 logging.debug('no {d} default found for kind "{k}", using default from generic.'.format(d=name,k=kind))
-                defaults[name]=val['generic']
+                try: defaults[name]=val['generic']
+                except KeyError:
+                    print val
+                    raise
             except TypeError: 
                 defaults[name]=val #no kind-distincted defaults
                 

@@ -8,8 +8,8 @@ parser.add_argument('directory', type=str,
                    help='the direcory of the problem you want to solve (or name of minpower demo case)')
 parser.add_argument('--solver','-s',  type=str, default=config.optimization_solver,
                    help='the solver name used to solve the problem (e.g. cplex, gurobi, glpk)')
-parser.add_argument('--visualization','-v',action="store_true", default=False,
-                  help='flag to create a visualization of the solution and save it to a file')
+parser.add_argument('--visualization_off','-v',action="store_true", default=False,
+                  help='flag to turn off the visualization of the solution')
 parser.add_argument('--breakpoints','-b',  type=int, default=config.default_num_breakpoints,
                    help='number of breakpoints to use in piece-wise linearization of polynomial costs')
 parser.add_argument('--commitment_hours','-c', type=int, default=config.default_hours_commitment,
@@ -45,6 +45,6 @@ solve.problem(directory,
               hours_commitment=args.commitment_hours,
               hours_commitment_overlap=args.overlap_hours,
               dispatch_decommit_allowed=args.dispatch_decommit_allowed,
-              visualization=args.visualization,
+              visualization=not args.visualization_off,
               problemfile=args.problemfile,
               )

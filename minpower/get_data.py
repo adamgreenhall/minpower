@@ -220,14 +220,14 @@ def setup_times(file_gens,file_loads,datadir):
     if len(timestrL) == max(n for n in nT_loads+nT_gens): 
         times=schedule.makeTimes(timedateL) #just one schedule
     else: 
-        uniqueTimes=unique(timedateL)
+        uniqueTimes=sorted(unique(timedateL))
         #make times from unique list
         times=schedule.makeTimes(uniqueTimes)
         
     #check for missing data problems by checking length
     nT=len(times)
     if any(n!=nT if n else False for n in nT_loads): 
-        msg='a load has schedule with inconsistent times. load schedule lengths={L} and there are {t} times.'.format(L=nT_loads,t=nT)
+        msg='a load has schedule with inconsistent times. load schedule lengths={L} and there are {t} times.'.format(L=dict(zip(loadScheds,nT_loads)),t=nT)
         raise ValueError(msg)
     if any(n!=nT if n else False for n in nT_gens): 
         msg='a generator has schedule with inconsistent times. gen schedule lengths={L} and there are {t} times.'.format(L=nT_gens,t=nT)

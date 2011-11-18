@@ -18,6 +18,9 @@ parser.add_argument('--overlap_hours','-o', type=int, default=config.default_hou
                    help='number hours to overlap commitments in a rolling UC')      
 parser.add_argument('--problemfile','-p',action="store_true", default=False,
                    help='flag to write the problem formulation to a problem-formulation.lp file -- useful for debugging')
+parser.add_argument('--duals_off','-u',action="store_true", default=False,
+                  help='flag to skip getting the the duals, or prices, of the optimization problem')
+
 
 parser.add_argument('--dispatch_decommit_allowed','-d', action="store_true", default=False,
                     help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
@@ -46,5 +49,6 @@ solve.problem(directory,
               hours_commitment_overlap=args.overlap_hours,
               dispatch_decommit_allowed=args.dispatch_decommit_allowed,
               visualization=not args.visualization_off,
+              get_duals=not args.duals_off,
               problemfile=args.problemfile,
               )

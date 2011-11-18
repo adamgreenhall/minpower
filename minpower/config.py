@@ -58,7 +58,9 @@ generator_defaults=dict(
     fuelcost=dict(
         generic=    1,
         coal=       2.5,   #from EIA national average coal price
-        naturalgas= 4.0,   #midrange forecast from NWPP plan: http://www.nwcouncil.org/energy/powerplan/6/
+        ngst=       4.0,   #midrange forecast from NWPP plan: http://www.nwcouncil.org/energy/powerplan/6/
+        ngcc=       4.0,
+        nggt=       4.0,
         nuclear =   0.65,  #from NWPP plan - Table I-34: Forecast nuclear fuel prices (2006$/MMBtu)
         wind=       0,
         ),
@@ -92,4 +94,4 @@ optimization_package='coopr' #'pulp'
 
 optimization_solver='gurobi'
 available_solvers = ['glpk','gurobi']#['glpk','gurobi','cplex']
-logging_level= logging.INFO
+logging_level= logging.DEBUG

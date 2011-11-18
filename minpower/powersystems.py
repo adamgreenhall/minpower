@@ -552,8 +552,9 @@ class Generator_nonControllable(Generator):
 >>>>>>> fix for Generator_nonControllable power argument. fix to warning message about generator defaults in makeGenerator
 =======
     def set_initial_condition(self,time=None, P=None, u=None, hoursinstatus=None):
-        if P is None: P=self.schedule.get_energy(time) #set default power as first scheduled power output
-        try: self.schedule.P[time]=P
+        try: 
+            if P is None: P=sorted(self.schedule.P.items())[0][1] #set initial value to first value
+            self.schedule.P[time]=P 
         except AttributeError: pass #fixed schedule
 >>>>>>> fix for Generator_nonControllable.set_initial_condition
     def getstatus(self,t,times): return {}

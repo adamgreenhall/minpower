@@ -40,11 +40,8 @@ def makeGenerator(kind='generic',**kwargs):
         for name,val in config.generator_defaults.iteritems():
             try: defaults[name]=val[kind]
             except KeyError:
-                logging.debug('no {d} default found for kind "{k}", using default from generic.'.format(d=name,k=kind))
-                try: defaults[name]=val['generic']
-                except KeyError:
-                    print val
-                    raise
+                if inputs.get(name,None) in ['',None]: logging.debug('no {d} default found for kind "{k}", using default from generic.'.format(d=name,k=kind))
+                defaults[name]=val['generic']
             except TypeError: 
                 defaults[name]=val #no kind-distincted defaults
                 
@@ -234,11 +231,11 @@ class Generator(OptimizationObject):
             tEnd = len(times)
             if self.minuptime>0:
                 up_intervals_remaining=roundoff((self.minuptime - self.initialStatusHours)/times.intervalhrs)
-                min_up_intervals_remaining_init =   min(tEnd, up_intervals_remaining*self.status(tInitial) )
+                min_up_intervals_remaining_init =   int(min(tEnd, up_intervals_remaining*self.status(tInitial) ))
             else: min_up_intervals_remaining_init=0
             if self.mindowntime>0:
                 down_intervals_remaining=roundoff((self.mindowntime - self.initialStatusHours)/times.intervalhrs)
-                min_down_intervals_remaining_init = min(tEnd,down_intervals_remaining*(self.status(tInitial)==0))
+                min_down_intervals_remaining_init = int(min(tEnd,down_intervals_remaining*(self.status(tInitial)==0)))
             else: min_down_intervals_remaining_init=0
             #initial up down time
             if min_up_intervals_remaining_init>0: 

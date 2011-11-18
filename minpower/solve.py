@@ -6,14 +6,13 @@ problems and solving them.
 """
 
 import logging
-from datetime import datetime as wallclocktime
 
 import optimization
 import get_data
 import powersystems
 import results
 import config
-from commonscripts import joindir
+from commonscripts import joindir,show_clock
     
 def problem(datadir='.',
         shell=True,
@@ -24,6 +23,7 @@ def problem(datadir='.',
         num_breakpoints=config.default_num_breakpoints,
         hours_commitment=config.default_hours_commitment,
         hours_commitment_overlap=config.default_hours_commitment_overlap,
+        get_duals=True,
         dispatch_decommit_allowed=False,
         logging_level=config.logging_level,
         ):
@@ -41,6 +41,7 @@ def problem(datadir='.',
     :param num_breakpoints: number of break points to use in linearization of bid (or cost) polynomials (equal to number of segments + 1)
     :param hours_commitment: maximum length of a single unit commitment, times beyond this will be divided into multiple problems and solved in a rolling commitment
     :param hours_commitment_overlap: overlap of commitments for rolling commitments
+    :param get_duals: get the duals, or prices, of the optimization problem
     :param dispatch_decommit_allowed: allow de-commitment of units in an ED -- useful for getting initial conditions for UCs  
     :returns: :class:`~results.Solution` object
     """
@@ -57,7 +58,7 @@ def problem(datadir='.',
     if times.spanhrs<=hours_commitment:
         problem=create_problem(power_system,times)
         if problemfile: problemfile=joindir(datadir,'problem-formulation.lp')
-        optimization.solve(problem,solver,problem_filename=problemfile)
+        problem.solve(solver,problem_filename=problemfile,get_duals=get_duals)
         
         if problem.solved:
             solution=results.make_solution(power_system,times,problem=problem,datadir=datadir)
@@ -65,11 +66,13 @@ def problem(datadir='.',
             raise optimization.OptimizationError('problem not solved')
     else: #split into multiple stages and solve
         stage_solutions,stage_times=solve_multistage(power_system,times,datadir,
+                                                       solver=solver,
+                                                       get_duals=get_duals,
                                                        stage_hours=hours_commitment,
                                                        overlap_hours=hours_commitment_overlap,
                                                        )
         solution=results.make_multistage_solution(power_system,stage_times,datadir,stage_solutions)
-        logging.info('problem solved in {}'.format(solution.solve_time))
+        logging.info('problem solved in {} ... finished at {}'.format(solution.solve_time,show_clock()))
         
     if shell: solution.show()
     if csv: solution.saveCSV()
@@ -97,10 +100,12 @@ def create_problem(power_system,times):
     return prob
 
 def solve_multistage(power_system,times,datadir,
+                              solver=config.optimization_solver,
                               interval_hours=None,
                               stage_hours=config.default_hours_commitment,
                               overlap_hours=config.default_hours_commitment_overlap,
                               writeproblem=False,
+                              get_duals=True,
                               showclock=True):
     """
     Solve a rolling or multi-stage power systems optimization problem.
@@ -114,6 +119,7 @@ def solve_multistage(power_system,times,datadir,
     :param stage_hours: number of hours per stage (e.g. run one commitment every stage_hours)
     :param overlap_hours: number of hours that stages overlap (e.g. run a 36hr commitment every 24hrs)
     :param writeproblem: save the formulation of each stage to a file
+    :param get_duals: get the duals, or prices, of the optimization problem 
     :param showclock: show the current system time at the start of each stage
     
     :returns: a list of :class:`~results.Solution_UC` objects (one per stage)
@@ -146,22 +152,24 @@ def solve_multistage(power_system,times,datadir,
 
 
     for t_stage in stage_times:
-        logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, 'clock time={}'.format(wallclocktime.now().strftime('%H:%M:%S')) if showclock else ''))
+        logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
         
         set_initialconditions(buses,t_stage.initialTime)
         stage_problem=create_problem(power_system,t_stage)
         if writeproblem: stage_problem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
-        optimization.solve(stage_problem)
+        logging.info('created... solving... {}'.format(show_clock(showclock)))
+        stage_problem.solve(solver,get_duals=get_duals)
         
         if not stage_problem.solved: 
             #re-do stage, with load shedding allowed
             logging.critical('Stage infeasible, re-running with load shedding.')
             power_system.set_load_shedding(True)
             stage_problem=create_problem(power_system,t_stage)
-            optimization.solve(stage_problem)
+            stage_problem.solve(solver,get_duals=get_duals)
             power_system.set_load_shedding(False)
             
         if stage_problem.solved:
+            logging.info('solved... get results... {}'.format(show_clock(showclock)))
             get_finalconditions(power_system,t_stage,stage_problem)
             #stage_sln=results.get_stage_solution(stage_problem,power_system,t_stage,overlap_hours)
             stage_sln=results.make_solution(power_system,t_stage.non_overlap_times,problem=stage_problem)

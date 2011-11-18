@@ -10,7 +10,7 @@ from coopr.opt.base import solvers as cooprsolver
 
 import logging,time
 import config
-from commonscripts import update_attributes 
+from commonscripts import update_attributes,show_clock
 
 class Problem(object):
     '''an optimization problem/model based on pyomo'''
@@ -27,12 +27,13 @@ class Problem(object):
     def add_constraint(self,constraint):
         '''add a single constraint to the problem'''
         self._add_component(constraint.name,constraint)
-    def solve(self,solver=config.optimization_solver,problem_filename=False):
+    def solve(self,solver=config.optimization_solver,problem_filename=False,get_duals=True):
         '''
         Solve the optimization problem.
         
-        :param solver: name of solver (lowercase string). Valid solvers are {cplex,gurobi,glpk}.
+        :param solver: name of solver (lowercase string).
         :param problem_filename: write MIP problem formulation to a file, if a file name is specified
+        :param get_duals: get the duals, or prices, of the optimization problem
         '''
         
         current_log_level = logging.getLogger().getEffectiveLevel()      
@@ -53,9 +54,9 @@ class Problem(object):
             return results,elapsed
         
         
-        logging.info('Solving with {s} ... '.format(s=solver))
+        logging.info('Solving with {s} ... {t}'.format(s=solver,t=show_clock()))
         instance=self.model.create()
-             
+        logging.debug('... model created ... {t}'.format(t=show_clock()))     
         results,elapsed=cooprsolve(instance)
         
         self.statusText = str(results.solver[0]['Termination condition'])
@@ -66,7 +67,7 @@ class Problem(object):
             self.status=self.solved=True
             self.solutionTime =elapsed #results.Solver[0]['Wallclock time']
             logging.info('Problem solved in {}s.'.format(self.solutionTime))
-        
+            logging.debug('... {t}'.format(t=show_clock()))
         
         if problem_filename:
             logging.disable(logging.CRITICAL) #disable coopr's funny loggings when writing lp files.  
@@ -77,7 +78,7 @@ class Problem(object):
         
         #instance.load(results)
         instance._load_solution(results.solution(0), ignore_invalid_labels=True )
-        
+        logging.debug('... solution loaded ... {t}'.format(t=show_clock()))
 
         
         def resolvefixvariables(instance,results):
@@ -102,10 +103,11 @@ class Problem(object):
             instance._load_solution(results.solution(0), ignore_invalid_labels=True )
             return instance,results
 
-        try: instance,results = resolvefixvariables(instance,results)
-        except RuntimeError:
-            logging.error('in re-solving for the duals. the duals will be set to default value.')
-            
+        if get_duals: 
+            try: instance,results = resolvefixvariables(instance,results)
+            except RuntimeError:
+                logging.error('in re-solving for the duals. the duals will be set to default value.')
+            logging.debug('... LP problem solved ... {t}'.format(t=show_clock()))    
                 
         try: self.objective = results.Solution.objective['objective'].value #instance.active_components(pyomo.Objective)['objective']
         except AttributeError:
@@ -297,14 +299,14 @@ def filter_optimization_objects(objects,times):
     return dict(filter(lambda (name,val): valid(name,val) ,objects.items()))
 
 
-def solve(problem,solver=config.optimization_solver,problem_filename=False): 
-    '''
-    Solve an optimization problem.
-    :param problem: a :class:`~optimization.Problem` object
-    :param solver: name of solver (lowercase string). Valid solvers are {cplex,gurobi,glpk}.
-    :param problem_filename: write MIP problem formulation to a file, if a file name is specified
-    '''
-    return problem.solve(solver,problem_filename)
+#def solve(problem,solver=config.optimization_solver,problem_filename=False): 
+#    '''
+#    Solve an optimization problem.
+#    :param problem: a :class:`~optimization.Problem` object
+#    :param solver: name of solver (lowercase string). Valid solvers are {cplex,gurobi,glpk}.
+#    :param problem_filename: write MIP problem formulation to a file, if a file name is specified
+#    '''
+#    return problem.solve(solver,problem_filename)
 
 class OptimizationError(Exception):
     '''Error that occurs within solving an optimization problem.'''

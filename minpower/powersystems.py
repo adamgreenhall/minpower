@@ -328,8 +328,9 @@ class Generator_nonControllable(Generator):
     def power(self,time): return self.schedule.get_energy(time)
     def status(self,time): return True
     def set_initial_condition(self,time=None, P=None, u=None, hoursinstatus=None):
-        if P is None: P=self.schedule.get_energy(time) #set default power as first scheduled power output
-        try: self.schedule.P[time]=P
+        try: 
+            if P is None: P=sorted(self.schedule.P.items())[0][1] #set initial value to first value
+            self.schedule.P[time]=P 
         except AttributeError: pass #fixed schedule
     def getstatus(self,t,times): return {}
     def create_variables(self,times): return {}

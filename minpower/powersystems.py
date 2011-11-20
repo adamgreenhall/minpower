@@ -11,7 +11,7 @@ from commonscripts import hours,drop_case_spaces,flatten,getattrL,unique,update_
 import config, bidding
 from schedule import FixedSchedule
 import logging
-import threading
+#import threading
 import numpy 
 
 def makeGenerator(kind='generic',**kwargs):
@@ -212,7 +212,6 @@ class Generator(OptimizationObject):
             bid.create_variables()
             self.add_component(bid,'bid',time)
         
-        if str(self)=='g2': print 'g2 children at end of create_variables: ',self.children.keys()
         #logging.debug('created {} variables {}'.format(str(self),show_clock()))
         return self.all_variables(times)
     def create_objective(self,times):

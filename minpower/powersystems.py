@@ -60,6 +60,7 @@ from optimization import value,sum_vars,OptimizationObject
 =======
 from optimization import value,dual,sum_vars,OptimizationObject
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> cleared up dual problem (old coopr solution index=None)
 from commonscripts import hours,drop_case_spaces,getattrL,unique,update_attributes
 >>>>>>> added update_attributes function for classes. fixed power attr/method clash for gen_noncontrollable
@@ -75,6 +76,13 @@ import logging
 #from dateutil.relativedelta import relativedelta
 =======
 >>>>>>> documentation overhaul - up to schedule
+=======
+from commonscripts import hours,drop_case_spaces,flatten,getattrL,unique,update_attributes,show_clock
+import config, bidding
+from schedule import FixedSchedule
+import logging
+import threading
+>>>>>>> debugging times for problem creation
 import numpy 
 
 def makeGenerator(kind='generic',**kwargs):
@@ -99,12 +107,14 @@ def makeGenerator(kind='generic',**kwargs):
             logging.info('"{k}" is an unknown kind of generator, using generic defaults.'.format(k=kind))
             kind='generic'
         
+        ignore_names=['power','isControllable','costcurvestring']
+        
         #get defaults from config file
         defaults=dict()
         for name,val in config.generator_defaults.iteritems():
             try: defaults[name]=val[kind]
             except KeyError:
-                if inputs.get(name,None) in ['',None]: logging.debug('no {d} default found for kind "{k}", using default from generic.'.format(d=name,k=kind))
+                if inputs.get(name,None) in ['',None] and name not in ignore_names: logging.debug('no {d} default found for kind "{k}", using default from generic.'.format(d=name,k=kind))
                 defaults[name]=val['generic']
             except TypeError: 
                 defaults[name]=val #no kind-distincted defaults
@@ -221,7 +231,12 @@ class Generator(OptimizationObject):
         return self.bid(time).output_incremental(self.power(time)) if value(self.status(time)) else None
     def bid(self,time):
         ''':class:`~bidding.Bid` object for time'''
-        return self.get_component('bid', time) 
+        try: return self.get_component('bid', time)
+        except KeyError:
+            print str(time)
+            print self.children
+            print [str(c) for c in self.children]
+            raise 
     def getstatus(self,t,times): return dict(u=value(self.status(t)),P=value(self.power(t)),hoursinstatus=self.gethrsinstatus(t,times))
     def plot_cost_curve(self,P=None,filename=None): self.cost_model.plot(P,filename)
     def gethrsinstatus(self,tm,times):
@@ -291,6 +306,7 @@ class Generator(OptimizationObject):
                 self.add_variable('startupcost', 'Csu', time,fixed_value=0)
                 self.add_variable('shutdowncost', 'Csd', time,fixed_value=0)
 <<<<<<< HEAD
+<<<<<<< HEAD
                 
 <<<<<<< HEAD
 >>>>>>> rough optimization object model for generator. unit and integration tested.
@@ -357,6 +373,8 @@ class Generator(OptimizationObject):
                     model=self.costModel,
 =======
             
+=======
+>>>>>>> debugging times for problem creation
             bid=bidding.Bid(
                     model=self.cost_model,
 <<<<<<< HEAD
@@ -372,15 +390,9 @@ class Generator(OptimizationObject):
                     time_iden=str(time))
             bid.create_variables()
             self.add_component(bid,'bid',time)
-#        print str(self)
-#        print self.children
-##        print [c.variables for c in self.children.values()]
-#        print [c.all_variables(times) for c in self.children.values()]
-#        
-#        test={}
-#        for child in self.children.values(): 
-#            test.update(child.all_constraints(times))
-#        print test
+        
+        if str(self)=='g2': print 'g2 children at end of create_variables: ',self.children.keys()
+        #logging.debug('created {} variables {}'.format(str(self),show_clock()))
         return self.all_variables(times)
 <<<<<<< HEAD
     
@@ -735,9 +747,22 @@ class Bus(OptimizationObject):
     def create_variables(self,times):
         self.add_components(self.generators,'generators')
         self.add_components(self.loads,'loads')
-        for gen in self.generators: gen.create_variables(times)
+        logging.debug('added bus {} components - generators and loads {}'.format(self.name,show_clock()))
+#        if len(self.generators)<50:
+        for gen in self.generators: gen.create_variables(times)             
+#        else:
+#            for gen in self.generators:
+#                threading.Thread(target=_call_generator_create_variables,args=(gen,times)).start()
+#            else:
+#                for th in threading.enumerate():  
+#                    if th is threading.current_thread(): continue
+#                    else: th.join()
+
+        logging.debug('created generator variables {}'.format(show_clock()))
         for load in self.loads: load.create_variables(times)
+        logging.debug('created load variables {}'.format(show_clock()))
         for time in times: self.add_variable('angle',time=time)
+        logging.debug('created bus variables ... returning {}'.format(show_clock()))
         return self.all_variables(times)
     def create_objective(self,times):
         self.objective= \
@@ -966,6 +991,7 @@ class PowerSystem(OptimizationObject):
     def create_variables(self,times):
         for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
+        logging.debug('... created power system vars... returning... {}'.format(show_clock()))
         return self.all_variables(times)
     def create_objective(self,times):
         self.objective=sum_vars(bus.create_objective(times) for bus in self.buses) + sum_vars(line.create_objective(times) for line in self.lines)
@@ -978,6 +1004,7 @@ class PowerSystem(OptimizationObject):
     
 #def power_to_energy(P,time):
 #    return P*time.intervalhrs
+<<<<<<< HEAD
     
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -993,3 +1020,7 @@ def filter_optimization_objects(objects,times):
 >>>>>>> rough optimization object model for generator. unit and integration tested.
 =======
 >>>>>>> working on the big refactor to opt.obj. model
+=======
+def _call_generator_create_variables(gen,times): return gen.create_variables(times)
+
+>>>>>>> debugging times for problem creation

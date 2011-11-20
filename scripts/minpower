@@ -22,6 +22,8 @@ parser.add_argument('--duals_off','-u',action="store_true", default=False,
                   help='flag to skip getting the the duals, or prices, of the optimization problem')
 parser.add_argument('--dispatch_decommit_allowed','-d', action="store_true", default=False,
                     help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
+parser.add_argument('--logfile','-l',type=str,default=False,
+                   help='log file, default is to log to terminal')
                     
 #figure out the command line arguments
 args = parser.parse_args()
@@ -49,4 +51,5 @@ solve.problem(directory,
               visualization=not args.visualization_off,
               get_duals=not args.duals_off,
               problemfile=args.problemfile,
+              logging_file=args.logfile,
               )

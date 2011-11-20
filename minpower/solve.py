@@ -47,13 +47,16 @@ def problem(datadir='.',
     """
     
     _setup_logging(logging_level)
-    
+    logging.debug('Minpower reading {} {}'.format(datadir, show_clock()))
     generators,loads,lines,times=get_data.parsedir(datadir)
+    logging.debug('data read {}'.format(show_clock()))
     power_system=powersystems.PowerSystem(generators,loads,lines,                 
                 num_breakpoints=num_breakpoints,
                 load_shedding_allowed=False,
                 #spinning_reserve_requirement=0,
                 dispatch_decommit_allowed=dispatch_decommit_allowed,)
+    
+    logging.debug('power system set up {}'.format(show_clock()))
     
     if times.spanhrs<=hours_commitment:
         problem=create_problem(power_system,times)
@@ -89,14 +92,22 @@ def create_problem(power_system,times):
     :returns: :class:`~optimization.Problem` object
     """
     
+    
     prob=optimization.newProblem()
+    logging.debug('initialized problem {}'.format(show_clock()))
     variables =power_system.create_variables(times)
+    logging.debug('created variables {}'.format(show_clock()))
     objective=power_system.create_objective(times)
+    logging.debug('created objective {}'.format(show_clock()))
     constraints=power_system.create_constraints(times)
+    logging.debug('created constraints {}'.format(show_clock()))
     
     for v in variables.values(): prob.add_variable(v)
+    logging.debug('added vars to problem {}'.format(show_clock()))
     for c in constraints.values(): prob.add_constraint(c)
+    logging.debug('added constraints to problem {}'.format(show_clock()))
     prob.add_objective(objective)
+    logging.debug('added objective to problem {}'.format(show_clock()))
     return prob
 
 def solve_multistage(power_system,times,datadir,
@@ -155,6 +166,7 @@ def solve_multistage(power_system,times,datadir,
         logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
         
         set_initialconditions(buses,t_stage.initialTime)
+        
         stage_problem=create_problem(power_system,t_stage)
         if writeproblem: stage_problem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
         logging.info('created... solving... {}'.format(show_clock(showclock)))

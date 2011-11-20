@@ -26,6 +26,7 @@ def problem(datadir='.',
         get_duals=True,
         dispatch_decommit_allowed=False,
         logging_level=config.logging_level,
+        logging_file=False,
         ):
     """ 
     Solve a optimization problem specified by spreadsheets in a directory.
@@ -46,7 +47,7 @@ def problem(datadir='.',
     :returns: :class:`~results.Solution` object
     """
     
-    _setup_logging(logging_level)
+    _setup_logging(logging_level,logging_file)
     logging.debug('Minpower reading {} {}'.format(datadir, show_clock()))
     generators,loads,lines,times=get_data.parsedir(datadir)
     logging.debug('data read {}'.format(show_clock()))
@@ -377,7 +378,7 @@ def solve_multistage(power_system,times,datadir,
             power_system.set_load_shedding(False)
             
         if stage_problem.solved:
-            logging.info('solved... get results... {}'.format(show_clock(showclock)))
+            logging.debug('solved... get results... {}'.format(show_clock(showclock)))
             get_finalconditions(power_system,t_stage,stage_problem)
             #stage_sln=results.get_stage_solution(stage_problem,power_system,t_stage,overlap_hours)
             stage_sln=results.make_solution(power_system,t_stage.non_overlap_times,problem=stage_problem)
@@ -392,6 +393,8 @@ def solve_multistage(power_system,times,datadir,
     return stage_solutions,stage_times
 
   
-def _setup_logging(level):
+def _setup_logging(level,filename=False):
     ''' set up the logging to report on the status'''
-    logging.basicConfig( level=level, format='%(levelname)s: %(message)s')
+    if filename:
+        logging.basicConfig( level=level, format='%(levelname)s: %(message)s',filename=filename)
+    else: logging.basicConfig( level=level, format='%(levelname)s: %(message)s')

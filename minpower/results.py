@@ -15,6 +15,23 @@ import config
 import matplotlib
 import matplotlib.pyplot as plot
 
+
+
+def prettify_plots(for_publication=True):
+    plot.rc("xtick", direction="out")
+    plot.rc("ytick", direction="out")
+    plot.rc("legend",fancybox=True)
+    if for_publication:
+        plot.rc("font",size=16)
+        plot.rc("font",family="serif")
+        
+def prettify_axes(ax):
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
+prettify_plots()
+
 def classify_problem(times,power_system):
     '''
     Classify the type of problem: ED, OPF, UC, or SCUC.
@@ -266,6 +283,7 @@ class Solution_ED(Solution):
         maxGen=max(getattrL(generators,'Pmax'))
 
         #save a plot of the price space - illustrating equal IC
+        ax=plot.axes()
         for gen in generators:
             if gen.status(t):
                 gensPlotted.append( gen.cost_model.plot_derivative(P=value(gen.power(t)),linestyle='-') )
@@ -282,7 +300,7 @@ class Solution_ED(Solution):
         plot.xlabel('P [MWh]')        
         if loadsPlotted:     plot.ylabel('Marginal Cost-Benifit [$/MWh]')
         else:                plot.ylabel('Marginal Cost [$/MWh]')
-
+        prettify_axes(ax)
         
         ymin,_ = plot.ylim()
         if ymin<0: plot.ylim(ymin=0)        
@@ -422,10 +440,11 @@ class Solution_UC(Solution):
         figWidth=.85; figLeft=(1-figWidth)/2
         yLabel_pos={'x':-0.09,'y':0.5}
         
-        plot.figure(figsize=(10, 4), dpi=120)
+        fig=plot.figure(figsize=(10, 4), dpi=120)
         ax=plot.axes([figLeft,.1,figWidth,.6])
         ax.set_ylabel('energy [MWh]',ha='center',**bigFont)
         ax.yaxis.set_label_coords(**yLabel_pos)
+        prettify_axes(ax)
         
         alpha_initialTime=0.2
         
@@ -503,11 +522,11 @@ class Solution_UC(Solution):
         else: 
             #show all generators individually 
             #sort generators by 1.committed hrs (and then by 2. energy)
-            generators=sorted(generators,reverse=True,
-                              key=lambda gen: 
-                              ( sum(value(gen.status(t)) for t in times), #committed hrs
-                               sum(value(gen.power(t)) for t in times) #energy
-                               ))
+#            generators=sorted(generators,reverse=True,
+#                              key=lambda gen: 
+#                              ( sum(value(gen.status(t)) for t in times), #committed hrs
+#                               sum(value(gen.power(t)) for t in times) #energy
+#                               ))
             colors=_colormap(len(generators),colormapName='Blues')
             for g,gen in enumerate(generators):
                 Pgen=[gen.power(t) for t in times.wInitial]
@@ -549,7 +568,7 @@ class Solution_UC(Solution):
                 #format the price axis nicely
                 plot.ylim((.9*min(prices_wo_none),1.1*max(prices_wo_none)))
                 axesPrice.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(5))
-        
+                prettify_axes(axesPrice)
         ax.xaxis_date()
         plottedL=loadsPlotted[::-1]+gensPlotted[::-1]
         ax.legend(plottedL, yLabels[::-1],loc='lower right')

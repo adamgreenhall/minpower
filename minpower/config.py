@@ -15,7 +15,7 @@ generator_kinds=[
     ]
 
 generator_defaults=dict(
-    Pmin=dict(generic=0),
+    Pmin=dict(generic=0,wind=0),
 
     costcurvestring=dict(
         generic=            '3000+25P+.005P^2',
@@ -35,6 +35,7 @@ generator_defaults=dict(
         nggt=                 90,
         ngcc=                420,
         ngst   =             550,#assume equal to coal fired steam
+        wind   =             100,
         ),
     
     minuptime=dict(
@@ -44,6 +45,7 @@ generator_defaults=dict(
         nggt=0,
         ngcc=6,
         ngst=24, #assume equal to coal fired steam
+        wind=0,
         ),
     
     mindowntime=dict(
@@ -53,6 +55,7 @@ generator_defaults=dict(
         nggt=0,
         ngcc=12,
         ngst=12,#assume equal to coal fired steam
+        wind=0,
         ),
     
     fuelcost=dict(
@@ -81,6 +84,7 @@ generator_defaults=dict(
         ngst   =  3581,
         nggt   =  7811,
         ngcc   =  9250,
+        wind   =     0,
         )
     )
 

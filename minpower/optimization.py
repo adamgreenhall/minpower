@@ -8,6 +8,8 @@ import coopr.pyomo as pyomo
 #import coopr.pyomo.scripting.util as cooprUtil
 from coopr.opt.base import solvers as cooprsolver
 
+variable_kinds = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyomo.Boolean)
+
 import logging,time
 import config
 from commonscripts import update_attributes,show_clock
@@ -459,8 +461,7 @@ def new_variable(name='',kind='Continuous',low=-1000000,high=1000000):
     :param low: low limit of variable
     :param high: high limit of variable
     '''
-    kindmap = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyomo.Boolean)
-    return pyomo.Var(name=name,bounds=(low,high),domain=kindmap[kind])
+    return pyomo.Var(name=name,bounds=(low,high),domain=variable_kinds[kind])
 def new_constraint(name,expression): 
     '''Create an optimization constraint.'''
     return pyomo.Constraint(name=name,rule=expression)

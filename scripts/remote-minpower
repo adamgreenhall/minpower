@@ -1,16 +1,47 @@
-#!/bin/bash
-dir=$1
-remote_computer=$2
-remote_loc="/tmp/"
-remote_dir="/tmp/$dir"
-remote_script='minpower'
+#!/usr/bin/python
+import argparse,os
+from fabric.api import run,put,get
+from minpower import solve,config
 
-if [ -d "$dir" ]; then
-    #run minpower solve on the directory
-    echo 'copying directory:' $dir
-    scp -r "$dir" "$remote_computer":"$remote_loc"
-    echo "solving problem on $remote_computer"
-    ssh "$remote_computer" "'$remote_script '$remote_dir''"
-    echo 'copying results'
-    scp -r "$remote_computer":"$remote_dir" "$dir/results"
-fi
+solution_filenames=['dispatch','power-flow','commitment']
+    
+def minpower(args):
+    directory=args.directory
+    _,name=os.path.split(directory.rstrip('/'))
+    remote_dir='/tmp/'+name+'/'
+    if not os.path.isdir(directory): raise OSError('Not a folder')
+    run('if test -d {dir}; then echo "overwriting dir"; else mkdir {dir}; fi'.format(dir=remote_dir))
+    files=os.path.join(directory,'*.csv')
+    files_sent=put(files,remote_dir)
+
+    run('minpower {d}'.format(d=remote_dir))
+
+    for f in solution_filenames:
+        search=remote_dir+'{f}*'.format(f=f)
+        try: get(search,directory)
+        except: pass
+
+parser = argparse.ArgumentParser(description='Minpower remote machine command line interface')
+parser.add_argument('directory', type=str, 
+                   help='the direcory of the problem you want to solve')
+parser.add_argument('remote_machine',type=str, help='the ssh-styled IP address of the machine to use')
+parser.add_argument('--solver','-s',  type=str, default=config.optimization_solver,
+                   help='the solver name used to solve the problem (e.g. cplex, gurobi, glpk)')
+parser.add_argument('--visualization_off','-v',action="store_true", default=False,
+                  help='flag to turn off the visualization of the solution')
+parser.add_argument('--breakpoints','-b',  type=int, default=config.default_num_breakpoints,
+                   help='number of breakpoints to use in piece-wise linearization of polynomial costs')
+parser.add_argument('--commitment_hours','-c', type=int, default=config.default_hours_commitment,
+                   help='number hours per commitment in a rolling UC (exclusive of overlap)')
+parser.add_argument('--overlap_hours','-o', type=int, default=config.default_hours_commitment_overlap,
+                   help='number hours to overlap commitments in a rolling UC')      
+parser.add_argument('--problemfile','-p',action="store_true", default=False,
+                   help='flag to write the problem formulation to a problem-formulation.lp file -- useful for debugging')
+parser.add_argument('--duals_off','-u',action="store_true", default=False,
+                  help='flag to skip getting the the duals, or prices, of the optimization problem')
+parser.add_argument('--dispatch_decommit_allowed','-d', action="store_true", default=False,
+                    help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
+                    
+#figure out the command line arguments
+args = parser.parse_args()
+print args.remote_machine

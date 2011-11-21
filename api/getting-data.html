@@ -1,0 +1,208 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Getting Data &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="top" title="minpower" href="../index.html" />
+    <link rel="up" title="Documentation" href="index.html" />
+    <link rel="next" title="Power Systems Components" href="power-systems.html" />
+    <link rel="prev" title="Solving Problems" href="solving.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-get_data">
+<span id="getting-data"></span><h1>Getting Data<a class="headerlink" href="#module-get_data" title="Permalink to this headline">¶</a></h1>
+<p>Get data from spreadsheet files and parse it into 
+<a class="reference internal" href="power-systems.html#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt></a>, <a class="reference internal" href="power-systems.html#powersystems.Load" title="powersystems.Load"><tt class="xref py py-class docutils literal"><span class="pre">Load</span></tt></a>,
+<a class="reference internal" href="power-systems.html#powersystems.Bus" title="powersystems.Bus"><tt class="xref py py-class docutils literal"><span class="pre">Bus</span></tt></a>, and <a class="reference internal" href="power-systems.html#powersystems.Line" title="powersystems.Line"><tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt></a> objects.
+Also extract the time information and create a <a class="reference internal" href="time.html#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a>
+object.</p>
+<dl class="function">
+<dt id="get_data.build_class_list">
+<tt class="descclassname">get_data.</tt><tt class="descname">build_class_list</tt><big>(</big><em>filename</em>, <em>model</em>, <em>field_attr_map</em>, <em>times=None</em><big>)</big><a class="reference internal" href="../_modules/get_data.html#build_class_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.build_class_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create list of class instances from data in a spreadsheet.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> &#8211; the spreadsheet file (currently just .csv)</li>
+<li><strong>classname</strong> &#8211; the <a class="reference internal" href="power-systems.html#module-powersystems" title="powersystems"><tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt></a> class to map the data to</li>
+<li><strong>field_attr_map</strong> &#8211; the map from field name (the first row of the spreadsheet) to attribute (the class)</li>
+<li><strong>times</strong> &#8211; for <a class="reference internal" href="power-systems.html#module-powersystems" title="powersystems"><tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt></a> classes which have schedule file information,
+a master:class:<cite>~schedule.Timelist</cite> list to pass to <a class="reference internal" href="time.html#schedule.Schedule" title="schedule.Schedule"><tt class="xref py py-class docutils literal"><span class="pre">Schedule</span></tt></a></li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a list of class objects</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="get_data.parsedir">
+<tt class="descclassname">get_data.</tt><tt class="descname">parsedir</tt><big>(</big><em>datadir='.'</em>, <em>file_gens='generators.csv'</em>, <em>file_loads='loads.csv'</em>, <em>file_lines='lines.csv'</em>, <em>file_init='initial.csv'</em><big>)</big><a class="reference internal" href="../_modules/get_data.html#parsedir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.parsedir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import data from spreadsheets and build lists of
+<a class="reference internal" href="power-systems.html#module-powersystems" title="powersystems"><tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt></a> classes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>datadir</strong> &#8211; directory of data</li>
+<li><strong>file_gens</strong> &#8211; spreadsheet of generator data</li>
+<li><strong>file_loads</strong> &#8211; spreadsheet of load data</li>
+<li><strong>file_lines</strong> &#8211; spreadsheet of line data (not required for ED,UC problems)</li>
+<li><strong>file_init</strong> &#8211; spreadsheet of initial time generator data
+(not required for ED,OPF problems. Defaults will be used
+for UC problems if not specified.)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>:return generators:, list of <a class="reference internal" href="power-systems.html#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt></a> objects 
+:return loads:, list of <tt class="xref py py-class docutils literal"><span class="pre">Load</span></tt> objects
+:return lines:, list of <a class="reference internal" href="power-systems.html#powersystems.Line" title="powersystems.Line"><tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt></a> objects
+:return times:, list of <a class="reference internal" href="time.html#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a> object</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="get_data.setup_initialcond">
+<tt class="descclassname">get_data.</tt><tt class="descname">setup_initialcond</tt><big>(</big><em>filename</em>, <em>generators</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/get_data.html#setup_initialcond"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.setup_initialcond" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read initial conditions from a spreadsheet and
+add information to each <a class="reference internal" href="power-systems.html#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt></a> 
+object.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="get_data.setup_times">
+<tt class="descclassname">get_data.</tt><tt class="descname">setup_times</tt><big>(</big><em>file_gens</em>, <em>file_loads</em>, <em>datadir</em><big>)</big><a class="reference internal" href="../_modules/get_data.html#setup_times"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.setup_times" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create list of <a class="reference internal" href="time.html#schedule.Time" title="schedule.Time"><tt class="xref py py-class docutils literal"><span class="pre">Time</span></tt></a> objects 
+from the schedule files. If there are no schedule
+files (as in ED,OPF), create just a single
+<a class="reference internal" href="time.html#schedule.Time" title="schedule.Time"><tt class="xref py py-class docutils literal"><span class="pre">Time</span></tt></a> instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>file_gens</strong> &#8211; spreadsheet of generator data</li>
+<li><strong>file_loads</strong> &#8211; spreadsheet of load data</li>
+<li><strong>datadir</strong> &#8211; directory of data</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a <a class="reference internal" href="time.html#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a> object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../creating-problems.html">Creating a Problem</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<div class="social">
+<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
+<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

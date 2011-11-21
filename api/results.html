@@ -1,0 +1,378 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Results &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="top" title="minpower" href="../index.html" />
+    <link rel="up" title="Documentation" href="index.html" />
+    <link rel="next" title="Testing" href="testing.html" />
+    <link rel="prev" title="Bidding" href="bids.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-results">
+<span id="results"></span><h1>Results<a class="headerlink" href="#module-results" title="Permalink to this headline">¶</a></h1>
+<p>Solution models, output, and display for power system
+optimization problems. Matplotlib and networkx are used for
+visualization.</p>
+<dl class="class">
+<dt id="results.Solution">
+<em class="property">class </em><tt class="descclassname">results.</tt><tt class="descname">Solution</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>problem</em>, <em>datadir='.'</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Solution information template for a power system over times.
+Each problem type has its own class for visualization and 
+spreadsheet output, e.g. <tt class="xref py py-class docutils literal"><span class="pre">Solution_ED</span></tt>.</p>
+<dl class="method">
+<dt id="results.Solution.buses">
+<tt class="descname">buses</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/results.html#Solution.buses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.buses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution.generators">
+<tt class="descname">generators</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/results.html#Solution.generators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.generators" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution.get_values">
+<tt class="descname">get_values</tt><big>(</big><em>kind='generators'</em>, <em>attrib='power'</em>, <em>time=None</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution.get_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.get_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the attributes of all objects of a certain kind at a given time.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="results.Solution.info_buses">
+<tt class="descname">info_buses</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution.info_buses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.info_buses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution.info_cost">
+<tt class="descname">info_cost</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/results.html#Solution.info_cost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.info_cost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution.info_generators">
+<tt class="descname">info_generators</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution.info_generators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.info_generators" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution.info_lines">
+<tt class="descname">info_lines</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution.info_lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.info_lines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution.info_loads">
+<tt class="descname">info_loads</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution.info_loads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.info_loads" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution.info_price">
+<tt class="descname">info_price</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution.info_price"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.info_price" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution.info_status">
+<tt class="descname">info_status</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/results.html#Solution.info_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.info_status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution.lines">
+<tt class="descname">lines</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/results.html#Solution.lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.lines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution.loads">
+<tt class="descname">loads</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/results.html#Solution.loads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.loads" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution.savevisualization">
+<tt class="descname">savevisualization</tt><big>(</big><em>filename=None</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution.savevisualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.savevisualization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the visualization to a file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="results.Solution.show">
+<tt class="descname">show</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/results.html#Solution.show"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the solution information to the terminal</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="results.Solution_ED">
+<em class="property">class </em><tt class="descclassname">results.</tt><tt class="descname">Solution_ED</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>problem</em>, <em>datadir='.'</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_ED"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_ED" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#results.Solution" title="results.Solution"><tt class="xref py py-class docutils literal"><span class="pre">results.Solution</span></tt></a></p>
+<dl class="method">
+<dt id="results.Solution_ED.info_buses">
+<tt class="descname">info_buses</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_ED.info_buses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_ED.info_buses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution_ED.info_lines">
+<tt class="descname">info_lines</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_ED.info_lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_ED.info_lines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution_ED.saveCSV">
+<tt class="descname">saveCSV</tt><big>(</big><em>filename='dispatch.csv'</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_ED.saveCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_ED.saveCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>economic dispatch generator solution values in spreadsheet form</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="results.Solution_ED.visualization">
+<tt class="descname">visualization</tt><big>(</big><em>show_cost_also=False</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_ED.visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_ED.visualization" title="Permalink to this definition">¶</a></dt>
+<dd><p>economic dispatch visualization of linearized incremental cost</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="results.Solution_OPF">
+<em class="property">class </em><tt class="descclassname">results.</tt><tt class="descname">Solution_OPF</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>problem</em>, <em>datadir='.'</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_OPF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_OPF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#results.Solution" title="results.Solution"><tt class="xref py py-class docutils literal"><span class="pre">results.Solution</span></tt></a></p>
+<dl class="method">
+<dt id="results.Solution_OPF.info_price">
+<tt class="descname">info_price</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_OPF.info_price"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_OPF.info_price" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution_OPF.saveCSV">
+<tt class="descname">saveCSV</tt><big>(</big><em>filename='powerflow'</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_OPF.saveCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_OPF.saveCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>OPF generator and line power values in spreadsheet form</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="results.Solution_OPF.visualization">
+<tt class="descname">visualization</tt><big>(</big><em>filename='powerflow.png'</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_OPF.visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_OPF.visualization" title="Permalink to this definition">¶</a></dt>
+<dd><p>power flow visualization</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="results.Solution_SCUC">
+<em class="property">class </em><tt class="descclassname">results.</tt><tt class="descname">Solution_SCUC</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>problem</em>, <em>datadir='.'</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_SCUC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_SCUC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#results.Solution_UC" title="results.Solution_UC"><tt class="xref py py-class docutils literal"><span class="pre">results.Solution_UC</span></tt></a></p>
+<dl class="method">
+<dt id="results.Solution_SCUC.visualization">
+<tt class="descname">visualization</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_SCUC.visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_SCUC.visualization" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="results.Solution_UC">
+<em class="property">class </em><tt class="descclassname">results.</tt><tt class="descname">Solution_UC</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>problem</em>, <em>datadir='.'</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#results.Solution" title="results.Solution"><tt class="xref py py-class docutils literal"><span class="pre">results.Solution</span></tt></a></p>
+<dl class="method">
+<dt id="results.Solution_UC.info_buses">
+<tt class="descname">info_buses</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC.info_buses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC.info_buses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution_UC.info_lines">
+<tt class="descname">info_lines</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC.info_lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC.info_lines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution_UC.saveCSV">
+<tt class="descname">saveCSV</tt><big>(</big><em>filename='commitment.csv'</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC.saveCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC.saveCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>generator power values and statuses for unit commitment</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="results.Solution_UC.visualization">
+<tt class="descname">visualization</tt><big>(</big><em>filename='commitment.png'</em>, <em>withPrices=True</em>, <em>withInitial=False</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC.visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC.visualization" title="Permalink to this definition">¶</a></dt>
+<dd><p>generator output visualization for unit commitment</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="results.Solution_UC_multistage">
+<em class="property">class </em><tt class="descclassname">results.</tt><tt class="descname">Solution_UC_multistage</tt><big>(</big><em>power_system</em>, <em>stage_times</em>, <em>datadir</em>, <em>stage_solutions</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC_multistage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC_multistage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#results.Solution_UC" title="results.Solution_UC"><tt class="xref py py-class docutils literal"><span class="pre">results.Solution_UC</span></tt></a></p>
+<p>Muti-stage unit commitment. Each stage represents one optimization problem.
+Each element of the list :param:stage_solutions is a <a class="reference internal" href="#results.Solution_UC" title="results.Solution_UC"><tt class="xref py py-class docutils literal"><span class="pre">Solution_UC</span></tt></a> object.</p>
+<dl class="method">
+<dt id="results.Solution_UC_multistage.info_shedding">
+<tt class="descname">info_shedding</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC_multistage.info_shedding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC_multistage.info_shedding" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution_UC_multistage.info_status">
+<tt class="descname">info_status</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC_multistage.info_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC_multistage.info_status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution_UC_multistage.show">
+<tt class="descname">show</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC_multistage.show"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC_multistage.show" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="results.classify_problem">
+<tt class="descclassname">results.</tt><tt class="descname">classify_problem</tt><big>(</big><em>times</em>, <em>power_system</em><big>)</big><a class="reference internal" href="../_modules/results.html#classify_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.classify_problem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Classify the type of problem: ED, OPF, UC, or SCUC.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>times</strong> &#8211; a <a class="reference internal" href="time.html#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a> object</li>
+<li><strong>power_system</strong> &#8211; a <a class="reference internal" href="power-systems.html#powersystems.PowerSystem" title="powersystems.PowerSystem"><tt class="xref py py-class docutils literal"><span class="pre">PowerSystem</span></tt></a> object</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="results.make_multistage_solution">
+<tt class="descclassname">results.</tt><tt class="descname">make_multistage_solution</tt><big>(</big><em>power_system</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/results.html#make_multistage_solution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.make_multistage_solution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a multi stage solution object.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="results.make_solution">
+<tt class="descclassname">results.</tt><tt class="descname">make_solution</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/results.html#make_solution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.make_solution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a <tt class="xref py py-class docutils literal"><span class="pre">solution.Solution</span></tt> object for a power system over times.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>times</strong> &#8211; a <a class="reference internal" href="time.html#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a> object</li>
+<li><strong>power_system</strong> &#8211; a <a class="reference internal" href="power-systems.html#powersystems.PowerSystem" title="powersystems.PowerSystem"><tt class="xref py py-class docutils literal"><span class="pre">PowerSystem</span></tt></a> object</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="results.prettify_axes">
+<tt class="descclassname">results.</tt><tt class="descname">prettify_axes</tt><big>(</big><em>ax</em><big>)</big><a class="reference internal" href="../_modules/results.html#prettify_axes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.prettify_axes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="results.prettify_plots">
+<tt class="descclassname">results.</tt><tt class="descname">prettify_plots</tt><big>(</big><em>for_publication=True</em><big>)</big><a class="reference internal" href="../_modules/results.html#prettify_plots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.prettify_plots" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="results.shrink_axis">
+<tt class="descclassname">results.</tt><tt class="descname">shrink_axis</tt><big>(</big><em>ax</em>, <em>percent_horizontal=0.2</em>, <em>percent_vertical=0</em><big>)</big><a class="reference internal" href="../_modules/results.html#shrink_axis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.shrink_axis" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="results.stack_plot_UC">
+<tt class="descclassname">results.</tt><tt class="descname">stack_plot_UC</tt><big>(</big><em>generators</em>, <em>times</em>, <em>prices</em>, <em>withInitial=False</em>, <em>withPrices=True</em><big>)</big><a class="reference internal" href="../_modules/results.html#stack_plot_UC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.stack_plot_UC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../creating-problems.html">Creating a Problem</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<div class="social">
+<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
+<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

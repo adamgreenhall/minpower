@@ -1,0 +1,346 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Optimization &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="top" title="minpower" href="../index.html" />
+    <link rel="up" title="Documentation" href="index.html" />
+    <link rel="next" title="Bidding" href="bids.html" />
+    <link rel="prev" title="Times and Schedules" href="time.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-optimization">
+<span id="optimization"></span><h1>Optimization<a class="headerlink" href="#module-optimization" title="Permalink to this headline">¶</a></h1>
+<p>An optimization command library.
+Currently uses pulp but is transitioning to using coopr.</p>
+<dl class="exception">
+<dt id="optimization.OptimizationError">
+<em class="property">exception </em><tt class="descclassname">optimization.</tt><tt class="descname">OptimizationError</tt><big>(</big><em>ivalue</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Error that occurs within solving an optimization problem.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="optimization.OptimizationObject">
+<em class="property">class </em><tt class="descclassname">optimization.</tt><tt class="descname">OptimizationObject</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>A template for an optimization object. 
+Override the methods of the template with your own.</p>
+<dl class="method">
+<dt id="optimization.OptimizationObject.add_component">
+<tt class="descname">add_component</tt><big>(</big><em>obj</em>, <em>name</em>, <em>time</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.add_component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.add_component" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a child <a class="reference internal" href="#optimization.OptimizationObject" title="optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">OptimizationObject</span></tt></a> dependent on time to this object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimization.OptimizationObject.add_components">
+<tt class="descname">add_components</tt><big>(</big><em>objL</em>, <em>name</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.add_components"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.add_components" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a child <a class="reference internal" href="#optimization.OptimizationObject" title="optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">OptimizationObject</span></tt></a> to this object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimization.OptimizationObject.add_constraint">
+<tt class="descname">add_constraint</tt><big>(</big><em>name</em>, <em>time</em>, <em>expression</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.add_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.add_constraint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new constraint and add it to the constraints dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimization.OptimizationObject.add_variable">
+<tt class="descname">add_variable</tt><big>(</big><em>name</em>, <em>short_name=None</em>, <em>time=None</em>, <em>fixed_value=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.add_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.add_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new variable and add it to the variables dictionary.
+Parameters include those for <cite>meth:optimization.new_variable</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimization.OptimizationObject.all_constraints">
+<tt class="descname">all_constraints</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.all_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.all_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>return constraints from object and children within times</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimization.OptimizationObject.all_variables">
+<tt class="descname">all_variables</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.all_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.all_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>return variables from object and children within times</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimization.OptimizationObject.clear_constraints">
+<tt class="descname">clear_constraints</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.clear_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.clear_constraints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="optimization.OptimizationObject.create_constraints">
+<tt class="descname">create_constraints</tt><big>(</big><em>times</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.create_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Individual class defined.
+Create the constraints in this method by using calls to
+<tt class="xref py py-meth docutils literal"><span class="pre">add_constraint()</span></tt>.
+Constraints will be accessible by using
+<tt class="xref py py-meth docutils literal"><span class="pre">get_constraint()</span></tt> (or by adding
+a shortcut methods, like <a class="reference internal" href="power-systems.html#powersystems.Bus.price" title="powersystems.Bus.price"><tt class="xref py py-meth docutils literal"><span class="pre">price()</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">dictionary of constraints belonging to the object and all its children (components)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimization.OptimizationObject.create_objective">
+<tt class="descname">create_objective</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.create_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.create_objective" title="Permalink to this definition">¶</a></dt>
+<dd><p>Individual class defined.
+Create the contribution to the objective (cost) expression.
+:returns: an expression, the default is 0</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimization.OptimizationObject.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.create_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Individual class defined.
+Create the variables in this method by using calls to
+<tt class="xref py py-meth docutils literal"><span class="pre">add_variable()</span></tt>.
+Variables will be accessible by using
+<tt class="xref py py-meth docutils literal"><span class="pre">get_variable()</span></tt> (or by adding
+a shortcut methods, like <a class="reference internal" href="power-systems.html#powersystems.Generator.power" title="powersystems.Generator.power"><tt class="xref py py-meth docutils literal"><span class="pre">power()</span></tt></a>).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">dictionary of variables belonging to the object and all its children (components)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimization.OptimizationObject.get_component">
+<tt class="descname">get_component</tt><big>(</big><em>name</em>, <em>time=None</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.get_component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.get_component" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a child <a class="reference internal" href="#optimization.OptimizationObject" title="optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">OptimizationObject</span></tt></a> dependent on time from this object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimization.OptimizationObject.get_constraint">
+<tt class="descname">get_constraint</tt><big>(</big><em>name</em>, <em>time</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.get_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.get_constraint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="optimization.OptimizationObject.get_variable">
+<tt class="descname">get_variable</tt><big>(</big><em>name</em>, <em>time</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.get_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.get_variable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="optimization.OptimizationObject.iden">
+<tt class="descname">iden</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.iden"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.iden" title="Permalink to this definition">¶</a></dt>
+<dd><p>Individual class defined.
+Identifing string for the object, depending on time. Used to name variables and constraints for the object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimization.OptimizationObject.init_optimization">
+<tt class="descname">init_optimization</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.init_optimization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.init_optimization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize optimization components: add containers for variables, 
+constraints, and an objective component. If the index is not
+defined, make it a hash of the object to ensure the index is unique.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimization.OptimizationObject.update_variables">
+<tt class="descname">update_variables</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.update_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.update_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace the object and its children&#8217;s variables with their numeric value.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="optimization.Problem">
+<em class="property">class </em><tt class="descclassname">optimization.</tt><tt class="descname">Problem</tt><a class="reference internal" href="../_modules/optimization.html#Problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem" title="Permalink to this definition">¶</a></dt>
+<dd><p>an optimization problem/model based on pyomo</p>
+<dl class="method">
+<dt id="optimization.Problem.add_constraint">
+<tt class="descname">add_constraint</tt><big>(</big><em>constraint</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#Problem.add_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.add_constraint" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a single constraint to the problem</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimization.Problem.add_objective">
+<tt class="descname">add_objective</tt><big>(</big><em>expression</em>, <em>sense=1</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#Problem.add_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.add_objective" title="Permalink to this definition">¶</a></dt>
+<dd><p>add an objective to the problem</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimization.Problem.add_variable">
+<tt class="descname">add_variable</tt><big>(</big><em>variable</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#Problem.add_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.add_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a single variable to the problem</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="optimization.Problem.solve">
+<tt class="descname">solve</tt><big>(</big><em>solver='gurobi'</em>, <em>problem_filename=False</em>, <em>get_duals=True</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#Problem.solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.Problem.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve the optimization problem.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>solver</strong> &#8211; name of solver (lowercase string).</li>
+<li><strong>problem_filename</strong> &#8211; write MIP problem formulation to a file, if a file name is specified</li>
+<li><strong>get_duals</strong> &#8211; get the duals, or prices, of the optimization problem</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="optimization.dual">
+<tt class="descclassname">optimization.</tt><tt class="descname">dual</tt><big>(</big><em>constraint</em>, <em>index=None</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#dual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.dual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dual of optimization constraint, after the problem is solved.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="optimization.filter_optimization_objects">
+<tt class="descclassname">optimization.</tt><tt class="descname">filter_optimization_objects</tt><big>(</big><em>objects</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#filter_optimization_objects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.filter_optimization_objects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter variables or constraints by times.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="optimization.newProblem">
+<tt class="descclassname">optimization.</tt><tt class="descname">newProblem</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/optimization.html#newProblem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.newProblem" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="optimization.new_constraint">
+<tt class="descclassname">optimization.</tt><tt class="descname">new_constraint</tt><big>(</big><em>name</em>, <em>expression</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#new_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.new_constraint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an optimization constraint.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="optimization.new_variable">
+<tt class="descclassname">optimization.</tt><tt class="descname">new_variable</tt><big>(</big><em>name=''</em>, <em>kind='Continuous'</em>, <em>low=-1000000</em>, <em>high=1000000</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#new_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.new_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an optimization variable.
+:param name: name of optimization variable.
+:param kind: type of variable, specified by string. {Continuous or Binary/Boolean}
+:param low: low limit of variable
+:param high: high limit of variable</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="optimization.sum_vars">
+<tt class="descclassname">optimization.</tt><tt class="descname">sum_vars</tt><big>(</big><em>variables</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#sum_vars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.sum_vars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="optimization.value">
+<tt class="descclassname">optimization.</tt><tt class="descname">value</tt><big>(</big><em>variable</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Value of an optimization variable after the problem is solved.
+If passed a numeric value, will return the number.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../creating-problems.html">Creating a Problem</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<div class="social">
+<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
+<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

@@ -1,0 +1,208 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Solving Problems &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="top" title="minpower" href="../index.html" />
+    <link rel="up" title="Documentation" href="index.html" />
+    <link rel="next" title="Getting Data" href="getting-data.html" />
+    <link rel="prev" title="Documentation" href="index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-solve">
+<span id="solving-problems"></span><h1>Solving Problems<a class="headerlink" href="#module-solve" title="Permalink to this headline">¶</a></h1>
+<p>Power systems optimization problem solver
+for ED, OPF, UC, and SCUC problems. The <a class="reference internal" href="#module-solve" title="solve"><tt class="xref py py-mod docutils literal"><span class="pre">solve</span></tt></a>
+module contains the top-level commands for creating
+problems and solving them.</p>
+<dl class="function">
+<dt id="solve.create_problem">
+<tt class="descclassname">solve.</tt><tt class="descname">create_problem</tt><big>(</big><em>power_system</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/solve.html#create_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.create_problem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an optimization problem.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>power_system</strong> &#8211; a <a class="reference internal" href="power-systems.html#powersystems.PowerSystem" title="powersystems.PowerSystem"><tt class="xref py py-class docutils literal"><span class="pre">PowerSystem</span></tt></a> object</li>
+<li><strong>times</strong> &#8211; <a class="reference internal" href="time.html#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a> object</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><a class="reference internal" href="optimization.html#optimization.Problem" title="optimization.Problem"><tt class="xref py py-class docutils literal"><span class="pre">Problem</span></tt></a> object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="solve.problem">
+<tt class="descclassname">solve.</tt><tt class="descname">problem</tt><big>(</big><em>datadir='.'</em>, <em>shell=True</em>, <em>problemfile=False</em>, <em>visualization=True</em>, <em>csv=True</em>, <em>solver='gurobi'</em>, <em>num_breakpoints=11</em>, <em>hours_commitment=24</em>, <em>hours_commitment_overlap=0</em>, <em>get_duals=True</em>, <em>dispatch_decommit_allowed=False</em>, <em>logging_level=10</em>, <em>logging_file=False</em><big>)</big><a class="reference internal" href="../_modules/solve.html#problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.problem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve a optimization problem specified by spreadsheets in a directory.
+Read in data, create and solve the problem, and return solution.
+The problem type is determined by the data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>datadir</strong> &#8211; directory of data files, see <a class="reference internal" href="getting-data.html#module-get_data" title="get_data"><tt class="xref py py-mod docutils literal"><span class="pre">get_data</span></tt></a></li>
+<li><strong>shell</strong> &#8211; output solution information to the command line</li>
+<li><strong>problemfile</strong> &#8211; write the problem formulation to a problem-formulation.lp file</li>
+<li><strong>visualization</strong> &#8211; create a visualization of the solution and save it to a file</li>
+<li><strong>csv</strong> &#8211; create a spreadsheet of the solution</li>
+<li><strong>solver</strong> &#8211; choice of solver, a lowercase string</li>
+<li><strong>num_breakpoints</strong> &#8211; number of break points to use in linearization of bid (or cost) polynomials (equal to number of segments + 1)</li>
+<li><strong>hours_commitment</strong> &#8211; maximum length of a single unit commitment, times beyond this will be divided into multiple problems and solved in a rolling commitment</li>
+<li><strong>hours_commitment_overlap</strong> &#8211; overlap of commitments for rolling commitments</li>
+<li><strong>get_duals</strong> &#8211; get the duals, or prices, of the optimization problem</li>
+<li><strong>dispatch_decommit_allowed</strong> &#8211; allow de-commitment of units in an ED &#8211; useful for getting initial conditions for UCs</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><a class="reference internal" href="results.html#results.Solution" title="results.Solution"><tt class="xref py py-class docutils literal"><span class="pre">Solution</span></tt></a> object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="solve.solve_multistage">
+<tt class="descclassname">solve.</tt><tt class="descname">solve_multistage</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>datadir</em>, <em>solver='gurobi'</em>, <em>interval_hours=None</em>, <em>stage_hours=24</em>, <em>overlap_hours=0</em>, <em>writeproblem=False</em>, <em>get_duals=True</em>, <em>showclock=True</em><big>)</big><a class="reference internal" href="../_modules/solve.html#solve_multistage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.solve_multistage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve a rolling or multi-stage power systems optimization problem.
+Each stage will be one optimization run. A stage&#8217;s final
+conditions will be the next stage&#8217;s initial condition.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>power_system</strong> &#8211; <a class="reference internal" href="power-systems.html#powersystems.PowerSystem" title="powersystems.PowerSystem"><tt class="xref py py-class docutils literal"><span class="pre">PowerSystem</span></tt></a> object</li>
+<li><strong>datadir</strong> &#8211; directory of spreadsheets</li>
+<li><strong>times</strong> &#8211; <a class="reference internal" href="time.html#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a> object. Will be split up into stages</li>
+<li><strong>interval_hours</strong> &#8211; number of hours per interval</li>
+<li><strong>stage_hours</strong> &#8211; number of hours per stage (e.g. run one commitment every stage_hours)</li>
+<li><strong>overlap_hours</strong> &#8211; number of hours that stages overlap (e.g. run a 36hr commitment every 24hrs)</li>
+<li><strong>writeproblem</strong> &#8211; save the formulation of each stage to a file</li>
+<li><strong>get_duals</strong> &#8211; get the duals, or prices, of the optimization problem</li>
+<li><strong>showclock</strong> &#8211; show the current system time at the start of each stage</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a list of <a class="reference internal" href="results.html#results.Solution_UC" title="results.Solution_UC"><tt class="xref py py-class docutils literal"><span class="pre">Solution_UC</span></tt></a> objects (one per stage)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a list of <a class="reference internal" href="time.html#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a> objects (one per stage)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../creating-problems.html">Creating a Problem</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<div class="social">
+<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
+<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

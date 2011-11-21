@@ -1,0 +1,665 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Power Systems Components &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="top" title="minpower" href="../index.html" />
+    <link rel="up" title="Documentation" href="index.html" />
+    <link rel="next" title="Times and Schedules" href="time.html" />
+    <link rel="prev" title="Getting Data" href="getting-data.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-powersystems">
+<span id="power-systems-components"></span><h1>Power Systems Components<a class="headerlink" href="#module-powersystems" title="Permalink to this headline">¶</a></h1>
+<p>Defines models for power systems components, including 
+<a class="reference internal" href="#powersystems.PowerSystem" title="powersystems.PowerSystem"><tt class="xref py py-class docutils literal"><span class="pre">PowerSystem</span></tt></a>, <a class="reference internal" href="#powersystems.Bus" title="powersystems.Bus"><tt class="xref py py-class docutils literal"><span class="pre">Bus</span></tt></a>, 
+<a class="reference internal" href="#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt></a>, <a class="reference internal" href="#powersystems.Load" title="powersystems.Load"><tt class="xref py py-class docutils literal"><span class="pre">Load</span></tt></a>,
+and  <a class="reference internal" href="#powersystems.Line" title="powersystems.Line"><tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt></a>. Each of these objects inherits
+an optimization framework from <a class="reference internal" href="optimization.html#optimization.OptimizationObject" title="optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">OptimizationObject</span></tt></a>.</p>
+<dl class="class">
+<dt id="powersystems.Bus">
+<em class="property">class </em><tt class="descclassname">powersystems.</tt><tt class="descname">Bus</tt><big>(</big><em>name=None</em>, <em>index=None</em>, <em>isSwing=False</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Bus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Bus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="optimization.html#optimization.OptimizationObject" title="optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">optimization.OptimizationObject</span></tt></a></p>
+<p>Describes a bus (usually a substation where one or more
+tranmission lines start/end).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>isSwing</strong> &#8211; flag if the bus is the swing bus 
+(sets the reference angle for the system)</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="powersystems.Bus.Pgen">
+<tt class="descname">Pgen</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Bus.Pgen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Bus.Pgen" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Bus.Pload">
+<tt class="descname">Pload</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Bus.Pload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Bus.Pload" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Bus.angle">
+<tt class="descname">angle</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Bus.angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Bus.angle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Bus.create_constraints">
+<tt class="descname">create_constraints</tt><big>(</big><em>times</em>, <em>Bmatrix</em>, <em>buses</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Bus.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Bus.create_constraints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Bus.create_objective">
+<tt class="descname">create_objective</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Bus.create_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Bus.create_objective" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Bus.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Bus.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Bus.create_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Bus.iden">
+<tt class="descname">iden</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Bus.iden"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Bus.iden" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Bus.power_balance">
+<tt class="descname">power_balance</tt><big>(</big><em>t</em>, <em>Bmatrix</em>, <em>allBuses</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Bus.power_balance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Bus.power_balance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Bus.price">
+<tt class="descname">price</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Bus.price"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Bus.price" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="powersystems.Generator">
+<em class="property">class </em><tt class="descclassname">powersystems.</tt><tt class="descname">Generator</tt><big>(</big><em>kind='generic'</em>, <em>Pmin=0</em>, <em>Pmax=500</em>, <em>minuptime=0</em>, <em>mindowntime=0</em>, <em>rampratemax=None</em>, <em>rampratemin=None</em>, <em>costcurvestring='20P'</em>, <em>heatratestring=None</em>, <em>fuelcost=1</em>, <em>startupcost=0</em>, <em>shutdowncost=0</em>, <em>mustrun=False</em>, <em>name=''</em>, <em>index=None</em>, <em>bus=None</em>, <em>dispatch_decommit_allowed=False</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="optimization.html#optimization.OptimizationObject" title="optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">optimization.OptimizationObject</span></tt></a></p>
+<p>A generator model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>Pmin</strong> &#8211; minimum real power</li>
+<li><strong>Pmax</strong> &#8211; maximum real power</li>
+<li><strong>minuptime</strong> &#8211; min. time after commitment in on status (hours)</li>
+<li><strong>mindowntime</strong> &#8211; min. time after de-commitment in off status (hours)</li>
+<li><strong>rampratemax</strong> &#8211; max. positive change in real power over 1hr (MW/hr)</li>
+<li><strong>rampratemin</strong> &#8211; max. negative change in real power over 1hr (MW/hr)</li>
+<li><strong>costcurvestring</strong> &#8211; text describing a polynomial cost curve ($/MWh)
+see <a class="reference internal" href="bids.html#bidding.parsePolynomial" title="bidding.parsePolynomial"><tt class="xref py py-meth docutils literal"><span class="pre">parsePolynomial()</span></tt></a> for more.</li>
+<li><strong>heatratestring</strong> &#8211; text describing a polynomial heat rate curve (MBTU/MW). 
+converts to cost curve when multiplied by fuelcost.</li>
+<li><strong>fuelcost</strong> &#8211; cost of fuel ($/MBTU)</li>
+<li><strong>startupcost</strong> &#8211; cost to commit ($)</li>
+<li><strong>shutdowncost</strong> &#8211; cost to de-commit ($)</li>
+<li><strong>mustrun</strong> &#8211; flag that forces commimtent to be on</li>
+<li><strong>name</strong> &#8211; name of the generator</li>
+<li><strong>index</strong> &#8211; numbering of the generator</li>
+<li><strong>bus</strong> &#8211; bus name that the generator is connected to</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="powersystems.Generator.bid">
+<tt class="descname">bid</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.bid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.bid" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="bids.html#bidding.Bid" title="bidding.Bid"><tt class="xref py py-class docutils literal"><span class="pre">Bid</span></tt></a> object for time</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.build_cost_model">
+<tt class="descname">build_cost_model</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.build_cost_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.build_cost_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a cost model for bidding with <a class="reference internal" href="bids.html#bidding.makeModel" title="bidding.makeModel"><tt class="xref py py-meth docutils literal"><span class="pre">makeModel()</span></tt></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.cost">
+<tt class="descname">cost</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.cost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>total cost at time (operating + startup + shutdown)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.cost_shutdown">
+<tt class="descname">cost_shutdown</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.cost_shutdown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.cost_shutdown" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.cost_startup">
+<tt class="descname">cost_startup</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.cost_startup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.cost_startup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.create_constraints">
+<tt class="descname">create_constraints</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.create_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>create the optimization constraints for a generator over all times</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.create_objective">
+<tt class="descname">create_objective</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.create_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.create_objective" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.create_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the optimization variables for a generator over all times. 
+Also create the <a class="reference internal" href="bids.html#bidding.Bid" title="bidding.Bid"><tt class="xref py py-class docutils literal"><span class="pre">bidding.Bid</span></tt></a> objects.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.gethrsinstatus">
+<tt class="descname">gethrsinstatus</tt><big>(</big><em>tm</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.gethrsinstatus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.gethrsinstatus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.getstatus">
+<tt class="descname">getstatus</tt><big>(</big><em>t</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.getstatus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.getstatus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.iden">
+<tt class="descname">iden</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.iden"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.iden" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.incrementalcost">
+<tt class="descname">incrementalcost</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.incrementalcost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.incrementalcost" title="Permalink to this definition">¶</a></dt>
+<dd><p>change in cost with change in power at time (based on exact bid polynomial).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.operatingcost">
+<tt class="descname">operatingcost</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.operatingcost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.operatingcost" title="Permalink to this definition">¶</a></dt>
+<dd><p>cost of real power production at time (based on bid model approximation).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.plot_cost_curve">
+<tt class="descname">plot_cost_curve</tt><big>(</big><em>P=None</em>, <em>filename=None</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.plot_cost_curve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.plot_cost_curve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.power">
+<tt class="descname">power</tt><big>(</big><em>time=None</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.power"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.power" title="Permalink to this definition">¶</a></dt>
+<dd><p>real power output at time</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.power_change">
+<tt class="descname">power_change</tt><big>(</big><em>t</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.power_change"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.power_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>change in output between power between t and t-1</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.set_initial_condition">
+<tt class="descname">set_initial_condition</tt><big>(</big><em>time=None</em>, <em>P=None</em>, <em>u=True</em>, <em>hoursinstatus=100</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.set_initial_condition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.set_initial_condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the initial condition at time.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.status">
+<tt class="descname">status</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>on/off status at time</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.status_change">
+<tt class="descname">status_change</tt><big>(</big><em>t</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.status_change"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.status_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>is the unit changing status between t and t-1</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator.truecost">
+<tt class="descname">truecost</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator.truecost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator.truecost" title="Permalink to this definition">¶</a></dt>
+<dd><p>exact cost of real power production at time (based on exact bid polynomial).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="powersystems.Generator_nonControllable">
+<em class="property">class </em><tt class="descclassname">powersystems.</tt><tt class="descname">Generator_nonControllable</tt><big>(</big><em>schedule=None</em>, <em>power=None</em>, <em>fuelcost=1</em>, <em>costcurvestring='0'</em>, <em>mustrun=False</em>, <em>Pmin=0</em>, <em>Pmax=None</em>, <em>name=''</em>, <em>index=None</em>, <em>bus=None</em>, <em>kind='wind'</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator_nonControllable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Generator</span></tt></a></p>
+<p>Describes a generator with a fixed schedule.
+The scedule is defined by a <a class="reference internal" href="time.html#schedule.Schedule" title="schedule.Schedule"><tt class="xref py py-class docutils literal"><span class="pre">Schedule</span></tt></a> object.</p>
+<dl class="method">
+<dt id="powersystems.Generator_nonControllable.cost">
+<tt class="descname">cost</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator_nonControllable.cost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable.cost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator_nonControllable.create_constraints">
+<tt class="descname">create_constraints</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator_nonControllable.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable.create_constraints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator_nonControllable.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator_nonControllable.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable.create_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator_nonControllable.getstatus">
+<tt class="descname">getstatus</tt><big>(</big><em>t</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator_nonControllable.getstatus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable.getstatus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator_nonControllable.incrementalcost">
+<tt class="descname">incrementalcost</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator_nonControllable.incrementalcost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable.incrementalcost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator_nonControllable.operatingcost">
+<tt class="descname">operatingcost</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator_nonControllable.operatingcost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable.operatingcost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator_nonControllable.power">
+<tt class="descname">power</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator_nonControllable.power"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable.power" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator_nonControllable.set_initial_condition">
+<tt class="descname">set_initial_condition</tt><big>(</big><em>time=None</em>, <em>P=None</em>, <em>u=None</em>, <em>hoursinstatus=None</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator_nonControllable.set_initial_condition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable.set_initial_condition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator_nonControllable.status">
+<tt class="descname">status</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator_nonControllable.status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Generator_nonControllable.truecost">
+<tt class="descname">truecost</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Generator_nonControllable.truecost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Generator_nonControllable.truecost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="powersystems.Line">
+<em class="property">class </em><tt class="descclassname">powersystems.</tt><tt class="descname">Line</tt><big>(</big><em>name=''</em>, <em>index=None</em>, <em>From=None</em>, <em>To=None</em>, <em>X=0.05</em>, <em>Pmax=9999</em>, <em>Pmin=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="optimization.html#optimization.OptimizationObject" title="optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">optimization.OptimizationObject</span></tt></a></p>
+<p>Describes a tranmission line. Currently the model
+only considers real power flow under normal conditions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>From</strong> &#8211; name of bus line originates at</li>
+<li><strong>To</strong> &#8211; name of bus line connects to</li>
+<li><strong>X</strong> &#8211; line reactance (p.u.)</li>
+<li><strong>Pmax</strong> &#8211; maximum (positive direction) power flow over line</li>
+<li><strong>Pmin</strong> &#8211; maximum (negative direction) power flow over line.
+Defaults to -<tt class="xref py py-attr docutils literal"><span class="pre">Pmax</span></tt> if not specified.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="powersystems.Line.create_constraints">
+<tt class="descname">create_constraints</tt><big>(</big><em>times</em>, <em>buses</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Line.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Line.create_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>create the constraints for a line over all times</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Line.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Line.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Line.create_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Line.iden">
+<tt class="descname">iden</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Line.iden"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Line.iden" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Line.power">
+<tt class="descname">power</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Line.power"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Line.power" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Line.price">
+<tt class="descname">price</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Line.price"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Line.price" title="Permalink to this definition">¶</a></dt>
+<dd><p>congestion price on line</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="powersystems.Load">
+<em class="property">class </em><tt class="descclassname">powersystems.</tt><tt class="descname">Load</tt><big>(</big><em>kind='varying'</em>, <em>name=''</em>, <em>index=None</em>, <em>bus=None</em>, <em>schedule=None</em>, <em>shedding_allowed=False</em>, <em>cost_shedding=100000000</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="optimization.html#optimization.OptimizationObject" title="optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">optimization.OptimizationObject</span></tt></a></p>
+<p>Describes a power system load (demand).
+Currently only real power is considered.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bus</strong> &#8211; name of bus that load is on 
+(not required if ED/OPF problem)</li>
+<li><strong>schedule</strong> &#8211; <a class="reference internal" href="time.html#schedule.Schedule" title="schedule.Schedule"><tt class="xref py py-class docutils literal"><span class="pre">Schedule</span></tt></a> object
+(generally created automatically from file
+by <a class="reference internal" href="getting-data.html#get_data.build_class_list" title="get_data.build_class_list"><tt class="xref py py-meth docutils literal"><span class="pre">get_data.build_class_list()</span></tt></a>)</li>
+<li><strong>shedding_allowed</strong> &#8211; if this load is allowed to be turned off</li>
+<li><strong>cost_shedding</strong> &#8211; the price of shedding 1MWh of this load</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="powersystems.Load.cost">
+<tt class="descname">cost</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Load.cost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Load.cost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Load.create_objective">
+<tt class="descname">create_objective</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Load.create_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Load.create_objective" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Load.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Load.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Load.create_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Load.iden">
+<tt class="descname">iden</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Load.iden"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Load.iden" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Load.power">
+<tt class="descname">power</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Load.power"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Load.power" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Load.shed">
+<tt class="descname">shed</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Load.shed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Load.shed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="powersystems.Load_Fixed">
+<em class="property">class </em><tt class="descclassname">powersystems.</tt><tt class="descname">Load_Fixed</tt><big>(</big><em>kind='fixed'</em>, <em>name=''</em>, <em>index=None</em>, <em>bus=None</em>, <em>P=0</em>, <em>shedding_allowed=False</em>, <em>cost_load_shedding=100000000</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Load_Fixed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Load_Fixed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#powersystems.Load" title="powersystems.Load"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Load</span></tt></a></p>
+<p>Describes a load that does not vary with time.
+This can be an easy way to add a load for an ED/OPF problem,
+or a system base load.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>P</strong> &#8211; real power consumed by load (MW/hr)</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="powersystems.Load_Fixed.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times=None</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Load_Fixed.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Load_Fixed.create_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Load_Fixed.power">
+<tt class="descname">power</tt><big>(</big><em>time=None</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Load_Fixed.power"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Load_Fixed.power" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.Load_Fixed.shed">
+<tt class="descname">shed</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#Load_Fixed.shed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.Load_Fixed.shed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="powersystems.PowerSystem">
+<em class="property">class </em><tt class="descclassname">powersystems.</tt><tt class="descname">PowerSystem</tt><big>(</big><em>generators</em>, <em>loads</em>, <em>lines=None</em>, <em>num_breakpoints=11</em>, <em>load_shedding_allowed=False</em>, <em>cost_load_shedding=100000000</em>, <em>dispatch_decommit_allowed=False</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#PowerSystem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.PowerSystem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="optimization.html#optimization.OptimizationObject" title="optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">optimization.OptimizationObject</span></tt></a></p>
+<p>Power systems object which is the container for all other components.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>generators</strong> &#8211; list of <tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt> objects</li>
+<li><strong>loads</strong> &#8211; list of <tt class="xref py py-class docutils literal"><span class="pre">Load</span></tt> objects</li>
+<li><strong>lines</strong> &#8211; list of <tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt> objects</li>
+<li><strong>num_breakpoints</strong> &#8211; number of break points to use in linearization
+of a generator&#8217;s bid (or cost) polynomials (equal to number of segments + 1)</li>
+<li><strong>load_shedding_allowed</strong> &#8211; flag - whether load shedding is allowed</li>
+<li><strong>cost_load_shedding</strong> &#8211; price of load shedding [$/MWh]</li>
+<li><strong>dispatch_decommit_allowed</strong> &#8211; flag - if generators can be decommitted during dispatch</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="powersystems.PowerSystem.create_admittance_matrix">
+<tt class="descname">create_admittance_matrix</tt><big>(</big><em>buses</em>, <em>lines</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#PowerSystem.create_admittance_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.PowerSystem.create_admittance_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the admittance matrix (B), 
+with elements = total admittance of line from bus i to j.
+Used in calculating the power balance for OPF problems.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>buses</strong> &#8211; list of <a class="reference internal" href="#powersystems.Line" title="powersystems.Line"><tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt></a> objects</li>
+<li><strong>lines</strong> &#8211; list of <a class="reference internal" href="#powersystems.Bus" title="powersystems.Bus"><tt class="xref py py-class docutils literal"><span class="pre">Bus</span></tt></a> objects</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="powersystems.PowerSystem.create_constraints">
+<tt class="descname">create_constraints</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#PowerSystem.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.PowerSystem.create_constraints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.PowerSystem.create_objective">
+<tt class="descname">create_objective</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#PowerSystem.create_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.PowerSystem.create_objective" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.PowerSystem.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#PowerSystem.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.PowerSystem.create_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.PowerSystem.generators">
+<tt class="descname">generators</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/powersystems.html#PowerSystem.generators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.PowerSystem.generators" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.PowerSystem.loads">
+<tt class="descname">loads</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/powersystems.html#PowerSystem.loads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.PowerSystem.loads" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="powersystems.PowerSystem.make_buses_list">
+<tt class="descname">make_buses_list</tt><big>(</big><em>loads</em>, <em>generators</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#PowerSystem.make_buses_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.PowerSystem.make_buses_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create list of <a class="reference internal" href="#powersystems.Bus" title="powersystems.Bus"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Bus</span></tt></a> objects 
+from the load and generator bus names. Otherwise
+(as in ED,UC) create just one (system)
+<a class="reference internal" href="#powersystems.Bus" title="powersystems.Bus"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Bus</span></tt></a> instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>loads</strong> &#8211; a list of <a class="reference internal" href="#powersystems.Load" title="powersystems.Load"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Load</span></tt></a> objects</li>
+<li><strong>generators</strong> &#8211; a list of <a class="reference internal" href="#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Generator</span></tt></a> objects</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a list of <a class="reference internal" href="#powersystems.Bus" title="powersystems.Bus"><tt class="xref py py-class docutils literal"><span class="pre">powersystems.Bus</span></tt></a> objects</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="powersystems.PowerSystem.set_load_shedding">
+<tt class="descname">set_load_shedding</tt><big>(</big><em>is_allowed</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#PowerSystem.set_load_shedding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.PowerSystem.set_load_shedding" title="Permalink to this definition">¶</a></dt>
+<dd><p>set system mode for load shedding</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="powersystems.makeGenerator">
+<tt class="descclassname">powersystems.</tt><tt class="descname">makeGenerator</tt><big>(</big><em>kind='generic'</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#makeGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.makeGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a <a class="reference internal" href="#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt></a> object 
+(or a <a class="reference internal" href="#powersystems.Generator_nonControllable" title="powersystems.Generator_nonControllable"><tt class="xref py py-class docutils literal"><span class="pre">Generator_nonControllable</span></tt></a>
+object depending on the kind). Set defaults
+depending on the kind (default values come from <tt class="xref py py-mod docutils literal"><span class="pre">config</span></tt>).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kind</strong> &#8211; define the kind of generator (all 
+kinds are defined in <tt class="xref py py-data docutils literal"><span class="pre">config.generator_kinds</span></tt>)</td>
+</tr>
+</tbody>
+</table>
+<p>Other parameters are detailed in <a class="reference internal" href="#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a <a class="reference internal" href="#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt></a> object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="powersystems.makeLoad">
+<tt class="descclassname">powersystems.</tt><tt class="descname">makeLoad</tt><big>(</big><em>kind='varying'</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/powersystems.html#makeLoad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#powersystems.makeLoad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a <a class="reference internal" href="#powersystems.Load" title="powersystems.Load"><tt class="xref py py-class docutils literal"><span class="pre">Load</span></tt></a> object (if a power 
+<a class="reference internal" href="time.html#schedule.Schedule" title="schedule.Schedule"><tt class="xref py py-class docutils literal"><span class="pre">Schedule</span></tt></a> is specified) or a
+cost_load_sheddingrsystems.Load_Fixed` object (if a single
+power value <tt class="xref py py-attr docutils literal"><span class="pre">P</span></tt> is specified).</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../creating-problems.html">Creating a Problem</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<div class="social">
+<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
+<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

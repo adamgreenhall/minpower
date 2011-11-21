@@ -675,7 +675,7 @@ class OptimizationObject(object):
         return constraints
     def clear_constraints(self):
         self.constraints={}
-        for nm,child in self.children.items(): 
+        for child in self.children.values(): 
             try: child.clear_constraints()
             except AttributeError:
                 for c in child: c.clear_constraints()

@@ -16,8 +16,8 @@
 from setuptools import setup, find_packages
 setup(
     name = "minpower",
-    version = "1.2",
-    download_url = "https://github.com/adamgreenhall/minpower/zipball/v1.2",
+    version = "2.0",
+    download_url = "https://github.com/adamgreenhall/minpower/zipball/v2.0",
 
     scripts= [
         'scripts/minpower',
@@ -25,7 +25,6 @@ setup(
         ],
     install_requires=[
         'Coopr>=3.0.4362',
-        #'PuLP>=1.4.8',
         'matplotlib>=1.0.1',
         'networkx>=1.5',
         'scipy>=0.9',

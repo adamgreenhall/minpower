@@ -673,7 +673,12 @@ class OptimizationObject(object):
             except AttributeError:
                 [constraints.update(c.all_constraints(times)) for c in child]
         return constraints
-
+    def clear_constraints(self):
+        self.constraints={}
+        for nm,child in self.children.items(): 
+            try: child.clear_constraints()
+            except AttributeError:
+                for c in child: c.clear_constraints()
 
 def filter_optimization_objects(objects,times):
     '''Filter variables or constraints by times.''' 

@@ -25,7 +25,7 @@ generator_defaults=dict(
         combustionturbine=  '9586+42.75P+.0012P^2',
         wind=               '0'
         ),
-    isControllable=dict(generic=True,wind=False),
+    is_controllable=dict(generic=True,wind=False),
     power=dict(generic=None),
     
     Pmax=dict(

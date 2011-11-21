@@ -6,7 +6,7 @@
 #udpate pypi using:
 #python setup.py register
 #python setup.py sdist upload
-
+#git tag -a v2.0 -m 'version 2.0'; git push --tags
 #info: http://packages.python.org/distribute/setuptools.html#basic-use
 
 

@@ -1,7 +1,7 @@
 Intro to Python
 =========================
 
-**minpower** takes advantage of many of Python_'s great features. If you have not worked with Python_ much this is a quick tutorial to help you understand what is going on in the code (and the :doc:`documentation`). 
+**minpower** takes advantage of many of Python_'s great features. If you have not worked with Python_ much this is a quick tutorial to help you understand what is going on in the code. 
 
 Syntax
 --------

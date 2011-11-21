@@ -18,7 +18,7 @@ Because **Minpower** is written in Python, the code is easy to read and write. B
 Calling a procedure
 --------------------
 
-    #. Find the procedure you are looking for (use the search box on the sidebar or check the :doc:`documentation`)
+    #. Find the procedure you are looking for (use the search box on the sidebar or check the :doc:`api/index`)
     #. Import the procedure into your own script, e.g.::
 
         from minpower.solve import create_problem

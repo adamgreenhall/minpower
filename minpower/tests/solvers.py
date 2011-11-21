@@ -16,7 +16,7 @@ def simple_problem():
 
 def test_one_solver(solver_name):
     prob=simple_problem()
-    optimization.solve(prob,solver=solver_name)
+    prob.solve(solver=solver_name)
     return prob.status
 
 @solvers.test

@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Why Minpower &mdash; minpower</title>
+    <title>Basic Use &mdash; minpower</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -27,8 +27,8 @@
     <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="minpower" href="index.html" />
-    <link rel="next" title="Installation" href="install.html" />
-    <link rel="prev" title="power systems tools made beautiful" href="index.html" />
+    <link rel="next" title="Creating a Problem" href="creating-problems.html" />
+    <link rel="prev" title="Installation" href="install.html" />
  
 <script type="text/javascript">
   var _gaq = _gaq || [];
@@ -46,31 +46,24 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="why-minpower">
-<h1>Why Minpower<a class="headerlink" href="#why-minpower" title="Permalink to this headline">¶</a></h1>
-<p><strong>Minpower</strong> is designed to make solving <a class="reference internal" href="economic-dispatch.html"><em>ED</em></a>, <a class="reference internal" href="optimal-power-flow.html"><em>OPF</em></a>, and <a class="reference internal" href="unit-commitment.html"><em>UC</em></a> problems simple and intuitive. Traditional approaches to solving these problems are limited by:</p>
-<blockquote>
-<div><ul class="simple">
-<li><abbr title="e.g. C++ or GMPL">low level</abbr> languages</li>
-<li><abbr title="e.g. CPLEX, GAMMS, AMPL, and AIMMS">expensive</abbr> software</li>
-<li>being <abbr title="e.g. only CPLEX or only GLPK">solver dependent</abbr></li>
-</ul>
-</div></blockquote>
-<div class="section" id="what-s-good">
-<h2>What&#8217;s good<a class="headerlink" href="#what-s-good" title="Permalink to this headline">¶</a></h2>
-<p><strong>Minpower</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li>is written in <a class="reference external" href="http://www.python.org/about/">Python</a></li>
-<li>is <a class="reference internal" href="about.html#license"><em>free</em></a> and <a class="reference internal" href="about.html#development"><em>open source</em></a></li>
-<li>can use many <a class="reference internal" href="solvers.html"><em>solvers</em></a></li>
-<li>has <abbr title="For large problems optimization takes most of the solution time. Minpower farms out its optimization to CPLEX with little overhead. Test results coming soon.">comparable solution times</abbr></li>
-</ul>
-</div></blockquote>
+  <div class="section" id="basic-use">
+<h1>Basic Use<a class="headerlink" href="#basic-use" title="Permalink to this headline">¶</a></h1>
+<p>The easiest way to use <strong>Minpower</strong> is by using the <tt class="docutils literal"><span class="pre">minpower</span></tt> script from the command line. Simply create a folder (e.g. <tt class="docutils literal"><span class="pre">mycommitment/</span></tt>) containing spreadsheets to specify the power systems problem you are trying to solve. Spreadsheet creation is described in detail in <a class="reference internal" href="creating-problems.html"><em>Creating a Problem</em></a>.</p>
+<p>To solve the problem call:</p>
+<div class="highlight-python"><pre>minpower mycommitment</pre>
 </div>
-<div class="section" id="sounds-great">
-<h2>Sounds great<a class="headerlink" href="#sounds-great" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="install.html"><em>Install Minpower</em></a> and try it out.</p>
+<p>Your problem is created and sent to an optimization solver on your computer and the results (in spreadsheet and graphical forms) are saved to the folder. Basic use is as easy as that.</p>
+<p>You can also specify a number of options from the command line. For example, to use the CPLEX solver:</p>
+<div class="highlight-python"><pre>minpower mycommitment --solver cplex</pre>
+</div>
+<p>A full list of options is available by calling:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">minpower</span> <span class="o">--</span><span class="n">help</span>
+</pre></div>
+</div>
+<p><strong>Minpower</strong> comes with many example cases built in. These cases can be used as templates, to test if your installation is working, or as learning tools. For quick reference, you can call any of the following to solve a simple test case problem:</p>
+<div class="highlight-python"><pre>minpower ed
+minpower opf
+minpower uc</pre>
 </div>
 </div>
 
@@ -82,16 +75,12 @@
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">minpower</a></h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="">Why Minpower</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#what-s-good">What&#8217;s good</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#sounds-great">Sounds great</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="why-minpower.html">Why Minpower</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="basic-use.html">Basic Use</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Basic Use</a></li>
 <li class="toctree-l1"><a class="reference internal" href="creating-problems.html">Creating a Problem</a></li>
 </ul>
 <ul>

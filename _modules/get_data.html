@@ -2,13 +2,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
     <title>get_data &mdash; minpower</title>
+    
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
@@ -44,34 +47,35 @@
             
   <h1>Source code for get_data</h1><div class="highlight"><pre>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Get data from csv files and parse it into lists of power systems class instances</span>
-<span class="sd">(:class:`~powersystems.Generator`, :class:`~powersystems.Line`, and :class:`~powersystems.Load`). </span>
-<span class="sd">Create lists of :class:`~powersystems.Bus` and :class:`~powersystems.Line` instances</span>
-<span class="sd">from the information found in the data.</span>
+<span class="sd">Get data from spreadsheet files and parse it into </span>
+<span class="sd">:class:`~powersystems.Generator`, :class:`~powersystems.Load`,</span>
+<span class="sd">:class:`~powersystems.Bus`, and :class:`~powersystems.Line` objects.</span>
+<span class="sd">Also extract the time information and create a :class:`~schedule.Timelist`</span>
+<span class="sd">object.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">powersystems</span>
 <span class="kn">import</span> <span class="nn">schedule</span>
-<span class="kn">from</span> <span class="nn">addons</span> <span class="kn">import</span> <span class="o">*</span> 
-<span class="kn">from</span> <span class="nn">commonscripts</span> <span class="kn">import</span> <span class="n">readCSV</span><span class="p">,</span><span class="n">csvColumn</span><span class="p">,</span><span class="n">flatten</span><span class="p">,</span><span class="n">unique</span><span class="p">,</span><span class="n">drop_case_spaces</span><span class="p">,</span><span class="n">getattrL</span><span class="p">,</span> <span class="n">joindir</span>
+<span class="kn">from</span> <span class="nn">addons</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">commonscripts</span> <span class="kn">import</span> <span class="n">readCSV</span><span class="p">,</span><span class="n">csvColumn</span><span class="p">,</span><span class="n">flatten</span><span class="p">,</span><span class="n">unique</span><span class="p">,</span><span class="n">drop_case_spaces</span><span class="p">,</span><span class="n">joindir</span>
 
 <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span><span class="nn">sys</span><span class="o">,</span><span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">dateutil</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
-<span class="n">fields_lines</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span><span class="s">&#39;name&#39;</span><span class="p">,</span><span class="s">&#39;to&#39;</span><span class="p">:</span><span class="s">&#39;To&#39;</span><span class="p">,</span><span class="s">&#39;from&#39;</span><span class="p">:</span><span class="s">&#39;From&#39;</span><span class="p">,</span><span class="s">&#39;pmax&#39;</span><span class="p">:</span><span class="s">&#39;Pmax&#39;</span><span class="p">}</span>
+<span class="n">fields_lines</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span><span class="s">&#39;name&#39;</span><span class="p">,</span><span class="s">&#39;to&#39;</span><span class="p">:</span><span class="s">&#39;To&#39;</span><span class="p">,</span><span class="s">&#39;from&#39;</span><span class="p">:</span><span class="s">&#39;From&#39;</span><span class="p">,</span><span class="s">&#39;reactance&#39;</span><span class="p">:</span><span class="s">&#39;X&#39;</span><span class="p">,</span><span class="s">&#39;pmax&#39;</span><span class="p">:</span><span class="s">&#39;Pmax&#39;</span><span class="p">}</span>
 <span class="n">fields_gens</span><span class="o">=</span><span class="p">{</span>
     <span class="s">&#39;name&#39;</span><span class="p">:</span><span class="s">&#39;name&#39;</span><span class="p">,</span><span class="s">&#39;type&#39;</span><span class="p">:</span><span class="s">&#39;kind&#39;</span><span class="p">,</span><span class="s">&#39;kind&#39;</span><span class="p">:</span><span class="s">&#39;kind&#39;</span><span class="p">,</span><span class="s">&#39;bus&#39;</span><span class="p">:</span><span class="s">&#39;bus&#39;</span><span class="p">,</span>
-    <span class="s">&#39;pmin&#39;</span><span class="p">:</span><span class="s">&#39;Pmin&#39;</span><span class="p">,</span><span class="s">&#39;pmax&#39;</span><span class="p">:</span><span class="s">&#39;Pmax&#39;</span><span class="p">,</span>
+    <span class="s">&#39;pmin&#39;</span><span class="p">:</span><span class="s">&#39;Pmin&#39;</span><span class="p">,</span><span class="s">&#39;pmax&#39;</span><span class="p">:</span><span class="s">&#39;Pmax&#39;</span><span class="p">,</span><span class="s">&#39;powermin&#39;</span><span class="p">:</span><span class="s">&#39;Pmin&#39;</span><span class="p">,</span><span class="s">&#39;powermax&#39;</span><span class="p">:</span><span class="s">&#39;Pmax&#39;</span><span class="p">,</span>
     <span class="s">&#39;p&#39;</span><span class="p">:</span><span class="s">&#39;power&#39;</span><span class="p">,</span><span class="s">&#39;pg&#39;</span><span class="p">:</span><span class="s">&#39;power&#39;</span><span class="p">,</span><span class="s">&#39;power&#39;</span><span class="p">:</span><span class="s">&#39;power&#39;</span><span class="p">,</span> <span class="c">#for a non-controllable gen in an ED</span>
     <span class="s">&#39;rampratemin&#39;</span><span class="p">:</span><span class="s">&#39;rampratemin&#39;</span><span class="p">,</span><span class="s">&#39;rampratemax&#39;</span><span class="p">:</span><span class="s">&#39;rampratemax&#39;</span><span class="p">,</span>
-    <span class="s">&#39;minuptime&#39;</span><span class="p">:</span><span class="s">&#39;minuptime&#39;</span><span class="p">,</span><span class="s">&#39;mindowntime&#39;</span><span class="p">:</span><span class="s">&#39;mindowntime&#39;</span><span class="p">,</span>
+    <span class="s">&#39;minuptime&#39;</span><span class="p">:</span><span class="s">&#39;minuptime&#39;</span><span class="p">,</span><span class="s">&#39;uptimemin&#39;</span><span class="p">:</span><span class="s">&#39;minuptime&#39;</span><span class="p">,</span>
+    <span class="s">&#39;mindowntime&#39;</span><span class="p">:</span><span class="s">&#39;mindowntime&#39;</span><span class="p">,</span><span class="s">&#39;downtimemin&#39;</span><span class="p">:</span><span class="s">&#39;mindowntime&#39;</span><span class="p">,</span>
     <span class="s">&#39;costcurveequation&#39;</span><span class="p">:</span><span class="s">&#39;costcurvestring&#39;</span><span class="p">,</span> 
     <span class="s">&#39;heatrateequation&#39;</span><span class="p">:</span><span class="s">&#39;heatratestring&#39;</span><span class="p">,</span><span class="s">&#39;fuelcost&#39;</span><span class="p">:</span><span class="s">&#39;fuelcost&#39;</span><span class="p">,</span>
     <span class="s">&#39;startupcost&#39;</span><span class="p">:</span><span class="s">&#39;startupcost&#39;</span><span class="p">,</span><span class="s">&#39;shutdowncost&#39;</span><span class="p">:</span><span class="s">&#39;shutdowncost&#39;</span><span class="p">,</span>
     <span class="s">&#39;schedulefilename&#39;</span><span class="p">:</span><span class="s">&#39;schedulefilename&#39;</span><span class="p">,</span><span class="s">&#39;mustrun&#39;</span><span class="p">:</span><span class="s">&#39;mustrun&#39;</span><span class="p">}</span>
 <span class="n">fields_loads</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;name&#39;</span><span class="p">:</span><span class="s">&#39;name&#39;</span><span class="p">,</span><span class="s">&#39;bus&#39;</span><span class="p">:</span><span class="s">&#39;bus&#39;</span><span class="p">,</span><span class="s">&#39;type&#39;</span><span class="p">:</span><span class="s">&#39;kind&#39;</span><span class="p">,</span><span class="s">&#39;kind&#39;</span><span class="p">:</span><span class="s">&#39;kind&#39;</span><span class="p">,</span>
-            <span class="s">&#39;p&#39;</span><span class="p">:</span><span class="s">&#39;P&#39;</span><span class="p">,</span><span class="s">&#39;pd&#39;</span><span class="p">:</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="s">&#39;pmin&#39;</span><span class="p">:</span><span class="s">&#39;Pmin&#39;</span><span class="p">,</span><span class="s">&#39;pmax&#39;</span><span class="p">:</span><span class="s">&#39;Pmax&#39;</span><span class="p">,</span>
+            <span class="s">&#39;p&#39;</span><span class="p">:</span><span class="s">&#39;P&#39;</span><span class="p">,</span><span class="s">&#39;pd&#39;</span><span class="p">:</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="s">&#39;power&#39;</span><span class="p">:</span><span class="s">&#39;P&#39;</span><span class="p">,</span>
+            <span class="s">&#39;pmin&#39;</span><span class="p">:</span><span class="s">&#39;Pmin&#39;</span><span class="p">,</span><span class="s">&#39;pmax&#39;</span><span class="p">:</span><span class="s">&#39;Pmax&#39;</span><span class="p">,</span>
             <span class="s">&#39;schedulefilename&#39;</span><span class="p">:</span><span class="s">&#39;schedulefilename&#39;</span><span class="p">,</span>
             <span class="s">&#39;bidequation&#39;</span><span class="p">:</span><span class="s">&#39;costcurvestring&#39;</span><span class="p">,</span><span class="s">&#39;costcurveequation&#39;</span><span class="p">:</span><span class="s">&#39;costcurvestring&#39;</span><span class="p">}</span>
 <span class="n">fields_initial</span><span class="o">=</span><span class="p">{</span>
@@ -81,7 +85,7 @@
     <span class="s">&#39;hoursinstatus&#39;</span><span class="p">:</span><span class="s">&#39;hoursinstatus&#39;</span><span class="p">,</span>
     <span class="s">&#39;ic&#39;</span><span class="p">:</span><span class="bp">None</span><span class="p">}</span>
     
-<div class="viewcode-block" id="parsedir"><a class="viewcode-back" href="../documentation.html#get_data.parsedir">[docs]</a><span class="k">def</span> <span class="nf">parsedir</span><span class="p">(</span><span class="n">datadir</span><span class="o">=</span><span class="s">&#39;.&#39;</span><span class="p">,</span>
+<div class="viewcode-block" id="parsedir"><a class="viewcode-back" href="../api/getting-data.html#get_data.parsedir">[docs]</a><span class="k">def</span> <span class="nf">parsedir</span><span class="p">(</span><span class="n">datadir</span><span class="o">=</span><span class="s">&#39;.&#39;</span><span class="p">,</span>
         <span class="n">file_gens</span><span class="o">=</span><span class="s">&#39;generators.csv&#39;</span><span class="p">,</span>
         <span class="n">file_loads</span><span class="o">=</span><span class="s">&#39;loads.csv&#39;</span><span class="p">,</span>
         <span class="n">file_lines</span><span class="o">=</span><span class="s">&#39;lines.csv&#39;</span><span class="p">,</span>
@@ -98,7 +102,10 @@
 <span class="sd">        (not required for ED,OPF problems. Defaults will be used</span>
 <span class="sd">        for UC problems if not specified.)</span>
 <span class="sd">    </span>
-<span class="sd">    :returns: buses, lines, times (lists of objects)</span>
+<span class="sd">    :return generators:, list of :class:`~powersystems.Generator` objects </span>
+<span class="sd">    :return loads:, list of :class:`~Load` objects</span>
+<span class="sd">    :return lines:, list of :class:`~powersystems.Line` objects</span>
+<span class="sd">    :return times:, list of :class:`~schedule.Timelist` object</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">datadir</span><span class="p">):</span> <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s">&#39;data directory &quot;{d}&quot; does not exist&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="n">datadir</span><span class="p">)</span> <span class="p">)</span>
     <span class="p">[</span><span class="n">file_gens</span><span class="p">,</span><span class="n">file_loads</span><span class="p">,</span><span class="n">file_lines</span><span class="p">,</span><span class="n">file_init</span><span class="p">]</span><span class="o">=</span><span class="p">[</span><span class="n">joindir</span><span class="p">(</span><span class="n">datadir</span><span class="p">,</span><span class="n">filename</span><span class="p">)</span> <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="p">(</span><span class="n">file_gens</span><span class="p">,</span><span class="n">file_loads</span><span class="p">,</span><span class="n">file_lines</span><span class="p">,</span><span class="n">file_init</span><span class="p">)]</span>
@@ -119,13 +126,14 @@
     <span class="k">try</span><span class="p">:</span> <span class="n">lines</span><span class="o">=</span><span class="n">build_class_list</span><span class="p">(</span><span class="n">file_lines</span><span class="p">,</span><span class="n">model</span><span class="o">=</span><span class="n">powersystems</span><span class="o">.</span><span class="n">Line</span><span class="p">,</span><span class="n">field_attr_map</span><span class="o">=</span><span class="n">fields_lines</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span> <span class="n">lines</span><span class="o">=</span><span class="p">[]</span>
     
-    <span class="c">#create buses list    </span>
-    <span class="n">buses</span><span class="o">=</span><span class="n">powersystems</span><span class="o">.</span><span class="n">make_buses_list</span><span class="p">(</span><span class="n">loads</span><span class="p">,</span><span class="n">generators</span><span class="p">)</span>
-    
-    <span class="k">return</span> <span class="n">buses</span><span class="p">,</span><span class="n">lines</span><span class="p">,</span><span class="n">times</span>
+    <span class="k">return</span> <span class="n">generators</span><span class="p">,</span><span class="n">loads</span><span class="p">,</span><span class="n">lines</span><span class="p">,</span><span class="n">times</span>
 </div>
-<div class="viewcode-block" id="setup_initialcond"><a class="viewcode-back" href="../documentation.html#get_data.setup_initialcond">[docs]</a><span class="k">def</span> <span class="nf">setup_initialcond</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="n">generators</span><span class="p">,</span><span class="n">times</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;read initial conditions from spreadsheet and add information to each :class:`powersystems.Generator`.&#39;&#39;&#39;</span>
+<div class="viewcode-block" id="setup_initialcond"><a class="viewcode-back" href="../api/getting-data.html#get_data.setup_initialcond">[docs]</a><span class="k">def</span> <span class="nf">setup_initialcond</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="n">generators</span><span class="p">,</span><span class="n">times</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Read initial conditions from a spreadsheet and</span>
+<span class="sd">    add information to each :class:`~powersystems.Generator` </span>
+<span class="sd">    object.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span><span class="o">&lt;=</span><span class="mi">1</span><span class="p">:</span> <span class="k">return</span> <span class="n">generators</span> <span class="c">#for UC,ED no need to set initial status</span>
     <span class="n">validFields</span><span class="o">=</span><span class="n">fields_initial</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
     
@@ -135,7 +143,7 @@
     <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span> 
         <span class="n">data</span><span class="p">,</span><span class="n">fields</span><span class="o">=</span><span class="p">[],[]</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&#39;No generation initial conditions file found. Setting to defaults.&#39;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">generators</span><span class="p">:</span> <span class="n">gen</span><span class="o">.</span><span class="n">setInitialCondition</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">initialTime</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">generators</span><span class="p">:</span> <span class="n">gen</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">initialTime</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">generators</span>
         
     <span class="k">try</span><span class="p">:</span> <span class="n">attributes</span><span class="o">=</span><span class="p">[</span><span class="n">fields_initial</span><span class="p">[</span><span class="n">drop_case_spaces</span><span class="p">(</span><span class="n">f</span><span class="p">)]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">]</span>
@@ -145,7 +153,7 @@
     
     
     <span class="c">#set initial condition for all gens to off</span>
-    <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">generators</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">setInitialCondition</span><span class="p">(</span><span class="n">initialTime</span><span class="p">,</span> <span class="n">u</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">P</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">generators</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span><span class="n">initialTime</span><span class="p">,</span> <span class="n">u</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">P</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
 
     <span class="c">#overwrite initial condition for generators which are specified in the initial file</span>
@@ -159,11 +167,11 @@
             <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">excludeCols</span><span class="p">:</span> <span class="k">continue</span>
             <span class="k">elif</span> <span class="n">elem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">inputs</span><span class="p">[</span><span class="n">attributes</span><span class="p">[</span><span class="n">c</span><span class="p">]]</span><span class="o">=</span><span class="n">elem</span>
         <span class="n">g</span><span class="o">=</span><span class="n">genNames</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">nameCol</span><span class="p">])</span>
-        <span class="n">generators</span><span class="p">[</span><span class="n">g</span><span class="p">]</span><span class="o">.</span><span class="n">setInitialCondition</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">initialTime</span><span class="p">,</span><span class="o">**</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">generators</span><span class="p">[</span><span class="n">g</span><span class="p">]</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">initialTime</span><span class="p">,</span><span class="o">**</span><span class="n">inputs</span><span class="p">)</span>
         
     <span class="k">return</span> <span class="n">generators</span>
 </div>
-<div class="viewcode-block" id="build_class_list"><a class="viewcode-back" href="../documentation.html#get_data.build_class_list">[docs]</a><span class="k">def</span> <span class="nf">build_class_list</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="n">model</span><span class="p">,</span><span class="n">field_attr_map</span><span class="p">,</span><span class="n">times</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="build_class_list"><a class="viewcode-back" href="../api/getting-data.html#get_data.build_class_list">[docs]</a><span class="k">def</span> <span class="nf">build_class_list</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="n">model</span><span class="p">,</span><span class="n">field_attr_map</span><span class="p">,</span><span class="n">times</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create list of class instances from data in a spreadsheet.</span>
 <span class="sd">    </span>
@@ -182,7 +190,7 @@
     <span class="n">data</span><span class="p">,</span><span class="n">fields</span><span class="o">=</span><span class="n">readCSV</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="n">validFields</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span> <span class="n">attributes</span><span class="o">=</span><span class="p">[</span><span class="n">field_attr_map</span><span class="p">[</span><span class="n">drop_case_spaces</span><span class="p">(</span><span class="n">f</span><span class="p">)]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">msg</span><span class="o">=</span><span class="s">&#39;Field &quot;{f}&quot; is not in list of valid fields (case insensitive): {V}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">f</span><span class="p">,</span><span class="n">V</span><span class="o">=</span><span class="n">validFields</span><span class="p">)</span>
+        <span class="n">msg</span><span class="o">=</span><span class="s">&#39;Field &quot;{f}&quot; is not in list of valid fields for {m} (case insensitive): {V}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">f</span><span class="p">,</span><span class="n">m</span><span class="o">=</span><span class="n">model</span><span class="p">,</span><span class="n">V</span><span class="o">=</span><span class="n">validFields</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     
     <span class="k">def</span> <span class="nf">getmodel</span><span class="p">(</span><span class="n">default</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">inputs</span><span class="p">):</span>
@@ -213,17 +221,18 @@
             <span class="n">index</span><span class="o">+=</span><span class="mi">1</span>
     <span class="k">return</span> <span class="n">classL</span>
 </div>
-<div class="viewcode-block" id="setup_times"><a class="viewcode-back" href="../documentation.html#get_data.setup_times">[docs]</a><span class="k">def</span> <span class="nf">setup_times</span><span class="p">(</span><span class="n">file_gens</span><span class="p">,</span><span class="n">file_loads</span><span class="p">,</span><span class="n">datadir</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Create list of :class:`~schedule.Time` objects </span>
-<span class="sd">        from the schedule files. If there are no schedule</span>
-<span class="sd">        files (as in ED,OPF), create just a single</span>
-<span class="sd">        :class:`~schedule.Time` instance.</span>
-<span class="sd">        </span>
-<span class="sd">        :param file_gens:    spreadsheet of generator data</span>
-<span class="sd">        :param file_loads:   spreadsheet of load data</span>
-<span class="sd">        :param datadir:      directory of data</span>
-<span class="sd">        </span>
-<span class="sd">        :returns: a :class:`~schedule.Timelist` object</span>
+<div class="viewcode-block" id="setup_times"><a class="viewcode-back" href="../api/getting-data.html#get_data.setup_times">[docs]</a><span class="k">def</span> <span class="nf">setup_times</span><span class="p">(</span><span class="n">file_gens</span><span class="p">,</span><span class="n">file_loads</span><span class="p">,</span><span class="n">datadir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Create list of :class:`~schedule.Time` objects </span>
+<span class="sd">    from the schedule files. If there are no schedule</span>
+<span class="sd">    files (as in ED,OPF), create just a single</span>
+<span class="sd">    :class:`~schedule.Time` instance.</span>
+<span class="sd">    </span>
+<span class="sd">    :param file_gens:    spreadsheet of generator data</span>
+<span class="sd">    :param file_loads:   spreadsheet of load data</span>
+<span class="sd">    :param datadir:      directory of data</span>
+<span class="sd">    </span>
+<span class="sd">    :returns: a :class:`~schedule.Timelist` object</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 
@@ -259,26 +268,20 @@
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">timestrL</span><span class="p">)</span> <span class="o">==</span> <span class="nb">max</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nT_loads</span><span class="o">+</span><span class="n">nT_gens</span><span class="p">):</span> 
         <span class="n">times</span><span class="o">=</span><span class="n">schedule</span><span class="o">.</span><span class="n">makeTimes</span><span class="p">(</span><span class="n">timedateL</span><span class="p">)</span> <span class="c">#just one schedule</span>
     <span class="k">else</span><span class="p">:</span> 
-        <span class="n">uniqueTimes</span><span class="o">=</span><span class="n">unique</span><span class="p">(</span><span class="n">timedateL</span><span class="p">)</span>
+        <span class="n">uniqueTimes</span><span class="o">=</span><span class="nb">sorted</span><span class="p">(</span><span class="n">unique</span><span class="p">(</span><span class="n">timedateL</span><span class="p">))</span>
         <span class="c">#make times from unique list</span>
         <span class="n">times</span><span class="o">=</span><span class="n">schedule</span><span class="o">.</span><span class="n">makeTimes</span><span class="p">(</span><span class="n">uniqueTimes</span><span class="p">)</span>
         
     <span class="c">#check for missing data problems by checking length</span>
     <span class="n">nT</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">n</span><span class="o">!=</span><span class="n">nT</span> <span class="k">if</span> <span class="n">n</span> <span class="k">else</span> <span class="bp">False</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nT_loads</span><span class="p">):</span> 
-        <span class="n">msg</span><span class="o">=</span><span class="s">&#39;a load has schedule with inconsistent times. load schedule lengths={L} and there are {t} times.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="n">nT_loads</span><span class="p">,</span><span class="n">t</span><span class="o">=</span><span class="n">nT</span><span class="p">)</span>
+        <span class="n">msg</span><span class="o">=</span><span class="s">&#39;a load has schedule with inconsistent times. load schedule lengths={L} and there are {t} times.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">loadScheds</span><span class="p">,</span><span class="n">nT_loads</span><span class="p">)),</span><span class="n">t</span><span class="o">=</span><span class="n">nT</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">n</span><span class="o">!=</span><span class="n">nT</span> <span class="k">if</span> <span class="n">n</span> <span class="k">else</span> <span class="bp">False</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nT_gens</span><span class="p">):</span> 
         <span class="n">msg</span><span class="o">=</span><span class="s">&#39;a generator has schedule with inconsistent times. gen schedule lengths={L} and there are {t} times.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">L</span><span class="o">=</span><span class="n">nT_gens</span><span class="p">,</span><span class="n">t</span><span class="o">=</span><span class="n">nT</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">times</span>
-</div>
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span> 
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="n">parsedir</span><span class="p">()</span>
-    <span class="k">else</span><span class="p">:</span> 
-        <span class="n">datadir</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">parsedir</span><span class="p">(</span><span class="n">datadir</span><span class="o">=</span><span class="n">datadir</span><span class="p">)</span>
-</pre></div>
+</pre></div></div>
 
           </div>
         </div>
@@ -288,8 +291,12 @@
         <div class="sphinxsidebarwrapper">
 <h3><a href="../index.html">minpower</a></h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why minpower?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why Minpower</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../creating-problems.html">Creating a Problem</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../students.html">For Students</a></li>
@@ -301,14 +308,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../unit-commitment.html">Unit Commitment</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">Documentation</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../collaborate.html">Collaborate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../about.html">About minpower</a></li>
 </ul>
 
-<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
+
 <div id="searchbox" style="display: none">
   <h3>Search</h3>
     <form class="search" action="../search.html" method="get">
@@ -322,6 +329,10 @@
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+<div class="social">
+<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
+<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
+</div>
         </div>
       </div>
       <div class="clearer"></div>

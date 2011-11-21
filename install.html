@@ -2,13 +2,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
     <title>Installation &mdash; minpower</title>
+    
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
@@ -24,8 +27,8 @@
     <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="minpower" href="index.html" />
-    <link rel="next" title="Linux Installation" href="install-linux.html" />
-    <link rel="prev" title="Why minpower?" href="why-minpower.html" />
+    <link rel="next" title="Basic Use" href="basic-use.html" />
+    <link rel="prev" title="Why Minpower" href="why-minpower.html" />
  
 <script type="text/javascript">
   var _gaq = _gaq || [];
@@ -45,16 +48,35 @@
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>Honestly, installation can be a pain - <em>Windows and CPLEX are the toughest</em> - but it is worth it.
-The initial time investment will pay off quickly.</p>
-<p>If you are already a Python user or an optimization person you have probably
-done some of these steps before. <a class="reference internal" href="install-linux.html"><em>Basic install on Linux</em></a> should take under 5min.
-<strong>minpower</strong> is platform and <a class="reference internal" href="solvers.html"><em>solver</em></a> independant.</p>
-<p>Choose your platform for instructions:</p>
-<a class="reference external image-reference" href="install-linux.html"><img alt="_static/linux.png" src="_static/linux.png" style="width: 120px;" /></a>
-<a class="reference external image-reference" href="install-mac.html"><img alt="_static/mac.jpg" src="_static/mac.jpg" style="width: 150px;" /></a>
-<a class="reference external image-reference" href="install-windows.html"><img alt="_static/windows.png" src="_static/windows.png" style="width: 130px;" /></a>
-<div class="toctree-wrapper compound">
+<p>Basic full installation:</p>
+<ol class="arabic simple">
+<li><a class="reference external" href="http://activestate.com/activepython/downloads">ActivePython 2.7</a></li>
+<li><tt class="docutils literal"><span class="pre">pypm</span> <span class="pre">install</span> <span class="pre">minpower</span></tt></li>
+<li><a class="reference external" href="http://www.gnu.org/s/glpk">GLPK</a> (<a class="reference external" href="http://gnuwin32.sourceforge.net/packages/glpk.htm">Win</a>, <a class="reference external" href="http://www.arnab-deka.com/posts/2010/02/installing-glpk-on-a-mac/">Mac</a>)</li>
+</ol>
+<div class="section" id="get-python">
+<h2>1. Get Python<a class="headerlink" href="#get-python" title="Permalink to this headline">¶</a></h2>
+<p>For new-to-Python folks, install <a class="reference external" href="http://activestate.com/activepython/downloads">ActivePython 2.7</a>. It makes the installation of a bunch of scientific <abbr title="add-ons in Python terms">packages</abbr> very easy - the way it should be.</p>
+<p>For experienced Python users, <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">minpower</span></tt> should work just fine. If that command doesn&#8217;t work, it is probably a failure to build scipy/numpy from source - try downloading the pre-built binary for your system from <a href="#id2"><span class="problematic" id="id3">`</span></a>SciPy &lt;<a class="reference external" href="http://www.scipy.org/Download">http://www.scipy.org/Download</a>&gt;_.</p>
+</div>
+<div class="section" id="get-minpower">
+<h2>2. Get Minpower<a class="headerlink" href="#get-minpower" title="Permalink to this headline">¶</a></h2>
+<p>Simply run:</p>
+<div class="highlight-python"><pre>pypm install minpower</pre>
+</div>
+</div>
+<div class="section" id="get-a-solver">
+<h2>3. Get a Solver<a class="headerlink" href="#get-a-solver" title="Permalink to this headline">¶</a></h2>
+<p>Minpower has been tested with <a class="reference external" href="http://www.gnu.org/s/glpk">GLPK</a>, <a class="reference external" href="http://gurobi.com">Gurboi</a>, and <a class="reference external" href="http://www.ibm.com/software/integration/optimization/cplex-optimizer">CPLEX</a>.</p>
+<p>But you can almost certainly use your favorite - here&#8217;s <a class="reference external" href="https://software.sandia.gov/trac/coopr/wiki/GettingStarted/Solvers">the full list</a>.</p>
+<p>Not sure which to try? Here&#8217;s a quick rundown on <a class="reference internal" href="solvers.html"><em>solvers</em></a>.</p>
+</div>
+<div class="section" id="test-it-out">
+<h2>Test it out<a class="headerlink" href="#test-it-out" title="Permalink to this headline">¶</a></h2>
+<p>Go ahead and try to solve one of the test cases first, like:</p>
+<div class="highlight-python"><pre>minpower uc</pre>
+</div>
+<p>If you get an error about the problem not being solved - Python doesn&#8217;t know where your solver is. To fix this here&#8217;s a <a class="reference internal" href="solver-connection.html"><em>guide to solver-to-Python connection</em></a>.</p>
 </div>
 </div>
 
@@ -67,16 +89,18 @@ done some of these steps before. <a class="reference internal" href="install-lin
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">minpower</a></h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="why-minpower.html">Why minpower?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-minpower.html">Why Minpower</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="install-linux.html">Linux Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="install-mac.html">Mac Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="install-windows.html">Windows Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="install-python-packages.html">Python Packages</a></li>
-<li class="toctree-l2"><a class="reference internal" href="solvers.html">Solver Choices</a></li>
-<li class="toctree-l2"><a class="reference internal" href="install-testing.html">Installation Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#get-python">1. Get Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#get-minpower">2. Get Minpower</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#get-a-solver">3. Get a Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#test-it-out">Test it out</a></li>
 </ul>
 </li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating-problems.html">Creating a Problem</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="students.html">For Students</a></li>
@@ -88,14 +112,14 @@ done some of these steps before. <a class="reference internal" href="install-lin
 <li class="toctree-l1"><a class="reference internal" href="unit-commitment.html">Unit Commitment</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">Documentation</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About minpower</a></li>
 </ul>
 
-<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
+
 <div id="searchbox" style="display: none">
   <h3>Search</h3>
     <form class="search" action="search.html" method="get">
@@ -109,6 +133,10 @@ done some of these steps before. <a class="reference internal" href="install-lin
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+<div class="social">
+<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
+<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
+</div>
         </div>
       </div>
       <div class="clearer"></div>

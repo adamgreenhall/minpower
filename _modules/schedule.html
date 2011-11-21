@@ -2,13 +2,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
     <title>schedule &mdash; minpower</title>
+    
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
@@ -48,11 +51,10 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">dateutil</span>
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">commonscripts</span> <span class="kn">import</span> <span class="n">hours</span><span class="p">,</span><span class="n">parseTime</span><span class="p">,</span> <span class="n">readCSV</span><span class="p">,</span><span class="n">getclass_inlist</span><span class="p">,</span> <span class="n">drop_case_spaces</span><span class="p">,</span><span class="n">transpose</span><span class="p">,</span><span class="n">frange</span><span class="p">,</span><span class="n">getattrL</span><span class="p">,</span><span class="n">getTimeFormat</span>
 
 
-<div class="viewcode-block" id="Time"><a class="viewcode-back" href="../documentation.html#schedule.Time">[docs]</a><span class="k">class</span> <span class="nc">Time</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Time"><a class="viewcode-back" href="../api/time.html#schedule.Time">[docs]</a><span class="k">class</span> <span class="nc">Time</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Describes a time interval.</span>
 <span class="sd">    </span>
@@ -81,7 +83,7 @@
 <span class="sd">                {e}!={si}&#39;&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">End</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Start</span><span class="p">,</span><span class="n">i</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">,</span><span class="n">si</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Start</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">intervalhrs</span><span class="o">=</span><span class="n">hours</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">)</span>
     
-<div class="viewcode-block" id="Time.Range"><a class="viewcode-back" href="../documentation.html#schedule.Time.Range">[docs]</a>    <span class="k">def</span> <span class="nf">Range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">interval</span><span class="p">):</span>
+<div class="viewcode-block" id="Time.Range"><a class="viewcode-back" href="../api/time.html#schedule.Time.Range">[docs]</a>    <span class="k">def</span> <span class="nf">Range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">interval</span><span class="p">):</span>
         <span class="n">intervalStepHrs</span><span class="o">=</span><span class="n">hours</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
         <span class="n">rangeLenHrs</span> <span class="o">=</span> <span class="n">hours</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">End</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">Start</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">Start</span> <span class="o">+</span> <span class="n">hours</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">frange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">rangeLenHrs</span><span class="p">,</span><span class="n">intervalStepHrs</span><span class="p">)]</span></div>
@@ -89,12 +91,12 @@
     <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Start</span><span class="o">+</span><span class="n">other</span>
     <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
         <span class="k">try</span><span class="p">:</span> <span class="k">return</span> <span class="s">&#39;t{ind:02d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ind</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>    
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span> <span class="k">return</span> <span class="s">&#39;t_{ind}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ind</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="c">#index is str    </span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span> <span class="k">return</span> <span class="s">&#39;t{ind}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ind</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="c">#index is str    </span>
     <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Start</span><span class="p">)</span><span class="o">+</span><span class="s">&#39; to &#39;</span><span class="o">+</span><span class="nb">unicode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">End</span><span class="p">)</span>
-</div>
-<div class="viewcode-block" id="makeTimes"><a class="viewcode-back" href="../documentation.html#schedule.makeTimes">[docs]</a><span class="k">def</span> <span class="nf">makeTimes</span><span class="p">(</span><span class="n">datetimeL</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;convert list of datetime objects to Timelist() class&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Start</span><span class="p">)</span></div>
+<div class="viewcode-block" id="makeTimes"><a class="viewcode-back" href="../api/time.html#schedule.makeTimes">[docs]</a><span class="k">def</span> <span class="nf">makeTimes</span><span class="p">(</span><span class="n">datetimeL</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;convert list of :py:class:`datetime.datetime` objects to :class:`~schedule.Timelist` object&#39;&#39;&#39;</span>
     <span class="n">S</span><span class="o">=</span><span class="n">datetimeL</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">I</span><span class="o">=</span><span class="n">datetimeL</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">S</span> <span class="c">#interval</span>
     <span class="n">E</span><span class="o">=</span><span class="n">datetimeL</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">I</span> <span class="c">#one past the last time</span>
@@ -102,7 +104,7 @@
     <span class="n">times</span><span class="o">.</span><span class="n">setInitial</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">times</span>
 </div>
-<div class="viewcode-block" id="make_times_basic"><a class="viewcode-back" href="../documentation.html#schedule.make_times_basic">[docs]</a><span class="k">def</span> <span class="nf">make_times_basic</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+<div class="viewcode-block" id="make_times_basic"><a class="viewcode-back" href="../api/time.html#schedule.make_times_basic">[docs]</a><span class="k">def</span> <span class="nf">make_times_basic</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39; make a :class:`schedule.Timelist` of N times, assume hourly interval.&#39;&#39;&#39;</span>
     <span class="n">S</span><span class="o">=</span><span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;0:00&#39;</span><span class="p">)</span>
     <span class="n">I</span><span class="o">=</span><span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;1:00&#39;</span><span class="p">)</span><span class="o">-</span><span class="n">S</span>
@@ -111,16 +113,20 @@
     <span class="n">times</span><span class="o">.</span><span class="n">setInitial</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">times</span>
     </div>
-<div class="viewcode-block" id="Timelist"><a class="viewcode-back" href="../documentation.html#schedule.Timelist">[docs]</a><span class="k">class</span> <span class="nc">Timelist</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Timelist"><a class="viewcode-back" href="../api/time.html#schedule.Timelist">[docs]</a><span class="k">class</span> <span class="nc">Timelist</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A container for :class:`schedule.Time` objects.</span>
 <span class="sd">    </span>
-<span class="sd">    If `Start`, `End`, `interval` are specified as </span>
-<span class="sd">    :py:class:`datetime.datetime` and :py:class:`datetime.timedelta` </span>
-<span class="sd">    objects then a uniformly spaced list of times is generated.</span>
+<span class="sd">    :param list_of_times: a tuple, list, or existing :class:`~schedule.Timelist` object</span>
+<span class="sd">    :param Start: a :py:class:`datetime.datetime` object</span>
+<span class="sd">    :param End: a :py:class:`datetime.datetime` object</span>
+<span class="sd">    :param interval: a :py:class:`datetime.timedelta` object</span>
 <span class="sd">    </span>
+<span class="sd">    If ``Start``, ``End``, ``interval`` are specified as </span>
+<span class="sd">    then a uniformly spaced list of times is generated. </span>
+<span class="sd">    Otherwise the list is created from ``list_of_times``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inittuple</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">initialTime</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">Start</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">End</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">interval</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_of_times</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">initialTime</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">Start</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">End</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">interval</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">Start</span> <span class="ow">and</span> <span class="n">End</span> <span class="ow">and</span> <span class="n">interval</span><span class="p">:</span>
             <span class="n">steps</span><span class="o">=</span><span class="n">hours</span><span class="p">(</span><span class="n">End</span><span class="o">-</span><span class="n">Start</span><span class="p">)</span><span class="o">/</span><span class="n">hours</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">steps</span><span class="o">==</span><span class="nb">int</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span> <span class="n">steps</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span>
@@ -128,10 +134,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="o">=</span><span class="p">[</span><span class="n">Time</span><span class="p">(</span><span class="n">Start</span><span class="o">=</span><span class="n">Start</span><span class="o">+</span><span class="n">i</span><span class="o">*</span><span class="n">interval</span><span class="p">,</span><span class="n">interval</span><span class="o">=</span><span class="n">interval</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">)]</span>
         <span class="k">else</span><span class="p">:</span>                 
             <span class="bp">self</span><span class="o">.</span><span class="n">times</span> <span class="o">=</span> <span class="p">()</span>
-            <span class="k">if</span> <span class="n">inittuple</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">inittuple</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">times</span> <span class="o">=</span> <span class="n">inittuple</span>
-                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inittuple</span><span class="p">,</span> <span class="n">Timelist</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">times</span> <span class="o">=</span> <span class="n">inittuple</span><span class="o">.</span><span class="n">times</span><span class="p">[:]</span>
-                <span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">times</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">inittuple</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">list_of_times</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">list_of_times</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">times</span> <span class="o">=</span> <span class="n">list_of_times</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">list_of_times</span><span class="p">,</span> <span class="n">Timelist</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">times</span> <span class="o">=</span> <span class="n">list_of_times</span><span class="o">.</span><span class="n">times</span><span class="p">[:]</span>
+                <span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">times</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">list_of_times</span><span class="p">)</span>
         
         <span class="n">interval</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">interval</span>
         
@@ -152,24 +158,24 @@
     <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
     <span class="k">def</span> <span class="nf">__getslice__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">j</span><span class="p">]</span>
-<div class="viewcode-block" id="Timelist.index"><a class="viewcode-back" href="../documentation.html#schedule.Timelist.index">[docs]</a>    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">val</span><span class="p">)</span></div>
-<div class="viewcode-block" id="Timelist.setInitial"><a class="viewcode-back" href="../documentation.html#schedule.Timelist.setInitial">[docs]</a>    <span class="k">def</span> <span class="nf">setInitial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">initialTime</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span> 
+<div class="viewcode-block" id="Timelist.index"><a class="viewcode-back" href="../api/time.html#schedule.Timelist.index">[docs]</a>    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">val</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">val</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Timelist.setInitial"><a class="viewcode-back" href="../api/time.html#schedule.Timelist.setInitial">[docs]</a>    <span class="k">def</span> <span class="nf">setInitial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">initialTime</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span> 
         <span class="k">if</span> <span class="n">initialTime</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialTime</span><span class="o">=</span> <span class="n">initialTime</span>
-        <span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialTime</span> <span class="o">=</span> <span class="n">Time</span><span class="p">(</span><span class="n">Start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Start</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialTime</span> <span class="o">=</span> <span class="n">Time</span><span class="p">(</span><span class="n">Start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Start</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="s">&#39;Init&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wInitial</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">initialTime</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">times</span><span class="p">))</span></div>
-<div class="viewcode-block" id="Timelist.subdivide"><a class="viewcode-back" href="../documentation.html#schedule.Timelist.subdivide">[docs]</a>    <span class="k">def</span> <span class="nf">subdivide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">hrsperdivision</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span><span class="n">hrsinterval</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="c">### add offset=0 to this</span>
+<div class="viewcode-block" id="Timelist.subdivide"><a class="viewcode-back" href="../api/time.html#schedule.Timelist.subdivide">[docs]</a>    <span class="k">def</span> <span class="nf">subdivide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">hrsperdivision</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span><span class="n">hrsinterval</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">overlap_hrs</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span> <span class="c">#offset_hrs=0</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Subdivide a list of times into serval lists,  each list</span>
+<span class="sd">        Subdivide a list of times into serval stages,  each stage</span>
 <span class="sd">        spanning `hrsperdivision` with intervals of `hrsinterval`.</span>
 <span class="sd">        </span>
-<span class="sd">        :param hoursperdivision: time span of each sub-list </span>
+<span class="sd">        :param hoursperdivision: time span of each stage (excluding overlap)</span>
 <span class="sd">        :param hrsinterval: (optional) time span of each interval</span>
-<span class="sd">          for each sub-list. If not specified, `intervalhrs` is used.</span>
+<span class="sd">          for each stage. If not specified, `intervalhrs` is used.</span>
+<span class="sd">        :param overlap_hrs: (optional) overlap between time stages, default is 0 </span>
 <span class="sd">        </span>
 <span class="sd">        typical use:</span>
 <span class="sd">        </span>
-<span class="sd">        &gt;&gt;&gt; t=Timeslist([1,2,3,4,5,6,7,8])</span>
+<span class="sd">        &gt;&gt;&gt; t=make_times_basic(8)</span>
 <span class="sd">        &gt;&gt;&gt; t.subdivide(hrsperdivision=4)</span>
 <span class="sd">        [[1,2,3,4],[5,6,7,8]]</span>
 <span class="sd">        </span>
@@ -177,43 +183,61 @@
 <span class="sd">        </span>
 <span class="sd">        &gt;&gt;&gt; t.subdivide(hrsperdivision=4,hrsinterval=2)</span>
 <span class="sd">        [[1,3],[5,7]]</span>
+<span class="sd">        </span>
+<span class="sd">        and handle arbitary overlaps:</span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; t.subdivide(hrsperdivision=4,overlap_hrs=2)</span>
+<span class="sd">        [[1,2,3,4,5,6],[4,5,6,7,8]]</span>
+<span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-            <span class="sd">&quot;&quot;&quot; Yield successive n-sized chunks from L.&quot;&quot;&quot;</span>
-            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">float</span><span class="p">:</span> 
-                <span class="k">if</span> <span class="n">n</span><span class="o">!=</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">):</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;rounding step size for time subdivision from {n} to {nr} not allowed&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span><span class="n">nr</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">n</span><span class="p">)))</span>
-                <span class="n">n</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">L</span><span class="p">),</span> <span class="n">n</span><span class="p">):</span> <span class="k">yield</span> <span class="n">Timelist</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">n</span><span class="p">])</span>
-            
+        <span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span><span class="n">overlap</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot; Yield successive n-sized chunks from L, with optional overlap.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">!=</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">):</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;rounding step size for time subdivision from {n} to {nr} not allowed&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span><span class="n">nr</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">n</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="n">overlap</span><span class="o">!=</span><span class="nb">int</span><span class="p">(</span><span class="n">overlap</span><span class="p">):</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;overlap size for time subdivision from {n} to {nr} not allowed&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">overlap</span><span class="p">,</span><span class="n">nr</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">overlap</span><span class="p">)))</span>
+            <span class="n">n</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">overlap</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">overlap</span><span class="p">)</span>
+            <span class="n">stages</span><span class="o">=</span><span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">L</span><span class="p">),</span> <span class="n">n</span><span class="p">):</span> 
+                <span class="n">stages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">Timelist</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">n</span><span class="o">+</span><span class="n">overlap</span><span class="p">])</span> <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c">#the last stage has no overlap and can contain less than the full n intervals</span>
+                <span class="n">stages</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">Timelist</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">:])</span>
+            <span class="k">return</span> <span class="n">stages</span>
         <span class="k">def</span> <span class="nf">timeslice</span><span class="p">(</span><span class="n">tStart</span><span class="p">,</span><span class="n">tEnd</span><span class="p">,</span><span class="n">index</span><span class="p">):</span> <span class="k">return</span> <span class="n">Time</span><span class="p">(</span><span class="n">Start</span><span class="o">=</span><span class="n">tStart</span><span class="p">,</span><span class="n">End</span><span class="o">=</span><span class="n">tEnd</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="n">hrsinterval</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">hrsinterval</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">intervalhrs</span>
+        <span class="n">overlap_intervals</span> <span class="o">=</span> <span class="n">overlap_hrs</span><span class="o">/</span><span class="n">hrsinterval</span>
+        
         
         
         <span class="k">if</span> <span class="n">hrsinterval</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">intervalhrs</span> <span class="ow">and</span> <span class="n">hrsperdivision</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">intervalhrs</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="k">elif</span> <span class="n">hrsinterval</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">intervalhrs</span><span class="p">:</span> <span class="n">newtimesL</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">hrsperdivision</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">intervalhrs</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">hrsinterval</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">intervalhrs</span><span class="p">:</span> 
+            <span class="n">newtimesL</span><span class="o">=</span><span class="n">chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">hrsperdivision</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">intervalhrs</span><span class="p">,</span><span class="n">overlap</span><span class="o">=</span><span class="n">overlap_intervals</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">hrsinterval</span><span class="o">&gt;</span><span class="bp">self</span><span class="o">.</span><span class="n">intervalhrs</span><span class="p">:</span>
             <span class="n">steps</span><span class="o">=</span><span class="n">hrsinterval</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">intervalhrs</span>
             <span class="k">if</span> <span class="n">steps</span><span class="o">==</span><span class="nb">int</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span> <span class="n">steps</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Native Timelist interval is i={i}, while proposed interval is j={j}. j/i must be an integer.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">intervalhrs</span><span class="p">,</span><span class="n">j</span><span class="o">=</span><span class="n">hrsinterval</span><span class="p">))</span>
             
             <span class="n">longertimeL</span> <span class="o">=</span> <span class="n">Timelist</span><span class="p">([</span><span class="n">timeslice</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">Start</span><span class="p">,</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="n">steps</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">End</span><span class="p">,</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-</span><span class="n">steps</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">steps</span><span class="p">)])</span>
-            <span class="n">newtimesL</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">chunks</span><span class="p">(</span><span class="n">longertimeL</span><span class="p">,</span><span class="n">hrsperdivision</span><span class="p">))</span>
+            <span class="n">newtimesL</span> <span class="o">=</span> <span class="n">chunks</span><span class="p">(</span><span class="n">longertimeL</span><span class="p">,</span><span class="n">hrsperdivision</span><span class="o">/</span><span class="n">hrsinterval</span><span class="p">,</span><span class="n">overlap_intervals</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">t</span><span class="p">,</span><span class="n">stage</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">newtimesL</span><span class="p">):</span> 
-            <span class="k">if</span> <span class="n">t</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>        <span class="n">stage</span><span class="o">.</span><span class="n">setInitial</span><span class="p">(</span> <span class="n">newtimesL</span><span class="p">[</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span>
+            <span class="k">if</span> <span class="n">t</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>        <span class="n">stage</span><span class="o">.</span><span class="n">setInitial</span><span class="p">(</span> <span class="n">newtimesL</span><span class="p">[</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">overlap_hrs</span><span class="o">/</span><span class="n">hrsinterval</span><span class="p">)]</span> <span class="p">)</span>
             <span class="k">elif</span> <span class="n">t</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="n">stage</span><span class="o">.</span><span class="n">setInitial</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialTime</span> <span class="p">)</span>
-                
+            <span class="n">stage</span><span class="o">.</span><span class="n">non_overlap_times</span> <span class="o">=</span> <span class="n">stage</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">overlap_intervals</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">overlap_intervals</span><span class="o">&gt;</span><span class="mi">0</span> <span class="k">else</span> <span class="n">stage</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c">#the last stage has no overlap and may not cover the whole division</span>
+            <span class="n">stage</span><span class="o">.</span><span class="n">non_overlap_times</span> <span class="o">=</span> <span class="n">stage</span>
         <span class="k">return</span> <span class="n">newtimesL</span>
         
         </div></div>
-<div class="viewcode-block" id="makeSchedule"><a class="viewcode-back" href="../documentation.html#schedule.makeSchedule">[docs]</a><span class="k">def</span> <span class="nf">makeSchedule</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="n">times</span><span class="p">):</span>
+<div class="viewcode-block" id="makeSchedule"><a class="viewcode-back" href="../api/time.html#schedule.makeSchedule">[docs]</a><span class="k">def</span> <span class="nf">makeSchedule</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="n">times</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Read time and power information from spreadsheet file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">mapFieldsToAttributes</span><span class="o">=</span><span class="p">{</span>
         <span class="s">&#39;time&#39;</span><span class="p">:</span><span class="s">&#39;time&#39;</span><span class="p">,</span><span class="s">&#39;t&#39;</span><span class="p">:</span><span class="s">&#39;time&#39;</span><span class="p">,</span>
-        <span class="s">&#39;p&#39;</span><span class="p">:</span><span class="s">&#39;P&#39;</span><span class="p">,</span><span class="s">&#39;demand&#39;</span><span class="p">:</span><span class="s">&#39;P&#39;</span><span class="p">,</span><span class="s">&#39;pd&#39;</span><span class="p">:</span><span class="s">&#39;P&#39;</span><span class="p">,</span><span class="s">&#39;load&#39;</span><span class="p">:</span><span class="s">&#39;P&#39;</span><span class="p">,</span><span class="s">&#39;wind&#39;</span><span class="p">:</span><span class="s">&#39;P&#39;</span><span class="p">}</span>
+        <span class="s">&#39;power&#39;</span><span class="p">:</span><span class="s">&#39;P&#39;</span><span class="p">,</span><span class="s">&#39;p&#39;</span><span class="p">:</span><span class="s">&#39;P&#39;</span><span class="p">,</span><span class="s">&#39;demand&#39;</span><span class="p">:</span><span class="s">&#39;P&#39;</span><span class="p">,</span><span class="s">&#39;pd&#39;</span><span class="p">:</span><span class="s">&#39;P&#39;</span><span class="p">,</span><span class="s">&#39;load&#39;</span><span class="p">:</span><span class="s">&#39;P&#39;</span><span class="p">,</span><span class="s">&#39;wind&#39;</span><span class="p">:</span><span class="s">&#39;P&#39;</span><span class="p">}</span>
     <span class="n">validFields</span><span class="o">=</span><span class="n">mapFieldsToAttributes</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
     
     <span class="n">data</span><span class="p">,</span><span class="n">fields</span><span class="o">=</span><span class="n">readCSV</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="n">validFields</span><span class="p">)</span>
@@ -221,10 +245,10 @@
     <span class="n">data_power</span><span class="o">=</span><span class="n">transpose</span><span class="p">(</span><span class="n">data</span><span class="p">)[</span><span class="n">attributes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">)]</span> 
     <span class="k">return</span> <span class="n">Schedule</span><span class="p">(</span><span class="n">times</span><span class="p">,</span><span class="n">data_power</span><span class="p">)</span>
     </div>
-<div class="viewcode-block" id="Schedule"><a class="viewcode-back" href="../documentation.html#schedule.Schedule">[docs]</a><span class="k">class</span> <span class="nc">Schedule</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Schedule"><a class="viewcode-back" href="../api/time.html#schedule.Schedule">[docs]</a><span class="k">class</span> <span class="nc">Schedule</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Describes a schedule of times and corresponding power values.</span>
-<span class="sd">    Mostly a container for a dictionary keyed by</span>
+<span class="sd">    A container for a dictionary keyed by</span>
 <span class="sd">    :py:class:`~schedule.Time` objects.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">times</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -242,8 +266,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">=</span><span class="n">p</span><span class="o">*</span><span class="n">multiplier</span>
         <span class="k">return</span> <span class="bp">self</span>
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">sorted</span><span class="p">([(</span><span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">Start</span><span class="p">),</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span><span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()])</span>    
-<div class="viewcode-block" id="Schedule.getEnergy"><a class="viewcode-back" href="../documentation.html#schedule.Schedule.getEnergy">[docs]</a>    <span class="k">def</span> <span class="nf">getEnergy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">timeperiod</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">sorted</span><span class="p">([(</span><span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="p">),</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span><span class="p">,</span><span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()]))</span>    
+<div class="viewcode-block" id="Schedule.get_energy"><a class="viewcode-back" href="../api/time.html#schedule.Schedule.get_energy">[docs]</a>    <span class="k">def</span> <span class="nf">get_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">timeperiod</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        get the amount of energy in a time period </span>
 <span class="sd">        </span>
@@ -252,14 +276,14 @@
 <span class="sd">        &gt;&gt;&gt; times=Timelist([Time(Start=&#39;1:00&#39;),Time(Start=&#39;2:00&#39;),Time(Start=&#39;3:00&#39;)])</span>
 <span class="sd">        &gt;&gt;&gt; P=[100,210,100]</span>
 <span class="sd">        &gt;&gt;&gt; s=Schedule(P=P,times=times)</span>
-<span class="sd">        &gt;&gt;&gt; s.getEnergy(times[0])</span>
+<span class="sd">        &gt;&gt;&gt; s.get_energy(times[0])</span>
 <span class="sd">        100</span>
 
 <span class="sd">        If the timeperiod spans multiple schedule times, energy should</span>
 <span class="sd">        be summed over each schedule time which the timeperiod contains:</span>
 
 <span class="sd">        &gt;&gt;&gt; tLarger=Time(Start=&#39;1:00&#39;,End=&#39;3:00&#39;)</span>
-<span class="sd">        &gt;&gt;&gt; s.getEnergy(tLarger)</span>
+<span class="sd">        &gt;&gt;&gt; s.get_energy(tLarger)</span>
 <span class="sd">        310.0</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">times</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
@@ -269,25 +293,31 @@
                 <span class="c">#energy of time is sum all energy in times within</span>
                 <span class="n">tstarts</span><span class="o">=</span><span class="n">timeperiod</span><span class="o">.</span><span class="n">Range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">)</span>
                 <span class="n">period_Times</span><span class="o">=</span><span class="n">getclass_inlist</span><span class="p">(</span><span class="n">times</span><span class="p">,</span><span class="n">tstarts</span><span class="p">,</span><span class="n">attribute</span><span class="o">=</span><span class="s">&#39;Start&#39;</span><span class="p">)</span>
-                <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">getEnergy</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">period_Times</span><span class="p">])</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">intervalhrs</span>
+                <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">get_energy</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">period_Times</span><span class="p">])</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">intervalhrs</span>
             <span class="k">elif</span> <span class="n">timeperiod</span><span class="o">.</span><span class="n">interval</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">interval</span><span class="p">:</span>
                 <span class="n">t</span><span class="o">=</span><span class="n">getattrL</span><span class="p">(</span><span class="n">times</span><span class="p">,</span><span class="s">&#39;Start&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">timeperiod</span><span class="o">.</span><span class="n">Start</span><span class="p">)</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getEnergy</span><span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_energy</span><span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
             <span class="k">else</span><span class="p">:</span> <span class="k">raise</span></div></div>
-<div class="viewcode-block" id="FixedSchedule"><a class="viewcode-back" href="../documentation.html#schedule.FixedSchedule">[docs]</a><span class="k">class</span> <span class="nc">FixedSchedule</span><span class="p">(</span><span class="n">Schedule</span><span class="p">):</span>
+<div class="viewcode-block" id="FixedSchedule"><a class="viewcode-back" href="../api/time.html#schedule.FixedSchedule">[docs]</a><span class="k">class</span> <span class="nc">FixedSchedule</span><span class="p">(</span><span class="n">Schedule</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;A simple &quot;schedule&quot; which has only one power output&#39;&#39;&#39;</span> 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">times</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="o">=</span><span class="n">P</span>
-<div class="viewcode-block" id="FixedSchedule.getEnergy"><a class="viewcode-back" href="../documentation.html#schedule.FixedSchedule.getEnergy">[docs]</a>    <span class="k">def</span> <span class="nf">getEnergy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">timeperiod</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span>
-    </div></div>
-<div class="viewcode-block" id="just_one_time"><a class="viewcode-back" href="../documentation.html#schedule.just_one_time">[docs]</a><span class="k">def</span> <span class="nf">just_one_time</span><span class="p">():</span>
+<div class="viewcode-block" id="FixedSchedule.get_energy"><a class="viewcode-back" href="../api/time.html#schedule.FixedSchedule.get_energy">[docs]</a>    <span class="k">def</span> <span class="nf">get_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">timeperiod</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span></div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s">&#39;FixedSchedule&lt;P={}&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">)</span></div>
+<div class="viewcode-block" id="just_one_time"><a class="viewcode-back" href="../api/time.html#schedule.just_one_time">[docs]</a><span class="k">def</span> <span class="nf">just_one_time</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;For a single-time problem, generate a Timelist with just one time in it.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">Timelist</span><span class="p">([</span><span class="n">Time</span><span class="p">(</span><span class="n">Start</span><span class="o">=</span><span class="s">&#39;0:00&#39;</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">)])</span></div>
-<div class="viewcode-block" id="parse_timestrings"><a class="viewcode-back" href="../documentation.html#schedule.parse_timestrings">[docs]</a><span class="k">def</span> <span class="nf">parse_timestrings</span><span class="p">(</span><span class="n">timestringsL</span><span class="p">):</span>
+<div class="viewcode-block" id="parse_timestrings"><a class="viewcode-back" href="../api/time.html#schedule.parse_timestrings">[docs]</a><span class="k">def</span> <span class="nf">parse_timestrings</span><span class="p">(</span><span class="n">timestringsL</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert list of strings to list of :py:class:`datetime.datetime`</span>
 <span class="sd">    objects using :meth:`dateutil.parser.parse`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">fmt</span><span class="o">=</span><span class="n">getTimeFormat</span><span class="p">(</span><span class="n">timestringsL</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="o">**</span><span class="n">fmt</span><span class="p">)</span> <span class="k">for</span> <span class="nb">str</span> <span class="ow">in</span> <span class="n">timestringsL</span><span class="p">]</span></div>
+    <span class="k">return</span> <span class="p">[</span><span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">string</span><span class="p">,</span><span class="o">**</span><span class="n">fmt</span><span class="p">)</span> <span class="k">for</span> <span class="n">string</span> <span class="ow">in</span> <span class="n">timestringsL</span><span class="p">]</span>
+
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
 </pre></div>
 
           </div>
@@ -298,8 +328,12 @@
         <div class="sphinxsidebarwrapper">
 <h3><a href="../index.html">minpower</a></h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why minpower?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why Minpower</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../creating-problems.html">Creating a Problem</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../students.html">For Students</a></li>
@@ -311,14 +345,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../unit-commitment.html">Unit Commitment</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">Documentation</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../collaborate.html">Collaborate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../about.html">About minpower</a></li>
 </ul>
 
-<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
+
 <div id="searchbox" style="display: none">
   <h3>Search</h3>
     <form class="search" action="../search.html" method="get">
@@ -332,6 +366,10 @@
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+<div class="social">
+<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
+<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
+</div>
         </div>
       </div>
       <div class="clearer"></div>

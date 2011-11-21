@@ -2,13 +2,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
     <title>solve &mdash; minpower</title>
+    
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
@@ -45,181 +48,208 @@
   <h1>Source code for solve</h1><div class="highlight"><pre>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Power systems optimization problem solver</span>
-<span class="sd">(ED, OPF, UC, and SCUC problems).</span>
+<span class="sd">for ED, OPF, UC, and SCUC problems. The :mod:`solve`</span>
+<span class="sd">module contains the top-level commands for creating</span>
+<span class="sd">problems and solving them.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span><span class="nn">os</span><span class="o">,</span><span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span> <span class="k">as</span> <span class="n">wallclocktime</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">import</span> <span class="nn">optimization</span>
 <span class="kn">import</span> <span class="nn">get_data</span>
 <span class="kn">import</span> <span class="nn">powersystems</span>
 <span class="kn">import</span> <span class="nn">results</span>
 <span class="kn">import</span> <span class="nn">config</span>
-<span class="kn">from</span> <span class="nn">commonscripts</span> <span class="kn">import</span> <span class="n">joindir</span><span class="p">,</span><span class="n">flatten</span>
-
-  
-<span class="k">def</span> <span class="nf">_setup_logging</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39; set up the logging to report on the status&#39;&#39;&#39;</span>
-    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span> <span class="n">level</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">logging_level</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(levelname)s</span><span class="s">: </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">fn</span>
+<span class="kn">from</span> <span class="nn">commonscripts</span> <span class="kn">import</span> <span class="n">joindir</span><span class="p">,</span><span class="n">show_clock</span>
     
-<span class="nd">@_setup_logging</span>
-<div class="viewcode-block" id="problem"><a class="viewcode-back" href="../documentation.html#solve.problem">[docs]</a><span class="k">def</span> <span class="nf">problem</span><span class="p">(</span><span class="n">datadir</span><span class="o">=</span><span class="s">&#39;.&#39;</span><span class="p">,</span><span class="n">shell</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">problemfile</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-        <span class="n">vizualization</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">csv</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">solver</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">optimization_solver</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Solve a optimization problem in a directory.</span>
-<span class="sd">        Problem type is determined from the data.</span>
-<span class="sd">            </span>
-<span class="sd">        :param datadir: directory of data files, see :mod:`get_data`</span>
-<span class="sd">        :param outputs: dictionary of outputs flags: {shell, problemfile, vizualization,csv}</span>
-<span class="sd">        :param solver:  choice of solver</span>
+<div class="viewcode-block" id="problem"><a class="viewcode-back" href="../api/solving.html#solve.problem">[docs]</a><span class="k">def</span> <span class="nf">problem</span><span class="p">(</span><span class="n">datadir</span><span class="o">=</span><span class="s">&#39;.&#39;</span><span class="p">,</span>
+        <span class="n">shell</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="n">problemfile</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">visualization</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="n">csv</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="n">solver</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">optimization_solver</span><span class="p">,</span>
+        <span class="n">num_breakpoints</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">default_num_breakpoints</span><span class="p">,</span>
+        <span class="n">hours_commitment</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">default_hours_commitment</span><span class="p">,</span>
+        <span class="n">hours_commitment_overlap</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">default_hours_commitment_overlap</span><span class="p">,</span>
+        <span class="n">get_duals</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="n">dispatch_decommit_allowed</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">logging_level</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">logging_level</span><span class="p">,</span>
+        <span class="n">logging_file</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    Solve a optimization problem specified by spreadsheets in a directory.</span>
+<span class="sd">    Read in data, create and solve the problem, and return solution.</span>
+<span class="sd">    The problem type is determined by the data.</span>
 <span class="sd">        </span>
-<span class="sd">        :returns: :class:`~results.Solution` object</span>
+<span class="sd">    :param datadir: directory of data files, see :mod:`get_data`</span>
+<span class="sd">    :param shell: output solution information to the command line</span>
+<span class="sd">    :param problemfile: write the problem formulation to a problem-formulation.lp file</span>
+<span class="sd">    :param visualization: create a visualization of the solution and save it to a file</span>
+<span class="sd">    :param csv: create a spreadsheet of the solution</span>
+<span class="sd">    :param solver: choice of solver, a lowercase string</span>
+<span class="sd">    :param num_breakpoints: number of break points to use in linearization of bid (or cost) polynomials (equal to number of segments + 1)</span>
+<span class="sd">    :param hours_commitment: maximum length of a single unit commitment, times beyond this will be divided into multiple problems and solved in a rolling commitment</span>
+<span class="sd">    :param hours_commitment_overlap: overlap of commitments for rolling commitments</span>
+<span class="sd">    :param get_duals: get the duals, or prices, of the optimization problem</span>
+<span class="sd">    :param dispatch_decommit_allowed: allow de-commitment of units in an ED -- useful for getting initial conditions for UCs  </span>
+<span class="sd">    :returns: :class:`~results.Solution` object</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="n">buses</span><span class="p">,</span><span class="n">lines</span><span class="p">,</span><span class="n">times</span><span class="o">=</span><span class="n">get_data</span><span class="o">.</span><span class="n">parsedir</span><span class="p">(</span><span class="n">datadir</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">times</span><span class="o">.</span><span class="n">spanhrs</span><span class="o">&lt;=</span><span class="mi">24</span><span class="p">:</span>
-        <span class="n">problem</span><span class="o">=</span><span class="n">create_problem</span><span class="p">(</span><span class="n">buses</span><span class="p">,</span><span class="n">lines</span><span class="p">,</span><span class="n">times</span><span class="p">)</span>
-        <span class="n">optimization</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span><span class="n">solver</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">problemfile</span><span class="p">:</span> <span class="n">problem</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">joindir</span><span class="p">(</span><span class="n">datadir</span><span class="p">,</span><span class="s">&#39;problem-formulation.lp&#39;</span><span class="p">))</span>
+    <span class="n">_setup_logging</span><span class="p">(</span><span class="n">logging_level</span><span class="p">,</span><span class="n">logging_file</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Minpower reading {} {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">datadir</span><span class="p">,</span> <span class="n">show_clock</span><span class="p">()))</span>
+    <span class="n">generators</span><span class="p">,</span><span class="n">loads</span><span class="p">,</span><span class="n">lines</span><span class="p">,</span><span class="n">times</span><span class="o">=</span><span class="n">get_data</span><span class="o">.</span><span class="n">parsedir</span><span class="p">(</span><span class="n">datadir</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;data read {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">show_clock</span><span class="p">()))</span>
+    <span class="n">power_system</span><span class="o">=</span><span class="n">powersystems</span><span class="o">.</span><span class="n">PowerSystem</span><span class="p">(</span><span class="n">generators</span><span class="p">,</span><span class="n">loads</span><span class="p">,</span><span class="n">lines</span><span class="p">,</span>                 
+                <span class="n">num_breakpoints</span><span class="o">=</span><span class="n">num_breakpoints</span><span class="p">,</span>
+                <span class="n">load_shedding_allowed</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                <span class="c">#spinning_reserve_requirement=0,</span>
+                <span class="n">dispatch_decommit_allowed</span><span class="o">=</span><span class="n">dispatch_decommit_allowed</span><span class="p">,)</span>
+    
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;power system set up {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">show_clock</span><span class="p">()))</span>
+    
+    <span class="k">if</span> <span class="n">times</span><span class="o">.</span><span class="n">spanhrs</span><span class="o">&lt;=</span><span class="n">hours_commitment</span><span class="p">:</span>
+        <span class="n">problem</span><span class="o">=</span><span class="n">create_problem</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">problemfile</span><span class="p">:</span> <span class="n">problemfile</span><span class="o">=</span><span class="n">joindir</span><span class="p">(</span><span class="n">datadir</span><span class="p">,</span><span class="s">&#39;problem-formulation.lp&#39;</span><span class="p">)</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="p">,</span><span class="n">problem_filename</span><span class="o">=</span><span class="n">problemfile</span><span class="p">,</span><span class="n">get_duals</span><span class="o">=</span><span class="n">get_duals</span><span class="p">)</span>
+        
         <span class="k">if</span> <span class="n">problem</span><span class="o">.</span><span class="n">solved</span><span class="p">:</span>
-            <span class="n">solution</span><span class="o">=</span><span class="n">results</span><span class="o">.</span><span class="n">makeSolution</span><span class="p">(</span><span class="n">times</span><span class="o">=</span><span class="n">times</span><span class="p">,</span><span class="n">lines</span><span class="o">=</span><span class="n">lines</span><span class="p">,</span><span class="n">buses</span><span class="o">=</span><span class="n">buses</span><span class="p">,</span><span class="n">problem</span><span class="o">=</span><span class="n">problem</span><span class="p">,</span><span class="n">datadir</span><span class="o">=</span><span class="n">datadir</span><span class="p">)</span>
+            <span class="n">solution</span><span class="o">=</span><span class="n">results</span><span class="o">.</span><span class="n">make_solution</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">,</span><span class="n">problem</span><span class="o">=</span><span class="n">problem</span><span class="p">,</span><span class="n">datadir</span><span class="o">=</span><span class="n">datadir</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span> 
             <span class="k">raise</span> <span class="n">optimization</span><span class="o">.</span><span class="n">OptimizationError</span><span class="p">(</span><span class="s">&#39;problem not solved&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span> <span class="c">#split into multi-stage problem</span>
-        <span class="n">problemsL</span><span class="p">,</span><span class="n">stageTimes</span><span class="o">=</span><span class="n">create_problem_multistage</span><span class="p">(</span><span class="n">buses</span><span class="p">,</span><span class="n">lines</span><span class="p">,</span><span class="n">times</span><span class="p">,</span><span class="n">datadir</span><span class="p">)</span>
-        <span class="n">solution</span><span class="o">=</span><span class="n">results</span><span class="o">.</span><span class="n">makeMultistageSolution</span><span class="p">(</span><span class="n">problemsL</span><span class="o">=</span><span class="n">problemsL</span><span class="p">,</span><span class="n">times</span><span class="o">=</span><span class="n">times</span><span class="p">,</span><span class="n">stageTimes</span><span class="o">=</span><span class="n">stageTimes</span><span class="p">,</span><span class="n">buses</span><span class="o">=</span><span class="n">buses</span><span class="p">,</span><span class="n">lines</span><span class="o">=</span><span class="n">lines</span><span class="p">,</span><span class="n">datadir</span><span class="o">=</span><span class="n">datadir</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;problem solved in {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">solution</span><span class="o">.</span><span class="n">solveTime</span><span class="p">))</span>
-    
+    <span class="k">else</span><span class="p">:</span> <span class="c">#split into multiple stages and solve</span>
+        <span class="n">stage_solutions</span><span class="p">,</span><span class="n">stage_times</span><span class="o">=</span><span class="n">solve_multistage</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">,</span><span class="n">datadir</span><span class="p">,</span>
+                                                       <span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">,</span>
+                                                       <span class="n">get_duals</span><span class="o">=</span><span class="n">get_duals</span><span class="p">,</span>
+                                                       <span class="n">stage_hours</span><span class="o">=</span><span class="n">hours_commitment</span><span class="p">,</span>
+                                                       <span class="n">overlap_hours</span><span class="o">=</span><span class="n">hours_commitment_overlap</span><span class="p">,</span>
+                                                       <span class="p">)</span>
+        <span class="n">solution</span><span class="o">=</span><span class="n">results</span><span class="o">.</span><span class="n">make_multistage_solution</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">stage_times</span><span class="p">,</span><span class="n">datadir</span><span class="p">,</span><span class="n">stage_solutions</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;problem solved in {} ... finished at {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">solution</span><span class="o">.</span><span class="n">solve_time</span><span class="p">,</span><span class="n">show_clock</span><span class="p">()))</span>
+        
     <span class="k">if</span> <span class="n">shell</span><span class="p">:</span> <span class="n">solution</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">csv</span><span class="p">:</span> <span class="n">solution</span><span class="o">.</span><span class="n">saveCSV</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">vizualization</span><span class="p">:</span> <span class="n">solution</span><span class="o">.</span><span class="n">vizualization</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">visualization</span><span class="p">:</span> <span class="n">solution</span><span class="o">.</span><span class="n">visualization</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">solution</span>
 </div>
-<div class="viewcode-block" id="create_problem"><a class="viewcode-back" href="../documentation.html#solve.create_problem">[docs]</a><span class="k">def</span> <span class="nf">create_problem</span><span class="p">(</span><span class="n">buses</span><span class="p">,</span><span class="n">lines</span><span class="p">,</span><span class="n">times</span><span class="p">,</span><span class="n">load_shedding_allowed</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">dispatch_decommit_allowed</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+<div class="viewcode-block" id="create_problem"><a class="viewcode-back" href="../api/solving.html#solve.create_problem">[docs]</a><span class="k">def</span> <span class="nf">create_problem</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create a power systems optimization problem.</span>
-<span class="sd">        </span>
-<span class="sd">        :param buses: list of :class:`~powersystems.Bus` objects</span>
-<span class="sd">        :param lines: list of :class:`~powersystems.Line` objects</span>
-<span class="sd">        :param times: :class:`~schedule.Timelist` object</span>
-<span class="sd">        </span>
-<span class="sd">        :returns: :class:`~optimization.Problem` object</span>
+<span class="sd">    Create an optimization problem.</span>
+<span class="sd">    </span>
+<span class="sd">    :param power_system: a :class:`~powersystems.PowerSystem` object</span>
+<span class="sd">    :param times: :class:`~schedule.Timelist` object</span>
+<span class="sd">    </span>
+<span class="sd">    :returns: :class:`~optimization.Problem` object</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">Bmatrix</span><span class="o">=</span><span class="n">powersystems</span><span class="o">.</span><span class="n">Network</span><span class="p">(</span><span class="n">buses</span><span class="p">,</span><span class="n">lines</span><span class="p">)</span><span class="o">.</span><span class="n">Bmatrix</span>
+    
+    
     <span class="n">prob</span><span class="o">=</span><span class="n">optimization</span><span class="o">.</span><span class="n">newProblem</span><span class="p">()</span>
-    <span class="n">costs</span><span class="o">=</span><span class="p">[]</span>
-    <span class="n">problemvars</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;initialized problem {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">show_clock</span><span class="p">()))</span>
+    <span class="n">variables</span> <span class="o">=</span><span class="n">power_system</span><span class="o">.</span><span class="n">create_variables</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;created variables {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">show_clock</span><span class="p">()))</span>
+    <span class="n">objective</span><span class="o">=</span><span class="n">power_system</span><span class="o">.</span><span class="n">create_objective</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;created objective {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">show_clock</span><span class="p">()))</span>
+    <span class="n">constraints</span><span class="o">=</span><span class="n">power_system</span><span class="o">.</span><span class="n">create_constraints</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;created constraints {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">show_clock</span><span class="p">()))</span>
     
-    <span class="k">for</span> <span class="n">bus</span> <span class="ow">in</span> <span class="n">buses</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buses</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span> <span class="n">bus</span><span class="o">.</span><span class="n">add_timevars</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
-        
-        <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">bus</span><span class="o">.</span><span class="n">generators</span><span class="p">:</span>
-            <span class="n">problemvars</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">add_timevars</span><span class="p">(</span><span class="n">times</span><span class="p">,</span><span class="n">dispatch_decommit_allowed</span><span class="p">))</span>
-            <span class="n">prob</span><span class="o">.</span><span class="n">addConstraints</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">constraints</span><span class="p">(</span><span class="n">times</span><span class="p">))</span>
-            <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">times</span><span class="p">:</span> <span class="n">costs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">cost</span><span class="p">(</span><span class="n">time</span><span class="p">))</span>
-
-        <span class="k">for</span> <span class="n">load</span> <span class="ow">in</span> <span class="n">bus</span><span class="o">.</span><span class="n">loads</span><span class="p">:</span>
-            <span class="n">problemvars</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">load</span><span class="o">.</span><span class="n">add_timevars</span><span class="p">(</span><span class="n">times</span><span class="p">,</span><span class="n">load_shedding_allowed</span><span class="p">))</span>
-            <span class="n">prob</span><span class="o">.</span><span class="n">addConstraints</span><span class="p">(</span><span class="n">load</span><span class="o">.</span><span class="n">constraints</span><span class="p">(</span><span class="n">times</span><span class="p">))</span>
-            <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">times</span><span class="p">:</span> <span class="n">costs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">load</span><span class="o">.</span><span class="n">benifit</span><span class="p">(</span><span class="n">time</span><span class="p">))</span>
-            
-    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
-        <span class="n">problemvars</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">add_timevars</span><span class="p">(</span><span class="n">times</span><span class="p">))</span>
-        <span class="n">prob</span><span class="o">.</span><span class="n">addConstraints</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">constraints</span><span class="p">(</span><span class="n">times</span><span class="p">,</span><span class="n">buses</span><span class="p">))</span>
-                    
-    <span class="k">for</span> <span class="n">bus</span> <span class="ow">in</span> <span class="n">buses</span><span class="p">:</span>
-        <span class="n">problemvars</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">bus</span><span class="o">.</span><span class="n">add_timevars</span><span class="p">(</span><span class="n">times</span><span class="p">))</span>
-        <span class="n">prob</span><span class="o">.</span><span class="n">addConstraints</span><span class="p">(</span><span class="n">bus</span><span class="o">.</span><span class="n">constraints</span><span class="p">(</span><span class="n">times</span><span class="p">,</span><span class="n">Bmatrix</span><span class="p">,</span><span class="n">buses</span><span class="p">))</span>
-    
-    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">problemvars</span><span class="p">:</span> <span class="n">prob</span><span class="o">.</span><span class="n">addVar</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
-    <span class="n">prob</span><span class="o">.</span><span class="n">addObjective</span><span class="p">(</span> <span class="n">optimization</span><span class="o">.</span><span class="n">sumVars</span><span class="p">(</span><span class="n">costs</span><span class="p">)</span> <span class="p">)</span>
-    
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">values</span><span class="p">():</span> <span class="n">prob</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;added vars to problem {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">show_clock</span><span class="p">()))</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">constraints</span><span class="o">.</span><span class="n">values</span><span class="p">():</span> <span class="n">prob</span><span class="o">.</span><span class="n">add_constraint</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;added constraints to problem {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">show_clock</span><span class="p">()))</span>
+    <span class="n">prob</span><span class="o">.</span><span class="n">add_objective</span><span class="p">(</span><span class="n">objective</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;added objective to problem {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">show_clock</span><span class="p">()))</span>
     <span class="k">return</span> <span class="n">prob</span>
-
-
-
-
-
 </div>
-<div class="viewcode-block" id="create_problem_multistage"><a class="viewcode-back" href="../documentation.html#solve.create_problem_multistage">[docs]</a><span class="k">def</span> <span class="nf">create_problem_multistage</span><span class="p">(</span><span class="n">buses</span><span class="p">,</span><span class="n">lines</span><span class="p">,</span><span class="n">times</span><span class="p">,</span><span class="n">datadir</span><span class="p">,</span><span class="n">intervalHrs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">stageHrs</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span><span class="n">writeproblem</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">showclock</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+<div class="viewcode-block" id="solve_multistage"><a class="viewcode-back" href="../api/solving.html#solve.solve_multistage">[docs]</a><span class="k">def</span> <span class="nf">solve_multistage</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">,</span><span class="n">datadir</span><span class="p">,</span>
+                              <span class="n">solver</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">optimization_solver</span><span class="p">,</span>
+                              <span class="n">interval_hours</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                              <span class="n">stage_hours</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">default_hours_commitment</span><span class="p">,</span>
+                              <span class="n">overlap_hours</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">default_hours_commitment_overlap</span><span class="p">,</span>
+                              <span class="n">writeproblem</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                              <span class="n">get_duals</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                              <span class="n">showclock</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Create a multi-stage power systems optimization problem.</span>
+<span class="sd">    Solve a rolling or multi-stage power systems optimization problem.</span>
 <span class="sd">    Each stage will be one optimization run. A stage&#39;s final</span>
 <span class="sd">    conditions will be the next stage&#39;s initial condition.</span>
-<span class="sd">    Multi-stage problems are generally used for UCs over many days.</span>
 <span class="sd">    </span>
-<span class="sd">    :param buses: list of :class:`~powersystems.Bus` objects</span>
-<span class="sd">    :param lines: list of :class:`~powersystems.Line` objects</span>
-<span class="sd">    :param times: :class:`~schedule.Timelist` object</span>
-<span class="sd">    :param intervalHrs: define the number of hours per interval</span>
-<span class="sd">    :param stageHrs: define the number of hours per stage</span>
+<span class="sd">    :param power_system: :class:`~powersystems.PowerSystem` object</span>
+<span class="sd">    :param datadir: directory of spreadsheets </span>
+<span class="sd">    :param times: :class:`~schedule.Timelist` object. Will be split up into stages</span>
+<span class="sd">    :param interval_hours: number of hours per interval</span>
+<span class="sd">    :param stage_hours: number of hours per stage (e.g. run one commitment every stage_hours)</span>
+<span class="sd">    :param overlap_hours: number of hours that stages overlap (e.g. run a 36hr commitment every 24hrs)</span>
+<span class="sd">    :param writeproblem: save the formulation of each stage to a file</span>
+<span class="sd">    :param get_duals: get the duals, or prices, of the optimization problem </span>
+<span class="sd">    :param showclock: show the current system time at the start of each stage</span>
 <span class="sd">    </span>
-<span class="sd">    </span>
-<span class="sd">    :returns: a list of :class:`~optimization.Problem` objects (one per stage)</span>
+<span class="sd">    :returns: a list of :class:`~results.Solution_UC` objects (one per stage)</span>
 <span class="sd">    :returns: a list of :class:`~schedule.Timelist` objects (one per stage)</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
         
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">intervalHrs</span><span class="p">:</span> <span class="n">intervalHrs</span><span class="o">=</span><span class="n">times</span><span class="o">.</span><span class="n">intervalhrs</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">interval_hours</span><span class="p">:</span> <span class="n">interval_hours</span><span class="o">=</span><span class="n">times</span><span class="o">.</span><span class="n">intervalhrs</span>
         
-    <span class="n">stageTimes</span><span class="o">=</span><span class="n">times</span><span class="o">.</span><span class="n">subdivide</span><span class="p">(</span><span class="n">hrsperdivision</span><span class="o">=</span><span class="n">stageHrs</span><span class="p">,</span><span class="n">hrsinterval</span><span class="o">=</span><span class="n">intervalHrs</span><span class="p">)</span>
-    <span class="n">problemsL</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">stage_times</span><span class="o">=</span><span class="n">times</span><span class="o">.</span><span class="n">subdivide</span><span class="p">(</span><span class="n">hrsperdivision</span><span class="o">=</span><span class="n">stage_hours</span><span class="p">,</span><span class="n">hrsinterval</span><span class="o">=</span><span class="n">interval_hours</span><span class="p">,</span><span class="n">overlap_hrs</span><span class="o">=</span><span class="n">overlap_hours</span><span class="p">)</span>
+    <span class="n">buses</span><span class="o">=</span><span class="n">power_system</span><span class="o">.</span><span class="n">buses</span>
+    <span class="n">stage_solutions</span><span class="o">=</span><span class="p">[]</span>
 
     
     <span class="k">def</span> <span class="nf">set_initialconditions</span><span class="p">(</span><span class="n">buses</span><span class="p">,</span><span class="n">initTime</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">bus</span> <span class="ow">in</span> <span class="n">buses</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">bus</span><span class="o">.</span><span class="n">generators</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span> 
-                    <span class="n">gen</span><span class="o">.</span><span class="n">setInitialCondition</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">initTime</span><span class="p">,</span><span class="o">**</span><span class="n">gen</span><span class="o">.</span><span class="n">finalstatus</span><span class="p">)</span>
+                    <span class="n">gen</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">initTime</span><span class="p">,</span><span class="o">**</span><span class="n">gen</span><span class="o">.</span><span class="n">finalstatus</span><span class="p">)</span>
                     <span class="k">del</span> <span class="n">gen</span><span class="o">.</span><span class="n">finalstatus</span>
-                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="k">pass</span> <span class="c">#first stage of problem already has initial time definied</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="k">pass</span> <span class="c">#first stage of problem already has initial time defined</span>
 
-    <span class="k">def</span> <span class="nf">get_finalconditions</span><span class="p">(</span><span class="n">buses</span><span class="p">,</span><span class="n">times</span><span class="p">,</span><span class="n">lastproblem</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">bus</span> <span class="ow">in</span> <span class="n">buses</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">get_finalconditions</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">,</span><span class="n">lastproblem</span><span class="p">):</span>
+        <span class="n">t_back</span><span class="o">=</span><span class="n">overlap_hours</span><span class="o">/</span><span class="n">times</span><span class="o">.</span><span class="n">intervalhrs</span>
+        <span class="n">next_stage_first_time</span> <span class="o">=</span> <span class="n">times</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">t_back</span><span class="p">)]</span>         
+        <span class="k">for</span> <span class="n">bus</span> <span class="ow">in</span> <span class="n">power_system</span><span class="o">.</span><span class="n">buses</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">bus</span><span class="o">.</span><span class="n">generators</span><span class="p">:</span>
-                <span class="n">gen</span><span class="o">.</span><span class="n">update_vars</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">lastproblem</span><span class="p">)</span>
-                <span class="n">gen</span><span class="o">.</span><span class="n">finalstatus</span><span class="o">=</span><span class="n">gen</span><span class="o">.</span><span class="n">getstatus</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">times</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">times</span><span class="o">=</span><span class="n">times</span><span class="p">)</span>
+                <span class="n">gen</span><span class="o">.</span><span class="n">update_variables</span><span class="p">()</span>
+                <span class="n">gen</span><span class="o">.</span><span class="n">finalstatus</span><span class="o">=</span><span class="n">gen</span><span class="o">.</span><span class="n">getstatus</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="n">next_stage_first_time</span><span class="p">,</span><span class="n">times</span><span class="o">=</span><span class="n">times</span><span class="p">)</span>
 
 
-    <span class="k">for</span> <span class="n">t_stage</span> <span class="ow">in</span> <span class="n">stageTimes</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Stage starting at {} {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t_stage</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Start</span><span class="p">,</span> <span class="s">&#39;time={}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">wallclocktime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span> <span class="k">if</span> <span class="n">showclock</span> <span class="k">else</span> <span class="s">&#39;&#39;</span><span class="p">))</span>
-        <span class="n">set_initialconditions</span><span class="p">(</span><span class="n">buses</span><span class="p">,</span><span class="n">t_stage</span><span class="o">.</span><span class="n">initialTime</span><span class="p">)</span>
-        <span class="n">stageproblem</span><span class="o">=</span><span class="n">create_problem</span><span class="p">(</span><span class="n">buses</span><span class="p">,</span><span class="n">lines</span><span class="p">,</span><span class="n">t_stage</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">writeproblem</span><span class="p">:</span> <span class="n">stageproblem</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">joindir</span><span class="p">(</span><span class="n">datadir</span><span class="p">,</span><span class="s">&#39;problem-stage{}.lp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t_stage</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Start</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s">--%H-%M&#39;</span><span class="p">))))</span>
+    <span class="k">for</span> <span class="n">t_stage</span> <span class="ow">in</span> <span class="n">stage_times</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Stage starting at {}, {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t_stage</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Start</span><span class="p">,</span> <span class="n">show_clock</span><span class="p">(</span><span class="n">showclock</span><span class="p">)))</span>
         
-        <span class="n">optimization</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">stageproblem</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">stageproblem</span><span class="o">.</span><span class="n">status</span><span class="o">!=</span><span class="mi">1</span><span class="p">:</span> 
-            <span class="c">#redo stage, with shedding allowed</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&#39;Stage infeasible, re-runnning with load shedding.&#39;</span><span class="p">)</span>
-            <span class="n">stageproblem</span><span class="o">=</span><span class="n">create_problem</span><span class="p">(</span><span class="n">buses</span><span class="p">,</span><span class="n">lines</span><span class="p">,</span><span class="n">t_stage</span><span class="p">,</span><span class="n">load_shedding_allowed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-            <span class="n">optimization</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">stageproblem</span><span class="p">)</span>
+        <span class="n">set_initialconditions</span><span class="p">(</span><span class="n">buses</span><span class="p">,</span><span class="n">t_stage</span><span class="o">.</span><span class="n">initialTime</span><span class="p">)</span>
+        
+        <span class="n">stage_problem</span><span class="o">=</span><span class="n">create_problem</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">t_stage</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">writeproblem</span><span class="p">:</span> <span class="n">stage_problem</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">joindir</span><span class="p">(</span><span class="n">datadir</span><span class="p">,</span><span class="s">&#39;problem-stage{}.lp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t_stage</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Start</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s">--%H-%M&#39;</span><span class="p">))))</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;created... solving... {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">show_clock</span><span class="p">(</span><span class="n">showclock</span><span class="p">)))</span>
+        <span class="n">stage_problem</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="p">,</span><span class="n">get_duals</span><span class="o">=</span><span class="n">get_duals</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">stage_problem</span><span class="o">.</span><span class="n">solved</span><span class="p">:</span> 
+            <span class="c">#re-do stage, with load shedding allowed</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s">&#39;Stage infeasible, re-running with load shedding.&#39;</span><span class="p">)</span>
+            <span class="n">power_system</span><span class="o">.</span><span class="n">set_load_shedding</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">stage_problem</span><span class="o">=</span><span class="n">create_problem</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">t_stage</span><span class="p">)</span>
+            <span class="n">stage_problem</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="p">,</span><span class="n">get_duals</span><span class="o">=</span><span class="n">get_duals</span><span class="p">)</span>
+            <span class="n">power_system</span><span class="o">.</span><span class="n">set_load_shedding</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
             
-        <span class="k">if</span> <span class="n">stageproblem</span><span class="o">.</span><span class="n">status</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
-            <span class="n">get_finalconditions</span><span class="p">(</span><span class="n">buses</span><span class="p">,</span><span class="n">t_stage</span><span class="p">,</span><span class="n">stageproblem</span><span class="p">)</span>
-            <span class="n">stage_sln</span><span class="o">=</span><span class="n">results</span><span class="o">.</span><span class="n">get_stage_solution</span><span class="p">(</span><span class="n">stageproblem</span><span class="p">,</span><span class="n">buses</span><span class="p">,</span><span class="n">t_stage</span><span class="p">)</span>
-            <span class="n">problemsL</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stage_sln</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">stage_problem</span><span class="o">.</span><span class="n">solved</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;solved... get results... {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">show_clock</span><span class="p">(</span><span class="n">showclock</span><span class="p">)))</span>
+            <span class="n">get_finalconditions</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">t_stage</span><span class="p">,</span><span class="n">stage_problem</span><span class="p">)</span>
+            <span class="c">#stage_sln=results.get_stage_solution(stage_problem,power_system,t_stage,overlap_hours)</span>
+            <span class="n">stage_sln</span><span class="o">=</span><span class="n">results</span><span class="o">.</span><span class="n">make_solution</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">t_stage</span><span class="o">.</span><span class="n">non_overlap_times</span><span class="p">,</span><span class="n">problem</span><span class="o">=</span><span class="n">stage_problem</span><span class="p">)</span>
+            <span class="n">stage_solutions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stage_sln</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span> 
-            <span class="k">print</span> <span class="n">stageproblem</span><span class="o">.</span><span class="n">status</span><span class="p">,</span><span class="n">stageproblem</span><span class="o">.</span><span class="n">statusText</span><span class="p">()</span>
-            <span class="n">stageproblem</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;infeasible-problem.lp&#39;</span><span class="p">)</span>
-            <span class="n">results</span><span class="o">.</span><span class="n">write_last_stage_status</span><span class="p">(</span><span class="n">buses</span><span class="p">,</span><span class="n">t_stage</span><span class="p">)</span>
+            <span class="c">#print stage_problem.status,stage_problem.statusText()</span>
+            <span class="n">stage_problem</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;infeasible-problem.lp&#39;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span> <span class="n">stage_sln</span><span class="o">.</span><span class="n">saveCSV</span><span class="p">(</span><span class="s">&#39;last-stage-solved.csv&#39;</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s">&#39;could not write last stage solution to spreadsheet&#39;</span><span class="p">)</span>
             <span class="n">msg</span><span class="o">=</span><span class="s">&#39;Infeasible problem - writing to .lp file for examination.&#39;</span>
             <span class="k">raise</span> <span class="n">optimization</span><span class="o">.</span><span class="n">OptimizationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">problemsL</span><span class="p">,</span><span class="n">stageTimes</span>
-</div>
-<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span> 
-    <span class="sd">&#39;&#39;&#39; command line input&#39;&#39;&#39;</span>
-    <span class="n">_setup_logging</span><span class="p">()</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="n">problem</span><span class="p">()</span>
-    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span> 
-        <span class="n">datadir</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">datadir</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span> <span class="s">&quot;data directory does not exist: &#39;{d}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="n">datadir</span><span class="p">)</span> <span class="p">)</span>
-        <span class="n">problem</span><span class="p">(</span><span class="n">datadir</span><span class="o">=</span><span class="n">datadir</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span> 
-        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s">&#39;solve.main() takes only one input argument (the directory). {n} inputs passed&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">stage_solutions</span><span class="p">,</span><span class="n">stage_times</span>
+
+  </div>
+<span class="k">def</span> <span class="nf">_setup_logging</span><span class="p">(</span><span class="n">level</span><span class="p">,</span><span class="n">filename</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; set up the logging to report on the status&#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span> <span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(levelname)s</span><span class="s">: </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">,</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span> <span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(levelname)s</span><span class="s">: </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">)</span>
 </pre></div>
 
           </div>
@@ -230,8 +260,12 @@
         <div class="sphinxsidebarwrapper">
 <h3><a href="../index.html">minpower</a></h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why minpower?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why Minpower</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../creating-problems.html">Creating a Problem</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../students.html">For Students</a></li>
@@ -243,14 +277,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../unit-commitment.html">Unit Commitment</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">Documentation</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../collaborate.html">Collaborate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../about.html">About minpower</a></li>
 </ul>
 
-<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
+
 <div id="searchbox" style="display: none">
   <h3>Search</h3>
     <form class="search" action="../search.html" method="get">
@@ -264,6 +298,10 @@
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+<div class="social">
+<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
+<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
+</div>
         </div>
       </div>
       <div class="clearer"></div>

@@ -1,0 +1,388 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Creating a Problem &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1 alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="top" title="minpower" href="index.html" />
+    <link rel="next" title="For Students" href="students.html" />
+    <link rel="prev" title="Basic Use" href="basic-use.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="creating-a-problem">
+<h1>Creating a Problem<a class="headerlink" href="#creating-a-problem" title="Permalink to this headline">¶</a></h1>
+<p>Minpower solves problems that are defined in spreadsheets. The most basic <abbr title="Economic Dispatch">ED</abbr> problem only has two files: <tt class="docutils literal"><span class="pre">generators.csv</span></tt> and <tt class="docutils literal"><span class="pre">loads.csv</span></tt>. If you are solving an <abbr title="Unit Commitment">UC</abbr> then you need to define the initial conditions for your generation in <tt class="docutils literal"><span class="pre">initial.csv</span></tt>. Scheduled or predicted energy amounts (e.g. predicted wind farm output or predicted load demand) over a series of times can be specified in a file defined by the <tt class="docutils literal"><span class="pre">schedule</span> <span class="pre">file</span> <span class="pre">name</span></tt> column of the component. If you are solving an <abbr title="Optimal Power Flow">OPF</abbr>, then you also need to define your transmission lines in <tt class="docutils literal"><span class="pre">lines.csv</span></tt>.</p>
+<p>The following tables give details on how to describe each component using spreadsheet columns. (Column order does not matter. Capitalization and spaces are ignored in the header row.) Examples spreadsheets are given after each table.</p>
+<div class="section" id="generators">
+<h2>Generators<a class="headerlink" href="#generators" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="51%" />
+<col width="14%" />
+<col width="13%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Column Name</td>
+<td>Description</td>
+<td>Default</td>
+<td>Units</td>
+</tr>
+<tr class="row-even"><td>name</td>
+<td>generator name</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>Power min</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>MW</td>
+</tr>
+<tr class="row-even"><td>Power max</td>
+<td>&nbsp;</td>
+<td>500</td>
+<td>MW</td>
+</tr>
+<tr class="row-odd"><td>Cost curve equation</td>
+<td>fuel cost polynomial</td>
+<td>&nbsp;</td>
+<td>$/MWh</td>
+</tr>
+<tr class="row-even"><td>Heat rate equation</td>
+<td>heat rate polynomial</td>
+<td>&nbsp;</td>
+<td>MMBtu/MWh</td>
+</tr>
+<tr class="row-odd"><td>Fuel cost</td>
+<td>&nbsp;</td>
+<td>1</td>
+<td>$/MMBtu</td>
+</tr>
+<tr class="row-even"><td>Start up cost</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>$</td>
+</tr>
+<tr class="row-odd"><td>Shut down cost</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>$</td>
+</tr>
+<tr class="row-even"><td>Ramp rate min</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>MW/h</td>
+</tr>
+<tr class="row-odd"><td>Ramp rate max</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>MW/h</td>
+</tr>
+<tr class="row-even"><td>Must run</td>
+<td>gen. status must remain ON</td>
+<td>0</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>Schedule filename</td>
+<td>filename of spreadsheet describing gen. schedule</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>Bus</td>
+<td>name of bus where gen. is connected</td>
+<td>single bus</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;name&quot;</span><span class="p">;</span><span class="s">&quot;Pmin&quot;</span><span class="p">;</span><span class="s">&quot;Pmax&quot;</span><span class="p">;</span><span class="s">&quot;heat rate equation&quot;</span><span class="p">;</span><span class="s">&quot;fuel cost&quot;</span><span class="p">;</span><span class="s">&quot;start up cost&quot;</span><span class="p">;</span><span class="s">&quot;min up time&quot;</span><span class="p">;</span><span class="s">&quot;min down time&quot;</span>
+<span class="s">&quot;g1&quot;</span><span class="p">;</span><span class="mi">50</span><span class="p">;</span><span class="mi">200</span><span class="p">;</span><span class="s">&quot;220+9.9P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">560</span><span class="p">;</span><span class="mi">8</span><span class="p">;</span><span class="mi">8</span>
+<span class="s">&quot;g2&quot;</span><span class="p">;</span><span class="mi">15</span><span class="p">;</span><span class="mi">60</span><span class="p">;</span><span class="s">&quot;80+10.1P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">210</span><span class="p">;</span><span class="mi">8</span><span class="p">;</span><span class="mi">8</span>
+<span class="s">&quot;g3&quot;</span><span class="p">;</span><span class="mi">15</span><span class="p">;</span><span class="mi">50</span><span class="p">;</span><span class="s">&quot;60+10.8P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">147</span><span class="p">;</span><span class="mi">4</span><span class="p">;</span><span class="mi">4</span>
+<span class="s">&quot;g4&quot;</span><span class="p">;</span><span class="mi">5</span><span class="p">;</span><span class="mi">40</span><span class="p">;</span><span class="s">&quot;40+11.9P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">0</span><span class="p">;</span><span class="mi">4</span><span class="p">;</span><span class="mi">4</span>
+<span class="s">&quot;g5&quot;</span><span class="p">;</span><span class="mi">5</span><span class="p">;</span><span class="mi">25</span><span class="p">;</span><span class="s">&quot;34+12.14P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">0</span><span class="p">;</span><span class="mi">4</span><span class="p">;</span><span class="mi">4</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="initial-conditions">
+<h2>Initial Conditions<a class="headerlink" href="#initial-conditions" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="44%" />
+<col width="21%" />
+<col width="11%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Column Name</td>
+<td>Description</td>
+<td>Default</td>
+<td>Units</td>
+</tr>
+<tr class="row-even"><td>name</td>
+<td>generator name</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>power</td>
+<td>output at initial time</td>
+<td>(Pmax-Pmin)/2</td>
+<td>MW</td>
+</tr>
+<tr class="row-even"><td>status</td>
+<td>status (1 or 0) at initial time</td>
+<td>1</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>hours in status</td>
+<td>&nbsp;</td>
+<td>100</td>
+<td>hrs</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="s">&quot;power&quot;</span><span class="p">,</span><span class="s">&quot;status&quot;</span><span class="p">,</span><span class="s">&quot;hours in status&quot;</span>
+<span class="n">g1</span><span class="p">,</span><span class="mi">250</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span>
+<span class="n">g2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">8</span>
+<span class="n">g3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">8</span>
+<span class="n">g4</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">8</span>
+<span class="n">g5</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">8</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="loads">
+<h2>Loads<a class="headerlink" href="#loads" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="18%" />
+<col width="61%" />
+<col width="12%" />
+<col width="8%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Column Name</td>
+<td>Description</td>
+<td>Default</td>
+<td>Units</td>
+</tr>
+<tr class="row-even"><td>name</td>
+<td>load name</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>power</td>
+<td>load power (a single number for ED problems or base load)</td>
+<td>&nbsp;</td>
+<td>MW</td>
+</tr>
+<tr class="row-even"><td>schedule filename</td>
+<td>spreadsheet filename describing the predicted load power over time</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>Bus</td>
+<td>name of bus where load is connected</td>
+<td>single bus</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">name</span><span class="p">,</span><span class="n">schedulefilename</span>
+<span class="n">Ireland</span><span class="p">,</span><span class="n">ireland_load_fewdays</span><span class="o">.</span><span class="n">csv</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="lines">
+<h2>Lines<a class="headerlink" href="#lines" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="52%" />
+<col width="15%" />
+<col width="12%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Column Name</td>
+<td>Description</td>
+<td>Default</td>
+<td>Units</td>
+</tr>
+<tr class="row-even"><td>name</td>
+<td>line name</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>to</td>
+<td>name of bus where line originates</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>from</td>
+<td>name of bus where line terminates</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>reactance</td>
+<td>total electrical reactance of line</td>
+<td>0.05</td>
+<td>p.u.</td>
+</tr>
+<tr class="row-even"><td>P max</td>
+<td>maximum power limit of line</td>
+<td>&nbsp;</td>
+<td>MW</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">From</span><span class="p">,</span>    <span class="n">To</span><span class="p">,</span>      <span class="n">Pmax</span>
+<span class="n">Seattle</span><span class="p">,</span> <span class="n">Tacoma</span><span class="p">,</span>  <span class="mi">3</span>
+<span class="n">Olympia</span><span class="p">,</span> <span class="n">Tacoma</span><span class="p">,</span>  <span class="mi">10000</span>
+<span class="n">Olympia</span><span class="p">,</span> <span class="n">Seattle</span><span class="p">,</span> <span class="mi">10000</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="schedules">
+<h2>Schedules<a class="headerlink" href="#schedules" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="16%" />
+<col width="64%" />
+<col width="11%" />
+<col width="9%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Column Name</td>
+<td>Description</td>
+<td>Default</td>
+<td>Units</td>
+</tr>
+<tr class="row-even"><td>time</td>
+<td>time and date (if applicable) for the start of the period</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>power</td>
+<td>energy scheduled (or predicted) for the period</td>
+<td>&nbsp;</td>
+<td>MWh</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><pre>time,power
+0:00,250
+2:00,320
+4:00,110
+6:00,75</pre>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="basic-use.html">Basic Use</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Creating a Problem</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#generators">Generators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#initial-conditions">Initial Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#loads">Loads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lines">Lines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#schedules">Schedules</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<div class="social">
+<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
+<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

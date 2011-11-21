@@ -2,13 +2,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
     <title>Unit Commitment &mdash; minpower</title>
+    
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
@@ -24,8 +27,8 @@
     <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="minpower" href="index.html" />
-    <link rel="next" title="Data Input" href="data-input.html" />
-    <link rel="prev" title="Data Input" href="data-input.html" />
+    <link rel="next" title="Documentation" href="api/index.html" />
+    <link rel="prev" title="Optimal Power Flow" href="optimal-power-flow.html" />
  
 <script type="text/javascript">
   var _gaq = _gaq || [];
@@ -46,17 +49,15 @@
   <div class="section" id="unit-commitment">
 <h1>Unit Commitment<a class="headerlink" href="#unit-commitment" title="Permalink to this headline">¶</a></h1>
 <p><abbr title="Unit Commitment">UC</abbr> tries to schedule generation to meet the system load for the next <abbr title="generally 12 or 24hrs">several hours</abbr> at lowest cost. <abbr title="Unit Commitment">UC</abbr>  adds a dimension of time to the <abbr title="Economic Dispatch">ED</abbr> problem, with the additional choice of turning generators on or off. The classic text is <a class="reference external" href="http://amzn.to/wood-wollenburg">Wood &amp; Wollenburg</a>.</p>
-<div class="toctree-wrapper compound">
-</div>
 <div class="section" id="the-problem">
 <h2>The problem<a class="headerlink" href="#the-problem" title="Permalink to this headline">¶</a></h2>
 <div class="optimizationproblem container">
-<p><span class="math">\(\min \sum_t \sum_g C_g(P_{t,g}) + C_{\mathrm{su} (g)}(u_{t,g})\)</span></p>
-<p><span class="math">\(\mathrm{s.t.} \; P_{\min (g)} \leq P_{t,g} \leq P_{\max (g)}  \; \forall  \; t,g  \; \mathrm{where}  \; u_{t,g}=1\)</span></p>
-<p><span class="math">\(\mathrm{s.t.} \; \sum_g P_{t,g}= P_{\mathrm{load}(t)}  \; \forall  \; t\)</span></p>
-<p><span class="math">\(\mathrm{s.t.} \; P_{\mathrm{ramp min} (g)} \leq P_{t,g}-P_{t-1,g} \leq P_{\mathrm{ramp max} (g)}    \; \forall  \; t,g\)</span></p>
+<p><img src="_images/mathmpl/math-ed2a7ac77b.png" style="position: relative; bottom: -21px"/></p>
+<p><img src="_images/mathmpl/math-70f0cfddc1.png" style="position: relative; bottom: -11px"/></p>
+<p><img src="_images/mathmpl/math-cfcdfc25df.png" style="position: relative; bottom: -21px"/></p>
+<p><img src="_images/mathmpl/math-44633e3b98.png" style="position: relative; bottom: -11px"/></p>
 </div>
-<p>In this mathematical formulation generators are indexed by <span class="math">\(g\)</span> and time is indexed by <span class="math">\(t\)</span>. <span class="math">\(P_{t,g}\)</span> is a generator’s power output at time <span class="math">\(t\)</span> and <span class="math">\(u_{t,g}\)</span> is its operation status (on/off). <span class="math">\(C_g()\)</span> is the generator&#8217;s production cost function and <span class="math">\(C_{\mathrm{su} (g)}()\)</span> is its startup/shutdown cost. The objective is to minimize the total cost. The constraints are:</p>
+<p>In this mathematical formulation generators are indexed by <img src="_images/mathmpl/math-dc3614845d.png" style="position: relative; bottom: -7px"/> and time is indexed by <img src="_images/mathmpl/math-316b65649e.png" style="position: relative; bottom: -3px"/>. <img src="_images/mathmpl/math-f8d703bf55.png" style="position: relative; bottom: -11px"/> is a generator’s power output at time <img src="_images/mathmpl/math-316b65649e.png" style="position: relative; bottom: -3px"/> and <img src="_images/mathmpl/math-e47b0e73a9.png" style="position: relative; bottom: -11px"/> is its operation status (on/off). <img src="_images/mathmpl/math-073891d0df.png" style="position: relative; bottom: -11px"/> is the generator&#8217;s production cost function and <img src="_images/mathmpl/math-6b6e77e1a8.png" style="position: relative; bottom: -11px"/> is its startup/shutdown cost. The objective is to minimize the total cost. The constraints are:</p>
 <ul class="simple">
 <li>each generator must be within its real power limits</li>
 <li>total power generated must equal the power consumed by the load</li>
@@ -65,114 +66,75 @@
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The last constraint is not shown in the formulation above <abbr title="it is a pain to show mathematically and is confusing to read. If you are interested, see the formulation used in the code.">due to complexity</abbr>. It requires keeping track of how many hours a generator has been on/off. For the actual formulation in use, see <a class="reference internal" href="documentation.html#powersystems.Generator.constraints" title="powersystems.Generator.constraints"><tt class="xref py py-meth docutils literal"><span class="pre">powersystems.Generator.constraints()</span></tt></a>.</p>
+<p class="last">The last constraint is not shown in the formulation above <abbr title="it is a pain to show mathematically and is confusing to read. If you are interested, see the formulation used in the code.">due to complexity</abbr>. For the actual formulation in use, see <a class="reference internal" href="api/power-systems.html#powersystems.Generator.create_constraints" title="powersystems.Generator.create_constraints"><tt class="xref py py-meth docutils literal"><span class="pre">powersystems.Generator.create_constraints()</span></tt></a>.</p>
 </div>
 </div>
-<div class="section" id="the-basics">
-<h2>The basics<a class="headerlink" href="#the-basics" title="Permalink to this headline">¶</a></h2>
-<p>Let&#8217;s say you have made a folder called <tt class="docutils literal"><span class="pre">mycommitment</span></tt> and put <a class="reference internal" href="#commitment-inputs-example"><em>the information</em></a>
-about your problem in the folder. Then if you run the script:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">minpower</span> <span class="kn">import</span> <span class="n">solve</span>
-<span class="n">solve</span><span class="o">.</span><span class="n">directory</span><span class="p">(</span><span class="s">&#39;mycommitment/&#39;</span><span class="p">)</span>
+<div class="section" id="example-problem">
+<h2>Example Problem<a class="headerlink" href="#example-problem" title="Permalink to this headline">¶</a></h2>
+<p>To define a simple <abbr title="Unit Commitment">UC</abbr> problem, <strong>Minpower</strong> requires at least three spreadsheets. The first describes the generator parameters (<a class="reference external" href="https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/uc-WW-5-2/generators.csv">generators.csv</a>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;name&quot;</span><span class="p">;</span><span class="s">&quot;Pmin&quot;</span><span class="p">;</span><span class="s">&quot;Pmax&quot;</span><span class="p">;</span><span class="s">&quot;heat rate equation&quot;</span><span class="p">;</span><span class="s">&quot;fuel cost&quot;</span><span class="p">;</span><span class="s">&quot;start up cost&quot;</span><span class="p">;</span><span class="s">&quot;min up time&quot;</span><span class="p">;</span><span class="s">&quot;min down time&quot;</span>
+<span class="s">&quot;g1&quot;</span><span class="p">;</span><span class="mi">50</span><span class="p">;</span><span class="mi">200</span><span class="p">;</span><span class="s">&quot;220+9.9P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">560</span><span class="p">;</span><span class="mi">8</span><span class="p">;</span><span class="mi">8</span>
+<span class="s">&quot;g2&quot;</span><span class="p">;</span><span class="mi">15</span><span class="p">;</span><span class="mi">60</span><span class="p">;</span><span class="s">&quot;80+10.1P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">210</span><span class="p">;</span><span class="mi">8</span><span class="p">;</span><span class="mi">8</span>
+<span class="s">&quot;g3&quot;</span><span class="p">;</span><span class="mi">15</span><span class="p">;</span><span class="mi">50</span><span class="p">;</span><span class="s">&quot;60+10.8P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">147</span><span class="p">;</span><span class="mi">4</span><span class="p">;</span><span class="mi">4</span>
+<span class="s">&quot;g4&quot;</span><span class="p">;</span><span class="mi">5</span><span class="p">;</span><span class="mi">40</span><span class="p">;</span><span class="s">&quot;40+11.9P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">0</span><span class="p">;</span><span class="mi">4</span><span class="p">;</span><span class="mi">4</span>
+<span class="s">&quot;g5&quot;</span><span class="p">;</span><span class="mi">5</span><span class="p">;</span><span class="mi">25</span><span class="p">;</span><span class="s">&quot;34+12.14P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">0</span><span class="p">;</span><span class="mi">4</span><span class="p">;</span><span class="mi">4</span>
 </pre></div>
 </div>
-<p>You get a plot:</p>
-<blockquote>
-<div><img alt="_static/demos/commitment/commitment.png" src="_static/demos/commitment/commitment.png" style="width: 500px;" />
-</div></blockquote>
-<p>This figure has two plots that share the same time axis. The top plot shows the <abbr title="The system price is generally determined by the most expensive committed generator and is in $/MWh. If you multiply the system load by the system price you get the cost to the system in $.">price of energy</abbr> for the system. The bottom plot shows the energy that each generator produces.</p>
+<p>The second simply describes which loads exist on the system and where there schedule files are (<a class="reference external" href="https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/uc-WW-5-2/loads.csv">loads.csv</a>):</p>
+<div class="highlight-python"><pre>name,schedule filename
+example,load-pattern.csv
+</pre>
+</div>
+<p>The other spreadsheets describe the load (or non-controllable generation) energy schedules. In this case (<a class="reference external" href="https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/uc-WW-5-2/load-pattern.csv">load-pattern.csv</a>):</p>
+<div class="highlight-python"><pre>time,power
+0:00,250
+2:00,320
+4:00,110
+6:00,75</pre>
+</div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">For only a few generators, <a class="reference internal" href="documentation.html#results.Solution_UC.vizualization" title="results.Solution_UC.vizualization"><tt class="xref py py-meth docutils literal"><span class="pre">results.Solution_UC.vizualization()</span></tt></a> displays a stack plot showing power for each generator. For more generators, the display is grouped by <tt class="xref py py-attr docutils literal"><span class="pre">kind</span></tt> (so that all the coal plants as one color, all the wind as another color, ...).</p>
+<p class="last">For more information about what options you can specify in each spreadsheet see: <a class="reference internal" href="creating-problems.html"><em>Creating a Problem</em></a>.</p>
+</div>
+</div>
+<div class="section" id="solving">
+<h2>Solving<a class="headerlink" href="#solving" title="Permalink to this headline">¶</a></h2>
+<p>Save the two spreadsheets above into into a folder (call it <tt class="docutils literal"><span class="pre">mycommitment</span></tt>) and run:</p>
+<div class="highlight-python"><pre>minpower mycommitment</pre>
+</div>
+<p>This particular problem is also <strong>Minpower</strong> built-in test case (based on <a class="reference external" href="http://amzn.to/wood-wollenburg">Wood &amp; Wollenburg</a> Problem 5.2), so if you haven&#8217;t been following along, to solve it, call:</p>
+<div class="highlight-python"><pre>minpower uc-WW-5-2</pre>
+</div>
+</div>
+<div class="section" id="example-solution">
+<h2>Example Solution<a class="headerlink" href="#example-solution" title="Permalink to this headline">¶</a></h2>
+<p>The result is a plot (<tt class="docutils literal"><span class="pre">commitment.png</span></tt>):</p>
+<blockquote>
+<div><img alt="_images/commitment.png" src="_images/commitment.png" style="width: 500px;" />
+</div></blockquote>
+<p>This figure has two axes that share the same time axis. The top axes shows the <abbr title="The system price is generally determined by the dual of the energy constraint in the optimization problem and is in $/MWh.">price of energy</abbr> for the system. The bottom axes shows the energy that each generator produces.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For only a few generators, <tt class="xref py py-meth docutils literal"><span class="pre">results.Solution_UC.vizualization()</span></tt> displays a stack plot showing power for each generator. For more generators, the display is grouped by <tt class="xref py py-attr docutils literal"><span class="pre">kind</span></tt> (so that all the coal plants as one color, all the wind as another color, ...).</p>
 </div>
 <p>For this example we have two generators, one named <tt class="docutils literal"><span class="pre">cheap</span></tt> (which produces energy for $45/MWh) and one named <tt class="docutils literal"><span class="pre">expensive</span></tt> (which produces energy for $150/MWh). Obviously we only turn on the expensive generator after we can&#8217;t use the cheaper any more (its limit is 100MW for this example). So as the load goes up and over 100MW, the expensive generator is committed.</p>
-<p>But why doesn&#8217;t the expensive generator turn back off at 6:00, when the load goes back down? It can&#8217;t turn off that quickly - it has a minimum up time of 2hrs and a minimum output of 20MW. But why does the price go back down? It&#8217;s complicated <a class="footnote-reference" href="#f1" id="id1">[1]</a>.</p>
-<p>The data from the graph is also output in spreadsheet form:</p>
+<p>But why doesn&#8217;t the expensive generator turn back off at 6:00, when the load goes back down? It can&#8217;t turn off that quickly - it has a minimum up time of 2hrs and a minimum output of 20MW. But why does the price go back down? It&#8217;s complicated <a class="footnote-reference" href="#f1" id="id2">[1]</a>.</p>
+<p>The data from the graph is also output in spreadsheet form (<tt class="docutils literal"><span class="pre">commitment.csv</span></tt>):</p>
 <blockquote>
-<div><div class="highlight-python"><pre>times,prices,status: expensive,power: expensive,status: cheap,power: cheap,load power: small
-2011-10-09 01:00:00,45.0,0.0,0.0,1.0,10.0,10
-2011-10-09 02:00:00,45.0,0.0,0.0,1.0,10.0,10
-2011-10-09 03:00:00,45.0,0.0,0.0,1.0,45.0,45
-2011-10-09 04:00:00,45.0,0.0,0.0,1.0,90.0,90
-2011-10-09 05:00:00,150.0,1.0,50.0,1.0,100.0,150
-2011-10-09 06:00:00,45.0,1.0,5.0,1.0,85.0,90
-2011-10-09 07:00:00,45.0,0.0,0.0,1.0,45.0,45
-2011-10-09 08:00:00,45.0,0.0,0.0,1.0,10.0,10
-2011-10-09 09:00:00,45.0,0.0,0.0,1.0,10.0,10
+<div><div class="highlight-python"><pre>times,prices,status: g1,power: g1,status: g2,power: g2,status: g3,power: g3,status: g4,power: g4,status: g5,power: g5,load power: example
+2011-11-21 00:00:00,14.14,1,200.0,1,50.0,0,0.0,0,0.0,0,0.0,250
+2011-11-21 02:00:00,16.996,1,200.0,1,60.0,0,0.0,1,40.0,1,20.0,320
+2011-11-21 04:00:00,16.996,0,0.0,1,60.0,0,0.0,1,40.0,1,10.0,110
+2011-11-21 06:00:00,16.996,0,0.0,1,60.0,0,0.0,0,0.0,1,15.0,75
 </pre>
 </div>
 </div></blockquote>
 <p>Unlike <a class="reference internal" href="economic-dispatch.html"><em>ED</em></a> and <a class="reference internal" href="optimal-power-flow.html"><em>OPF</em></a> results, this spreadsheet is not particularly easy to read. It is meant more for machines than for humans. The spreadsheet gives status and energy output for each generator, along with the system energy price, for each time.</p>
-<p>These outputs are saved in the <tt class="docutils literal"><span class="pre">mycommitment</span></tt> folder as <tt class="docutils literal"><span class="pre">commitment.png</span></tt> and <tt class="docutils literal"><span class="pre">commitment.csv</span></tt>.</p>
-</div>
-<div class="section" id="what-s-actually-going-on">
-<h2>What&#8217;s actually going on?<a class="headerlink" href="#what-s-actually-going-on" title="Permalink to this headline">¶</a></h2>
-<dl class="docutils">
-<dt>It&#8217;s easy once you get the hang of it. <strong>minpower</strong> will:</dt>
-<dd><ol class="first last arabic simple">
-<li>read in your files (see <a class="reference internal" href="documentation.html#module-get_data" title="get_data"><tt class="xref py py-mod docutils literal"><span class="pre">get_data</span></tt></a>)</li>
-<li>set up an optimization problem (see <a class="reference internal" href="documentation.html#solve.create_problem" title="solve.create_problem"><tt class="xref py py-func docutils literal"><span class="pre">solve.create_problem()</span></tt></a>)</li>
-<li>send it off to a <a class="reference internal" href="solvers.html"><em>solver</em></a> (see <a class="reference internal" href="documentation.html#optimization.solve" title="optimization.solve"><tt class="xref py py-func docutils literal"><span class="pre">optimization.solve()</span></tt></a>)</li>
-<li>show you the results (see <a class="reference internal" href="documentation.html#results.Solution_UC" title="results.Solution_UC"><tt class="xref py py-class docutils literal"><span class="pre">results.Solution_UC</span></tt></a>)</li>
-</ol>
-</dd>
-</dl>
-<p><strong>minpower</strong> just looks for the files in the <tt class="docutils literal"><span class="pre">mycommitment</span></tt> directory that describe the generators and load.</p>
-<p id="commitment-inputs-example">Tell it the specifics of your problem by editing the generator file (<tt class="docutils literal"><span class="pre">generators.csv</span></tt>):</p>
-<blockquote>
-<div><div class="highlight-python"><pre>name,cost curve equation,min up time,P max,P min,startup cost
-expensive,150P,2,500,5,0
-cheap,45P,0,100,0,0
-</pre>
-</div>
-</div></blockquote>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Cost curves don&#8217;t have to be linear. See an example of polynomial cost curves in the <a class="reference internal" href="economic-dispatch.html#dispatch-inputs-example"><em>ED example</em></a> or see the documentation in <a class="reference internal" href="documentation.html#bidding.parsePolynomial" title="bidding.parsePolynomial"><tt class="xref py py-func docutils literal"><span class="pre">bidding.parsePolynomial()</span></tt></a>.</p>
-</div>
-<p>the initial generator state file (<tt class="docutils literal"><span class="pre">initial.csv</span></tt>):</p>
-<blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span class="n">name</span><span class="p">,</span><span class="n">P</span><span class="p">,</span><span class="n">status</span><span class="p">,</span><span class="n">hours</span> <span class="ow">in</span> <span class="n">status</span>
-<span class="n">expensive</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span>
-<span class="n">cheap</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span>
-</pre></div>
-</div>
-</div></blockquote>
-<p>the loads file (<tt class="docutils literal"><span class="pre">loads.csv</span></tt>):</p>
-<blockquote>
-<div><div class="highlight-python"><pre>name,schedule filename
-small,small-changing-load.csv 
-</pre>
-</div>
-</div></blockquote>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">You specify each changing load by a schedule file. You can also have loads with fixed power values, which are specified by <tt class="docutils literal"><span class="pre">P</span></tt>. For <abbr title="Unit Commitment">UC</abbr>, all loads are summed together to get the system load.</p>
-</div>
-<p>and in this case we just have one schedule file (<tt class="docutils literal"><span class="pre">small-changing-load.csv</span></tt>):</p>
-<blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;time&quot;</span><span class="p">,</span><span class="s">&quot;P&quot;</span>
-<span class="s">&quot;1:00&quot;</span><span class="p">,</span><span class="s">&quot;10&quot;</span>
-<span class="s">&quot;2:00&quot;</span><span class="p">,</span><span class="s">&quot;10&quot;</span>
-<span class="s">&quot;3:00&quot;</span><span class="p">,</span><span class="s">&quot;45&quot;</span>
-<span class="s">&quot;4:00&quot;</span><span class="p">,</span><span class="s">&quot;90&quot;</span>
-<span class="s">&quot;5:00&quot;</span><span class="p">,</span><span class="s">&quot;150&quot;</span>
-<span class="s">&quot;6:00&quot;</span><span class="p">,</span><span class="s">&quot;90&quot;</span>
-<span class="s">&quot;7:00&quot;</span><span class="p">,</span><span class="s">&quot;45&quot;</span>
-<span class="s">&quot;8:00&quot;</span><span class="p">,</span><span class="s">&quot;10&quot;</span>
-<span class="s">&quot;9:00&quot;</span><span class="p">,</span><span class="s">&quot;10&quot;</span>
-</pre></div>
-</div>
-</div></blockquote>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">For more information about what options you can specify in each spreadsheet see: <a class="reference internal" href="data-input.html"><em>Data Input</em></a>.</p>
-</div>
 <p class="rubric">Footnotes</p>
 <table class="docutils footnote" frame="void" id="f1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Generators at their limits can&#8217;t set the price. In the real world the monetary differences are dealt with via a system called &#8220;side payments&#8221;. In the example above a side payment of $105/MWh would be made to the more expensive generator for its second hour to make sure that it recovers its cost of operating for that hour.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[1]</a></td><td>Generators at their limits can&#8217;t set the price. In the real world the monetary differences are dealt with via a system called &#8220;side payments&#8221;. In the example above a side payment of $105/MWh would be made to the more expensive generator for its second hour to make sure that it recovers its cost of operating for that hour.</td></tr>
 </tbody>
 </table>
 </div>
@@ -187,8 +149,12 @@ small,small-changing-load.csv
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">minpower</a></h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="why-minpower.html">Why minpower?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why-minpower.html">Why Minpower</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating-problems.html">Creating a Problem</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="students.html">For Students</a></li>
@@ -198,22 +164,22 @@ small,small-changing-load.csv
 <li class="toctree-l1"><a class="reference internal" href="economic-dispatch.html">Economic Dispatch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optimal-power-flow.html">Optimal Power Flow</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Unit Commitment</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="data-input.html">Data Input</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#the-problem">The problem</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#the-basics">The basics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#what-s-actually-going-on">What&#8217;s actually going on?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-problem">Example Problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#solving">Solving</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-solution">Example Solution</a></li>
 </ul>
 </li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">Documentation</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About minpower</a></li>
 </ul>
 
-<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
+
 <div id="searchbox" style="display: none">
   <h3>Search</h3>
     <form class="search" action="search.html" method="get">
@@ -227,6 +193,10 @@ small,small-changing-load.csv
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+<div class="social">
+<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
+<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
+</div>
         </div>
       </div>
       <div class="clearer"></div>

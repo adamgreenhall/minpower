@@ -52,11 +52,11 @@
 <div class="section" id="the-problem">
 <h2>The problem<a class="headerlink" href="#the-problem" title="Permalink to this headline">¶</a></h2>
 <div class="optimizationproblem container">
-<p><img src="_images/mathmpl/math-ff10a9ef2a.png" style="position: relative; bottom: -21px"/></p>
-<p><img src="_images/mathmpl/math-0040cd3b92.png" style="position: relative; bottom: -11px"/></p>
-<p><img src="_images/mathmpl/math-3327b2d547.png" style="position: relative; bottom: -21px"/></p>
+<p><span class="math">\(\min \sum_g C_g(P_g)\)</span></p>
+<p><span class="math">\(\mathrm{s.t.}  P_{\min (g)} \leq P_g \leq P_{\max (g)}   \forall   \mathrm{generators} (g)\)</span></p>
+<p><span class="math">\(\mathrm{s.t.}  \sum_g P_{g}= P_{\mathrm{load}}\)</span></p>
 </div>
-<p>In this mathematical formulation generators are indexed by <img src="_images/mathmpl/math-dc3614845d.png" style="position: relative; bottom: -7px"/>. <img src="_images/mathmpl/math-e46d102639.png" style="position: relative; bottom: -11px"/> is a generator’s power output and <img src="_images/mathmpl/math-073891d0df.png" style="position: relative; bottom: -11px"/> is its cost function. The objective is to minimize the total cost. There are two constraints:</p>
+<p>In this mathematical formulation generators are indexed by <span class="math">\(g\)</span>. <span class="math">\(P_g\)</span> is a generator’s power output and <span class="math">\(C_g()\)</span> is its cost function. The objective is to minimize the total cost. There are two constraints:</p>
 <ul class="simple">
 <li>each generator must be within its real power limits and</li>
 <li>total power generated must equal the power consumed by the load.</li>

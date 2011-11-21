@@ -52,12 +52,12 @@
 <div class="section" id="the-problem">
 <h2>The problem<a class="headerlink" href="#the-problem" title="Permalink to this headline">¶</a></h2>
 <div class="optimizationproblem container">
-<p><img src="_images/mathmpl/math-ed2a7ac77b.png" style="position: relative; bottom: -21px"/></p>
-<p><img src="_images/mathmpl/math-70f0cfddc1.png" style="position: relative; bottom: -11px"/></p>
-<p><img src="_images/mathmpl/math-cfcdfc25df.png" style="position: relative; bottom: -21px"/></p>
-<p><img src="_images/mathmpl/math-44633e3b98.png" style="position: relative; bottom: -11px"/></p>
+<p><span class="math">\(\min \sum_t \sum_g C_g(P_{t,g}) + C_{\mathrm{su} (g)}(u_{t,g})\)</span></p>
+<p><span class="math">\(\mathrm{s.t.} \; P_{\min (g)} \leq P_{t,g} \leq P_{\max (g)}  \; \forall  \; t,g  \; \mathrm{where}  \; u_{t,g}=1\)</span></p>
+<p><span class="math">\(\mathrm{s.t.} \; \sum_g P_{t,g}= P_{\mathrm{load}(t)}  \; \forall  \; t\)</span></p>
+<p><span class="math">\(\mathrm{s.t.} \; P_{\mathrm{ramp min} (g)} \leq P_{t,g}-P_{t-1,g} \leq P_{\mathrm{ramp max} (g)}    \; \forall  \; t,g\)</span></p>
 </div>
-<p>In this mathematical formulation generators are indexed by <img src="_images/mathmpl/math-dc3614845d.png" style="position: relative; bottom: -7px"/> and time is indexed by <img src="_images/mathmpl/math-316b65649e.png" style="position: relative; bottom: -3px"/>. <img src="_images/mathmpl/math-f8d703bf55.png" style="position: relative; bottom: -11px"/> is a generator’s power output at time <img src="_images/mathmpl/math-316b65649e.png" style="position: relative; bottom: -3px"/> and <img src="_images/mathmpl/math-e47b0e73a9.png" style="position: relative; bottom: -11px"/> is its operation status (on/off). <img src="_images/mathmpl/math-073891d0df.png" style="position: relative; bottom: -11px"/> is the generator&#8217;s production cost function and <img src="_images/mathmpl/math-6b6e77e1a8.png" style="position: relative; bottom: -11px"/> is its startup/shutdown cost. The objective is to minimize the total cost. The constraints are:</p>
+<p>In this mathematical formulation generators are indexed by <span class="math">\(g\)</span> and time is indexed by <span class="math">\(t\)</span>. <span class="math">\(P_{t,g}\)</span> is a generator’s power output at time <span class="math">\(t\)</span> and <span class="math">\(u_{t,g}\)</span> is its operation status (on/off). <span class="math">\(C_g()\)</span> is the generator&#8217;s production cost function and <span class="math">\(C_{\mathrm{su} (g)}()\)</span> is its startup/shutdown cost. The objective is to minimize the total cost. The constraints are:</p>
 <ul class="simple">
 <li>each generator must be within its real power limits</li>
 <li>total power generated must equal the power consumed by the load</li>

@@ -52,18 +52,18 @@
 <div class="section" id="the-problem">
 <h2>The problem<a class="headerlink" href="#the-problem" title="Permalink to this headline">¶</a></h2>
 <div class="optimizationproblem container">
-<p><img src="_images/mathmpl/math-ff10a9ef2a.png" style="position: relative; bottom: -21px"/></p>
-<p><img src="_images/mathmpl/math-3d2a3bae52.png" style="position: relative; bottom: -11px"/></p>
-<p><img src="_images/mathmpl/math-a69d80ade0.png" style="position: relative; bottom: -25px"/></p>
-<p><img src="_images/mathmpl/math-de388ca0bf.png" style="position: relative; bottom: -11px"/></p>
+<p><span class="math">\(\min \sum_g C_g(P_g)\)</span></p>
+<p><span class="math">\(\mathrm{s.t.} \; P_{\min (g)} \leq P_g \leq P_{\max (g)}  \; \forall  \; \mathrm{generators} \;(g)\)</span></p>
+<p><span class="math">\(\mathrm{s.t.} \; P_{\mathrm{gen} (i)} - P_{\mathrm{load} (i)} - \sum_j P_{ij} = 0   \; \forall  \; \mathrm{buses} \;(i)\)</span></p>
+<p><span class="math">\(\mathrm{s.t.} \; P_{\min (ij)} \leq P_{ij} \leq P_{\max (ij)} \forall  \; \mathrm{lines} \;(ij)\)</span></p>
 </div>
-<p>In this mathematical formulation generators are indexed by <img src="_images/mathmpl/math-dc3614845d.png" style="position: relative; bottom: -7px"/>. <img src="_images/mathmpl/math-e46d102639.png" style="position: relative; bottom: -11px"/> is a generator’s power output and <img src="_images/mathmpl/math-073891d0df.png" style="position: relative; bottom: -11px"/> is its cost function. The objective is to minimize the total cost. There are three constraints:</p>
+<p>In this mathematical formulation generators are indexed by <span class="math">\(g\)</span>. <span class="math">\(P_g\)</span> is a generator’s power output and <span class="math">\(C_g()\)</span> is its cost function. The objective is to minimize the total cost. There are three constraints:</p>
 <ul class="simple">
 <li>each generator must be within its real power limits</li>
 <li><abbr title="called power balance">inflow must equal outflow</abbr> at each bus</li>
 <li>each line must be within its real power limits</li>
 </ul>
-<p>For <abbr title="De-Coupled Optimal Power Flow">DCOPF</abbr>, the real power flow on a line <img src="_images/mathmpl/math-e69cb4373f.png" style="position: relative; bottom: -17px"/> depends linearly on the voltage angles of the buses it connects (<img src="_images/mathmpl/math-14b48e3c76.png" style="position: relative; bottom: -8px"/>, <img src="_images/mathmpl/math-0fceea4ac1.png" style="position: relative; bottom: -11px"/>) and its own reactance <img src="_images/mathmpl/math-034780258d.png" style="position: relative; bottom: -11px"/>. Bus angles are the difference in voltage angle between the bus and the <abbr title="known as the swing or slack bus">reference bus</abbr> which has angle <img src="_images/mathmpl/math-b418d4a43b.png" style="position: relative; bottom: -4px"/>.</p>
+<p>For <abbr title="De-Coupled Optimal Power Flow">DCOPF</abbr>, the real power flow on a line <span class="math">\(P_{ij} = \frac{1}{X_{ij}} \left( \theta_i-\theta_j \right)\)</span> depends linearly on the voltage angles of the buses it connects (<span class="math">\(\theta_{i}\)</span>, <span class="math">\(\theta_{j}\)</span>) and its own reactance <span class="math">\(X_{ij}\)</span>. Bus angles are the difference in voltage angle between the bus and the <abbr title="known as the swing or slack bus">reference bus</abbr> which has angle <span class="math">\(0^{\circ}\)</span>.</p>
 </div>
 <div class="section" id="example-problem">
 <h2>Example Problem<a class="headerlink" href="#example-problem" title="Permalink to this headline">¶</a></h2>
@@ -110,9 +110,9 @@ smelter,    Olympia, 50
 </div></blockquote>
 <p><abbr title="Optimal Power Flow">OPF</abbr> is difficult to visualize (please <a class="reference external" href="mailto:minpower&#37;&#52;&#48;adamgreenhall&#46;com">send suggestions</a>).</p>
 <ul class="simple">
-<li>A red colored transmission line indicates a limit on that line, while gray lines are below their limits. <em>The Tacoma</em> <img src="_images/mathmpl/math-fb1cbbd43f.png" style="position: relative; bottom: -3px"/> <em>Seattle line is at its limit. The other two gray colored lines are running below their limits.</em></li>
+<li>A red colored transmission line indicates a limit on that line, while gray lines are below their limits. <em>The Tacoma</em> <span class="math">\(\rightarrow\)</span> <em>Seattle line is at its limit. The other two gray colored lines are running below their limits.</em></li>
 <li>The width of the line indicates the amount of power flow. <em>The Olympia-Seattle line has the largest flow</em>.</li>
-<li>The <abbr title="arrows would be nicer, but this is what networkx gives">stubs</abbr> at one end indicate direction of flow. <em>Flow direction is Olympia</em> <img src="_images/mathmpl/math-fb1cbbd43f.png" style="position: relative; bottom: -3px"/> <em>Seattle</em>.</li>
+<li>The <abbr title="arrows would be nicer, but this is what networkx gives">stubs</abbr> at one end indicate direction of flow. <em>Flow direction is Olympia</em> <span class="math">\(\rightarrow\)</span> <em>Seattle</em>.</li>
 <li><abbr title="generation minus load for the bus">Injected power</abbr> is shown by the color of the bus. <em>Olympia is injecting power into the system while Seattle is pulling power</em>.</li>
 </ul>
 <p>There are also spreadsheet outputs of generator information (<tt class="docutils literal"><span class="pre">powerflow-generators.csv</span></tt>):</p>
@@ -130,7 +130,7 @@ Olympia,Seattle,1.5,0.0
 </pre>
 </div>
 <p>Each line&#8217;s real power flow is output. Lines that have congestion will show a positive shadow price.
-<em>Because the flow is Tacoma</em> <img src="_images/mathmpl/math-fb1cbbd43f.png" style="position: relative; bottom: -3px"/> <em>Seattle and the from/to fields of the
+<em>Because the flow is Tacoma</em> <span class="math">\(\rightarrow\)</span> <em>Seattle and the from/to fields of the
 spreadsheet are the other way around, we see a negative power flow. The Seattle-Tacoma
 line is at its limit, so there is an extra cost to the system from the congestion and the line has a
 positive shadow price.</em></p>

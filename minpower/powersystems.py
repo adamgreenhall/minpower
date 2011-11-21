@@ -111,7 +111,7 @@ def makeGenerator(kind='generic',**kwargs):
             logging.info('"{k}" is an unknown kind of generator, using generic defaults.'.format(k=kind))
             kind='generic'
         
-        ignore_names=['power','isControllable','costcurvestring']
+        ignore_names=['power','is_controllable','costcurvestring']
         
         #get defaults from config file
         defaults=dict()
@@ -130,13 +130,13 @@ def makeGenerator(kind='generic',**kwargs):
     
     
     kind,kwargs=parse_args(kind,**kwargs)    
-    if kind=='wind' or not kwargs['isControllable'] or kwargs.get('schedule',None) or (kwargs.get('power') is not None): 
+    if kind=='wind' or not kwargs['is_controllable'] or kwargs.get('schedule',None) or (kwargs.get('power') is not None): 
         classname=Generator_nonControllable
     else:
         classname=Generator
         kwargs.pop('power')
 
-    kwargs.pop('isControllable')
+    kwargs.pop('is_controllable')
 
     return classname(kind=kind,**kwargs)
 
@@ -187,7 +187,7 @@ class Generator(OptimizationObject):
         
         update_attributes(self,locals()) #load in inputs     
         if self.rampratemin is None and self.rampratemax is not None: self.rampratemin = -1*self.rampratemax
-        self.isControllable=True
+        self.is_controllable=True
         self.build_cost_model()
         self.init_optimization()
         
@@ -277,6 +277,7 @@ class Generator(OptimizationObject):
         Also create the :class:`bidding.Bid` objects.
         '''
         commitment_problem= len(times)>1 or self.dispatch_decommit_allowed
+        self.cost_model.do_segmentation()
         for time in times:
             self.add_variable('power','P',time,low=0,high=self.Pmax)
             if commitment_problem: #UC problem
@@ -520,7 +521,7 @@ class Generator_nonControllable(Generator):
             self.schedule = FixedSchedule(P=power)
 
         if Pmax is None: self.Pmax = self.schedule.maxvalue
-        self.isControllable=False
+        self.is_controllable=False
         self.build_cost_model()
         self.init_optimization()
     def power(self,time): return self.schedule.get_energy(time)

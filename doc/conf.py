@@ -17,7 +17,7 @@ extensions = [
           'sphinx.ext.intersphinx',
           'sphinx.ext.viewcode',
           'sphinx.ext.mathjax',
-          'matplotlib.sphinxext.mathmpl',
+          # 'matplotlib.sphinxext.mathmpl',
           'matplotlib.sphinxext.only_directives',
           'matplotlib.sphinxext.plot_directive',
 

@@ -170,7 +170,7 @@ dt:target
       display: none
   .sphinxsidebar
     position: absolute
-    left: -120px
+    left: -101px
     top: 0px
     width: 200px
     h3
@@ -182,7 +182,7 @@ dt:target
       &.current
         font-weight: bold
     ul
-      padding-left: 0
+      padding-left: 10px
       list-style-type: none
       ul
         padding-left: 15px
@@ -206,22 +206,7 @@ dt:target
   margin-bottom: 4ex
   margin-left: 3em
 
-.installation-homepage
-  padding: 10px
-  width: 15em
-  background: lightblue
-  +border-radius(10px)
-  border: 
-    style: solid
-    color: DarkSlateGray
-    width: 3px
-  position: absolute
-  top: 200px
-  right: -20em
-  ul
-    padding-left: 20px
-    list-style-type: circle
-    
+
 .solution-homepage
   padding: 10px
   width: 15em
@@ -232,9 +217,24 @@ dt:target
     color: DarkSlateGray
     width: 3px
   position: absolute
-  top: 80px
-  right: -20em
+  top: 120px
+  right: -40em
 
+.installation-homepage
+  padding: 10px
+  width: 15em
+  background: lightblue
+  +border-radius(10px)
+  border: 
+    style: solid
+    color: DarkSlateGray
+    width: 3px
+  position: absolute
+  top: 240px
+  right: -40em
+  ul
+    padding-left: 20px
+    list-style-type: circle
 
 =alternating-rows($even-row-color, $odd-row-color)
   tr.row-odd

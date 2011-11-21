@@ -289,7 +289,7 @@ dt:target {
 /* line 171, default.sass */
 .document .sphinxsidebar {
   position: absolute;
-  left: -120px;
+  left: -101px;
   top: 0px;
   width: 200px;
 }
@@ -308,7 +308,7 @@ dt:target {
 }
 /* line 184, default.sass */
 .document .sphinxsidebar ul {
-  padding-left: 0;
+  padding-left: 10px;
   list-style-type: none;
 }
 /* line 187, default.sass */
@@ -341,31 +341,7 @@ dt:target {
   margin-left: 3em;
 }
 
-/* line 209, default.sass */
-.installation-homepage {
-  padding: 10px;
-  width: 15em;
-  background: lightblue;
-  -moz-border-radius: 10px;
-  -webkit-border-radius: 10px;
-  -o-border-radius: 10px;
-  -ms-border-radius: 10px;
-  -khtml-border-radius: 10px;
-  border-radius: 10px;
-  border-style: solid;
-  border-color: DarkSlateGray;
-  border-width: 3px;
-  position: absolute;
-  top: 200px;
-  right: -20em;
-}
-/* line 221, default.sass */
-.installation-homepage ul {
-  padding-left: 20px;
-  list-style-type: circle;
-}
-
-/* line 225, default.sass */
+/* line 210, default.sass */
 .solution-homepage {
   padding: 10px;
   width: 15em;
@@ -380,8 +356,32 @@ dt:target {
   border-color: DarkSlateGray;
   border-width: 3px;
   position: absolute;
-  top: 80px;
-  right: -20em;
+  top: 120px;
+  right: -40em;
+}
+
+/* line 223, default.sass */
+.installation-homepage {
+  padding: 10px;
+  width: 15em;
+  background: lightblue;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -o-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -khtml-border-radius: 10px;
+  border-radius: 10px;
+  border-style: solid;
+  border-color: DarkSlateGray;
+  border-width: 3px;
+  position: absolute;
+  top: 240px;
+  right: -40em;
+}
+/* line 235, default.sass */
+.installation-homepage ul {
+  padding-left: 20px;
+  list-style-type: circle;
 }
 
 /* line 246, default.sass */

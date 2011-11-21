@@ -14,7 +14,7 @@ import config
 
 import matplotlib
 import matplotlib.pyplot as plot
-
+from matplotlib.font_manager import FontProperties
 
 
 def prettify_plots(for_publication=True):
@@ -329,132 +329,9 @@ class Solution_UC(Solution):
     
     def visualization(self,filename='commitment.png',withPrices=True,withInitial=False):
         '''generator output visualization for unit commitment'''
-        times,generators,loads=self.times,self.generators(),self.loads()
-        if len(generators)<=5: fewunits=True
-        else: fewunits=False
         prices=[self.lmps[t][0] for t in self.times]
-        
-        bigFont={'fontsize':15}
-        figWidth=.85; figLeft=(1-figWidth)/2
-        yLabel_pos={'x':-0.09,'y':0.5}
-        
-        fig=plot.figure(figsize=(10, 4), dpi=120)
-        ax=plot.axes([figLeft,.1,figWidth,.6])
-        ax.set_ylabel('energy [MWh]',ha='center',**bigFont)
-        ax.yaxis.set_label_coords(**yLabel_pos)
-        prettify_axes(ax)
-        
-        alpha_initialTime=0.2
-        
-        gensPlotted,loadsPlotted,yLabels=[],[],[]
-        
-        T=[t.Start for t in times.wInitial]
-        barWidth = times.intervalhrs / 24.0 #maplotlib dates have base of 1day
-        initWidth = times.initialTime.intervalhrs / 24.0        
-        stackBottom=[0]*len(T)
-        
-        
-        def addtostackplot(ax,time,power,color, gensPlotted,stackBottom):
-            #add initial time to stackplot
-            if withInitial:
-                ax.bar(time[0],power[0],bottom=stackBottom[0],color=color, edgecolor=color, alpha=alpha_initialTime, width=initWidth)
-            #add commitment times to stackplot
-            plt=ax.bar(time[1:],power[1:],bottom=stackBottom[1:],color=color, edgecolor=color,width=barWidth)
-            #add power to stack bottom
-            stackBottom=elementwiseAdd(power,stackBottom)
-            #add to list of gens plotted
-            gensPlotted.append(plt[0])
-            return gensPlotted,stackBottom
-        
-        if not fewunits:
-            #group generators by kind
-            allkinds=['nuclear','coal','naturalgas','wind','other']
-            colors = dict(nuclear='PowderBlue',coal='SkyBlue',naturalgas='LightSlateGray',wind='SteelBlue',other='Aquamarine')
-            genbykind=OrderedDict(zip(allkinds,[None]*len(allkinds)))
-            for gen in generators:
-                kind=gen.kind if gen.kind in allkinds else 'other'
-                if genbykind[kind] is None:
-                    genbykind[kind]=[value(gen.power(t)) for t in times.wInitial]
-                else:
-                    genbykind[kind]=elementwiseAdd([value(gen.power(t)) for t in times.wInitial],genbykind[kind])
-            
-            for kind,Pgen in genbykind.iteritems():
-                if Pgen is None: continue
-                gensPlotted,stackBottom=addtostackplot(ax,T,Pgen,colors[kind], gensPlotted,stackBottom)
-                yLabels.append(kind)
-        
-        else: 
-            #show all generators individually 
-            #sort generators by 1.committed hrs (and then by 2. energy)
-#            generators=sorted(generators,reverse=True,
-#                              key=lambda gen: 
-#                              ( sum(value(gen.status(t)) for t in times), #committed hrs
-#                               sum(value(gen.power(t)) for t in times) #energy
-#                               ))
-            colors=_colormap(len(generators),colormapName='Blues')
-            for g,gen in enumerate(generators):
-                Pgen=[gen.power(t) for t in times.wInitial]
-                gensPlotted,stackBottom=addtostackplot(ax,T,Pgen,colors[g], gensPlotted,stackBottom)
-                yLabels.append(gen.name)
-        
-        #show demand response loads
-        stackBottom=stackBottom[1:] #loads don't have initial time info
-        
-        convert_to_GW=True if max(stackBottom)>20000 else False
-        
-        for load in loads:
-            color='.8' #gray
-            if load.kind in ['shifting','bidding']:
-                Pd=[value(load.power(t)) for t in times]
-                stackBottom=elementwiseAdd([-1*P for P in Pd],stackBottom)
-                plt=ax.bar(T[1:],Pd,bottom=stackBottom,alpha=.5,color=color,edgecolor=color,width=barWidth,hatch="/")
-                loadsPlotted.append(plt[0])
-                yLabels.append(load.name)
-                if fewunits: colors.append(color)
-                else: colors[load.kind] = color
-            else: pass
-        
-        #show prices
-        if withPrices and any(prices):
-            prices=replace_all(prices, config.cost_load_shedding, None)
-            prices_wo_none=[p for p in prices if p is not None]
-            if prices_wo_none:
-                axesPrice = plot.axes([figLeft,.75,figWidth,.2],sharex=ax)
-                plt=axesPrice.step(T[1:]+[times.End],prices+[prices[-1]],  where='post') #start from 1 past initial time
-                axesPrice.set_ylabel('price\n[$/MWh]',ha='center',**bigFont)
-                axesPrice.yaxis.set_label_coords(**yLabel_pos)
-                plot.setp(axesPrice.get_xticklabels(), visible=False)
-                #format the price axis nicely
-                plot.ylim((.9*min(prices_wo_none),1.1*max(prices_wo_none)))
-                axesPrice.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(5))
-                prettify_axes(axesPrice)
-        ax.xaxis_date()
-        plottedL=loadsPlotted[::-1]+gensPlotted[::-1]
-        ax.legend(plottedL, yLabels[::-1],loc='lower right')
-        
-        for label in ax.get_xticklabels():
-            label.set_ha('right')
-            label.set_rotation(30)        
-        
-        #format the time axis nicely
-        if filename is not None:
-            if 24*7>times.spanhrs>48:
-                ax.xaxis.set_major_locator(matplotlib.dates.DayLocator())
-                ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y-%m-%d'))
-                ax.xaxis.set_minor_locator(matplotlib.dates.HourLocator())
-            elif times.spanhrs<48:
-                ax.xaxis.set_major_locator(matplotlib.dates.HourLocator())
-                ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M'))
-        #otherwise use defaults
-        #else: leave the xaxis for interactive zooming  
-        
-        #format the power axis nicely
-        if convert_to_GW:
-            labels_power=ax.get_yticks()
-            labels_power=[P/1000 for P in labels_power]
-            ax.set_yticklabels(labels_power)
-            ax.set_ylabel('energy [GWh]',ha='center',**bigFont)
-        ax.autoscale_view()        
+        stack_plot_UC(self.generators(),self.times,prices,withPrices=withPrices,withInitial=withInitial)
+
         self.savevisualization(filename)
 
 class Solution_SCUC(Solution_UC):
@@ -502,3 +379,133 @@ class Solution_UC_multistage(Solution_UC):
 def _colormap(numcolors,colormapName='gist_rainbow',mincolor=1):
     cm = matplotlib.cm.get_cmap(colormapName)
     return [cm(1.*i/numcolors) for i in range(mincolor,numcolors+mincolor)]      
+
+def stack_plot_UC(generators,times,prices,withInitial=False,withPrices=True):
+    withPrices=withPrices and any(prices)
+    bigFont={'fontsize':15}
+    figWidth=.85; figLeft=(1-figWidth)/2
+    yLabel_pos={'x':-0.09,'y':0.5}
+    
+    fig=plot.figure(figsize=(10, 4), dpi=120)
+    ax=plot.axes([figLeft,.1,figWidth,.6])
+    ax.set_ylabel('energy [MWh]',ha='center',**bigFont)
+    ax.yaxis.set_label_coords(**yLabel_pos)
+    prettify_axes(ax)
+    
+    alpha_initialTime=0.2
+    
+    gensPlotted,loadsPlotted,yLabels=[],[],[]
+    
+    T=[t.Start for t in times.wInitial]
+    barWidth = times.intervalhrs / 24.0 #maplotlib dates have base of 1day
+    initWidth = times.initialTime.intervalhrs / 24.0        
+    stackBottom=[0]*len(T)
+    
+    
+    def addtostackplot(ax,time,power,color, gensPlotted,stackBottom):
+        #add initial time to stackplot
+        if withInitial:
+            ax.bar(time[0],power[0],bottom=stackBottom[0],color=color, edgecolor=color, alpha=alpha_initialTime, width=initWidth)
+        #add commitment times to stackplot
+        plt=ax.bar(time[1:],power[1:],bottom=stackBottom[1:],color=color, edgecolor=color,width=barWidth)
+        #add power to stack bottom
+        stackBottom=elementwiseAdd(power,stackBottom)
+        #add to list of gens plotted
+        gensPlotted.append(plt[0])
+        return gensPlotted,stackBottom
+    
+    if len(generators)<=5:
+        colors=_colormap(len(generators),colormapName='Blues')
+        for g,gen in enumerate(generators):
+            Pgen=[gen.power(t) for t in times.wInitial]
+            gensPlotted,stackBottom=addtostackplot(ax,T,Pgen,colors[g], gensPlotted,stackBottom)
+            yLabels.append(gen.name)
+    else:     
+        #group generators by kind
+        kind_map=dict(ngst='shoulder NG',ngcc='shoulder NG',nggt='peaker NG',chp='CHP')
+        ordered_kinds=['nuclear','coal','CHP','other','shoulder NG','peaker NG','wind']
+        colors=_colormap(len(ordered_kinds),colormapName='Blues')
+        power_by_kind=OrderedDict(zip(ordered_kinds,[None]*len(ordered_kinds)))
+        for gen in generators:
+            kind=gen.kind.lower() if gen.kind.lower() in ordered_kinds else kind_map.get(gen.kind.lower(),'other')
+            if power_by_kind[kind] is None:
+                power_by_kind[kind]=[value(gen.power(t)) for t in times.wInitial]
+            else:
+                power_by_kind[kind]=elementwiseAdd([value(gen.power(t)) for t in times.wInitial],power_by_kind[kind])
+        
+        for kind,Pgen in power_by_kind.iteritems():
+            if Pgen is None: continue
+            gensPlotted,stackBottom=addtostackplot(ax,T,Pgen,colors[ordered_kinds.index(kind)], gensPlotted,stackBottom)
+            yLabels.append(kind)
+    
+
+    
+    #show demand response loads
+    stackBottom=stackBottom[1:] #loads don't have initial time info
+    
+    convert_to_GW=True if max(stackBottom)>20000 else False
+    
+#    for load in loads:
+#        color='.8' #gray
+#        if load.kind in ['shifting','bidding']:
+#            Pd=[value(load.power(t)) for t in times]
+#            stackBottom=elementwiseAdd([-1*P for P in Pd],stackBottom)
+#            plt=ax.bar(T[1:],Pd,bottom=stackBottom,alpha=.5,color=color,edgecolor=color,width=barWidth,hatch="/")
+#            loadsPlotted.append(plt[0])
+#            yLabels.append(load.name)
+#            if fewunits: colors.append(color)
+#            else: colors[load.kind] = color
+#        else: pass
+    
+    #show prices
+    if withPrices:
+        prices=replace_all(prices, config.cost_load_shedding, None)
+        prices_wo_none=[p for p in prices if p is not None]
+        if prices_wo_none:
+            axesPrice = plot.axes([figLeft,.75,figWidth,.2],sharex=ax)
+            axesPrice.step(T[1:]+[times.End],prices+[prices[-1]],  where='post') #start from 1 past initial time
+            axesPrice.set_ylabel('price\n[$/MWh]',ha='center',**bigFont)
+            axesPrice.yaxis.set_label_coords(**yLabel_pos)
+            plot.setp(axesPrice.get_xticklabels(), visible=False)
+            #format the price axis nicely
+            plot.ylim((.9*min(prices_wo_none),1.1*max(prices_wo_none)))
+            axesPrice.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(5))
+            prettify_axes(axesPrice)
+            
+    ax.xaxis_date()
+    
+    for label in ax.get_xticklabels():
+        label.set_ha('right')
+        label.set_rotation(30)        
+    
+    #format the time axis nicely
+    if 24*10>times.spanhrs>48:
+        ax.xaxis.set_major_locator(matplotlib.dates.DayLocator())
+        ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y-%m-%d'))
+        ax.xaxis.set_minor_locator(matplotlib.dates.HourLocator())
+    elif times.spanhrs<48:
+        ax.xaxis.set_major_locator(matplotlib.dates.HourLocator())
+        ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M'))
+    #otherwise use defaults  
+    
+    #format the power axis nicely
+    if convert_to_GW:
+        labels_power=ax.get_yticks()
+        labels_power=[P/1000 for P in labels_power]
+        ax.set_yticklabels(labels_power)
+        ax.set_ylabel('energy [GWh]',ha='center',**bigFont)
+    ax.autoscale_view()        
+
+    #add the legend
+    plottedL=loadsPlotted[::-1]+gensPlotted[::-1]    
+#    shrink_axis(ax,0.30)
+#    if withPrices: shrink_axis(axesPrice,0.30)
+    legend_font=FontProperties()
+    legend_font.set_size('small')
+    ax.legend(plottedL, yLabels[::-1],prop=legend_font)#,loc='center left', bbox_to_anchor=(1, 0.5))
+    
+
+def shrink_axis(ax,percent_horizontal=0.20,percent_vertical=0):
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0, box.width * (1-percent_horizontal), box.height*(1-percent_vertical)])
+    

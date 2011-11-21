@@ -60,7 +60,7 @@ generator_defaults=dict(
     
     fuelcost=dict(
         generic=    1,
-        coal=       2.5,   #from EIA national average coal price
+        coal=       2.0,   #from EIA national average coal price: http://www.eia.gov/electricity/monthly/
         ngst=       4.0,   #midrange forecast from NWPP plan: http://www.nwcouncil.org/energy/powerplan/6/
         ngcc=       4.0,
         nggt=       4.0,
@@ -91,7 +91,7 @@ generator_defaults=dict(
 
 cost_load_shedding = 100000000 #$/MWh
 
-default_num_breakpoints=10
+default_num_breakpoints=11
 default_hours_commitment=24
 default_hours_commitment_overlap=0
 optimization_package='coopr' #'pulp'

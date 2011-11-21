@@ -1,10 +1,17 @@
 #!/usr/bin/python
 import argparse,os
-from fabric.api import run,put,get
+from fabric.api import run,put,get,env,execute
 from minpower import solve,config
 
 solution_filenames=['dispatch','power-flow','commitment']
     
+def command_line_style(args_object):
+    out=[]
+    args=vars(args_object)
+    args.pop('directory')
+    args.pop('remote_machine')
+    for name,value in args.items(): out.append('--{}={}'.format(name,value))
+    return ' '.join(out)
 def minpower(args):
     directory=args.directory
     _,name=os.path.split(directory.rstrip('/'))
@@ -14,17 +21,46 @@ def minpower(args):
     files=os.path.join(directory,'*.csv')
     files_sent=put(files,remote_dir)
 
-    run('minpower {d}'.format(d=remote_dir))
+    run('minpower {d} {args}'.format(d=remote_dir,args=command_line_style(args)))
 
     for f in solution_filenames:
         search=remote_dir+'{f}*'.format(f=f)
         try: get(search,directory)
         except: pass
 
+def _annotate_hosts_with_ssh_config_info():
+    from os.path import expanduser
+    from paramiko.config import SSHConfig
+
+    def hostinfo(host, config):
+        hive = config.lookup(host)
+        if 'hostname' in hive:
+            host = hive['hostname']
+        if 'user' in hive:
+            host = '%s@%s' % (hive['user'], host)
+        if 'port' in hive:
+            host = '%s:%s' % (host, hive['port'])
+        return host
+
+    try:
+        config_file = file(expanduser('~/.ssh/config'))
+    except IOError:
+        pass
+    else:
+        config = SSHConfig()
+        config.parse(config_file)
+        keys = [config.lookup(host).get('identityfile', None)
+            for host in env.hosts]
+        env.key_filename = [expanduser(key) for key in keys if key is not None]
+        env.hosts = [hostinfo(host, config) for host in env.hosts]
+
+        for role, rolehosts in env.roledefs.items():
+            env.roledefs[role] = [hostinfo(host, config) for host in rolehosts]
+
 parser = argparse.ArgumentParser(description='Minpower remote machine command line interface')
+parser.add_argument('remote_machine',type=str, help='the ssh-styled IP address of the machine to use')
 parser.add_argument('directory', type=str, 
                    help='the direcory of the problem you want to solve')
-parser.add_argument('remote_machine',type=str, help='the ssh-styled IP address of the machine to use')
 parser.add_argument('--solver','-s',  type=str, default=config.optimization_solver,
                    help='the solver name used to solve the problem (e.g. cplex, gurobi, glpk)')
 parser.add_argument('--visualization_off','-v',action="store_true", default=False,
@@ -44,4 +80,6 @@ parser.add_argument('--dispatch_decommit_allowed','-d', action="store_true", def
                     
 #figure out the command line arguments
 args = parser.parse_args()
-print args.remote_machine
+env.hosts = [args.remote_machine]
+_annotate_hosts_with_ssh_config_info()
+execute(minpower,args)

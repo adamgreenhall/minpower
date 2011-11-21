@@ -148,11 +148,17 @@ class Solution(object):
         self._get_costs()
 
     def _get_problem_info(self,problem):
-        self.status     =problem.statusText
-        self.solve_time  =problem.solutionTime
-        self.objective  =float(value(problem.objective))
-        self.active_constraints = sum([dual(c)!=0 for c in problem.constraints.values()])
-        self.total_constraints = len(problem.constraints)
+        #self.status     =problem.statusText
+        try: 
+            self.solve_time  =problem.solutionTime
+            self.objective  =float(value(problem.objective))
+            self.active_constraints = sum([dual(c)!=0 for c in problem.constraints.values()])
+            self.total_constraints = len(problem.constraints)
+        except AttributeError:
+            self.solve_time=None
+            self.objective=None
+            self.active_constraints=None
+            self.total_constraints=None
     def _get_costs(self):
         generators=self.generators()
         gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t)) for t in self.times] for gen in generators]
@@ -405,7 +411,7 @@ class Solution_UC(Solution):
         fields.append('times');  data.append([t.Start for t in times])
         fields.append('prices'); data.append([bus.price(t) for t in times])
         for gen in self.generators(): 
-            if gen.isControllable:
+            if gen.is_controllable:
                 fields.append('status: '+str(gen.name))
                 data.append([1 if value(gen.status(t))==1 else 0 for t in times])
             fields.append('power: '+str(gen.name))

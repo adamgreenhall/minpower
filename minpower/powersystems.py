@@ -277,7 +277,6 @@ class Generator(OptimizationObject):
         Also create the :class:`bidding.Bid` objects.
         '''
         commitment_problem= len(times)>1 or self.dispatch_decommit_allowed
-        self.cost_model.do_segmentation()
         for time in times:
             self.add_variable('power','P',time,low=0,high=self.Pmax)
             if commitment_problem: #UC problem
@@ -683,7 +682,6 @@ class Line(OptimizationObject):
             self.add_constraint('line limit high',t,self.power(t)<=self.Pmax)
             self.add_constraint('line limit low',t,self.Pmin<=self.power(t))
         return self.all_constraints(times)
-    
     def __str__(self): return 'k{ind}'.format(ind=self.index)
     def __int__(self): return self.index
     def iden(self,t): return str(self)+str(t)
@@ -889,6 +887,11 @@ class Load_Fixed(Load):
 =======
                 self.add_constraint('swing bus',time, self.angle(time)==0)#swing bus has angle=0
         return self.all_constraints(times)
+    # def clear_constraints(self):
+    #     self.constraints={}
+    #     for gen in self.generators: gen.clear_constraints()
+    #     for load in self.loads: load.clear_constraints()
+
     def iden(self,t):   return str(self)+str(t)
     def __str__(self):  return 'i{ind}'.format(ind=self.index)
 <<<<<<< HEAD
@@ -934,7 +937,9 @@ class PowerSystem(OptimizationObject):
                 except AttributeError: pass #load has no cost model   
         for gen in generators:
             gen.dispatch_decommit_allowed=dispatch_decommit_allowed
-            try: gen.cost_model.num_breakpoints=num_breakpoints
+            try: 
+                gen.cost_model.num_breakpoints=num_breakpoints
+                gen.cost_model.do_segmentation()
             except AttributeError: pass #gen has no cost model
             
     def set_load_shedding(self,is_allowed):
@@ -1005,9 +1010,15 @@ class PowerSystem(OptimizationObject):
         for line in self.lines: line.create_constraints(times,self.buses)
         #a system reserve constraint would go here
         return self.all_constraints(times)
+    # def clear_constraints(self):
+    #     self.constraints={}
+    #     for bus in self.buses: bus.clear_constraints()
+    #     for line in self.lines: line.clear_constraints()
+    
     
 #def power_to_energy(P,time):
 #    return P*time.intervalhrs
+<<<<<<< HEAD
 <<<<<<< HEAD
     
 <<<<<<< HEAD
@@ -1026,5 +1037,8 @@ def filter_optimization_objects(objects,times):
 >>>>>>> working on the big refactor to opt.obj. model
 =======
 def _call_generator_create_variables(gen,times): return gen.create_variables(times)
+=======
+#def _call_generator_create_variables(gen,times): return gen.create_variables(times)
+>>>>>>> do_segmentation at update breakpoints in PowerSystem
 
 >>>>>>> debugging times for problem creation

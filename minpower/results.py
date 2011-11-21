@@ -146,20 +146,23 @@ class Solution(object):
 =======
         self._get_problem_info(problem)
         self._get_costs()
+        self._get_prices()
+        self.power_system.clear_constraints()
 
     def _get_problem_info(self,problem):
         #self.status     =problem.statusText
-        try: 
-            self.solve_time  =problem.solutionTime
-            self.objective  =float(value(problem.objective))
-            self.active_constraints = sum([dual(c)!=0 for c in problem.constraints.values()])
-            self.total_constraints = len(problem.constraints)
-        except AttributeError:
-            self.solve_time=None
-            self.objective=None
-            self.active_constraints=None
-            self.total_constraints=None
+#        try: 
+        self.solve_time  =problem.solutionTime
+        self.objective  =float(value(problem.objective))
+        self.active_constraints = sum([dual(c)!=0 for c in problem.constraints.values()])
+        self.total_constraints = len(problem.constraints)
+#        except AttributeError:
+#            self.solve_time=None
+#            self.objective=None
+#            self.active_constraints=None
+#            self.total_constraints=None
     def _get_costs(self):
+#        try: 
         generators=self.generators()
         gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t)) for t in self.times] for gen in generators]
         gen_fuel_costs_polynomial = [[gen.truecost(t) for t in self.times] for gen in generators]
@@ -167,9 +170,21 @@ class Solution(object):
         self.truecost_generation=sum( c for c in flatten(gen_fuel_costs_polynomial) )
         self.load_shed = sum( sum(load.shed(t) for load in self.loads()) for t in self.times )
         self._get_cost_error()
+#        except TypeError:
+#            self.fuelcost_generation=None
+#            self.truecost_generation=None
+#            self.load_shed=None
+#            self.costerror=None
     def _get_cost_error(self):
         try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
         except ZeroDivisionError: self.costerror=0
+    def _get_prices(self):
+        self.lmps={}
+        self.line_prices={}
+        for t in self.times: 
+            self.lmps[t]=self.get_values('buses','price',t)
+            self.line_prices[t]=self.get_values('lines','price',t)
+        
     def buses(self): return self.power_system.buses
     def lines(self): return self.power_system.lines
     def generators(self): return flatten( [[gen for gen in bus.generators] for bus in self.buses()] )
@@ -204,7 +219,7 @@ class Solution(object):
             out.extend(self.info_cost())
             print '\n'.join(out)
     def info_status(self): return ['solved in {time:0.4f} sec'.format(time=self.solve_time)]
-    def info_price(self,t): return ['price={}'.format(self.get_values('buses','price',t))]    
+    def info_price(self,t): return ['price={}'.format(self.lmps[t])]    
     def info_generators(self,t):
         out=['generator info:']
         if len(self.buses())>1: out.append('bus={}'.format(self.get_values('generators','bus')))
@@ -224,7 +239,7 @@ class Solution(object):
              'name={}'.format(getattrL(buses,'name')),
              'Pinj={}'.format([ bus.Pgen(t) - bus.Pload(t) for bus in buses]),
              'angle={}'.format(self.get_values('buses','angle',t)),
-             'LMP={}'.format(self.get_values('buses','price',t))]    
+             'LMP={}'.format(self.lmps[t])]    
         return out    
     def info_lines(self,t):
 <<<<<<< HEAD
@@ -265,8 +280,12 @@ class Solution(object):
         return ['line info:',
              'connecting={}'.format(zip(getattrL(lines,'From'),getattrL(lines,'To'))),       
              'Pk={}'.format(self.get_values('lines','power',t)),
+<<<<<<< HEAD
              'price={}'.format(self.get_values('lines','price',t))]            
 >>>>>>> major cleanup of results.py. still need to tackle the multistage commitments
+=======
+             'price={}'.format(self.line_prices[t])]            
+>>>>>>> store prices, clear constraints
     def info_cost(self):
         return ['objective cost={}'.format(self.objective),
         'linearized fuel cost of generation={}'.format(self.fuelcost_generation),
@@ -281,7 +300,7 @@ class Solution_ED(Solution):
     def visualization(self,show_cost_also=False):
         ''' economic dispatch visualization of linearized incremental cost'''
         t=self.times[0]
-        price=self.buses()[0].price(t)
+        price=self.lmps[t][0]
         generators,loads=self.generators(),self.loads()
         
         gensPlotted,genNames,loadsPlotted,loadNames=[],[],[],[]
@@ -396,7 +415,7 @@ class Solution_OPF(Solution):
         fields.append('from');  data.append(self.get_values('lines','From'))
         fields.append('to');  data.append(self.get_values('lines','To'))
         fields.append('power'); data.append(self.get_values('lines','power',t))
-        fields.append('congestion shadow price'); data.append(self.get_values('lines','price',t))
+        fields.append('congestion shadow price'); data.append(self.line_prices[t])
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename+'-lines.csv'))        
     
     def info_price(self,t): return [] #built into bus info
@@ -406,10 +425,9 @@ class Solution_UC(Solution):
     def saveCSV(self,filename='commitment.csv'):
         '''generator power values and statuses for unit commitment'''
         times=self.times
-        bus=self.buses()[0]
         fields,data=[],[]
         fields.append('times');  data.append([t.Start for t in times])
-        fields.append('prices'); data.append([bus.price(t) for t in times])
+        fields.append('prices'); data.append([self.lmps[t][0] for t in times])
         for gen in self.generators(): 
             if gen.is_controllable:
                 fields.append('status: '+str(gen.name))
@@ -429,6 +447,7 @@ class Solution_UC(Solution):
         else: fewunits=False
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     
         times,generators,loads=self.times,self.generators,self.loads
         prices=[self.buses[0].price[t] for t in self.times]
@@ -440,6 +459,9 @@ class Solution_UC(Solution):
 =======
         prices=[self.buses()[0].price(t) for t in self.times]
 >>>>>>> major cleanup of results.py. still need to tackle the multistage commitments
+=======
+        prices=[self.lmps[t][0] for t in self.times]
+>>>>>>> store prices, clear constraints
         
 >>>>>>> duals and variables now working with coopr. tests are still failing.
         bigFont={'fontsize':15}
@@ -625,13 +647,16 @@ class Solution_UC_multistage(Solution_UC):
         #self.total_constraints = len(constraints)
         
         self._get_costs(stage_solutions)
+        self._get_prices(stage_solutions)
     def _sum_over(self,attrib,stage_solutions): return sum(getattr(sln, attrib) for sln in stage_solutions)     
     def _get_costs(self,stage_solutions):
         self.fuelcost_generation=self._sum_over('fuelcost_generation',stage_solutions)
         self.truecost_generation=self._sum_over('truecost_generation',stage_solutions)
         self.load_shed=          self._sum_over('load_shed',stage_solutions)
         self._get_cost_error()       
-
+    def _get_prices(self,stage_solutions):
+        self.lmps={}
+        for stage in stage_solutions: self.lmps.update(stage.lmps)
     def show(self):
         out=[]
         out.extend(self.info_status())

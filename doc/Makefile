@@ -52,7 +52,7 @@ gh-pages: clean html
 	git add ../_modules/*.html #recursive add module html files
 	git add ../_modules/*/*.html # add module subdir html files
 	git commit -m 'publishing'
-	git push
+	git push origin gh-pages
 	@echo "to get back to work::: git checkout HEAD"
 	#git checkout master
 

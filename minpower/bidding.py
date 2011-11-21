@@ -174,8 +174,8 @@ class PWLmodel(object):
     def output(self,variables,owner_iden,time_iden): 
         F = [variables[self._f_name(f,owner_iden,time_iden)] for f in range(len(self.bp_inputs))]
         return sum_vars( elementwiseMultiply(F,self.bp_outputs) )
-    def output_true(self,input_val): return polyval( self.poly_curve, value(input_val) )
-    def output_incremental(self,input_var):  return polyval( polyder(self.poly_curve),value(input_var) )
+    def output_true(self,input_val): return float(polyval( self.poly_curve, value(input_val) ))
+    def output_incremental(self,input_var):  return float(polyval( polyder(self.poly_curve),value(input_var) ))
     def texrepresentation(self,digits=3):
         '''
         Output polynomial to tex-style string.
@@ -227,8 +227,8 @@ class convexPWLmodel(PWLmodel):
             y1=self.bp_outputs[b]
             self.segment_lines.append(make_lineareq(x1,y1,x2,y2))
     
-    def output_true(self,input_val): return polyval( self.poly_curve, value(input_val) )
-    def output_incremental(self,input_val):  return polyval( polyder(self.poly_curve),value(input_val) )
+    def output_true(self,input_val): return float(polyval( self.poly_curve, value(input_val) ))
+    def output_incremental(self,input_val):  return float(polyval( polyder(self.poly_curve),value(input_val) ))
     def plot(self,P=None,showPW=True,linestyle='-',color='k'):
         inDiscrete=linspace(self.min_input, self.max_input, 1e6)
         outDiscrete=polyval(self.poly_curve,inDiscrete)

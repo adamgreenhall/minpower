@@ -264,7 +264,6 @@ class convexPWLmodel(PWLmodel):
         return linePlotted
     def get_time_variables(self,input_var,status_var,owner_iden,time_iden):
         variables={}
-        self.do_segmentation()
         name = 'bidCost_'+owner_iden+time_iden
         variables[name] = new_variable(name=name,high=float(max(self.bp_outputs)))
         return variables

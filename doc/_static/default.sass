@@ -182,9 +182,10 @@ dt:target
       &.current
         font-weight: bold
     ul
-      padding-left: 10px
       list-style-type: none
+      margin-top: 20px
       ul
+        margin-top: 0px
         padding-left: 15px
         
     input
@@ -217,8 +218,8 @@ dt:target
     color: DarkSlateGray
     width: 3px
   position: absolute
-  top: 120px
-  right: -40em
+  top: 250px
+  right: -15em
 
 .installation-homepage
   padding: 10px
@@ -230,11 +231,24 @@ dt:target
     color: DarkSlateGray
     width: 3px
   position: absolute
-  top: 240px
-  right: -40em
+  top: 380px
+  right: -15em
   ul
     padding-left: 20px
     list-style-type: circle
+
+.basic-installation
+  padding: 6px
+  width: 14em
+  background: lightblue
+  +border-radius(10px)
+  border: 
+    style: solid
+    color: DarkSlateGray
+    width: 3px
+  position: absolute
+  top: 25px
+  right: -17em
 
 =alternating-rows($even-row-color, $odd-row-color)
   tr.row-odd
@@ -248,6 +262,7 @@ table.docutils
   tbody
     tr.row-odd:first-child
       color: dimgray
+      font-weight: bold
   td
     padding: 10px
   +alternating-rows(#ffffff, #eeeeee)
@@ -275,6 +290,13 @@ dl.function //function inputs
   em
     +mono
     color: dimgray
+  background: WhiteSmoke
+  +border-radius(10px)
+  padding: 10px
+  margin-top: 20px
+  table.field-list
+    width: 100%
+    
 dl.class //class inputs
   em
     +mono
@@ -285,6 +307,9 @@ dl.class //class inputs
     left: 10px
     right: 10px
     top: 5px
+  table.field-list
+    width: 100%
+
 dl.method //class inputs
   em
     +mono

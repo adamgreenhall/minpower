@@ -9,16 +9,18 @@ def main(publish=False,just_css=False):
         return
     if publish:
         # os.system('make gh-pages')
+        os.chdir('~/minpower/')
         commands=[
-            'cd ~/minpower/',
+            # 'cd ~/minpower/',
             'git checkout gh-pages',
             'cp -r doc/_build/html/ .',
             # 'git add *.html api/*.html',
             'git commit -am "publishing"',
             # 'git push origin gh-pages',
+            'git checkout master'
             'rm objects.inv',
             'rm -r _sources/',
-            'git checkout master'
+            'rm -r _static/',
             ]
         for cmd in commands: 
             result=os.system(cmd)

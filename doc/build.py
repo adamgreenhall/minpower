@@ -8,7 +8,18 @@ def main(publish=False,just_css=False):
         os.system('cp _static/default.css _build/html/_static/default.css')
         return
     if publish:
-        os.system('make gh-pages')
+        # os.system('make gh-pages')
+        commands=[
+            'cd ~/minpower/',
+            'git checkout gh-pages',
+            'cp -r docs/_build/html/* .',
+            'git commit -am "publishing"',
+            # 'git push origin gh-pages',
+            'rm objects.inv',
+            'rm -r _sources/',
+            'git checkout master'
+            ]
+        for cmd in commands: os.system(cmd)
     else:
         os.system('compass compile')
         os.system('make html')

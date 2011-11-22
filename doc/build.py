@@ -9,7 +9,7 @@ def main(publish=False,just_css=False):
         return
     if publish:
         # os.system('make gh-pages')
-        os.chdir('~/minpower/')
+        # os.chdir('~/minpower/')
         commands=[
             # 'cd ~/minpower/',
             'git checkout gh-pages',

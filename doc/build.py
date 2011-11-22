@@ -12,7 +12,7 @@ def main(publish=False,just_css=False):
         commands=[
             'cd ~/minpower/',
             'git checkout gh-pages',
-            'cp -r docs/_build/html/ .',
+            'cp -r doc/_build/html/* .',
             'git commit -am "publishing"',
             # 'git push origin gh-pages',
             'rm objects.inv',

@@ -41,22 +41,22 @@ html:
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-gh-pages: clean html
-	git checkout gh-pages
-	git rm ../*.html
-	git checkout HEAD
-	cp -r ./_build/html/* ..
-	rm -r ../_sources #get rid of sources folder
-	rm ../objects.inv #get rid of objects inventory
-	git add ../*.html
-	git add ../_modules/*.html #recursive add module html files
-	git add ../_modules/*/*.html # add module subdir html files
-	git add ../api/*.html #add api html
-	git add _static/default.css #add css
-	git commit -m 'publishing'
-	git push origin gh-pages
-	@echo "to get back to work::: git checkout HEAD"
-	#git checkout master
+# gh-pages: clean html
+# 	git checkout gh-pages
+# 	git rm ../*.html
+# 	git checkout HEAD
+# 	cp -r ./_build/html/* ..
+# 	rm -r ../_sources #get rid of sources folder
+# 	rm ../objects.inv #get rid of objects inventory
+# 	git add ../*.html
+# 	git add ../_modules/*.html #recursive add module html files
+# 	git add ../_modules/*/*.html # add module subdir html files
+# 	git add ../api/*.html #add api html
+# 	git add _static/default.css #add css
+# 	git commit -m 'publishing'
+# 	git push origin gh-pages
+# 	@echo "to get back to work::: git checkout HEAD"
+# 	#git checkout master
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml

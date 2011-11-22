@@ -19,7 +19,9 @@ def main(publish=False,just_css=False):
             'rm -r _sources/',
             'git checkout master'
             ]
-        for cmd in commands: os.system(cmd)
+        for cmd in commands: 
+            result=os.system(cmd)
+            if result!=0: break
     else:
         os.system('compass compile')
         os.system('make html')

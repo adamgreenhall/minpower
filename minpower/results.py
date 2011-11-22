@@ -4,6 +4,10 @@
     visualization.
 """
 
+from guppy import hpy
+import objgraph
+import meliae 
+
 import logging
 from collections import OrderedDict
 
@@ -77,7 +81,19 @@ class Solution(object):
         self._get_problem_info(problem)
         self._get_costs()
         self._get_prices()
+        
+        
+#        objgraph.show_refs([self], filename='memory-graph.png')
+#        objgraph.show_backrefs([self],filename='memory-backrefs.png')
+        #objgraph.show_growth(limit=5)
+        
+        #meliae.scanner.dump_all_objects('dump.memory')
+        
+        
+#        hpy().heap()
+#        hpy().iso(1,[],{})
         self.power_system.clear_constraints()
+        #objgraph.show_growth(limit=5)
 
     def _get_problem_info(self,problem):
         #self.status     =problem.statusText

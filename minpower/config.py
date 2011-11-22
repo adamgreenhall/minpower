@@ -98,4 +98,4 @@ optimization_package='coopr' #'pulp'
 
 optimization_solver='gurobi'
 available_solvers = ['glpk','gurobi']#['glpk','gurobi','cplex']
-logging_level= logging.DEBUG
+logging_level= logging.INFO

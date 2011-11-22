@@ -5,6 +5,8 @@ module contains the top-level commands for creating
 problems and solving them.
 """
 
+import objgraph,inspect,random
+
 import logging
 
 import optimization
@@ -165,7 +167,17 @@ def solve_multistage(power_system,times,datadir,
 
     for t_stage in stage_times:
         logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
-        
+        objgraph.show_growth(limit=5)
+        print 'dicts',len(objgraph.by_type('dict'))
+        roots = objgraph.get_leaking_objects()
+        print 'potential leakers',len(roots)
+#        objgraph.show_most_common_types(objects=roots)
+
+#        print objgraph.by_type('list')[1]
+#        objgraph.show_chain(
+#            objgraph.find_backref_chain(objgraph.by_type('list')[1],inspect.ismodule),
+#            filename='chain{}.png'.format(t_stage[0].Start))
+#        objgraph.show_refs(objgraph.by_type('dict')[0],filename='dict{}.png'.format(t_stage[0].Start))
         set_initialconditions(buses,t_stage.initialTime)
         
         stage_problem=create_problem(power_system,t_stage)

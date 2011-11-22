@@ -6,6 +6,15 @@ problems and solving them.
 """
 
 import objgraph,inspect,random
+#import memory_size
+from pympler.asizeof import asizeof
+from pympler import summary,muppy
+from pympler.classtracker import ClassTracker
+from pympler.classtracker_stats import HtmlStats
+from pympler.refgraph import ReferenceGraph
+import coopr.pyomo as pyomo
+import bidding,schedule
+
 
 import logging
 
@@ -15,7 +24,12 @@ import powersystems
 import results
 import config
 from commonscripts import joindir,show_clock
-    
+
+tracker = ClassTracker()
+tracker_all=ClassTracker()
+tracker_gens = ClassTracker()
+
+
 def problem(datadir='.',
         shell=True,
         problemfile=False,
@@ -49,16 +63,24 @@ def problem(datadir='.',
     :returns: :class:`~results.Solution` object
     """
     
+    for cls in [powersystems.PowerSystem,powersystems.Generator,
+                pyomo.ConcreteModel,pyomo.Var,pyomo.Constraint,
+                bidding.Bid,results.Solution,results.Solution_UC_multistage,
+                optimization.Problem,schedule.Timelist
+                ]:
+        tracker_all.track_class(cls)
+    
     _setup_logging(logging_level,logging_file)
     logging.debug('Minpower reading {} {}'.format(datadir, show_clock()))
     generators,loads,lines,times=get_data.parsedir(datadir)
+    tracker_all.create_snapshot('data read')
     logging.debug('data read {}'.format(show_clock()))
     power_system=powersystems.PowerSystem(generators,loads,lines,                 
                 num_breakpoints=num_breakpoints,
                 load_shedding_allowed=False,
                 #spinning_reserve_requirement=0,
                 dispatch_decommit_allowed=dispatch_decommit_allowed,)
-    
+    tracker_all.create_snapshot('power system created')
     logging.debug('power system set up {}'.format(show_clock()))
     
     if times.spanhrs<=hours_commitment:
@@ -78,7 +100,18 @@ def problem(datadir='.',
                                                        overlap_hours=hours_commitment_overlap,
                                                        )
         solution=results.make_multistage_solution(power_system,stage_times,datadir,stage_solutions)
+#        tracker.create_snapshot('solution created')
         logging.info('problem solved in {} ... finished at {}'.format(solution.solve_time,show_clock()))
+        tracker_all.create_snapshot('all times solution created')
+#        gb = ReferenceGraph([power_system,times,solution])
+#        gb.render('mutlistage-memory.png',format='png')
+    tracker.stats.print_summary()
+        
+    
+
+#    tracker_gens.stats.print_summary()
+#    tracker_all.stats.print_summary()
+    HtmlStats(tracker=tracker_all).create_html('profile.html')
         
     if shell: solution.show()
     if csv: solution.saveCSV()
@@ -165,12 +198,24 @@ def solve_multistage(power_system,times,datadir,
                 gen.finalstatus=gen.getstatus(t=next_stage_first_time,times=times)
 
 
+    tracker.track_object(power_system)
+    tracker_gens.track_class(powersystems.Generator)
+
+
     for t_stage in stage_times:
         logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
-        objgraph.show_growth(limit=5)
-        print 'dicts',len(objgraph.by_type('dict'))
-        roots = objgraph.get_leaking_objects()
-        print 'potential leakers',len(roots)
+        tracker_all.create_snapshot('{} started'.format(str(t_stage[0].Start)))
+#        print 'power system size',asizeof(power_system)
+#        all_objects = muppy.get_objects()
+#        summary.print_(summary.summarize(all_objects))
+        tracker.create_snapshot(str(t_stage[0].Start))
+        tracker_gens.create_snapshot(str(t_stage[0].Start))
+#        memory_size.total_size(power_system,verbose=True)
+#        objgraph.show_growth(limit=5)
+        
+#        print 'dicts',len(objgraph.by_type('dict'))
+#        roots = objgraph.get_leaking_objects()
+#        print 'potential leakers',len(roots)
 #        objgraph.show_most_common_types(objects=roots)
 
 #        print objgraph.by_type('list')[1]
@@ -181,9 +226,11 @@ def solve_multistage(power_system,times,datadir,
         set_initialconditions(buses,t_stage.initialTime)
         
         stage_problem=create_problem(power_system,t_stage)
+        tracker_all.create_snapshot('{} created problem'.format(str(t_stage[0].Start)))
         if writeproblem: stage_problem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
         logging.info('created... solving... {}'.format(show_clock(showclock)))
         stage_problem.solve(solver,get_duals=get_duals)
+        tracker_all.create_snapshot('{} solved problem'.format(str(t_stage[0].Start)))
         
         if not stage_problem.solved: 
             #re-do stage, with load shedding allowed
@@ -206,6 +253,7 @@ def solve_multistage(power_system,times,datadir,
             except: logging.critical('could not write last stage solution to spreadsheet')
             msg='Infeasible problem - writing to .lp file for examination.'
             raise optimization.OptimizationError(msg)
+        tracker_all.create_snapshot('{} solution made'.format(str(t_stage[0].Start)))
     return stage_solutions,stage_times
 
   

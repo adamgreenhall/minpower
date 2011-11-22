@@ -289,7 +289,7 @@ dt:target {
 /* line 171, default.sass */
 .document .sphinxsidebar {
   position: absolute;
-  left: -120px;
+  left: -101px;
   top: 0px;
   width: 200px;
 }
@@ -308,64 +308,41 @@ dt:target {
 }
 /* line 184, default.sass */
 .document .sphinxsidebar ul {
-  padding-left: 0;
   list-style-type: none;
+  margin-top: 20px;
 }
 /* line 187, default.sass */
 .document .sphinxsidebar ul ul {
+  margin-top: 0px;
   padding-left: 15px;
 }
-/* line 190, default.sass */
+/* line 191, default.sass */
 .document .sphinxsidebar input {
   border-color: DarkSlateGray;
 }
-/* line 194, default.sass */
+/* line 195, default.sass */
 .document .sphinxsidebar #searchbox h3 {
   margin-bottom: 0px;
 }
-/* line 196, default.sass */
+/* line 197, default.sass */
 .document .sphinxsidebar #searchbox .searchtip {
   display: none;
 }
 
-/* line 200, default.sass */
+/* line 201, default.sass */
 .license {
   font-size: 60%;
   max-width: 500px;
   margin-left: 60px;
 }
 
-/* line 205, default.sass */
+/* line 206, default.sass */
 .optimizationproblem {
   margin-bottom: 4ex;
   margin-left: 3em;
 }
 
-/* line 209, default.sass */
-.installation-homepage {
-  padding: 10px;
-  width: 15em;
-  background: lightblue;
-  -moz-border-radius: 10px;
-  -webkit-border-radius: 10px;
-  -o-border-radius: 10px;
-  -ms-border-radius: 10px;
-  -khtml-border-radius: 10px;
-  border-radius: 10px;
-  border-style: solid;
-  border-color: DarkSlateGray;
-  border-width: 3px;
-  position: absolute;
-  top: 200px;
-  right: -20em;
-}
-/* line 221, default.sass */
-.installation-homepage ul {
-  padding-left: 20px;
-  list-style-type: circle;
-}
-
-/* line 225, default.sass */
+/* line 211, default.sass */
 .solution-homepage {
   padding: 10px;
   width: 15em;
@@ -380,68 +357,128 @@ dt:target {
   border-color: DarkSlateGray;
   border-width: 3px;
   position: absolute;
-  top: 80px;
-  right: -20em;
+  top: 250px;
+  right: -15em;
 }
 
-/* line 246, default.sass */
+/* line 224, default.sass */
+.installation-homepage {
+  padding: 10px;
+  width: 15em;
+  background: lightblue;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -o-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -khtml-border-radius: 10px;
+  border-radius: 10px;
+  border-style: solid;
+  border-color: DarkSlateGray;
+  border-width: 3px;
+  position: absolute;
+  top: 380px;
+  right: -15em;
+}
+/* line 236, default.sass */
+.installation-homepage ul {
+  padding-left: 20px;
+  list-style-type: circle;
+}
+
+/* line 240, default.sass */
+.basic-installation {
+  padding: 6px;
+  width: 14em;
+  background: lightblue;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -o-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -khtml-border-radius: 10px;
+  border-radius: 10px;
+  border-style: solid;
+  border-color: DarkSlateGray;
+  border-width: 3px;
+  position: absolute;
+  top: 25px;
+  right: -17em;
+}
+
+/* line 260, default.sass */
 table.docutils {
   width: 140%;
 }
-/* line 249, default.sass */
+/* line 263, default.sass */
 table.docutils tbody tr.row-odd:first-child {
   color: dimgray;
+  font-weight: bold;
 }
-/* line 251, default.sass */
+/* line 266, default.sass */
 table.docutils td {
   padding: 10px;
 }
-/* line 241, default.sass */
+/* line 255, default.sass */
 table.docutils tr.row-odd td {
   background-color: #eeeeee;
 }
-/* line 244, default.sass */
+/* line 258, default.sass */
 table.docutils tr.row-even td {
   background-color: white;
 }
 
-/* line 255, default.sass */
+/* line 270, default.sass */
 table.docutils.field-list {
   margin-top: 30px;
 }
-/* line 257, default.sass */
+/* line 272, default.sass */
 table.docutils.field-list th.field-name {
   display: block;
   font-weight: bold;
 }
-/* line 260, default.sass */
+/* line 275, default.sass */
 table.docutils.field-list td.field-body {
   display: block;
   margin-left: 20px;
 }
-/* line 263, default.sass */
+/* line 278, default.sass */
 table.docutils.field-list td.field-body strong {
   font-family: "Cousine", monospace;
   color: dimgray;
 }
 
-/* line 267, default.sass */
+/* line 282, default.sass */
 tt.descname {
   font-weight: bold;
 }
 
-/* line 271, default.sass */
+/* line 286, default.sass */
 dl dd {
   margin-left: 20px;
 }
 
-/* line 275, default.sass */
+/* line 289, default.sass */
+dl.function {
+  background: WhiteSmoke;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -o-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -khtml-border-radius: 10px;
+  border-radius: 10px;
+  padding: 10px;
+  margin-top: 20px;
+}
+/* line 290, default.sass */
 dl.function em {
   font-family: "Cousine", monospace;
   color: dimgray;
 }
+/* line 297, default.sass */
+dl.function table.field-list {
+  width: 100%;
+}
 
-/* line 278, default.sass */
+/* line 300, default.sass */
 dl.class {
   background: FloralWhite;
   -moz-border-radius: 10px;
@@ -454,19 +491,23 @@ dl.class {
   padding-right: 10px;
   padding-top: 5px;
 }
-/* line 279, default.sass */
+/* line 301, default.sass */
 dl.class em {
   font-family: "Cousine", monospace;
   color: dimgray;
 }
+/* line 310, default.sass */
+dl.class table.field-list {
+  width: 100%;
+}
 
-/* line 289, default.sass */
+/* line 314, default.sass */
 dl.method em {
   font-family: "Cousine", monospace;
   color: dimgray;
 }
 
-/* line 293, default.sass */
+/* line 318, default.sass */
 .viewcode-link {
   color: LightSlateGray;
   text-decoration: none;
@@ -474,12 +515,12 @@ dl.method em {
   font-size: small;
 }
 
-/* line 299, default.sass */
+/* line 324, default.sass */
 ul {
   list-style-position: inside;
 }
 
-/* line 301, default.sass */
+/* line 326, default.sass */
 ol.arabic.simple {
   list-style-type: decimal;
   list-style-position: inside;

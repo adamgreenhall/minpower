@@ -6,12 +6,14 @@ problems and solving them.
 """
 
 import objgraph,inspect,random
+import weakref
 #import memory_size
 from pympler.asizeof import asizeof
 from pympler import summary,muppy
 from pympler.classtracker import ClassTracker
 from pympler.classtracker_stats import HtmlStats
 from pympler.refgraph import ReferenceGraph
+from pympler import refbrowser
 import coopr.pyomo as pyomo
 import bidding,schedule
 
@@ -64,7 +66,8 @@ def problem(datadir='.',
     """
     
     for cls in [powersystems.PowerSystem,powersystems.Generator,
-                pyomo.ConcreteModel,pyomo.Var,pyomo.Constraint,
+                pyomo.ConcreteModel,pyomo.Var,pyomo.base.var._VarElement,
+                pyomo.Constraint,
                 bidding.Bid,results.Solution,results.Solution_UC_multistage,
                 optimization.Problem,schedule.Timelist
                 ]:
@@ -84,14 +87,8 @@ def problem(datadir='.',
     logging.debug('power system set up {}'.format(show_clock()))
     
     if times.spanhrs<=hours_commitment:
-        problem=create_problem(power_system,times)
-        if problemfile: problemfile=joindir(datadir,'problem-formulation.lp')
-        problem.solve(solver,problem_filename=problemfile,get_duals=get_duals)
-        
-        if problem.solved:
-            solution=results.make_solution(power_system,times,problem=problem,datadir=datadir)
-        else: 
-            raise optimization.OptimizationError('problem not solved')
+        solution=create_solve_problem(power_system,times,datadir,solver,problemfile,get_duals)
+        tracker_all.create_snapshot('solution returned')
     else: #split into multiple stages and solve
         stage_solutions,stage_times=solve_multistage(power_system,times,datadir,
                                                        solver=solver,
@@ -105,19 +102,39 @@ def problem(datadir='.',
         tracker_all.create_snapshot('all times solution created')
 #        gb = ReferenceGraph([power_system,times,solution])
 #        gb.render('mutlistage-memory.png',format='png')
-    tracker.stats.print_summary()
-        
-    
+    tracker_all.stats.print_summary()
+#    tracker_all.stats.dump_stats('pympler.stats')
+#    stats = HtmlStats()
+#    stats.load_stats('pympler.stats')
+#    stats.create_html('profile-memory.html')
 
 #    tracker_gens.stats.print_summary()
 #    tracker_all.stats.print_summary()
     HtmlStats(tracker=tracker_all).create_html('profile.html')
-        
+
+#    print 'testing refbrowser'
+#    obj='the object im testing'
+#    stuff=[obj]
+#    stuffer={obj:'abc'}
+#    def output_function(o): return str(type(o))
+#    cb=refbrowser.ConsoleBrowser(obj, str_func=output_function, maxdepth=2)
+#    print cb
+#    cb.print_tree()       
     if shell: solution.show()
     if csv: solution.saveCSV()
     if visualization: solution.visualization()
     return solution
 
+def create_solve_problem(power_system,times,datadir,solver,problemfile=False,get_duals=True):
+    problem=create_problem(power_system,times)
+    if problemfile: problemfile=joindir(datadir,'problem-formulation.lp')
+    problem.solve(solver,problem_filename=problemfile,get_duals=get_duals)
+    
+    if problem.solved:
+        solution=results.make_solution(power_system,times,problem=problem,datadir=datadir)
+    else: 
+        raise optimization.OptimizationError('problem not solved')
+    return solution
 def create_problem(power_system,times):
     """
     Create an optimization problem.
@@ -138,12 +155,15 @@ def create_problem(power_system,times):
     constraints=power_system.create_constraints(times)
     logging.debug('created constraints {}'.format(show_clock()))
     
+    tracker_all.create_snapshot('power system problem created')
     for v in variables.values(): prob.add_variable(v)
-    logging.debug('added vars to problem {}'.format(show_clock()))
     for c in constraints.values(): prob.add_constraint(c)
-    logging.debug('added constraints to problem {}'.format(show_clock()))
     prob.add_objective(objective)
-    logging.debug('added objective to problem {}'.format(show_clock()))
+    
+#    print 'variable type is', type(v)
+#    print 'objective type is', type(objective)
+    objgraph.show_backrefs([v], filename='variable-backref-pre-solve.png')
+    tracker_all.create_snapshot('Problem created')
     return prob
 
 def solve_multistage(power_system,times,datadir,
@@ -192,39 +212,10 @@ def solve_multistage(power_system,times,datadir,
     def get_finalconditions(power_system,times,lastproblem):
         t_back=overlap_hours/times.intervalhrs
         next_stage_first_time = times[-1-int(t_back)]         
-        for bus in power_system.buses:
-            for gen in bus.generators:
-                gen.update_variables()
-                gen.finalstatus=gen.getstatus(t=next_stage_first_time,times=times)
+        for gen in power_system.generators():
+            gen.finalstatus=gen.getstatus(t=next_stage_first_time,times=times)
 
-
-    tracker.track_object(power_system)
-    tracker_gens.track_class(powersystems.Generator)
-
-
-    for t_stage in stage_times:
-        logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
-        tracker_all.create_snapshot('{} started'.format(str(t_stage[0].Start)))
-#        print 'power system size',asizeof(power_system)
-#        all_objects = muppy.get_objects()
-#        summary.print_(summary.summarize(all_objects))
-        tracker.create_snapshot(str(t_stage[0].Start))
-        tracker_gens.create_snapshot(str(t_stage[0].Start))
-#        memory_size.total_size(power_system,verbose=True)
-#        objgraph.show_growth(limit=5)
-        
-#        print 'dicts',len(objgraph.by_type('dict'))
-#        roots = objgraph.get_leaking_objects()
-#        print 'potential leakers',len(roots)
-#        objgraph.show_most_common_types(objects=roots)
-
-#        print objgraph.by_type('list')[1]
-#        objgraph.show_chain(
-#            objgraph.find_backref_chain(objgraph.by_type('list')[1],inspect.ismodule),
-#            filename='chain{}.png'.format(t_stage[0].Start))
-#        objgraph.show_refs(objgraph.by_type('dict')[0],filename='dict{}.png'.format(t_stage[0].Start))
-        set_initialconditions(buses,t_stage.initialTime)
-        
+    def solve_stage_problem(power_system,t_stage):
         stage_problem=create_problem(power_system,t_stage)
         tracker_all.create_snapshot('{} created problem'.format(str(t_stage[0].Start)))
         if writeproblem: stage_problem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
@@ -242,10 +233,10 @@ def solve_multistage(power_system,times,datadir,
             
         if stage_problem.solved:
             logging.debug('solved... get results... {}'.format(show_clock(showclock)))
-            get_finalconditions(power_system,t_stage,stage_problem)
             #stage_sln=results.get_stage_solution(stage_problem,power_system,t_stage,overlap_hours)
             stage_sln=results.make_solution(power_system,t_stage.non_overlap_times,problem=stage_problem)
-            stage_solutions.append(stage_sln)
+            get_finalconditions(power_system,t_stage,stage_problem)
+            return stage_sln
         else: 
             #print stage_problem.status,stage_problem.statusText()
             stage_problem.write('infeasible-problem.lp')
@@ -253,6 +244,21 @@ def solve_multistage(power_system,times,datadir,
             except: logging.critical('could not write last stage solution to spreadsheet')
             msg='Infeasible problem - writing to .lp file for examination.'
             raise optimization.OptimizationError(msg)
+
+
+    tracker.track_object(power_system)
+    tracker_gens.track_class(powersystems.Generator)
+
+
+    for t_stage in stage_times:
+        logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
+        tracker_all.create_snapshot('{} started'.format(str(t_stage[0].Start)))
+        tracker.create_snapshot(str(t_stage[0].Start))
+        tracker_gens.create_snapshot(str(t_stage[0].Start))
+        set_initialconditions(buses,t_stage.initialTime)
+        
+        stage_sln=solve_stage_problem(power_system,t_stage)
+        stage_solutions.append(stage_sln)
         tracker_all.create_snapshot('{} solution made'.format(str(t_stage[0].Start)))
     return stage_solutions,stage_times
 

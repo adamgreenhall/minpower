@@ -2,6 +2,8 @@
 An optimization command library.
 Currently uses pulp but is transitioning to using coopr.
 """
+from pympler import refbrowser
+
 
 import coopr.pyomo as pyomo
 #from pyutilib.misc import Options as cooprOptions
@@ -17,7 +19,7 @@ from commonscripts import update_attributes,show_clock
 class Problem(object):
     '''an optimization problem/model based on pyomo'''
     def __init__(self):
-        self.model=pyomo.ConcreteModel()
+        self.model=pyomo.ConcreteModel('power system problem')
         self.solved=False
     def add_objective(self,expression,sense=pyomo.minimize):
         '''add an objective to the problem'''            
@@ -44,6 +46,7 @@ class Problem(object):
             if not keepFiles: logging.getLogger().setLevel(logging.WARNING)
             if opt is None: 
                 opt = cooprsolver.SolverFactory(solver)
+                print cooprsolver.SolverFactory
                 if opt is None: 
                     msg='solver "{}" not found'.format(solver)
                     raise OptimizationError(msg)
@@ -124,6 +127,10 @@ class Problem(object):
         except AttributeError:
             msg='the model has no variable/constraint/attribute named "{n}"'.format(n=name)
             raise AttributeError(msg)
+#    def __del__(self):
+#        print 'deleting problem so deleting pyomo model too'
+#        refbrowser.ConsoleBrowser(self.model, str_func=lambda obj: repr(obj)).print_tree()
+#        del self.model
 
 def value(variable):
     '''
@@ -178,7 +185,6 @@ class OptimizationObject(object):
         '''
         self.variables=dict()
         self.constraints=dict()
-        self.objective  =0 #cost
         self.children=dict()
         if getattr(self,'index',None) is None: self.index=hash(self)
         if getattr(self,'name',None)=='': self.name = self.index+1 #1 and up naming
@@ -198,10 +204,10 @@ class OptimizationObject(object):
     def create_objective(self,times):
         '''
         Individual class defined.
-        Create the contribution to the objective (cost) expression.
+        Return the contribution to the objective (cost) expression.
         :returns: an expression, the default is 0
         '''
-        return self.objective
+        return 0
     def create_constraints(self, times,*args,**kwargs):
         ''' 
         Individual class defined.
@@ -292,6 +298,7 @@ class OptimizationObject(object):
         for child in self.children.values(): 
             try: child.clear_constraints()
             except AttributeError:
+                #child is a list of objects
                 for c in child: c.clear_constraints()
 
 def filter_optimization_objects(objects,times):

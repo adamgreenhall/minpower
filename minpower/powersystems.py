@@ -215,8 +215,7 @@ class Generator(OptimizationObject):
         #logging.debug('created {} variables {}'.format(str(self),show_clock()))
         return self.all_variables(times)
     def create_objective(self,times):
-        self.objective=sum_vars(self.cost(time) for time in times)
-        return self.objective
+        return sum_vars(self.cost(time) for time in times)
 
     def create_constraints(self,times):
         '''create the optimization constraints for a generator over all times'''
@@ -367,8 +366,7 @@ class Load(OptimizationObject):
             for time in times: self.add_variable('power','Pd',time,low=0,high=self.schedule.get_energy(time))
 
     def create_objective(self,times):
-        self.objective=sum_vars([ self.cost(time) for time in times])
-        return self.objective
+        return sum_vars([ self.cost(time) for time in times])
 
     def __str__(self): return 'd{ind}'.format(ind=self.index)    
     def __int__(self): return self.index
@@ -475,10 +473,8 @@ class Bus(OptimizationObject):
         logging.debug('created bus variables ... returning {}'.format(show_clock()))
         return self.all_variables(times)
     def create_objective(self,times):
-        self.objective= \
-            sum_vars(gen.create_objective(times) for gen in self.generators) + \
+        return sum_vars(gen.create_objective(times) for gen in self.generators) + \
             sum_vars(load.create_objective(times) for load in self.loads)
-        return self.objective
     def create_constraints(self,times,Bmatrix,buses):
         for gen in self.generators: gen.create_constraints(times)
         for load in self.loads: load.create_constraints(times)
@@ -600,8 +596,7 @@ class PowerSystem(OptimizationObject):
         logging.debug('... created power system vars... returning... {}'.format(show_clock()))
         return self.all_variables(times)
     def create_objective(self,times):
-        self.objective=sum_vars(bus.create_objective(times) for bus in self.buses) + sum_vars(line.create_objective(times) for line in self.lines)
-        return self.objective
+        return sum_vars(bus.create_objective(times) for bus in self.buses) + sum_vars(line.create_objective(times) for line in self.lines)
     def create_constraints(self,times):
         for bus in self.buses: bus.create_constraints(times,self.Bmatrix,self.buses)
         for line in self.lines: line.create_constraints(times,self.buses)

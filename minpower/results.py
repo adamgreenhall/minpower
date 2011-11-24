@@ -4,9 +4,9 @@
     visualization.
 """
 
-from guppy import hpy
-import objgraph
-import meliae 
+#from guppy import hpy
+import objgraph,inspect,random,gc
+#import meliae 
 
 import logging
 from collections import OrderedDict
@@ -74,6 +74,9 @@ class Solution(object):
     def __init__(self,power_system,times,problem,datadir='.'):
         update_attributes(self,locals(),exclude=['problem'])
         self.power_system.update_variables()
+        objgraph.show_backrefs([problem.variables.values()[0]], filename='variable-backref-post-solve.png')
+        objgraph.show_chain(
+            objgraph.find_backref_chain( problem.variables.values()[0],inspect.ismodule),filename='variable-backref-post-solve-module-chain.png')
         
         if not problem.solved: 
             logging.error('Problem solve was not completed. Status {s}.'.format(s=problem.status))
@@ -81,34 +84,20 @@ class Solution(object):
         self._get_problem_info(problem)
         self._get_costs()
         self._get_prices()
-        
-        
-#        objgraph.show_refs([self], filename='memory-graph.png')
-#        objgraph.show_backrefs([self],filename='memory-backrefs.png')
-        #objgraph.show_growth(limit=5)
-        
-        #meliae.scanner.dump_all_objects('dump.memory')
-        
-        
-#        hpy().heap()
-#        hpy().iso(1,[],{})
         self.power_system.clear_constraints()
-        #objgraph.show_growth(limit=5)
-
+        gc.collect()
+        objgraph.show_backrefs([problem.constraints.values()[0]], filename='constraints-backref-post-solve.png')
+        objgraph.show_chain(objgraph.find_backref_chain(objgraph.by_type('Constraint')[0],inspect.ismodule),filename='constraint-backref-post-solve-chain.png')
+        leakers=objgraph.get_leaking_objects()
+        objgraph.show_most_common_types(objects=leakers)
+        objgraph.show_refs(leakers[:3], refcounts=True, filename='leakers.png')
     def _get_problem_info(self,problem):
-        #self.status     =problem.statusText
-#        try: 
         self.solve_time  =problem.solutionTime
         self.objective  =float(value(problem.objective))
         self.active_constraints = sum([dual(c)!=0 for c in problem.constraints.values()])
         self.total_constraints = len(problem.constraints)
-#        except AttributeError:
-#            self.solve_time=None
-#            self.objective=None
-#            self.active_constraints=None
-#            self.total_constraints=None
+
     def _get_costs(self):
-#        try: 
         generators=self.generators()
         gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t)) for t in self.times] for gen in generators]
         gen_fuel_costs_polynomial = [[gen.truecost(t) for t in self.times] for gen in generators]
@@ -116,11 +105,6 @@ class Solution(object):
         self.truecost_generation=sum( c for c in flatten(gen_fuel_costs_polynomial) )
         self.load_shed = sum( sum(load.shed(t) for load in self.loads()) for t in self.times )
         self._get_cost_error()
-#        except TypeError:
-#            self.fuelcost_generation=None
-#            self.truecost_generation=None
-#            self.load_shed=None
-#            self.costerror=None
     def _get_cost_error(self):
         try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
         except ZeroDivisionError: self.costerror=0

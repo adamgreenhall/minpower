@@ -24,7 +24,7 @@ setup(
         'scripts/remote-minpower',
         ],
     install_requires=[
-        'Coopr>=3.0.4362',
+        'Coopr>=3.1',
         'matplotlib>=1.0.1',
         'networkx>=1.5',
         'scipy>=0.9',

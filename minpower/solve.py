@@ -197,17 +197,15 @@ def solve_multistage(power_system,times,datadir,
     if not interval_hours: interval_hours=times.intervalhrs
         
     stage_times=times.subdivide(hrsperdivision=stage_hours,hrsinterval=interval_hours,overlap_hrs=overlap_hours)
-    buses=power_system.buses
     stage_solutions=[]
 
     
-    def set_initialconditions(buses,initTime):
-        for bus in buses:
-            for gen in bus.generators:
-                try: 
-                    gen.set_initial_condition(time=initTime,**gen.finalstatus)
-                    del gen.finalstatus
-                except AttributeError: pass #first stage of problem already has initial time defined
+    def set_initialconditions(power_system,initTime):
+        for gen in power_system.generators():
+            try: 
+                gen.set_initial_condition(time=initTime,**gen.finalstatus)
+                del gen.finalstatus
+            except AttributeError: pass #first stage of problem already has initial time defined
 
     def get_finalconditions(power_system,times,lastproblem):
         t_back=overlap_hours/times.intervalhrs
@@ -255,7 +253,7 @@ def solve_multistage(power_system,times,datadir,
         tracker_all.create_snapshot('{} started'.format(str(t_stage[0].Start)))
         tracker.create_snapshot(str(t_stage[0].Start))
         tracker_gens.create_snapshot(str(t_stage[0].Start))
-        set_initialconditions(buses,t_stage.initialTime)
+        set_initialconditions(power_system,t_stage.initialTime)
         
         stage_sln=solve_stage_problem(power_system,t_stage)
         stage_solutions.append(stage_sln)

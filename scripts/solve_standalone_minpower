@@ -1,0 +1,39 @@
+#!/usr/bin/python
+'''
+Standalone single-stage power systems optimization problem solver.
+Intended for use in multi-stage unit commitment problems to bypass 
+the memory leaks in Coopr3.0.
+'''
+
+import argparse
+import yaml
+from minpower.optimization import Problem,value,dual
+parser = argparse.ArgumentParser(description='Minpower standalone solver')
+parser.add_argument('--problem_file', type=str)
+parser.add_argument('--solver', type=str)
+parser.add_argument('--solution_file', type=str)
+
+args = parser.parse_args()
+
+
+#load in problem file (containing obj, var, and constraint objects in yaml)
+with open(args.problem_file,'r') as f: model=yaml.load(f)
+problem=Problem()
+for v in model['variables'].values: problem.add_variable(v)
+for c in model['constraints'].values: problem.add_constraint(c)
+problem.add_objective(model['objective'])
+
+#solve problem
+problem.solve(args.solver)
+
+#save problem results
+if problem.solved:
+    for name,var in problem.variables.items(): model['variables'][name]=value(var)
+    for name,constraint in problem.constraints.items(): model['constraints'][name]=dual(constraint)
+    model['objective']=problem.objective
+    model['solve_time']=problem.solutionTime
+    model['solved']=True
+else: 
+    model=dict(solved=False)
+    
+with open(args.solution_file,'w+') as f: yaml.dump(model,f)

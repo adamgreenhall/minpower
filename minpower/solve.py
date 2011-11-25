@@ -6,7 +6,7 @@ problems and solving them.
 """
 
 import objgraph,inspect,random
-import weakref
+#import weakref
 #import memory_size
 from pympler.asizeof import asizeof
 from pympler import summary,muppy

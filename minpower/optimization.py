@@ -42,20 +42,32 @@ class Problem(object):
         
         current_log_level = logging.getLogger().getEffectiveLevel()      
                     
-        def cooprsolve(instance,opt=None,suffixes=['dual'],keepFiles=False):
-            if not keepFiles: logging.getLogger().setLevel(logging.WARNING)
-            if opt is None: 
-                opt = cooprsolver.SolverFactory(solver)
-                print cooprsolver.SolverFactory
-                if opt is None: 
-                    msg='solver "{}" not found'.format(solver)
-                    raise OptimizationError(msg)
-            
+        def cooprsolve(instance,suffixes=['dual'],keepFiles=False):
+#            if not keepFiles: logging.getLogger().setLevel(logging.WARNING) 
+#            opt_solver = cooprsolver.SolverFactory(solver)
+#
+##            print cooprsolver.__file__
+##            from coopr.opt.base.solvers import IOptSolver
+##            print IOptSolver
+##            print IOptSolver._factory_active
+#
+#            if opt_solver is None: 
+#                msg='solver "{}" not found'.format(solver)
+#                raise OptimizationError(msg)
+#            
+##            opt_solver = cooprsolver.OptSolver(type=solver)
+#            
+#            start = time.time()
+#            results= opt_solver.solve(instance,suffixes=suffixes) #,keepFiles=keepFiles
+#            #results,opt=cooprUtil.apply_optimizer(options,instance)
+#            elapsed = (time.time() - start)
+#            logging.getLogger().setLevel(current_log_level)
+            from coopr.pyomo.scripting.util import apply_optimizer
+            from pyutilib.misc import Options
+            options=Options(solver=solver,solver_suffixes=suffixes)
             start = time.time()
-            results= opt.solve(instance,suffixes=suffixes,keepFiles=keepFiles)
-            #results,opt=cooprUtil.apply_optimizer(options,instance)
+            results,opt=apply_optimizer(options,instance)
             elapsed = (time.time() - start)
-            logging.getLogger().setLevel(current_log_level)
             return results,elapsed
         
         

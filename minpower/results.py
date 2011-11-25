@@ -85,12 +85,19 @@ class Solution(object):
         self._get_costs()
         self._get_prices()
         self.power_system.clear_constraints()
+#        problem.model.reset()
+        problem.model={}
+        problem.variables={}
+        problem.constraints={}
         gc.collect()
-        objgraph.show_backrefs([problem.constraints.values()[0]], filename='constraints-backref-post-solve.png')
-        objgraph.show_chain(objgraph.find_backref_chain(objgraph.by_type('Constraint')[0],inspect.ismodule),filename='constraint-backref-post-solve-chain.png')
-        leakers=objgraph.get_leaking_objects()
-        objgraph.show_most_common_types(objects=leakers)
-        objgraph.show_refs(leakers[:3], refcounts=True, filename='leakers.png')
+        try:
+            objgraph.show_backrefs([problem.constraints.values()[0]], filename='constraints-backref-post-solve.png')
+            objgraph.show_chain(objgraph.find_backref_chain(objgraph.by_type('Constraint')[0],inspect.ismodule),filename='constraint-backref-post-solve-chain.png')
+        except IndexError:
+            logging.info('no constraints or variables left in problem instance to trace back references for.')
+#        leakers=objgraph.get_leaking_objects()
+#        objgraph.show_most_common_types(objects=leakers)
+#        objgraph.show_refs(leakers[:3], refcounts=True, filename='leakers.png')
     def _get_problem_info(self,problem):
         self.solve_time  =problem.solutionTime
         self.objective  =float(value(problem.objective))

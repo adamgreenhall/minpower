@@ -46,7 +46,6 @@ class Problem(object):
             if not keepFiles: logging.getLogger().setLevel(logging.WARNING)
             if opt is None: 
                 opt = cooprsolver.SolverFactory(solver)
-                print cooprsolver.SolverFactory
                 if opt is None: 
                     msg='solver "{}" not found'.format(solver)
                     raise OptimizationError(msg)

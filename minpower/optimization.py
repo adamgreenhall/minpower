@@ -43,31 +43,32 @@ class Problem(object):
         current_log_level = logging.getLogger().getEffectiveLevel()      
                     
         def cooprsolve(instance,suffixes=['dual'],keepFiles=False):
-#            if not keepFiles: logging.getLogger().setLevel(logging.WARNING) 
-#            opt_solver = cooprsolver.SolverFactory(solver)
+            if not keepFiles: logging.getLogger().setLevel(logging.WARNING) 
+            opt_solver = cooprsolver.SolverFactory(solver)
 #
 ##            print cooprsolver.__file__
 ##            from coopr.opt.base.solvers import IOptSolver
 ##            print IOptSolver
 ##            print IOptSolver._factory_active
 #
-#            if opt_solver is None: 
-#                msg='solver "{}" not found'.format(solver)
-#                raise OptimizationError(msg)
+            if opt_solver is None: 
+                msg='solver "{}" not found'.format(solver)
+                raise OptimizationError(msg)
 #            
 ##            opt_solver = cooprsolver.OptSolver(type=solver)
 #            
-#            start = time.time()
-#            results= opt_solver.solve(instance,suffixes=suffixes) #,keepFiles=keepFiles
-#            #results,opt=cooprUtil.apply_optimizer(options,instance)
-#            elapsed = (time.time() - start)
-#            logging.getLogger().setLevel(current_log_level)
-            from coopr.pyomo.scripting.util import apply_optimizer
-            from pyutilib.misc import Options
-            options=Options(solver=solver,solver_suffixes=suffixes)
             start = time.time()
-            results,opt=apply_optimizer(options,instance)
+            results= opt_solver.solve(instance,suffixes=suffixes) #,keepFiles=keepFiles
+            #results,opt=cooprUtil.apply_optimizer(options,instance)
             elapsed = (time.time() - start)
+            logging.getLogger().setLevel(current_log_level)
+
+#            from coopr.pyomo.scripting.util import apply_optimizer
+#            from pyutilib.misc import Options
+#            options=Options(solver=solver,solver_suffixes=suffixes)
+#            start = time.time()
+#            results,opt=apply_optimizer(options,instance)
+#            elapsed = (time.time() - start)
             return results,elapsed
         
         
@@ -93,8 +94,8 @@ class Problem(object):
                 
         if not self.status: return
         
-        #instance.load(results)
-        instance._load_solution(results.solution(0), ignore_invalid_labels=True )
+        instance.load(results)
+#        instance._load_solution(results.solution(0), ignore_invalid_labels=True )
         logging.debug('... solution loaded ... {t}'.format(t=show_clock()))
 
         
@@ -116,8 +117,8 @@ class Problem(object):
                 logging.error('coopr raised an error in solving. keep the files for debugging.')
                 results= cooprsolve(instance, keepFiles=True)    
             
-            #instance.load(results)
-            instance._load_solution(results.solution(0), ignore_invalid_labels=True )
+            instance.load(results)
+#            instance._load_solution(results.solution(0), ignore_invalid_labels=True )
             return instance,results
 
         if get_duals: 

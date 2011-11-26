@@ -91,7 +91,7 @@ def problem(datadir='.',
         solution=create_solve_problem(power_system,times,datadir,solver,problemfile,get_duals)
         tracker_all.create_snapshot('solution returned')
     else: #split into multiple stages and solve
-        stage_solutions,stage_times=solve_multistage(power_system,times,datadir,
+        stage_solutions,stage_times=solve_multistage_standalone(power_system,times,datadir,
                                                        solver=solver,
                                                        get_duals=get_duals,
                                                        stage_hours=hours_commitment,
@@ -267,7 +267,10 @@ def create_problem_standalone(power_system,times):
         objective=power_system.create_objective(times),
         constraints=power_system.create_constraints(times)
         )
-    yaml.dump(problem,'/tmp/stage-problem.yaml')
+    with open('/tmp/stage-problem.yaml','w+') as f: yaml.dump(problem,f)
+#        for v in problem['variables'].values(): v.pprint(ostream=f)
+#        for c in problem['constraints'].values(): c.display(ostream=f)
+#        problem['objective'].display(ostream=f)
     
     
     
@@ -285,8 +288,8 @@ def solve_multistage_standalone(power_system,times,datadir,
     stage_times=times.subdivide(hrsperdivision=stage_hours,hrsinterval=interval_hours,overlap_hrs=overlap_hours)
     stage_solutions=[]
     solution_file='/tmp/uc-rolling.yaml'
-    status_file='/tmp/uc-rolling-init-status.json'
-    with open(solution_file,'w+') as f: f.write('') 
+#    status_file='/tmp/uc-rolling-init-status.json'
+    #with open(solution_file,'w+') as f: f.write('') 
     
     def set_initialconditions(power_system,initTime):
         for gen in power_system.generators():

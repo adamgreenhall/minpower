@@ -286,70 +286,29 @@ def solve_multistage_standalone(power_system,times,datadir,
     if not interval_hours: interval_hours=times.intervalhrs
         
     stage_times=times.subdivide(hrsperdivision=stage_hours,hrsinterval=interval_hours,overlap_hrs=overlap_hours)
-    stage_solutions=[]
-    solution_file='/tmp/uc-rolling.yaml'
-#    status_file='/tmp/uc-rolling-init-status.json'
+    stage_solution_files=[]
+#    stage_solution_file='/tmp/uc-rolling-stage0.yaml'
+    times_file='/tmp/uc-rolling-times.json'
+    init_file='/tmp/uc-rolling-init.json'
     #with open(solution_file,'w+') as f: f.write('') 
-    
-    def set_initialconditions(power_system,initTime):
-        for gen in power_system.generators():
-            try: 
-                gen.set_initial_condition(time=initTime,**gen.finalstatus)
-                del gen.finalstatus
-            except AttributeError: pass #first stage of problem already has initial time defined
 
-    def get_finalconditions(power_system,times):
-        t_back=overlap_hours/times.intervalhrs
-        next_stage_first_time = times[-1-int(t_back)]         
-        for gen in power_system.generators():
-            gen.finalstatus=gen.getstatus(t=next_stage_first_time,times=times)
-    def call_solve_standalone(stage_problem_file,solver,solution_file):
-        os.system('solve_standalone_minpower --problem_file {spf} --solver {solver} --solution_file {slnf}'.format(
-            spf=stage_problem_file,
+    def call_solve_standalone(stage_solution_file):
+        os.system('solve_standalone_minpower --solver {solver} --solution_file {slnf}'.format(
+            slnf=stage_solution_file,
+            times_file=times_file,
+            init_file=init_file,
             solver=solver,
-            solution_file=solution_file
+            num_breakpoints=10,
             ))
-    def solve_stage_problem(power_system,t_stage):
-        stage_problem_file=create_problem_standalone(power_system,t_stage)
-        call_solve_standalone(stage_problem_file,solver,solution_file)
-        with open(solution_file,'r') as f: stage_problem=yaml.load(f)
+    
+    with open(init_file,'w+') as f: yaml.dump([gen.getstatus(t=times.initialTime,times=times) for gen in power_system.generators()],f)
+    for n,t_stage in enumerate(stage_times):
+        #write stage times
+        with open(times_file,'w+') as f: yaml.dump(t_stage,f)
+        #solve the problem
+        call_solve_standalone(stage_solution_file='/tmp/uc-rolling-stage{n}.yaml'.format(n=n))
         
-        if not stage_problem['solved']: 
-            #re-do stage, with load shedding allowed
-            logging.critical('Stage infeasible, re-running with load shedding.')
-            power_system.set_load_shedding(True)
-            stage_problem_file=create_problem_standalone(power_system,t_stage)
-            call_solve_standalone(stage_problem_file,solver,solution_file)
-            power_system.set_load_shedding(False)
-            
-        if stage_problem['solved']:
-            logging.debug('solved... get results... {}'.format(show_clock(showclock)))
-            #stage_sln=results.get_stage_solution(stage_problem,power_system,t_stage,overlap_hours)
-            stage_sln=results.make_solution(power_system,t_stage.non_overlap_times,problem=stage_problem)
-            get_finalconditions(power_system,t_stage)
-            return stage_sln
-        else: 
-            #print stage_problem.status,stage_problem.statusText()
-#            stage_problem.write('infeasible-problem.lp')
-            try: stage_sln.saveCSV('last-stage-solved.csv')
-            except: logging.critical('could not write last stage solution to spreadsheet')
-            msg='Infeasible problem - writing to .lp file for examination.'
-            raise optimization.OptimizationError(msg)
-
-
-    tracker.track_object(power_system)
-    tracker_gens.track_class(powersystems.Generator)
-
-
-    for t_stage in stage_times:
-        logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
-        tracker_all.create_snapshot('{} started'.format(str(t_stage[0].Start)))
-        tracker.create_snapshot(str(t_stage[0].Start))
-        tracker_gens.create_snapshot(str(t_stage[0].Start))
-        stage_sln=solve_stage_problem(power_system,t_stage)
-        stage_solutions.append(stage_sln)
-        tracker_all.create_snapshot('{} solution made'.format(str(t_stage[0].Start)))
-    return stage_solutions,stage_times
+    return stage_solution_files,stage_times
 
 def _setup_logging(level,filename=False):
     ''' set up the logging to report on the status'''

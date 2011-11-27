@@ -147,8 +147,8 @@ class Problem(object):
                 
         if not self.status: return
         
-        #instance.load(results)
-        instance._load_solution(results.solution(0), ignore_invalid_labels=True )
+        instance.load(results)
+#        instance._load_solution(results.solution(0), ignore_invalid_labels=True )
         logging.debug('... solution loaded ... {t}'.format(t=show_clock()))
 
         
@@ -170,6 +170,7 @@ class Problem(object):
                 logging.error('coopr raised an error in solving. keep the files for debugging.')
                 results= cooprsolve(instance, keepFiles=True)    
             
+<<<<<<< HEAD
 <<<<<<< HEAD
             instance.load(results)
 <<<<<<< HEAD
@@ -319,6 +320,10 @@ class Problem(object):
 >>>>>>> rough optimization object model for generator. unit and integration tested.
             
 =======
+=======
+            instance.load(results)
+#            instance._load_solution(results.solution(0), ignore_invalid_labels=True )
+>>>>>>> instance.load(results) update for coopr 3.1
             return instance,results
 >>>>>>> dropped pulp from optimization module. clean up docstrings.
 

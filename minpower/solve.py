@@ -202,7 +202,7 @@ def solve_multistage_standalone(power_system,times,datadir,
     
     with open(init_file,'w+') as f: yaml.dump(init_statuses,f)
     for n,t_stage in enumerate(stage_times):    
-        logging.info('stage {} started ... finished at {}'.format(t_stage[0].Start,show_clock()))
+        logging.info('stage {} started ... at {}'.format(t_stage[0].Start,show_clock()))
         #write stage times
         with open(times_file,'w+') as f: yaml.dump(t_stage,f)
         #solve the problem

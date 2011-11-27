@@ -12,12 +12,13 @@ from minpower.commonscripts import joindir
 from minpower.optimization import Problem,value,dual
 from minpower.solve import create_solve_problem
 parser = argparse.ArgumentParser(description='Minpower standalone solver')
+parser.add_argument('--power_system_file', type=str)
 parser.add_argument('--times_file', type=str)
 parser.add_argument('--init_file', type=str)
 parser.add_argument('--solution_file', type=str)
 parser.add_argument('--solver', type=str)
 parser.add_argument('--data_dir', type=str)
-parser.add_argument('--num_breakpoints', type=int)
+#parser.add_argument('--num_breakpoints', type=int)
 args = parser.parse_args()
 
 datadir=args.data_dir
@@ -27,11 +28,17 @@ solver=args.solver
 with open(args.times_file,'r') as f: times=yaml.load(f)
 with open(args.init_file,'r') as f: initial_conditions=yaml.load(f)
 
-#load in the power system from the data directory
-[file_gens,file_loads]=[joindir(datadir,filename) for filename in ('generators.csv','loads.csv')]
-loads=get_data.build_class_list(file_loads,model=powersystems.makeLoad,field_attr_map=get_data.fields_loads,times=times)
-generators=get_data.build_class_list(file_gens,model=powersystems.makeGenerator,field_attr_map=get_data.fields_gens,times=times)
-power_system=powersystems.PowerSystem(generators,loads,lines=[],num_breakpoints=args.num_breakpoints,load_shedding_allowed=False)
+##load in the power system from the data directory
+#[file_gens,file_loads]=[joindir(datadir,filename) for filename in ('generators.csv','loads.csv')]
+#loads=get_data.build_class_list(file_loads,model=powersystems.makeLoad,field_attr_map=get_data.fields_loads,times=times)
+#generators=get_data.build_class_list(file_gens,model=powersystems.makeGenerator,field_attr_map=get_data.fields_gens,times=times)
+#power_system=powersystems.PowerSystem(generators,loads,lines=[],num_breakpoints=args.num_breakpoints,load_shedding_allowed=False)
+with open(args.power_system_file,'r') as f: power_system=yaml.load(f)
+
+#add cost models
+for gen in power_system.generators(): 
+    gen.build_cost_model()
+    gen.cost_model.do_segmentation()
 
 #add initial conditions
 for g,gen in enumerate(power_system.generators()):
@@ -54,4 +61,4 @@ def get_finalconditions(power_system,times):
         gen.finalstatus=gen.getstatus(t=next_stage_first_time,times=times)
 
 get_finalconditions(power_system,times)
-with open(args.init_file,'w') as f: yaml.dump([g.finalstatus for g in generators],f)
+with open(args.init_file,'w') as f: yaml.dump([g.finalstatus for g in power_system.generators()],f)

@@ -1,13 +1,7 @@
 """
-An optimization command library.
-Currently uses pulp but is transitioning to using coopr.
+An optimization command library for Minpower.
 """
-from pympler import refbrowser
-
-
 import coopr.pyomo as pyomo
-#from pyutilib.misc import Options as cooprOptions
-#import coopr.pyomo.scripting.util as cooprUtil
 from coopr.opt.base import solvers as cooprsolver
 
 variable_kinds = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyomo.Boolean)

@@ -333,7 +333,7 @@ class Solution_UC(Solution):
         times=self.times
         fields,data=[],[]
         fields.append('times');  data.append([t.Start for t in times])
-        try: fields.append('prices'); data.append([self.lmps[t][0] for t in times])
+        try: data.append([self.lmps[t][0] for t in times]); fields.append('prices') 
         except KeyError: pass
 #        lmps=[]
 #        for t in times:

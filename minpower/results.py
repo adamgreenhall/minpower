@@ -327,11 +327,10 @@ class Solution_UC(Solution):
         
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))
     
-    def visualization(self,filename='commitment.png',withPrices=True,withInitial=False):
+    def visualization(self,filename='commitment.png',withPrices=True,withInitial=False,seperate_legend=False):
         '''generator output visualization for unit commitment'''
         prices=[self.lmps[t][0] for t in self.times]
-        stack_plot_UC(self.generators(),self.times,prices,withPrices=withPrices,withInitial=withInitial)
-
+        stack_plot_UC(self.generators(),self.times,prices,self.datadir,withInitial,withPrices,seperate_legend)
         self.savevisualization(filename)
 
 class Solution_SCUC(Solution_UC):
@@ -380,7 +379,7 @@ def _colormap(numcolors,colormapName='gist_rainbow',mincolor=1):
     cm = matplotlib.cm.get_cmap(colormapName)
     return [cm(1.*i/numcolors) for i in range(mincolor,numcolors+mincolor)]      
 
-def stack_plot_UC(generators,times,prices,withInitial=False,withPrices=True):
+def stack_plot_UC(generators,times,prices,datadir,withInitial=False,withPrices=True,seperate_legend=False):
     withPrices=withPrices and any(prices)
     bigFont={'fontsize':15}
     figWidth=.85; figLeft=(1-figWidth)/2
@@ -502,9 +501,15 @@ def stack_plot_UC(generators,times,prices,withInitial=False,withPrices=True):
 #    if withPrices: shrink_axis(axesPrice,0.30)
     legend_font=FontProperties()
     legend_font.set_size('small')
-    ax.legend(plottedL, yLabels[::-1],prop=legend_font)#,loc='center left', bbox_to_anchor=(1, 0.5))
     
-
+    if seperate_legend:
+        figlegend = plot.figure()
+        figlegend.legend(plottedL, yLabels[::-1],prop=legend_font,loc='center')
+        figlegend.savefig(joindir(datadir,'commitment-legend.png'))
+        plot.close(figlegend)
+    else:
+        ax.legend(plottedL, yLabels[::-1],prop=legend_font)#,loc='center left', bbox_to_anchor=(1, 0.5))
+    
 def shrink_axis(ax,percent_horizontal=0.20,percent_vertical=0):
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width * (1-percent_horizontal), box.height*(1-percent_vertical)])

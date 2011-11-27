@@ -5,7 +5,7 @@ Intended for use in multi-stage unit commitment problems to bypass
 the memory leaks in Coopr3.0.
 '''
 
-import argparse
+import argparse,logging
 import yaml
 from minpower import get_data,powersystems
 from minpower.commonscripts import joindir
@@ -13,6 +13,8 @@ from minpower.optimization import Problem,value,dual
 from minpower.solve import create_solve_problem
 parser = argparse.ArgumentParser(description='Minpower standalone solver')
 parser.add_argument('--times_file', type=str)
+parser.add_argument('--init_file', type=str)
+parser.add_argument('--solution_file', type=str)
 parser.add_argument('--solver', type=str)
 parser.add_argument('--data_dir', type=str)
 parser.add_argument('--num_breakpoints', type=int)
@@ -26,20 +28,24 @@ with open(args.times_file,'r') as f: times=yaml.load(f)
 with open(args.init_file,'r') as f: initial_conditions=yaml.load(f)
 
 #load in the power system from the data directory
-[file_gens,file_loads,file_lines]=[joindir(datadir,filename) for filename in ('generators.csv','loads.csv')]
+[file_gens,file_loads]=[joindir(datadir,filename) for filename in ('generators.csv','loads.csv')]
 loads=get_data.build_class_list(file_loads,model=powersystems.makeLoad,field_attr_map=get_data.fields_loads,times=times)
 generators=get_data.build_class_list(file_gens,model=powersystems.makeGenerator,field_attr_map=get_data.fields_gens,times=times)
 power_system=powersystems.PowerSystem(generators,loads,lines=[],num_breakpoints=args.num_breakpoints,load_shedding_allowed=False)
 
 #add initial conditions
 for g,gen in enumerate(power_system.generators()):
-    gen.set_initial_condition(**initial_conditions[g])
+    gen.set_initial_condition(time=times.initialTime,**initial_conditions[g])
 
 #solve problem
 solution=create_solve_problem(power_system,times,datadir,solver,problemfile=False,get_duals=True)
-
+solution.generators_status=dict(zip(times.non_overlap_times,[solution.get_values('generators','status',t) for t in times.non_overlap_times]))
+solution.generators_power=dict(zip(times.non_overlap_times,[solution.get_values('generators','power',t) for t in times.non_overlap_times]))
+del solution.power_system
 #save solution
+
 with open(args.solution_file,'w+') as f: yaml.dump(solution,f)
+print 'stage solution written to: '+args.solution_file
 
 #update the initial conditions file with the final conditions
 def get_finalconditions(power_system,times):

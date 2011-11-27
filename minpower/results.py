@@ -6,6 +6,7 @@
 
 #from guppy import hpy
 import objgraph,inspect,random,gc
+import yaml
 #import meliae 
 
 import logging
@@ -65,6 +66,24 @@ def make_multistage_solution(power_system,*args,**kwargs):
     if power_system.lines: logging.warning('no visualization for multistage SCUC yet')
     return Solution_UC_multistage(power_system,*args,**kwargs)
 
+def make_multistage_solution_standalone(power_system,stage_times,datadir,stage_solution_files):
+    print 'stage files are:',stage_solution_files
+    stage_solutions=[]
+    generators=power_system.generators()
+    for filename in stage_solution_files:
+        with open(filename,'r') as f: stage_solutions.append(yaml.load(f))
+    for sln in stage_solutions:
+        for time in sln.times.non_overlap_times:
+            for g,status in enumerate(sln.generators_status[time]):
+                generators[g].add_variable('status', 'u', time,fixed_value=status)
+            for g,power in enumerate(sln.generators_power[time]):
+                generators[g].add_variable('power', 'P', time,fixed_value=power)
+#        lmp_times=sorted(sln.lmps.keys())
+#        for t,time in enumerate(sln.times):
+#            sln.lmps[time]=sln.lmps[lmp_times[t]]
+    return Solution_UC_multistage(power_system,stage_times,datadir,stage_solutions)
+
+
 class Solution(object):
     '''
     Solution information template for a power system over times.
@@ -74,9 +93,9 @@ class Solution(object):
     def __init__(self,power_system,times,problem,datadir='.'):
         update_attributes(self,locals(),exclude=['problem'])
         self.power_system.update_variables()
-        objgraph.show_backrefs([problem.variables.values()[0]], filename='variable-backref-post-solve.png')
-        objgraph.show_chain(
-            objgraph.find_backref_chain( problem.variables.values()[0],inspect.ismodule),filename='variable-backref-post-solve-module-chain.png')
+        #objgraph.show_backrefs([problem.variables.values()[0]], filename='variable-backref-post-solve.png')
+        #objgraph.show_chain(
+        #    objgraph.find_backref_chain( problem.variables.values()[0],inspect.ismodule),filename='variable-backref-post-solve-module-chain.png')
         
         if not problem.solved: 
             logging.error('Problem solve was not completed. Status {s}.'.format(s=problem.status))
@@ -85,12 +104,12 @@ class Solution(object):
         self._get_costs()
         self._get_prices()
         self.power_system.clear_constraints()
-        gc.collect()
-        objgraph.show_backrefs([problem.constraints.values()[0]], filename='constraints-backref-post-solve.png')
-        objgraph.show_chain(objgraph.find_backref_chain(objgraph.by_type('Constraint')[0],inspect.ismodule),filename='constraint-backref-post-solve-chain.png')
-        leakers=objgraph.get_leaking_objects()
-        objgraph.show_most_common_types(objects=leakers)
-        objgraph.show_refs(leakers[:3], refcounts=True, filename='leakers.png')
+        #gc.collect()
+        #objgraph.show_backrefs([problem.constraints.values()[0]], filename='constraints-backref-post-solve.png')
+        #objgraph.show_chain(objgraph.find_backref_chain(objgraph.by_type('Constraint')[0],inspect.ismodule),filename='constraint-backref-post-solve-chain.png')
+        #leakers=objgraph.get_leaking_objects()
+        #objgraph.show_most_common_types(objects=leakers)
+        #objgraph.show_refs(leakers[:3], refcounts=True, filename='leakers.png')
     def _get_problem_info(self,problem):
         self.solve_time  =problem.solutionTime
         self.objective  =float(value(problem.objective))
@@ -101,8 +120,8 @@ class Solution(object):
         generators=self.generators()
         gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t)) for t in self.times] for gen in generators]
         gen_fuel_costs_polynomial = [[gen.truecost(t) for t in self.times] for gen in generators]
-        self.fuelcost_generation=sum( c for c in flatten(gen_fuel_costs_pwlmodel) )
-        self.truecost_generation=sum( c for c in flatten(gen_fuel_costs_polynomial) )
+        self.fuelcost_generation=float(sum( c for c in flatten(gen_fuel_costs_pwlmodel) ))
+        self.truecost_generation=float(sum( c for c in flatten(gen_fuel_costs_polynomial) ))
         self.load_shed = sum( sum(load.shed(t) for load in self.loads()) for t in self.times )
         self._get_cost_error()
     def _get_cost_error(self):
@@ -117,7 +136,7 @@ class Solution(object):
         
     def buses(self): return self.power_system.buses
     def lines(self): return self.power_system.lines
-    def generators(self): return flatten( [[gen for gen in bus.generators] for bus in self.buses()] )
+    def generators(self): return self.power_system.generators()
     def loads(self): return flatten( [[ld for ld in bus.loads] for bus in self.buses()] )
     def get_values(self,kind='generators',attrib='power',time=None):
         '''Get the attributes of all objects of a certain kind at a given time.'''
@@ -314,7 +333,23 @@ class Solution_UC(Solution):
         times=self.times
         fields,data=[],[]
         fields.append('times');  data.append([t.Start for t in times])
-        fields.append('prices'); data.append([self.lmps[t][0] for t in times])
+        try: fields.append('prices'); data.append([self.lmps[t][0] for t in times])
+        except KeyError: pass
+#        lmps=[]
+#        for t in times:
+#            try: lmps.append(self.lmps[t][0])
+#            except KeyError:
+#                print t
+#                print str(t)
+#                print type(t)
+#                print repr(t)
+#                sl=sorted(self.lmps.keys())
+#                print sl
+#                print t==sl[1]
+#                print len(self.lmps), len(self.times)
+#                raise 
+#        data.append(lmps)
+
         for gen in self.generators(): 
             if gen.is_controllable:
                 fields.append('status: '+str(gen.name))
@@ -329,7 +364,10 @@ class Solution_UC(Solution):
     
     def visualization(self,filename='commitment.png',withPrices=True,withInitial=False):
         '''generator output visualization for unit commitment'''
-        prices=[self.lmps[t][0] for t in self.times]
+        try: prices=[self.lmps[t][0] for t in self.times]
+        except KeyError: 
+            withPrices=False
+            prices={}
         stack_plot_UC(self.generators(),self.times,prices,withPrices=withPrices,withInitial=withInitial)
 
         self.savevisualization(filename)

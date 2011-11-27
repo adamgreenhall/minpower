@@ -319,7 +319,11 @@ def filter_optimization_objects(objects,times):
     times_str=[str(t).lstrip('t') for t in times]
     times_str.append(str(times.initialTime).lstrip('t'))
     def valid(name,val):
-        in_time_period=name.rsplit('t',1)[1] in times_str
+        try: in_time_period=name.rsplit('t',1)[1] in times_str
+        except IndexError:
+            print name
+            print times_str
+            raise
         is_variable_not_fixed = getattr(val,'value',0)==None
         return in_time_period and is_variable_not_fixed
     return dict(filter(lambda (name,val): valid(name,val) ,objects.items()))

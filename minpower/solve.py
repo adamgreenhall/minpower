@@ -19,7 +19,7 @@ import bidding,schedule
 
 import yaml
 
-import logging,os
+import logging,subprocess
 
 import optimization
 import get_data
@@ -91,13 +91,13 @@ def problem(datadir='.',
         solution=create_solve_problem(power_system,times,datadir,solver,problemfile,get_duals)
         tracker_all.create_snapshot('solution returned')
     else: #split into multiple stages and solve
-        stage_solutions,stage_times=solve_multistage_standalone(power_system,times,datadir,
+        stage_solution_files,stage_times=solve_multistage_standalone(power_system,times,datadir,
                                                        solver=solver,
                                                        get_duals=get_duals,
                                                        stage_hours=hours_commitment,
                                                        overlap_hours=hours_commitment_overlap,
                                                        )
-        solution=results.make_multistage_solution(power_system,stage_times,datadir,stage_solutions)
+        solution=results.make_multistage_solution_standalone(power_system,stage_times,datadir,stage_solution_files)
 #        tracker.create_snapshot('solution created')
         logging.info('problem solved in {} ... finished at {}'.format(solution.solve_time,show_clock()))
         tracker_all.create_snapshot('all times solution created')
@@ -163,7 +163,7 @@ def create_problem(power_system,times):
     
 #    print 'variable type is', type(v)
 #    print 'objective type is', type(objective)
-    objgraph.show_backrefs([v], filename='variable-backref-pre-solve.png')
+    #objgraph.show_backrefs([v], filename='variable-backref-pre-solve.png')
     tracker_all.create_snapshot('Problem created')
     return prob
 
@@ -261,16 +261,16 @@ def solve_multistage(power_system,times,datadir,
         tracker_all.create_snapshot('{} solution made'.format(str(t_stage[0].Start)))
     return stage_solutions,stage_times
 
-def create_problem_standalone(power_system,times):
-    problem=dict(
-        variables =power_system.create_variables(times),
-        objective=power_system.create_objective(times),
-        constraints=power_system.create_constraints(times)
-        )
-    with open('/tmp/stage-problem.yaml','w+') as f: yaml.dump(problem,f)
-#        for v in problem['variables'].values(): v.pprint(ostream=f)
-#        for c in problem['constraints'].values(): c.display(ostream=f)
-#        problem['objective'].display(ostream=f)
+#def create_problem_standalone(power_system,times):
+#    problem=dict(
+#        variables =power_system.create_variables(times),
+#        objective=power_system.create_objective(times),
+#        constraints=power_system.create_constraints(times)
+#        )
+#    with open('/tmp/stage-problem.yaml','w+') as f: yaml.dump(problem,f)
+##        for v in problem['variables'].values(): v.pprint(ostream=f)
+##        for c in problem['constraints'].values(): c.display(ostream=f)
+##        problem['objective'].display(ostream=f)
     
     
     
@@ -287,26 +287,35 @@ def solve_multistage_standalone(power_system,times,datadir,
         
     stage_times=times.subdivide(hrsperdivision=stage_hours,hrsinterval=interval_hours,overlap_hrs=overlap_hours)
     stage_solution_files=[]
-#    stage_solution_file='/tmp/uc-rolling-stage0.yaml'
-    times_file='/tmp/uc-rolling-times.json'
-    init_file='/tmp/uc-rolling-init.json'
-    #with open(solution_file,'w+') as f: f.write('') 
+    times_file='/tmp/uc-rolling-times.yaml'
+    init_file='/tmp/uc-rolling-init.yaml' 
 
+#    for gen in power_system.generators():
+#        gen.
+#    with open('/tmp/uc-rolling-power-system.yaml','w+') as f: yaml.dump(power_system,f)
     def call_solve_standalone(stage_solution_file):
-        os.system('solve_standalone_minpower --solver {solver} --solution_file {slnf}'.format(
-            slnf=stage_solution_file,
+        inputs=dict(
+            solution_file=stage_solution_file,
             times_file=times_file,
             init_file=init_file,
+            data_dir=datadir,
             solver=solver,
             num_breakpoints=10,
-            ))
+            )
+        input_args=''.join(['--{k} {v} '.format(k=k,v=v) for k,v in inputs.items()])
+        subprocess.check_call('solve_standalone_minpower '+input_args,shell=True)
     
-    with open(init_file,'w+') as f: yaml.dump([gen.getstatus(t=times.initialTime,times=times) for gen in power_system.generators()],f)
-    for n,t_stage in enumerate(stage_times):
+    ti=times.initialTime
+    init_statuses=[dict(P=gen.power(ti),u=gen.status(ti),hoursinstatus=getattr(gen,'initialStatusHours',0)) for gen in power_system.generators()]
+    
+    with open(init_file,'w+') as f: yaml.dump(init_statuses,f)
+    for n,t_stage in enumerate(stage_times):            
         #write stage times
         with open(times_file,'w+') as f: yaml.dump(t_stage,f)
         #solve the problem
-        call_solve_standalone(stage_solution_file='/tmp/uc-rolling-stage{n}.yaml'.format(n=n))
+        stage_solution_file='/tmp/uc-rolling-stage{n}.yaml'.format(n=n)
+        call_solve_standalone(stage_solution_file)
+        stage_solution_files.append(stage_solution_file)
         
     return stage_solution_files,stage_times
 

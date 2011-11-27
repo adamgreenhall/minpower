@@ -368,7 +368,7 @@ class Solution_UC(Solution):
         except KeyError: 
             withPrices=False
             prices={}
-        stack_plot_UC(self.generators(),self.times,prices,withPrices=withPrices,withInitial=withInitial)
+        stack_plot_UC(self.generators(),self.times,self.datadir,prices,withPrices=withPrices,withInitial=withInitial)
 
         self.savevisualization(filename)
 
@@ -418,7 +418,7 @@ def _colormap(numcolors,colormapName='gist_rainbow',mincolor=1):
     cm = matplotlib.cm.get_cmap(colormapName)
     return [cm(1.*i/numcolors) for i in range(mincolor,numcolors+mincolor)]      
 
-def stack_plot_UC(generators,times,prices,withInitial=False,withPrices=True):
+def stack_plot_UC(generators,times,prices,datadir,withInitial=False,withPrices=True,seperate_legend=True):
     withPrices=withPrices and any(prices)
     bigFont={'fontsize':15}
     figWidth=.85; figLeft=(1-figWidth)/2
@@ -483,18 +483,6 @@ def stack_plot_UC(generators,times,prices,withInitial=False,withPrices=True):
     
     convert_to_GW=True if max(stackBottom)>20000 else False
     
-#    for load in loads:
-#        color='.8' #gray
-#        if load.kind in ['shifting','bidding']:
-#            Pd=[value(load.power(t)) for t in times]
-#            stackBottom=elementwiseAdd([-1*P for P in Pd],stackBottom)
-#            plt=ax.bar(T[1:],Pd,bottom=stackBottom,alpha=.5,color=color,edgecolor=color,width=barWidth,hatch="/")
-#            loadsPlotted.append(plt[0])
-#            yLabels.append(load.name)
-#            if fewunits: colors.append(color)
-#            else: colors[load.kind] = color
-#        else: pass
-    
     #show prices
     if withPrices:
         prices=replace_all(prices, config.cost_load_shedding, None)
@@ -540,8 +528,14 @@ def stack_plot_UC(generators,times,prices,withInitial=False,withPrices=True):
 #    if withPrices: shrink_axis(axesPrice,0.30)
     legend_font=FontProperties()
     legend_font.set_size('small')
-    ax.legend(plottedL, yLabels[::-1],prop=legend_font)#,loc='center left', bbox_to_anchor=(1, 0.5))
     
+    if seperate_legend:
+        figlegend = plot.figure()
+        figlegend.legend(plottedL, yLabels[::-1],prop=legend_font,loc='center')
+        figlegend.savefig(joindir(datadir,'commitment-legend.png'))
+        plot.close(figlegend)
+    else:
+        ax.legend(plottedL, yLabels[::-1],prop=legend_font)#,loc='center left', bbox_to_anchor=(1, 0.5))
 
 def shrink_axis(ax,percent_horizontal=0.20,percent_vertical=0):
     box = ax.get_position()

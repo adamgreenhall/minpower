@@ -18,6 +18,7 @@ parser.add_argument('--init_file', type=str)
 parser.add_argument('--solution_file', type=str)
 parser.add_argument('--solver', type=str)
 parser.add_argument('--data_dir', type=str)
+parser.add_argument('--shedding_allowed',type=bool)
 #parser.add_argument('--num_breakpoints', type=int)
 args = parser.parse_args()
 
@@ -44,6 +45,8 @@ for gen in power_system.generators():
 for g,gen in enumerate(power_system.generators()):
     gen.set_initial_condition(time=times.initialTime,**initial_conditions[g])
 
+if args.shedding_allowed: power_system.set_load_shedding(True)
+ 
 #solve problem
 solution=create_solve_problem(power_system,times,datadir,solver,problemfile=False,get_duals=True)
 solution.generators_status=dict(zip(times.non_overlap_times,[solution.get_values('generators','status',t) for t in times.non_overlap_times]))

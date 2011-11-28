@@ -19,7 +19,7 @@ problems and solving them.
 
 import yaml
 
-import logging,subprocess
+import logging,subprocess,sys
 
 import optimization
 import get_data
@@ -184,7 +184,7 @@ def solve_multistage_standalone(power_system,times,datadir,
     power_system_file='/tmp/uc-rolling-power-system.yaml'
     for gen in power_system.generators(): gen.cost_model=None
     with open(power_system_file,'w+') as f: yaml.dump(power_system,f)
-    def call_solve_standalone(stage_solution_file):
+    def call_solve_standalone(stage_solution_file,shedding_allowed=False):
         inputs=dict(
             solution_file=stage_solution_file,
             power_system_file=power_system_file,
@@ -192,24 +192,29 @@ def solve_multistage_standalone(power_system,times,datadir,
             init_file=init_file,
             solver=solver,
             data_dir=datadir,
+            shedding_allowed=shedding_allowed,
 #            num_breakpoints=10,
             )
         input_args=''.join(['--{k} {v} '.format(k=k,v=v) for k,v in inputs.items()])
-        subprocess.check_call('solve_standalone_minpower '+input_args,shell=True)
+        subprocess.check_call('solve_standalone_minpower '+input_args,shell=True,stdout=sys.stdout)
     
     ti=times.initialTime
     init_statuses=[dict(P=gen.power(ti),u=gen.status(ti),hoursinstatus=getattr(gen,'initialStatusHours',0)) for gen in power_system.generators()]
     
     with open(init_file,'w+') as f: yaml.dump(init_statuses,f)
-    for n,t_stage in enumerate(stage_times):    
+    for n,t_stage in enumerate(stage_times): #[84:]    
         logging.info('stage {} started ... at {}'.format(t_stage[0].Start,show_clock()))
         #write stage times
         with open(times_file,'w+') as f: yaml.dump(t_stage,f)
         #solve the problem
         stage_solution_file='/tmp/uc-rolling-stage{n}.yaml'.format(n=n)
-        call_solve_standalone(stage_solution_file)
+#        call_solve_standalone(stage_solution_file)
+        try: call_solve_standalone(stage_solution_file)
+        except subprocess.CalledProcessError:
+            logging.info('infeasible problem, retry with load shedding')
+            call_solve_standalone(stage_solution_file,shedding_allowed=True)
         stage_solution_files.append(stage_solution_file)
-        logging.info('stage {} solved ... finished at {}'.format(t_stage[0].Start,show_clock()))
+#        logging.info('stage {} solved ... finished at {}'.format(t_stage[0].Start,show_clock()))
         
     return stage_solution_files,stage_times
 

@@ -131,8 +131,8 @@ class Solution(object):
         self.lmps={}
         self.line_prices={}
         for t in self.times: 
-            self.lmps[t]=self.get_values('buses','price',t)
-            self.line_prices[t]=self.get_values('lines','price',t)
+            self.lmps[str(t)]=self.get_values('buses','price',t)
+            self.line_prices[str(t)]=self.get_values('lines','price',t)
         
     def buses(self): return self.power_system.buses
     def lines(self): return self.power_system.lines
@@ -164,7 +164,7 @@ class Solution(object):
             out.extend(self.info_cost())
             print '\n'.join(out)
     def info_status(self): return ['solved in {time:0.4f} sec'.format(time=self.solve_time)]
-    def info_price(self,t): return ['price={}'.format(self.lmps[t])]    
+    def info_price(self,t): return ['price={}'.format(self.lmps[str(t)])]    
     def info_generators(self,t):
         out=['generator info:']
         if len(self.buses())>1: out.append('bus={}'.format(self.get_values('generators','bus')))
@@ -184,7 +184,7 @@ class Solution(object):
              'name={}'.format(getattrL(buses,'name')),
              'Pinj={}'.format([ bus.Pgen(t) - bus.Pload(t) for bus in buses]),
              'angle={}'.format(self.get_values('buses','angle',t)),
-             'LMP={}'.format(self.lmps[t])]    
+             'LMP={}'.format(self.lmps[str(t)])]    
         return out    
     def info_lines(self,t):
         lines=self.lines()
@@ -206,7 +206,7 @@ class Solution_ED(Solution):
     def visualization(self,show_cost_also=False):
         ''' economic dispatch visualization of linearized incremental cost'''
         t=self.times[0]
-        price=self.lmps[t][0]
+        price=self.lmps[str(t)][0]
         generators,loads=self.generators(),self.loads()
         
         gensPlotted,genNames,loadsPlotted,loadNames=[],[],[],[]
@@ -333,8 +333,10 @@ class Solution_UC(Solution):
         times=self.times
         fields,data=[],[]
         fields.append('times');  data.append([t.Start for t in times])
-        try: data.append([self.lmps[t][0] for t in times]); fields.append('prices') 
-        except KeyError: pass
+        fields.append('prices'); data.append([self.lmps[str(t)][0] for t in times]) 
+#        try: data.append([self.lmps[t][0] for t in times]); fields.append('prices') 
+#        except KeyError: pass
+
 #        lmps=[]
 #        for t in times:
 #            try: lmps.append(self.lmps[t][0])
@@ -364,11 +366,11 @@ class Solution_UC(Solution):
     
     def visualization(self,filename='commitment.png',withPrices=True,withInitial=False):
         '''generator output visualization for unit commitment'''
-        try: prices=[self.lmps[t][0] for t in self.times]
+        try: prices=[self.lmps[str(t)][0] for t in self.times]
         except KeyError: 
             withPrices=False
             prices={}
-        stack_plot_UC(self.generators(),self.times,self.datadir,prices,withPrices=withPrices,withInitial=withInitial)
+        stack_plot_UC(self.generators(),self.times,prices,self.datadir,withPrices=withPrices,withInitial=withInitial)
 
         self.savevisualization(filename)
 

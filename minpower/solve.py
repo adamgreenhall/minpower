@@ -5,17 +5,17 @@ module contains the top-level commands for creating
 problems and solving them.
 """
 
-import objgraph,inspect,random
-#import weakref
-#import memory_size
-from pympler.asizeof import asizeof
-from pympler import summary,muppy
-from pympler.classtracker import ClassTracker
-from pympler.classtracker_stats import HtmlStats
-from pympler.refgraph import ReferenceGraph
-from pympler import refbrowser
-import coopr.pyomo as pyomo
-import bidding,schedule
+#import objgraph,inspect,random
+##import weakref
+##import memory_size
+#from pympler.asizeof import asizeof
+#from pympler import summary,muppy
+#from pympler.classtracker import ClassTracker
+#from pympler.classtracker_stats import HtmlStats
+#from pympler.refgraph import ReferenceGraph
+#from pympler import refbrowser
+#import coopr.pyomo as pyomo
+#import bidding,schedule
 
 import yaml
 
@@ -28,9 +28,9 @@ import results
 import config
 from commonscripts import joindir,show_clock
 
-tracker = ClassTracker()
-tracker_all=ClassTracker()
-tracker_gens = ClassTracker()
+#tracker = ClassTracker()
+#tracker_all=ClassTracker()
+#tracker_gens = ClassTracker()
 
 
 def problem(datadir='.',
@@ -66,30 +66,30 @@ def problem(datadir='.',
     :returns: :class:`~results.Solution` object
     """
     
-    for cls in [powersystems.PowerSystem,powersystems.Generator,
-                pyomo.ConcreteModel,pyomo.Var,pyomo.base.var._VarElement,
-                pyomo.Constraint,
-                bidding.Bid,results.Solution,results.Solution_UC_multistage,
-                optimization.Problem,schedule.Timelist
-                ]:
-        tracker_all.track_class(cls)
+#    for cls in [powersystems.PowerSystem,powersystems.Generator,
+#                pyomo.ConcreteModel,pyomo.Var,pyomo.base.var._VarElement,
+#                pyomo.Constraint,
+#                bidding.Bid,results.Solution,results.Solution_UC_multistage,
+#                optimization.Problem,schedule.Timelist
+#                ]:
+#        tracker_all.track_class(cls)
     
     _setup_logging(logging_level,logging_file)
     logging.debug('Minpower reading {} {}'.format(datadir, show_clock()))
     generators,loads,lines,times=get_data.parsedir(datadir)
-    tracker_all.create_snapshot('data read')
+#    tracker_all.create_snapshot('data read')
     logging.debug('data read {}'.format(show_clock()))
     power_system=powersystems.PowerSystem(generators,loads,lines,                 
                 num_breakpoints=num_breakpoints,
                 load_shedding_allowed=False,
                 #spinning_reserve_requirement=0,
                 dispatch_decommit_allowed=dispatch_decommit_allowed,)
-    tracker_all.create_snapshot('power system created')
+#    tracker_all.create_snapshot('power system created')
     logging.debug('power system set up {}'.format(show_clock()))
     
     if times.spanhrs<=hours_commitment:
         solution=create_solve_problem(power_system,times,datadir,solver,problemfile,get_duals)
-        tracker_all.create_snapshot('solution returned')
+#        tracker_all.create_snapshot('solution returned')
     else: #split into multiple stages and solve
         stage_solution_files,stage_times=solve_multistage_standalone(power_system,times,datadir,
                                                        solver=solver,
@@ -100,10 +100,10 @@ def problem(datadir='.',
         solution=results.make_multistage_solution_standalone(power_system,stage_times,datadir,stage_solution_files)
 #        tracker.create_snapshot('solution created')
         logging.info('problem solved in {} ... finished at {}'.format(solution.solve_time,show_clock()))
-        tracker_all.create_snapshot('all times solution created')
+#        tracker_all.create_snapshot('all times solution created')
 #        gb = ReferenceGraph([power_system,times,solution])
 #        gb.render('mutlistage-memory.png',format='png')
-    tracker_all.stats.print_summary()
+#    tracker_all.stats.print_summary()
 #    tracker_all.stats.dump_stats('pympler.stats')
 #    stats = HtmlStats()
 #    stats.load_stats('pympler.stats')
@@ -111,7 +111,7 @@ def problem(datadir='.',
 
 #    tracker_gens.stats.print_summary()
 #    tracker_all.stats.print_summary()
-    HtmlStats(tracker=tracker_all).create_html('profile.html')
+#    HtmlStats(tracker=tracker_all).create_html('profile.html')
 
 #    print 'testing refbrowser'
 #    obj='the object im testing'
@@ -156,7 +156,7 @@ def create_problem(power_system,times):
     constraints=power_system.create_constraints(times)
     logging.debug('created constraints {}'.format(show_clock()))
     
-    tracker_all.create_snapshot('power system problem created')
+#    tracker_all.create_snapshot('power system problem created')
     for v in variables.values(): prob.add_variable(v)
     for c in constraints.values(): prob.add_constraint(c)
     prob.add_objective(objective)
@@ -164,7 +164,7 @@ def create_problem(power_system,times):
 #    print 'variable type is', type(v)
 #    print 'objective type is', type(objective)
     #objgraph.show_backrefs([v], filename='variable-backref-pre-solve.png')
-    tracker_all.create_snapshot('Problem created')
+#    tracker_all.create_snapshot('Problem created')
     return prob
 
 def solve_multistage_standalone(power_system,times,datadir,

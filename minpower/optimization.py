@@ -150,7 +150,6 @@ def value(variable):
 def dual(constraint,index=None):
     '''Dual of optimization constraint, after the problem is solved.'''
     return constraint[index].dual
-def sum_vars(variables): return sum(variables)
 def newProblem(): return Problem()
 def new_variable(name='',kind='Continuous',low=-1000000,high=1000000):
     '''

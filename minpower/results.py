@@ -209,7 +209,7 @@ class Solution_ED(Solution):
         price=self.lmps[str(t)][0]
         generators,loads=self.generators(),self.loads()
         
-        gensPlotted,genNames,loadsPlotted,loadNames=[],[],[],[]
+        plotted_gens,names_gens,plotted_loads,names_loads=[],[],[],[]
         minGen=min(getattrL(generators,'Pmin'))
         maxGen=max(getattrL(generators,'Pmax'))
 
@@ -217,28 +217,29 @@ class Solution_ED(Solution):
         ax=plot.axes()
         for gen in generators:
             if gen.status(t):
-                gensPlotted.append( gen.cost_model.plot_derivative(P=value(gen.power(t)),linestyle='-') )
-                genNames.append(gen.name)
+                plotted_gens.append( gen.cost_model.plot_derivative(P=value(gen.power(t)),linestyle='-') )
+                names_gens.append(gen.name)
         for load in loads: 
             if load.kind=='bidding': 
-                loadsPlotted.append( load.bid(t).plot_derivative(P=value(load.power(t)),linestyle=':') )
-                loadNames.append(load.name)
+                plotted_loads.append( load.bid(t).plot_derivative(P=value(load.power(t)),linestyle=':') )
+                names_loads.append(load.name)
         if price is not None: 
             grayColor='.75'
             plot.plot([minGen,maxGen],[price,price],'--k',color=grayColor)
             plot.text(maxGen, price, '{p:0.2f} $/MWh'.format(p=price),color=grayColor,horizontalalignment='right')
         
         plot.xlabel('P [MWh]')        
-        if loadsPlotted:     plot.ylabel('Marginal Cost-Benifit [$/MWh]')
+        if plotted_loads:     plot.ylabel('Marginal Cost-Benifit [$/MWh]')
         else:                plot.ylabel('Marginal Cost [$/MWh]')
         prettify_axes(ax)
         
+        #plot.xlim(xmin=0,xmax=)
         ymin,_ = plot.ylim()
         if ymin<0: plot.ylim(ymin=0)        
 
-        legendGens=plot.legend(gensPlotted, genNames, fancybox=True,title='Generators:',loc='best')
-        if loadsPlotted:
-            plot.legend(loadsPlotted, loadNames, fancybox=True,title='Loads:',loc='best')
+        legendGens=plot.legend(plotted_gens, names_gens, fancybox=True,title='Generators:',loc='best')
+        if plotted_loads:
+            plot.legend(plotted_loads, names_loads, fancybox=True,title='Loads:',loc='best')
             plot.gca().add_artist(legendGens) #add first legend to the axes manually bcs multiple legends get overwritten
         
         self.savevisualization(filename='dispatch.png')
@@ -246,22 +247,22 @@ class Solution_ED(Solution):
         if show_cost_also:
             #show a plot of the cost space, illustrating the linearization
             plot.figure()
-            gensPlotted_price=gensPlotted
-            gensPlotted,genNames,loadsPlotted,loadNames=[],[],[],[]
+            gensPlotted_price=plotted_gens
+            plotted_gens,names_gens,plotted_loads,names_loads=[],[],[],[]
             for g,gen in enumerate(generators):
                 if gen.status(t):
-                    gensPlotted.append( gen.cost_model.plot(P=value(gen.power(t)),linestyle='-',color=gensPlotted_price[g].get_color()) )
-                    genNames.append(gen.name)
+                    plotted_gens.append( gen.cost_model.plot(P=value(gen.power(t)),linestyle='-',color=gensPlotted_price[g].get_color()) )
+                    names_gens.append(gen.name)
             for load in loads: 
                 if load.kind=='bidding': 
-                    loadsPlotted.append( load.bid(t).plot(P=value(load.power(t)),linestyle=':') )
-                    loadNames.append(load.name)        
+                    plotted_loads.append( load.bid(t).plot(P=value(load.power(t)),linestyle=':') )
+                    names_loads.append(load.name)        
             plot.xlabel('P [MWh]')
-            if loadsPlotted:     plot.ylabel('Cost-Benifit [$/h]')
+            if plotted_loads:     plot.ylabel('Cost-Benifit [$/h]')
             else:                plot.ylabel('Cost [$/h]')
-            legendGens=plot.legend(gensPlotted, genNames, fancybox=True,title='Generators:',loc='best')
-            if loadsPlotted:
-                plot.legend(loadsPlotted, loadNames, fancybox=True,title='Loads:',loc='best')
+            legendGens=plot.legend(plotted_gens, names_gens, fancybox=True,title='Generators:',loc='best')
+            if plotted_loads:
+                plot.legend(plotted_loads, names_loads, fancybox=True,title='Loads:',loc='best')
                 plot.gca().add_artist(legendGens) #add first legend to the axes manually bcs multiple legends get overwritten
             
             self.savevisualization(filename='dispatch-cost.png')        

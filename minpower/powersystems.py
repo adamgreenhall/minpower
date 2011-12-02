@@ -6,7 +6,7 @@ and  :class:`~powersystems.Line`. Each of these objects inherits
 an optimization framework from :class:`~optimization.OptimizationObject`.
 """
 
-from optimization import value,dual,sum_vars,OptimizationObject
+from optimization import value,dual,OptimizationObject
 from commonscripts import hours,drop_case_spaces,flatten,getattrL,unique,update_attributes,show_clock
 import config, bidding
 from schedule import FixedSchedule
@@ -215,7 +215,7 @@ class Generator(OptimizationObject):
         #logging.debug('created {} variables {}'.format(str(self),show_clock()))
         return self.all_variables(times)
     def create_objective(self,times):
-        return sum_vars(self.cost(time) for time in times)
+        return sum(self.cost(time) for time in times)
 
     def create_constraints(self,times):
         '''create the optimization constraints for a generator over all times'''
@@ -238,9 +238,9 @@ class Generator(OptimizationObject):
             else: min_down_intervals_remaining_init=0
             #initial up down time
             if min_up_intervals_remaining_init>0: 
-                self.add_constraint('minuptime', tInitial, 0==sum_vars([(1-self.status(times[t])) for t in range(min_up_intervals_remaining_init)]))
+                self.add_constraint('minuptime', tInitial, 0==sum([(1-self.status(times[t])) for t in range(min_up_intervals_remaining_init)]))
             if min_down_intervals_remaining_init>0: 
-                self.add_constraint('mindowntime', tInitial, 0==sum_vars([self.status(times[t]) for t in range(min_down_intervals_remaining_init)]))
+                self.add_constraint('mindowntime', tInitial, 0==sum([self.status(times[t]) for t in range(min_down_intervals_remaining_init)]))
 
 
             #initial ramp rate
@@ -272,13 +272,13 @@ class Generator(OptimizationObject):
             if t >= min_up_intervals_remaining_init and self.minuptime>0:
                 no_shut_down=range(t,min(tEnd,t+min_up_intervals))
                 min_up_intervals_remaining=min(tEnd-t,min_up_intervals)
-                E = sum_vars([self.status(times[s]) for s in no_shut_down]) >= min_up_intervals_remaining*self.status_change(t,times)
+                E = sum([self.status(times[s]) for s in no_shut_down]) >= min_up_intervals_remaining*self.status_change(t,times)
                 self.add_constraint('min up time', time, E)
             #min down time        
             if t >= min_down_intervals_remaining_init and self.mindowntime>0:
                 no_start_up=range(t,min(tEnd,t+min_down_intervals))
                 min_down_intervals_remaining=min(tEnd-t,min_down_intervals)
-                E=sum_vars([1-self.status(times[s]) for s in no_start_up]) >= min_down_intervals_remaining * -1 * self.status_change(t,times)
+                E=sum([1-self.status(times[s]) for s in no_start_up]) >= min_down_intervals_remaining * -1 * self.status_change(t,times)
                 self.add_constraint('min down time', time, E)
                                         
             #ramping power
@@ -366,7 +366,7 @@ class Load(OptimizationObject):
             for time in times: self.add_variable('power','Pd',time,low=0,high=self.schedule.get_energy(time))
 
     def create_objective(self,times):
-        return sum_vars([ self.cost(time) for time in times])
+        return sum([ self.cost(time) for time in times])
 
     def __str__(self): return 'd{ind}'.format(ind=self.index)    
     def __int__(self): return self.index
@@ -446,12 +446,12 @@ class Bus(OptimizationObject):
     
     def angle(self,time): return self.get_variable('angle',time)
     def price(self,time): return dual(self.get_constraint('power balance',time))
-    def Pgen(self,t):   return sum_vars([gen.power(t) for gen in self.generators])
-    def Pload(self,t):  return sum_vars([ ld.power(t) for ld in self.loads])
+    def Pgen(self,t):   return sum(gen.power(t) for gen in self.generators)
+    def Pload(self,t):  return sum(ld.power(t) for ld in self.loads)
     def power_balance(self,t,Bmatrix,allBuses):
         if len(allBuses)==1: lineFlowsFromBus=0
-        else: lineFlowsFromBus=sum_vars([Bmatrix[self.index][otherBus.index]*otherBus.angle(t) for otherBus in allBuses]) #P_{ij}=sum_{i} B_{ij}*theta_j ???
-        return sum_vars([ -lineFlowsFromBus,-self.Pload(t),self.Pgen(t) ])
+        else: lineFlowsFromBus=sum([Bmatrix[self.index][otherBus.index]*otherBus.angle(t) for otherBus in allBuses]) #P_{ij}=sum_{i} B_{ij}*theta_j ???
+        return sum([ -lineFlowsFromBus,-self.Pload(t),self.Pgen(t) ])
     def create_variables(self,times):
         self.add_components(self.generators,'generators')
         self.add_components(self.loads,'loads')
@@ -473,8 +473,8 @@ class Bus(OptimizationObject):
         logging.debug('created bus variables ... returning {}'.format(show_clock()))
         return self.all_variables(times)
     def create_objective(self,times):
-        return sum_vars(gen.create_objective(times) for gen in self.generators) + \
-            sum_vars(load.create_objective(times) for load in self.loads)
+        return sum(gen.create_objective(times) for gen in self.generators) + \
+            sum(load.create_objective(times) for load in self.loads)
     def create_constraints(self,times,Bmatrix,buses):
         for gen in self.generators: gen.create_constraints(times)
         for load in self.loads: load.create_constraints(times)
@@ -596,7 +596,7 @@ class PowerSystem(OptimizationObject):
         logging.debug('... created power system vars... returning... {}'.format(show_clock()))
         return self.all_variables(times)
     def create_objective(self,times):
-        return sum_vars(bus.create_objective(times) for bus in self.buses) + sum_vars(line.create_objective(times) for line in self.lines)
+        return sum(bus.create_objective(times) for bus in self.buses) + sum(line.create_objective(times) for line in self.lines)
     def create_constraints(self,times):
         for bus in self.buses: bus.create_constraints(times,self.Bmatrix,self.buses)
         for line in self.lines: line.create_constraints(times,self.buses)

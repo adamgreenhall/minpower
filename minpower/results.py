@@ -273,12 +273,21 @@ class Solution_ED(Solution):
         
         t=self.times[0]
         generators=self.generators()
-        
+        output_loads= [load for load in self.loads() if getattr(load,'kind',None) in ['bidding','shifting']]
         fields,data=[],[]
-        fields.append('generator name');  data.append(getattrL(generators,'name'))
-        fields.append('u');  data.append([niceTF(g.status(t)) for g in generators])
-        fields.append('P');  data.append([nice_zeros(g.power(t)) for g in generators])
-        fields.append('IC');  data.append([nice_zeros(g.incrementalcost(t)) for g in generators])
+        components=flatten([generators,output_loads])
+        fields.append('name')
+        data.append(getattrL(components,'name'))
+        
+        fields.append('u');   
+        data.append([niceTF(g.status(t)) for g in components])
+        
+        fields.append('P')
+        data.append([nice_zeros(g.power(t)) for g in components])
+        
+        fields.append('IC')
+        data.append([nice_zeros(g.incrementalcost(t)) for g in components])
+        
         writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))        
 class Solution_OPF(Solution): 
     def visualization(self,filename='powerflow.png'): 

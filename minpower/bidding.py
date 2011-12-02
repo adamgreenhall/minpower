@@ -1,5 +1,5 @@
 from commonscripts import elementwiseMultiply,update_attributes
-from optimization import value,new_variable,sum,OptimizationObject
+from optimization import value,new_variable,OptimizationObject
 from config import default_num_breakpoints
 
 from scipy import linspace, polyval, polyder, interp, poly1d
@@ -157,7 +157,7 @@ class PWLmodel(object):
         iden=owner_iden+time_iden
         input_var=variables['input']
         status_var=variables['status']
-        if status_var in (True,False): status_var=1 if status_var else 0 #convert bool to integer for coopr 
+        #if status_var in (True,False): status_var=1 if status_var else 0 #convert bool to integer for coopr 
         
         S = [variables[self._s_name(s,owner_iden,time_iden)] for s in range(len(self.segments))] 
         F = [variables[self._f_name(f,owner_iden,time_iden)] for f in range(len(self.bp_inputs))]

@@ -526,7 +526,9 @@ class PowerSystem(OptimizationObject):
         #add system mode parameters to relevant components
         self.set_load_shedding(load_shedding_allowed) #set load shedding
         for load in loads:
-                try: load.cost_model.num_breakpoints=num_breakpoints
+                try: 
+                    load.cost_model.num_breakpoints=num_breakpoints
+                    load.cost_model.do_segmentation()
                 except AttributeError: pass #load has no cost model   
         for gen in generators:
             gen.dispatch_decommit_allowed=dispatch_decommit_allowed
@@ -602,13 +604,8 @@ class PowerSystem(OptimizationObject):
         for line in self.lines: line.create_constraints(times,self.buses)
         #a system reserve constraint would go here
         return self.all_constraints(times)
-    # def clear_constraints(self):
-    #     self.constraints={}
-    #     for bus in self.buses: bus.clear_constraints()
-    #     for line in self.lines: line.clear_constraints()
     
     
 #def power_to_energy(P,time):
 #    return P*time.intervalhrs
-#def _call_generator_create_variables(gen,times): return gen.create_variables(times)
 

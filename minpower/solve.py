@@ -13,6 +13,21 @@ import powersystems
 import results
 import config
 from commonscripts import joindir,show_clock
+
+import objgraph,inspect,random
+from pympler.classtracker import ClassTracker
+from pympler.classtracker_stats import HtmlStats
+
+from coopr import pyomo
+from coopr.opt.base.solvers import IOptSolver,OptSolver
+tracker=ClassTracker()
+for cls in [pyomo.ConcreteModel,pyomo.Var,pyomo.base.var._VarElement,
+            pyomo.Constraint,optimization.Problem,
+            IOptSolver,OptSolver,
+            ]:
+    tracker.track_class(cls)
+
+
     
 def problem(datadir='.',
         shell=True,
@@ -59,6 +74,8 @@ def problem(datadir='.',
     
     logging.debug('power system set up {}'.format(show_clock()))
     
+    tracker.create_snapshot('prob. created')
+    
     if times.spanhrs<=hours_commitment:
         problem=create_problem(power_system,times)
         if problemfile: problemfile=joindir(datadir,'problem-formulation.lp')
@@ -77,7 +94,9 @@ def problem(datadir='.',
                                                        )
         solution=results.make_multistage_solution(power_system,stage_times,datadir,stage_solutions)
         logging.info('problem solved in {} ... finished at {}'.format(solution.solve_time,show_clock()))
-        
+    
+    tracker.create_snapshot('solutions solved')
+    
     if shell: solution.show()
     if csv: solution.saveCSV()
     if visualization: solution.visualization()

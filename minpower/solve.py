@@ -13,6 +13,21 @@ import powersystems
 import results
 import config
 from commonscripts import joindir,show_clock
+
+import objgraph,inspect,random
+from pympler.classtracker import ClassTracker
+from pympler.classtracker_stats import HtmlStats
+
+from coopr import pyomo
+from coopr.opt.base.solvers import IOptSolver,OptSolver
+tracker=ClassTracker()
+for cls in [pyomo.ConcreteModel,pyomo.Var,pyomo.base.var._VarElement,
+            pyomo.Constraint,optimization.Problem,
+            IOptSolver,OptSolver,
+            ]:
+    tracker.track_class(cls)
+
+
     
 def problem(datadir='.',
         shell=True,
@@ -58,6 +73,8 @@ def problem(datadir='.',
                 dispatch_decommit_allowed=dispatch_decommit_allowed,)
     
     logging.debug('power system set up {}'.format(show_clock()))
+    
+    tracker.create_snapshot('prob. created')
     
     if times.spanhrs<=hours_commitment:
         problem=create_problem(power_system,times)
@@ -140,9 +157,15 @@ def problem(datadir='.',
 >>>>>>> major cleanup of results.py. still need to tackle the multistage commitments
 =======
         logging.info('problem solved in {} ... finished at {}'.format(solution.solve_time,show_clock()))
+<<<<<<< HEAD
 >>>>>>> fix for fuelcost default with different types of NG
         
 >>>>>>> fix for linear cost curves - now: cost=a*u+b*P
+=======
+    
+    tracker.create_snapshot('solutions solved')
+    
+>>>>>>> setting up pympler test
     if shell: solution.show()
     if csv: solution.saveCSV()
 <<<<<<< HEAD

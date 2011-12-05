@@ -102,6 +102,16 @@ def problem(datadir='.',
     if visualization: solution.visualization()
     return solution
 
+def create_solve_problem(power_system,times,datadir,solver,problemfile=False,get_duals=True):
+    problem=create_problem(power_system,times)
+    if problemfile: problemfile=joindir(datadir,'problem-formulation.lp')
+    problem.solve(solver,problem_filename=problemfile,get_duals=get_duals)
+    
+    if problem.solved:
+        solution=results.make_solution(power_system,times,problem=problem,datadir=datadir)
+    else: 
+        raise optimization.OptimizationError('problem not solved')
+    return solution
 def create_problem(power_system,times):
     """
     Create an optimization problem.
@@ -121,13 +131,9 @@ def create_problem(power_system,times):
     logging.debug('created objective {}'.format(show_clock()))
     constraints=power_system.create_constraints(times)
     logging.debug('created constraints {}'.format(show_clock()))
-    
     for v in variables.values(): prob.add_variable(v)
-    logging.debug('added vars to problem {}'.format(show_clock()))
     for c in constraints.values(): prob.add_constraint(c)
-    logging.debug('added constraints to problem {}'.format(show_clock()))
     prob.add_objective(objective)
-    logging.debug('added objective to problem {}'.format(show_clock()))
     return prob
 
 def solve_multistage(power_system,times,datadir,

@@ -21,7 +21,7 @@ from pympler.classtracker_stats import HtmlStats
 from coopr import pyomo
 from coopr.opt.base.solvers import IOptSolver,OptSolver
 
-profile_memory=True
+profile_memory=False
 tracker=ClassTracker()
 if profile_memory:
     for cls in [pyomo.ConcreteModel,pyomo.Var,pyomo.base.var._VarElement,

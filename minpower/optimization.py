@@ -266,7 +266,7 @@ class OptimizationObject(object):
         return 'opt_obj{ind}'.format(ind=self.index)
     def all_variables(self,times):
         '''return variables from object and children within times'''
-        variables=filter_optimization_objects(self.variables,times)
+        variables=self.variables
         for child in self.children.values(): 
             try: variables.update(child.all_variables(times))
             except AttributeError:
@@ -274,7 +274,7 @@ class OptimizationObject(object):
         return variables
     def all_constraints(self,times): 
         '''return constraints from object and children within times'''
-        constraints=filter_optimization_objects(self.constraints,times)
+        constraints=self.constraints
         for child in self.children.values(): 
             try: constraints.update(child.all_constraints(times))
             except AttributeError:
@@ -290,17 +290,18 @@ class OptimizationObject(object):
 
 def filter_optimization_objects(objects,times):
     '''Filter variables or constraints by times.''' 
-    times_str=[str(t).lstrip('t') for t in times]
-    times_str.append(str(times.initialTime).lstrip('t'))
-    def valid(name,val):
-        try: in_time_period=name.rsplit('t',1)[1] in times_str
-        except IndexError:
-            print name
-            print times_str
-            raise
-        is_variable_not_fixed = getattr(val,'value',0)==None
-        return in_time_period and is_variable_not_fixed
-    return dict(filter(lambda (name,val): valid(name,val) ,objects.items()))
+#    times_str=[str(t).lstrip('t') for t in times]
+#    times_str.append(str(times.initialTime).lstrip('t'))
+#    def valid(name,val):
+#        try: in_time_period=name.rsplit('t',1)[1] in times_str
+#        except IndexError:
+#            print name
+#            print times_str
+#            raise
+#        is_variable_not_fixed = getattr(val,'value',0)==None
+#        return in_time_period and is_variable_not_fixed
+#    return dict(filter(lambda (name,val): valid(name,val) ,objects.items()))
+    return objects
 
 
 #def solve(problem,solver=config.optimization_solver,problem_filename=False): 

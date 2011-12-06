@@ -247,7 +247,7 @@ class Generator(OptimizationObject):
         timesClipped=times[:times.index(tm)]
         try: 
             t_lastchange=(t for t in reversed(timesClipped) if value(self.status(t))!=status ).next()
-            return hours(tm-t_lastchange)
+            return hours(tm.End-t_lastchange.Start)
         except StopIteration: #no changes over whole time period
             h=hours(tm.End-times[0].Start)
             if value(self.status(times.initialTime)) == status: h+=self.initialStatusHours

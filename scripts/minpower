@@ -26,7 +26,7 @@ parser.add_argument('--logfile','-l',type=str,default=False,
                    help='log file, default is to log to terminal')
 parser.add_argument('--solution_file',type=str,default=False,
                    help='save solution file to disk')
-                   
+parser.add_argument('--profile',action="store_true",default=False,help='run cProfile and output to minpower.profile')
                     
 #figure out the command line arguments
 args = parser.parse_args()
@@ -44,16 +44,38 @@ if not os.path.isdir(directory):
         msg='There is no folder named "{}".'.format(directory)
         raise OSError(msg)
 
-#solve the problem with those arguments
-solve.problem(directory,
-              solver=args.solver,
-              num_breakpoints=args.breakpoints,
-              hours_commitment=args.commitment_hours,
-              hours_commitment_overlap=args.overlap_hours,
-              dispatch_decommit_allowed=args.dispatch_decommit_allowed,
-              visualization=not args.visualization_off,
-              get_duals=not args.duals_off,
-              problemfile=args.problemfile,
-              logging_file=args.logfile,
-              solution_file=args.solution_file,
-              )
+
+#import cProfile
+#def profileit(filename):
+#    '''a decorator for profiling'''
+#    def inner(func):
+#        def wrapper(*args, **kargs):
+#            prof = cProfile.Profile()
+#            retval = prof.runcall(func, *args, **kwargs)
+#            # Note use of name from outer scope
+#            prof.dump_stats(filename)
+#            return retval
+#        return wrapper
+#    return inner
+
+
+inputs=dict(solver=args.solver,
+          num_breakpoints=args.breakpoints,
+          hours_commitment=args.commitment_hours,
+          hours_commitment_overlap=args.overlap_hours,
+          dispatch_decommit_allowed=args.dispatch_decommit_allowed,
+          visualization=not args.visualization_off,
+          get_duals=not args.duals_off,
+          problemfile=args.problemfile,
+          logging_file=args.logfile,
+          solution_file=args.solution_file)
+if args.profile:
+    print 'run profile'
+    import cProfile
+    prof = cProfile.Profile()
+    prof.runcall(solve.problem, directory, **inputs)
+    prof.dump_stats('minpower.profile')
+
+else:
+    #solve the problem with those arguments
+    solve.problem(directory,**inputs)

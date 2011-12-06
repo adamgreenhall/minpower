@@ -20,12 +20,15 @@ from pympler.classtracker_stats import HtmlStats
 
 from coopr import pyomo
 from coopr.opt.base.solvers import IOptSolver,OptSolver
+
+profile_memory=True
 tracker=ClassTracker()
-for cls in [pyomo.ConcreteModel,pyomo.Var,pyomo.base.var._VarElement,
-            pyomo.Constraint,Problem,
-            IOptSolver,OptSolver,
-            ]:
-    tracker.track_class(cls)
+if profile_memory:
+    for cls in [pyomo.ConcreteModel,pyomo.Var,pyomo.base.var._VarElement,
+                pyomo.Constraint,Problem,
+                IOptSolver,OptSolver,
+                ]:
+        tracker.track_class(cls)
 
 def show_backref_chain(name):
     try: objgraph.show_chain(objgraph.find_backref_chain( random.choice(objgraph.by_type(name)),inspect.ismodule),filename='{}-chain.png'.format(name))
@@ -188,10 +191,17 @@ def problem(datadir='.',
 >>>>>>> changed problem file to false by default. renamed visualization.
 =======
     if solution_file: solution.save(solution_file)
+<<<<<<< HEAD
     HtmlStats(tracker=tracker).create_html('profile.html')
     show_backref_chain('_VarElement')
     show_backrefs('_VarElement')
 >>>>>>> testing memory differences (pulled some code for create_solve_problem from DR_update)
+=======
+    if profile_memory:
+        HtmlStats(tracker=tracker).create_html('profile.html')
+        #show_backref_chain('_VarElement')
+        #show_backrefs('_VarElement')
+>>>>>>> memory and processor profiling
     return solution
 
 def create_solve_problem(power_system,times,datadir,solver,problemfile=False,get_duals=True):

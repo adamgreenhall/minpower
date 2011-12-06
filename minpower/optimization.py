@@ -207,7 +207,10 @@ class OptimizationObject(object):
  
     def update_variables(self):
         '''Replace the object and its children's variables with their numeric value.'''
-        for name,var in self.variables.items(): self.variables[name]=value(var)
+        for name,var in self.variables.items(): 
+            self.variables[name]=value(var)
+            try: var._varval=[]
+            except AttributeError: pass
         for child in self.children.values(): 
             try: child.update_variables()
             except AttributeError:

@@ -25,6 +25,7 @@ def main(solver=config.optimization_solver):
     from minpower import solve
     
     dirNm=splitFilename(__file__)[0]
+    if dirNm=='': dirNm='.'
     excludeL=[]
     for fileNm in os.listdir(dirNm):
         if fileNm in excludeL: continue

@@ -288,31 +288,6 @@ class OptimizationObject(object):
                 #child is a list of objects
                 for c in child: c.clear_constraints()
 
-def filter_optimization_objects(objects,times):
-    '''Filter variables or constraints by times.''' 
-#    times_str=[str(t).lstrip('t') for t in times]
-#    times_str.append(str(times.initialTime).lstrip('t'))
-#    def valid(name,val):
-#        try: in_time_period=name.rsplit('t',1)[1] in times_str
-#        except IndexError:
-#            print name
-#            print times_str
-#            raise
-#        is_variable_not_fixed = getattr(val,'value',0)==None
-#        return in_time_period and is_variable_not_fixed
-#    return dict(filter(lambda (name,val): valid(name,val) ,objects.items()))
-    return objects
-
-
-#def solve(problem,solver=config.optimization_solver,problem_filename=False): 
-#    '''
-#    Solve an optimization problem.
-#    :param problem: a :class:`~optimization.Problem` object
-#    :param solver: name of solver (lowercase string). Valid solvers are {cplex,gurobi,glpk}.
-#    :param problem_filename: write MIP problem formulation to a file, if a file name is specified
-#    '''
-#    return problem.solve(solver,problem_filename)
-
 class OptimizationError(Exception):
     '''Error that occurs within solving an optimization problem.'''
     def __init__(self, ivalue):

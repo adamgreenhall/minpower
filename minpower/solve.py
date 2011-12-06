@@ -429,7 +429,6 @@ def solve_multistage(power_system,times,datadir,
         tracker.create_snapshot('stage started {}'.format(t_stage[0].Start))
         set_initialconditions(buses,t_stage.initialTime)
         
-        logging.info('created... solving... {}'.format(show_clock(showclock)))
         try: stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile,get_duals)
         except OptimizationError:
             #re-do stage, with load shedding allowed
@@ -438,15 +437,6 @@ def solve_multistage(power_system,times,datadir,
             #save problem formulation for degbugging in case of infeasibility
             stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile=True,get_duals=get_duals)
             power_system.set_load_shedding(False)
-#        else: 
-#            #print stage_problem.status,stage_problem.statusText()
-#            stage_problem.write('infeasible-problem.lp')
-#            try: stage_sln.saveCSV('last-stage-solved.csv')
-#            except: logging.critical('could not write last stage solution to spreadsheet')
-#            msg='Infeasible problem - writing to .lp file for examination.'
-#            raise optimization.OptimizationError(msg)
-            
-
 
         logging.debug('solved... get results... {}'.format(show_clock(showclock)))
         get_finalconditions(power_system,t_stage)

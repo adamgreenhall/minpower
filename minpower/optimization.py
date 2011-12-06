@@ -1,11 +1,7 @@
 """
-An optimization command library.
-Currently uses pulp but is transitioning to using coopr.
+An optimization command library for Minpower.
 """
-
 import coopr.pyomo as pyomo
-#from pyutilib.misc import Options as cooprOptions
-#import coopr.pyomo.scripting.util as cooprUtil
 from coopr.opt.base import solvers as cooprsolver
 
 variable_kinds = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyomo.Boolean)
@@ -85,7 +81,7 @@ if optimization_package=='coopr':
 class Problem(object):
     '''an optimization problem/model based on pyomo'''
     def __init__(self):
-        self.model=pyomo.ConcreteModel()
+        self.model=pyomo.ConcreteModel('power system problem')
         self.solved=False
     def add_objective(self,expression,sense=pyomo.minimize):
         '''add an objective to the problem'''            
@@ -108,6 +104,7 @@ class Problem(object):
         
         current_log_level = logging.getLogger().getEffectiveLevel()      
                     
+<<<<<<< HEAD
         def cooprsolve(instance,opt=None,suffixes=['dual'],keepFiles=False):
             if not keepFiles: logging.getLogger().setLevel(logging.WARNING)
             if opt is None: 
@@ -117,9 +114,16 @@ class Problem(object):
                     msg='solver "{}" not found'.format(solver)
                     raise OptimizationError(msg)
             
+=======
+        def cooprsolve(instance,suffixes=['dual'],keepFiles=False):
+            if not keepFiles: logging.getLogger().setLevel(logging.WARNING) 
+            opt_solver = cooprsolver.SolverFactory(solver)
+            if opt_solver is None: 
+                msg='solver "{}" not found'.format(solver)
+                raise OptimizationError(msg)
+>>>>>>> dropped some comments
             start = time.time()
-            results= opt.solve(instance,suffixes=suffixes,keepFiles=keepFiles)
-            #results,opt=cooprUtil.apply_optimizer(options,instance)
+            results= opt_solver.solve(instance,suffixes=suffixes) #,keepFiles=keepFiles
             elapsed = (time.time() - start)
             logging.getLogger().setLevel(current_log_level)
             return results,elapsed
@@ -170,6 +174,7 @@ class Problem(object):
                 logging.error('coopr raised an error in solving. keep the files for debugging.')
                 results= cooprsolve(instance, keepFiles=True)    
             
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
             instance.load(results)
@@ -324,6 +329,9 @@ class Problem(object):
             instance.load(results)
 #            instance._load_solution(results.solution(0), ignore_invalid_labels=True )
 >>>>>>> instance.load(results) update for coopr 3.1
+=======
+            instance.load(results)
+>>>>>>> dropped some comments
             return instance,results
 >>>>>>> dropped pulp from optimization module. clean up docstrings.
 
@@ -456,7 +464,6 @@ def value(variable):
 def dual(constraint,index=None):
     '''Dual of optimization constraint, after the problem is solved.'''
     return constraint[index].dual
-def sum_vars(variables): return sum(variables)
 def newProblem(): return Problem()
 def new_variable(name='',kind='Continuous',low=-1000000,high=1000000):
     '''
@@ -557,11 +564,14 @@ class OptimizationObject(object):
         '''
         self.variables=dict()
         self.constraints=dict()
+<<<<<<< HEAD
         self.objective  =0 #cost
 <<<<<<< HEAD
         if self.index is None: self.index=hash(self)
         if self.name in [None, '']: self.name = self.index+1 #1 and up naming
 =======
+=======
+>>>>>>> dropped some comments
         self.children=dict()
         if getattr(self,'index',None) is None: self.index=hash(self)
         if getattr(self,'name',None)=='': self.name = self.index+1 #1 and up naming
@@ -589,10 +599,10 @@ class OptimizationObject(object):
     def create_objective(self,times):
         '''
         Individual class defined.
-        Create the contribution to the objective (cost) expression.
+        Return the contribution to the objective (cost) expression.
         :returns: an expression, the default is 0
         '''
-        return self.objective
+        return 0
     def create_constraints(self, times,*args,**kwargs):
         ''' 
         Individual class defined.
@@ -683,6 +693,7 @@ class OptimizationObject(object):
         for child in self.children.values(): 
             try: child.clear_constraints()
             except AttributeError:
+                #child is a list of objects
                 for c in child: c.clear_constraints()
 
 def filter_optimization_objects(objects,times):
@@ -690,7 +701,11 @@ def filter_optimization_objects(objects,times):
     times_str=[str(t).lstrip('t') for t in times]
     times_str.append(str(times.initialTime).lstrip('t'))
     def valid(name,val):
-        in_time_period=name.rsplit('t',1)[1] in times_str
+        try: in_time_period=name.rsplit('t',1)[1] in times_str
+        except IndexError:
+            print name
+            print times_str
+            raise
         is_variable_not_fixed = getattr(val,'value',0)==None
         return in_time_period and is_variable_not_fixed
     return dict(filter(lambda (name,val): valid(name,val) ,objects.items()))

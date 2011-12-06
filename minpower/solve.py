@@ -435,7 +435,8 @@ def solve_multistage(power_system,times,datadir,
             #re-do stage, with load shedding allowed
             logging.critical('Stage infeasible, re-running with load shedding.')
             power_system.set_load_shedding(True)
-            stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile,get_duals)
+            #save problem formulation for degbugging in case of infeasibility
+            stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile=True,get_duals=get_duals)
             power_system.set_load_shedding(False)
 #        else: 
 #            #print stage_problem.status,stage_problem.statusText()

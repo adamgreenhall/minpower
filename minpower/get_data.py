@@ -9,7 +9,7 @@ object.
 import powersystems
 import schedule
 from addons import *
-from commonscripts import readCSV,csvColumn,flatten,unique,drop_case_spaces,joindir
+from commonscripts import csv2dicts,csvColumn,flatten,unique,drop_case_spaces,joindir
 
 import os,sys,logging
 
@@ -28,7 +28,7 @@ fields_gens={
 fields_loads={'name':'name','bus':'bus','type':'kind','kind':'kind',
             'p':'P','pd':'P', 'power':'P',
             'pmin':'Pmin','pmax':'Pmax',
-            'schedulefilename':'schedulefilename',
+            'schedulefilename':'schedulefilename','model':'model',
             'bidequation':'costcurvestring','costcurveequation':'costcurvestring'}
 fields_initial={
     'name':'name','generatorname':'name',
@@ -61,153 +61,123 @@ def parsedir(datadir='.',
     """
     if not os.path.isdir(datadir): raise OSError('data directory "{d}" does not exist'.format(d=datadir) )
     [file_gens,file_loads,file_lines,file_init]=[joindir(datadir,filename) for filename in (file_gens,file_loads,file_lines,file_init)]
-
+    
+    generators_data=csv2dicts(file_gens,field_map=fields_gens)
+    loads_data=csv2dicts(file_loads,field_map=fields_loads)
+    try: lines_data=csv2dicts(file_lines,field_map=fields_lines)
+    except IOError: lines_data=[]
+    try: init_data=csv2dicts(file_init,field_map=fields_initial)
+    except IOError: init_data=[]
+    
+    
     #create times
-    times=setup_times(file_gens,file_loads,datadir)
-    
+    times=setup_times(generators_data,loads_data,datadir)
     #add loads
-    loads=build_class_list(file_loads,model=powersystems.makeLoad,field_attr_map=fields_loads,times=times)
-    
-    #add gens
-    generators=build_class_list(file_gens,model=powersystems.makeGenerator,field_attr_map=fields_gens,times=times)
-    
-    #add initial conditions
-    generators=setup_initialcond(file_init,generators,times)
-    
+    loads=build_class_list(loads_data,powersystems.makeLoad,datadir,times=times)
+    #add generators
+    generators=build_class_list(generators_data,powersystems.makeGenerator,datadir,times=times)
     #add lines
-    try: lines=build_class_list(file_lines,model=powersystems.Line,field_attr_map=fields_lines)
-    except IOError: lines=[]
-    
+    lines=build_class_list(lines_data,powersystems.Line,datadir)    
+    #add initial conditions
+    setup_initialcond(init_data,generators,times)
     return generators,loads,lines,times
 
-def setup_initialcond(filename,generators,times):
+def setup_initialcond(data,generators,times):
     '''
-    Read initial conditions from a spreadsheet and
+    Take a list of initial conditions parameters and
     add information to each :class:`~powersystems.Generator` 
     object.
     '''
     if len(times)<=1: return generators #for UC,ED no need to set initial status
-    validFields=fields_initial.keys()
     
-    initialTime = times.initialTime
-    
-    try: data,fields=readCSV(filename,validFields)
-    except IOError: 
-        data,fields=[],[]
+    t_init = times.initialTime
+    if not data:
         logging.warning('No generation initial conditions file found. Setting to defaults.')
-        for gen in generators: gen.set_initial_condition(time=initialTime)
-        return generators
+        for gen in generators: gen.set_initial_condition(time=t_init)
+        return
         
-    try: attributes=[fields_initial[drop_case_spaces(f)] for f in fields]
-    except KeyError:
-        print 'Field "{f}" is not in valid fields (case insensitive): {V}.'.format(f=f,V=validFields)
-        raise
-    
-    
-    #set initial condition for all gens to off
-    for g in generators: g.set_initial_condition(initialTime, u=False, P=0)
+    #begin by setting initial condition for all generators to off
+    for g in generators: g.set_initial_condition(t_init, u=False, P=0)
 
+    names=[g.name for g in generators]
+    try_in_order= len(data)==len(generators)
 
     #overwrite initial condition for generators which are specified in the initial file
-    genNames=[g.name for g in generators]
-    nameCol = attributes.index('name')
-    excludeCols = [nameCol]
-    if None in attributes: excludeCols.append( attributes.index(None) )
-    for row in data:
-        inputs=dict()
-        for c,elem in enumerate(row): 
-            if c in excludeCols: continue
-            elif elem is not None: inputs[attributes[c]]=elem
-        g=genNames.index(row[nameCol])
-        generators[g].set_initial_condition(time=initialTime,**inputs)
-        
+    for g,row in enumerate(data):
+        name=row.pop('name',names[g] if try_in_order else None)
+        g=names.index(name)
+        generators[g].set_initial_condition(time=t_init,**row)        
     return generators
 
-def build_class_list(filename,model,field_attr_map,times=None):
+def build_class_list(data,model,datadir,times=None,model_schedule=schedule.make_schedule):
     """
     Create list of class instances from data in a spreadsheet.
     
-    :param filename: the spreadsheet file (currently just .csv)
-    :param classname: the :mod:`powersystems` class to map the data to
-    :param field_attr_map: the map from field name (the first row of the spreadsheet) to attribute (the class)
+    :param data: a list of dictionaries describing the parameters
+    :param model: the :mod:`powersystems` class to map the data to
+    :param datadir: the directory where the data (and schedule files are)
     :param times: for :mod:`powersystems` classes which have schedule file information,
         a master:class:`~schedule.Timelist` list to pass to :class:`~schedule.Schedule`
     
     :returns: a list of class objects
     """
-    field_attr_map.update({'model':'model','modelschedule':'modelschedule'}) #add a model override
-    dirname=os.path.dirname(filename)
-    classL=[]
-    validFields=field_attr_map.keys()
-    data,fields=readCSV(filename,validFields)
-    try: attributes=[field_attr_map[drop_case_spaces(f)] for f in fields]
-    except KeyError:
-        msg='Field "{f}" is not in list of valid fields for {m} (case insensitive): {V}.'.format(f=f,m=model,V=validFields)
-        raise KeyError(msg)
+
     
-    def getmodel(default,name,inputs):
+    def get_model(inputs,default=model,field='model'):
         model=default
-        newmodel=inputs.pop(name,None)
-        if newmodel is None:
-            return model
+        newmodel=inputs.pop(field,None)
+        if newmodel is None: return model,model_schedule
         else:
             modname,classname=newmodel.split('.')
-            return getattr(globals()[modname],classname)
+            if 'Shifting' in classname: 
+                model_schedule_row=getattr(globals()[modname],'make_shifting_schedule')
+            else: 
+                model_schedule_row=model_schedule
+            return getattr(globals()[modname],classname),model_schedule_row
     
-    
+    all_models=[]
     index=0
     for row in data:
-        inputs=dict()
-        for c,elem in enumerate(row): 
-            if row[c] is None: continue
-            else: inputs[attributes[c]]= row[c]
-        else:
-            model_local         =getmodel(model,'model',inputs)
-            model_schedule_local=getmodel(schedule.makeSchedule,'modelschedule',inputs)
+        model_row,model_schedule_row=get_model(row)
+        schedulefilename=row.pop('schedulefilename',None)
+        if schedulefilename is not None: row['schedule']=model_schedule_row(joindir(datadir,schedulefilename),times)
+        try: obj=model_row(index=index, **row)
+        except TypeError:
+            msg='{} model got unexpected parameter'.format(model_row)
+            print msg
+            raise
+        all_models.append( obj )
+        index+=1
+    return all_models
 
-            schedulefilename=inputs.pop('schedulefilename',None)
-            if schedulefilename is not None:
-                inputs['schedule']=model_schedule_local(joindir(dirname,schedulefilename),times)
-            
-            classL.append( model_local(index=index, **inputs) )
-            index+=1
-    return classL
-
-def setup_times(file_gens,file_loads,datadir):
+def setup_times(generators_data,loads_data,datadir):
     """ 
     Create list of :class:`~schedule.Time` objects 
     from the schedule files. If there are no schedule
     files (as in ED,OPF), create just a single
     :class:`~schedule.Time` instance.
     
-    :param file_gens:    spreadsheet of generator data
-    :param file_loads:   spreadsheet of load data
-    :param datadir:      directory of data
+    :param generators_data: list of dictionaries each describing a generator
+    :param loads_data:   list of dictionaries each describing a load
+    :param datadir:      the directory containing the data
     
     :returns: a :class:`~schedule.Timelist` object
     """
 
-
-    def getTimeCol(filename):
-        if filename is None: return []
-        try: return csvColumn(joindir(datadir,filename),'time')
-        except ValueError: return [] 
-
-
-    timestrL_loads=[]
-    timestrL_gens=[]
+    time_strings=[]
+    schedule_filenames=[]
     
-    schedField='schedulefilename'
-    try: loadScheds=csvColumn(file_loads,schedField)
-    except ValueError: loadScheds=[]
-    try: genScheds=csvColumn(file_gens,schedField)
-    except ValueError: genScheds=[]    
+    field_sched='schedulefilename'
+    def valid_sched_file(D): return D.get(field_sched,None) is not None and not D.get('model','').count('Shifting')
+    schedule_filenames.extend([load[field_sched] for load in loads_data if valid_sched_file(load)])
+    schedule_filenames.extend([gen[field_sched] for gen in generators_data if valid_sched_file(gen)])
     
-    if len(genScheds)==0 and len(loadScheds)==0:
+    
+    if len(schedule_filenames)==0:
         #this is a ED or OPF problem - only one time
-        times=schedule.just_one_time()
-        return times
+        return schedule.just_one_time()
 
+<<<<<<< HEAD
 
     for filename in loadScheds: timestrL_loads.append( getTimeCol(filename) )
     for filename in genScheds:  timestrL_gens.append( getTimeCol(filename) )
@@ -239,3 +209,24 @@ def setup_times(file_gens,file_loads,datadir):
 >>>>>>> improved error messages for schedule errors
     return times
 
+=======
+    for filename in schedule_filenames:
+        try: time_strings.append( csvColumn(joindir(datadir,filename),'time') )
+        except ValueError:
+            time_strings.append( csvColumn(joindir(datadir,filename),'times') )
+            
+    
+    nT =[len(L) for L in time_strings]
+    if not all(nT[0]==N for N in nT):
+        msg='there is a schedule with inconsistent times. schedule lengths={L}.'.format(L=dict(zip(schedule_filenames,nT)))
+        raise ValueError(msg)
+    
+    
+    time_strings=flatten(time_strings)
+    time_dates=schedule.parse_timestrings(time_strings)
+    
+    if not len(time_strings) == max(nT): 
+        #need to get a unique list
+        time_dates=sorted(unique(time_dates))
+    return schedule.make_times(time_dates)
+>>>>>>> merged in changes from DR_model

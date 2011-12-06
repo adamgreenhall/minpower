@@ -1,5 +1,5 @@
 from commonscripts import elementwiseMultiply,update_attributes
-from optimization import value,new_variable,sum_vars,OptimizationObject
+from optimization import value,new_variable,OptimizationObject
 from config import default_num_breakpoints
 
 <<<<<<< HEAD
@@ -223,19 +223,19 @@ class PWLmodel(object):
         iden=owner_iden+time_iden
         input_var=variables['input']
         status_var=variables['status']
-        if status_var in (True,False): status_var=1 if status_var else 0 #convert bool to integer for coopr 
+        if type(status_var)==type(True): status_var=1 if status_var else 0 #convert bool to integer for coopr 
         
         S = [variables[self._s_name(s,owner_iden,time_iden)] for s in range(len(self.segments))] 
         F = [variables[self._f_name(f,owner_iden,time_iden)] for f in range(len(self.bp_inputs))]
 
-        constraints['oneActiveSegment '+iden]= sum_vars(S)== status_var 
-        constraints['fractionSums '+iden]    = sum_vars(F) == status_var 
-        constraints['computeInput '+iden]    = input_var == sum_vars( elementwiseMultiply(F,self.bp_inputs) )
+        constraints['oneActiveSegment '+iden]= sum(S)== status_var 
+        constraints['fractionSums '+iden]    = sum(F) == status_var 
+        constraints['computeInput '+iden]    = input_var == sum( elementwiseMultiply(F,self.bp_inputs) )
         constraints['firstSegment '+iden]    = F[0]<=S[0]
         constraints['lastSegment '+iden]     = F[-1]<=S[-1]
         for b in range(1,self.num_breakpoints-1): 
             name='midSegment {iden} b{bnum}'.format(iden=iden,bnum=b)
-            constraints[name]                = ( F[b] <= sum_vars([S[b-1],S[b]]) )
+            constraints[name]                = ( F[b] <= sum([S[b-1],S[b]]) )
         return constraints
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -274,12 +274,16 @@ class PWLmodel(object):
 =======
     def output(self,variables,owner_iden,time_iden): 
         F = [variables[self._f_name(f,owner_iden,time_iden)] for f in range(len(self.bp_inputs))]
+<<<<<<< HEAD
         return sum_vars( elementwiseMultiply(F,self.bp_outputs) )
 <<<<<<< HEAD
     def output_true(self,input_val): return polyval( self.poly_curve, value(input_val) )
     def output_incremental(self,input_var):  return polyval( polyder(self.poly_curve),value(input_var) )
 >>>>>>> redo of bid, bid.model input and status variable handling
 =======
+=======
+        return sum( elementwiseMultiply(F,self.bp_outputs) )
+>>>>>>> merged in changes from DR_model
     def output_true(self,input_val): return float(polyval( self.poly_curve, value(input_val) ))
     def output_incremental(self,input_var):  return float(polyval( polyder(self.poly_curve),value(input_var) ))
 >>>>>>> float the numpy output_true

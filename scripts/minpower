@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import argparse,os
 from minpower import solve,config
 from minpower.tests import test
@@ -24,6 +24,9 @@ parser.add_argument('--dispatch_decommit_allowed','-d', action="store_true", def
                     help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
 parser.add_argument('--logfile','-l',type=str,default=False,
                    help='log file, default is to log to terminal')
+parser.add_argument('--solution_file',type=str,default=False,
+                   help='save solution file to disk')
+                   
                     
 #figure out the command line arguments
 args = parser.parse_args()
@@ -52,4 +55,5 @@ solve.problem(directory,
               get_duals=not args.duals_off,
               problemfile=args.problemfile,
               logging_file=args.logfile,
+              solution_file=args.solution_file,
               )

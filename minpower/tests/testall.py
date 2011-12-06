@@ -76,7 +76,8 @@ This module uses the Attest package testing framework.
 
 >>>>>>> documentation
 from attest import Tests
-
+import logging
+logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s')
 if __name__ == "__main__": 
     all_tests=Tests([
     'solvers.solvers',

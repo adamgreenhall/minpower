@@ -57,7 +57,7 @@ class Problem(object):
         results,elapsed=cooprsolve(instance)
         
         self.statusText = str(results.solver[0]['Termination condition'])
-        if not self.statusText =='optimal':
+        if not self.statusText =='optimal' and solver!='cbc':
             logging.critical('problem not solved. Solver terminated with status: "{}"'.format(self.statusText))
             self.status=self.solved=False
         else:

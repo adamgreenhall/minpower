@@ -7,7 +7,7 @@ problems and solving them.
 
 import logging
 
-import optimization
+from optimization import OptimizationError,Problem
 import get_data
 import powersystems
 import results
@@ -22,12 +22,17 @@ from coopr import pyomo
 from coopr.opt.base.solvers import IOptSolver,OptSolver
 tracker=ClassTracker()
 for cls in [pyomo.ConcreteModel,pyomo.Var,pyomo.base.var._VarElement,
-            pyomo.Constraint,optimization.Problem,
+            pyomo.Constraint,Problem,
             IOptSolver,OptSolver,
             ]:
     tracker.track_class(cls)
 
-
+def show_backref_chain(name):
+    try: objgraph.show_chain(objgraph.find_backref_chain( random.choice(objgraph.by_type(name)),inspect.ismodule),filename='{}-chain.png'.format(name))
+    except: print 'couldnt find a reference to {} -- skip plotting'.format(name)
+def show_backrefs(name):
+    try: objgraph.show_backrefs(random.choice(objgraph.by_type(name)),filename='{}-backrefs.png'.format(name))
+    except: print 'no objects of type {} -- skipping plotting'.format(name)
     
 def problem(datadir='.',
         shell=True,
@@ -42,6 +47,7 @@ def problem(datadir='.',
         dispatch_decommit_allowed=False,
         logging_level=config.logging_level,
         logging_file=False,
+        solution_file=False,
         ):
     """ 
     Solve a optimization problem specified by spreadsheets in a directory.
@@ -77,20 +83,14 @@ def problem(datadir='.',
     tracker.create_snapshot('prob. created')
     
     if times.spanhrs<=hours_commitment:
-        problem=create_problem(power_system,times)
-        if problemfile: problemfile=joindir(datadir,'problem-formulation.lp')
-        problem.solve(solver,problem_filename=problemfile,get_duals=get_duals)
-        
-        if problem.solved:
-            solution=results.make_solution(power_system,times,problem=problem,datadir=datadir)
-        else: 
-            raise optimization.OptimizationError('problem not solved')
+        solution=create_solve_problem(power_system,times,datadir,solver,problemfile,get_duals)
     else: #split into multiple stages and solve
         stage_solutions,stage_times=solve_multistage(power_system,times,datadir,
                                                        solver=solver,
                                                        get_duals=get_duals,
                                                        stage_hours=hours_commitment,
                                                        overlap_hours=hours_commitment_overlap,
+                                                       problemfile=problemfile,
                                                        )
         solution=results.make_multistage_solution(power_system,stage_times,datadir,stage_solutions)
         logging.info('problem solved in {} ... finished at {}'.format(solution.solve_time,show_clock()))
@@ -100,6 +100,10 @@ def problem(datadir='.',
     if shell: solution.show()
     if csv: solution.saveCSV()
     if visualization: solution.visualization()
+    if solution_file: solution.save(solution_file)
+    HtmlStats(tracker=tracker).create_html('profile.html')
+    show_backref_chain('_VarElement')
+    show_backrefs('_VarElement')
     return solution
 
 def create_solve_problem(power_system,times,datadir,solver,problemfile=False,get_duals=True):
@@ -110,7 +114,7 @@ def create_solve_problem(power_system,times,datadir,solver,problemfile=False,get
     if problem.solved:
         solution=results.make_solution(power_system,times,problem=problem,datadir=datadir)
     else: 
-        raise optimization.OptimizationError('problem not solved')
+        raise OptimizationError('problem not solved')
     return solution
 def create_problem(power_system,times):
     """
@@ -123,7 +127,7 @@ def create_problem(power_system,times):
     """
     
     
-    prob=optimization.newProblem()
+    prob=Problem()
     logging.debug('initialized problem {}'.format(show_clock()))
     variables =power_system.create_variables(times)
     logging.debug('created variables {}'.format(show_clock()))
@@ -141,7 +145,7 @@ def solve_multistage(power_system,times,datadir,
                               interval_hours=None,
                               stage_hours=config.default_hours_commitment,
                               overlap_hours=config.default_hours_commitment_overlap,
-                              writeproblem=False,
+                              problemfile=False,
                               get_duals=True,
                               showclock=True):
     """
@@ -166,7 +170,7 @@ def solve_multistage(power_system,times,datadir,
         
     if not interval_hours: interval_hours=times.intervalhrs
         
-    stage_times=times.subdivide(hrsperdivision=stage_hours,hrsinterval=interval_hours,overlap_hrs=overlap_hours)
+    stage_times=times.subdivide(stage_hours,interval_hrs=interval_hours,overlap_hrs=overlap_hours)
     buses=power_system.buses
     stage_solutions=[]
 
@@ -179,7 +183,7 @@ def solve_multistage(power_system,times,datadir,
                     del gen.finalstatus
                 except AttributeError: pass #first stage of problem already has initial time defined
 
-    def get_finalconditions(power_system,times,lastproblem):
+    def get_finalconditions(power_system,times):
         t_back=overlap_hours/times.intervalhrs
         next_stage_first_time = times[-1-int(t_back)]         
         for bus in power_system.buses:
@@ -190,35 +194,31 @@ def solve_multistage(power_system,times,datadir,
 
     for t_stage in stage_times:
         logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
-        
+        tracker.create_snapshot('stage started {}'.format(t_stage[0].Start))
         set_initialconditions(buses,t_stage.initialTime)
         
-        stage_problem=create_problem(power_system,t_stage)
-        if writeproblem: stage_problem.write(joindir(datadir,'problem-stage{}.lp'.format(t_stage[0].Start.strftime('%Y-%m-%d--%H-%M'))))
         logging.info('created... solving... {}'.format(show_clock(showclock)))
-        stage_problem.solve(solver,get_duals=get_duals)
-        
-        if not stage_problem.solved: 
+        try: stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile,get_duals)
+        except OptimizationError:
             #re-do stage, with load shedding allowed
             logging.critical('Stage infeasible, re-running with load shedding.')
             power_system.set_load_shedding(True)
-            stage_problem=create_problem(power_system,t_stage)
-            stage_problem.solve(solver,get_duals=get_duals)
+            stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile,get_duals)
             power_system.set_load_shedding(False)
+#        else: 
+#            #print stage_problem.status,stage_problem.statusText()
+#            stage_problem.write('infeasible-problem.lp')
+#            try: stage_sln.saveCSV('last-stage-solved.csv')
+#            except: logging.critical('could not write last stage solution to spreadsheet')
+#            msg='Infeasible problem - writing to .lp file for examination.'
+#            raise optimization.OptimizationError(msg)
             
-        if stage_problem.solved:
-            logging.debug('solved... get results... {}'.format(show_clock(showclock)))
-            get_finalconditions(power_system,t_stage,stage_problem)
-            #stage_sln=results.get_stage_solution(stage_problem,power_system,t_stage,overlap_hours)
-            stage_sln=results.make_solution(power_system,t_stage.non_overlap_times,problem=stage_problem)
-            stage_solutions.append(stage_sln)
-        else: 
-            #print stage_problem.status,stage_problem.statusText()
-            stage_problem.write('infeasible-problem.lp')
-            try: stage_sln.saveCSV('last-stage-solved.csv')
-            except: logging.critical('could not write last stage solution to spreadsheet')
-            msg='Infeasible problem - writing to .lp file for examination.'
-            raise optimization.OptimizationError(msg)
+
+
+        logging.debug('solved... get results... {}'.format(show_clock(showclock)))
+        get_finalconditions(power_system,t_stage)
+        stage_solutions.append(stage_solution)
+        #tracker.create_snapshot('stage finished {}'.format(t_stage[0].Start))
     return stage_solutions,stage_times
 
   

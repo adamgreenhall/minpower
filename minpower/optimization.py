@@ -44,6 +44,8 @@ class Problem(object):
                 raise OptimizationError(msg)
             start = time.time()
             results= opt_solver.solve(instance,suffixes=suffixes) #,keepFiles=keepFiles
+            try: opt_solver._symbol_map=None #this should mimic the memory leak bugfix at: software.sandia.gov/trac/coopr/changeset/5449
+            except AttributeError: pass      #should remove after this fix becomes part of a release 
             elapsed = (time.time() - start)
             logging.getLogger().setLevel(current_log_level)
             return results,elapsed

@@ -3,7 +3,7 @@
     optimization problems. Matplotlib and networkx are used for
     visualization.
 """
-
+import yaml
 import logging
 from collections import OrderedDict
 
@@ -20,6 +20,8 @@ from matplotlib.font_manager import FontProperties
 def prettify_plots(for_publication=True):
     plot.rc("xtick", direction="out")
     plot.rc("ytick", direction="out")
+    plot.rc("ytick",labelsize='small')
+    plot.rc("xtick",labelsize='small')
     plot.rc("legend",fancybox=True)
     if for_publication:
         plot.rc("font",size=16)
@@ -61,6 +63,24 @@ def make_multistage_solution(power_system,*args,**kwargs):
     if power_system.lines: logging.warning('no visualization for multistage SCUC yet')
     return Solution_UC_multistage(power_system,*args,**kwargs)
 
+def make_multistage_solution_standalone(power_system,stage_times,datadir,stage_solution_files):
+    #print 'stage files are:',stage_solution_files
+    stage_solutions=[]
+    generators=power_system.generators()
+    for filename in stage_solution_files:
+        with open(filename,'r') as f: stage_solutions.append(yaml.load(f))
+    for sln in stage_solutions:
+        for time in sln.times.non_overlap_times:
+            for g,status in enumerate(sln.generators_status[time]):
+                generators[g].add_variable('status', 'u', time,fixed_value=status)
+            for g,power in enumerate(sln.generators_power[time]):
+                generators[g].add_variable('power', 'P', time,fixed_value=power)
+#        lmp_times=sorted(sln.lmps.keys())
+#        for t,time in enumerate(sln.times):
+#            sln.lmps[time]=sln.lmps[lmp_times[t]]
+    return Solution_UC_multistage(power_system,stage_times,datadir,stage_solutions)
+
+
 class Solution(object):
     '''
     Solution information template for a power system over times.
@@ -71,6 +91,10 @@ class Solution(object):
         update_attributes(self,locals(),exclude=['problem'])
         self.power_system.update_variables()
         
+        #objgraph.show_backrefs([problem.variables.values()[0]], filename='variable-backref-post-solve.png')
+        #objgraph.show_chain(
+        #    objgraph.find_backref_chain( problem.variables.values()[0],inspect.ismodule),filename='variable-backref-post-solve-module-chain.png')
+        
         if not problem.solved: 
             logging.error('Problem solve was not completed. Status {s}.'.format(s=problem.status))
             return
@@ -78,46 +102,41 @@ class Solution(object):
         self._get_costs()
         self._get_prices()
         self.power_system.clear_constraints()
-
+        #gc.collect()
+        #objgraph.show_backrefs([problem.constraints.values()[0]], filename='constraints-backref-post-solve.png')
+        #objgraph.show_chain(objgraph.find_backref_chain(objgraph.by_type('Constraint')[0],inspect.ismodule),filename='constraint-backref-post-solve-chain.png')
+        #leakers=objgraph.get_leaking_objects()
+        #objgraph.show_most_common_types(objects=leakers)
+        #objgraph.show_refs(leakers[:3], refcounts=True, filename='leakers.png')
     def _get_problem_info(self,problem):
-        #self.status     =problem.statusText
-#        try: 
         self.solve_time  =problem.solutionTime
         self.objective  =float(value(problem.objective))
         self.active_constraints = sum([dual(c)!=0 for c in problem.constraints.values()])
         self.total_constraints = len(problem.constraints)
-#        except AttributeError:
-#            self.solve_time=None
-#            self.objective=None
-#            self.active_constraints=None
-#            self.total_constraints=None
+
     def _get_costs(self):
-#        try: 
         generators=self.generators()
-        gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t)) for t in self.times] for gen in generators]
-        gen_fuel_costs_polynomial = [[gen.truecost(t) for t in self.times] for gen in generators]
-        self.fuelcost_generation=sum( c for c in flatten(gen_fuel_costs_pwlmodel) )
-        self.truecost_generation=sum( c for c in flatten(gen_fuel_costs_polynomial) )
-        self.load_shed = sum( sum(load.shed(t) for load in self.loads()) for t in self.times )
+        times=getattr(self.times,'non_overlap_times',self.times)
+        gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t)) for t in times] for gen in generators]
+        gen_fuel_costs_polynomial = [[gen.truecost(t) for t in times] for gen in generators]
+        self.totalcost_generation = sum(flatten([[float(gen.cost(t)) for t in times] for gen in generators]))
+        self.fuelcost_generation=float(sum( c for c in flatten(gen_fuel_costs_pwlmodel) ))
+        self.fuelcost_true_generation=float(sum( c for c in flatten(gen_fuel_costs_polynomial) ))
+        self.load_shed = sum( sum(load.shed(t) for load in self.loads()) for t in times )
         self._get_cost_error()
-#        except TypeError:
-#            self.fuelcost_generation=None
-#            self.truecost_generation=None
-#            self.load_shed=None
-#            self.costerror=None
     def _get_cost_error(self):
-        try: self.costerror=abs(self.fuelcost_generation-self.truecost_generation)/self.truecost_generation
+        try: self.costerror=abs(self.fuelcost_generation-self.fuelcost_true_generation)/self.fuelcost_true_generation
         except ZeroDivisionError: self.costerror=0
     def _get_prices(self):
         self.lmps={}
         self.line_prices={}
         for t in self.times: 
-            self.lmps[t]=self.get_values('buses','price',t)
-            self.line_prices[t]=self.get_values('lines','price',t)
+            self.lmps[str(t)]=self.get_values('buses','price',t)
+            self.line_prices[str(t)]=self.get_values('lines','price',t)
         
     def buses(self): return self.power_system.buses
     def lines(self): return self.power_system.lines
-    def generators(self): return flatten( [[gen for gen in bus.generators] for bus in self.buses()] )
+    def generators(self): return self.power_system.generators()
     def loads(self): return flatten( [[ld for ld in bus.loads] for bus in self.buses()] )
     def get_values(self,kind='generators',attrib='power',time=None):
         '''Get the attributes of all objects of a certain kind at a given time.'''
@@ -128,24 +147,24 @@ class Solution(object):
     def savevisualization(self,filename=None):
         '''Save the visualization to a file'''
         if filename is None: plot.show()
-        else: plot.savefig(joindir(self.datadir,filename),bbox_inches='tight')
+        else: plot.savefig(filename,bbox_inches='tight')
         plot.close()
     def show(self):
         '''Display the solution information to the terminal'''
         out=['']
         out.extend(['Solution information','-'*10,''])
-        for t in self.times:
-            out.append('{tm}: {start}'.format(tm=t,start=t.Start))
-            out.extend(self.info_price(t))
-            out.extend(self.info_generators(t))
-            out.extend(self.info_loads(t))
-            out.extend(self.info_buses(t))
-            out.extend(self.info_lines(t))
-        else:
-            out.extend(self.info_cost())
-            print '\n'.join(out)
+        if len(self.times)<5:
+            for t in self.times:
+                out.append('{tm}: {start}'.format(tm=t,start=t.Start))
+                out.extend(self.info_price(t))
+                out.extend(self.info_generators(t))
+                out.extend(self.info_loads(t))
+                out.extend(self.info_buses(t))
+                out.extend(self.info_lines(t))
+        out.extend(self.info_cost())
+        print '\n'.join(out)
     def info_status(self): return ['solved in {time:0.4f} sec'.format(time=self.solve_time)]
-    def info_price(self,t): return ['price={}'.format(self.lmps[t])]    
+    def info_price(self,t): return ['price={}'.format(self.lmps[str(t)])]    
     def info_generators(self,t):
         out=['generator info:']
         if len(self.buses())>1: out.append('bus={}'.format(self.get_values('generators','bus')))
@@ -165,32 +184,44 @@ class Solution(object):
              'name={}'.format(getattrL(buses,'name')),
              'Pinj={}'.format([ bus.Pgen(t) - bus.Pload(t) for bus in buses]),
              'angle={}'.format(self.get_values('buses','angle',t)),
-             'LMP={}'.format(self.lmps[t])]    
+             'LMP={}'.format(self.lmps[str(t)])]    
         return out    
     def info_lines(self,t):
         lines=self.lines()
         return ['line info:',
              'connecting={}'.format(zip(getattrL(lines,'From'),getattrL(lines,'To'))),       
              'Pk={}'.format(self.get_values('lines','power',t)),
-             'price={}'.format(self.line_prices[t])]            
+             'price={}'.format(self.line_prices[str(t)])]            
     def info_cost(self):
         return ['objective cost={}'.format(self.objective),
+        'total cost of generation={}'.format(self.totalcost_generation),
         'linearized fuel cost of generation={}'.format(self.fuelcost_generation),
-        ' non-linearized cost of generation={}'.format(self.truecost_generation),
+        ' non-linearized cost of generation={}'.format(self.fuelcost_true_generation),
         'percentage difference\t\t={diff:.2%}'.format(diff=self.costerror),
         ]
+    def save(self,filename=None):
+        if filename is None: filename=joindir(self.datadir,'solution.yaml')
+        def get_time_listing(component,attr):
+            try: return dict(zip(self.times.non_overlap_times,[self.get_values(component,attr,t) for t in self.times.non_overlap_times]))
+            except AttributeError:
+                return dict(zip(self.times,[self.get_values(component,attr,t) for t in self.times]))
+        self.generators_status=get_time_listing('generators','status')
+        self.generators_power=get_time_listing('generators','power')
+        self.power_system=[]
+        with open(filename,'w+') as f: yaml.dump(self,f)
 
 
 class Solution_ED(Solution):
     def info_lines(self,t): return []
     def info_buses(self,t): return []
-    def visualization(self,show_cost_also=False):
+    def visualization(self,filename=None,show_cost_also=False):
         ''' economic dispatch visualization of linearized incremental cost'''
+        if filename is None: filename=joindir(self.datadir,'dispatch.png')
         t=self.times[0]
-        price=self.lmps[t][0]
+        price=self.lmps[str(t)][0]
         generators,loads=self.generators(),self.loads()
         
-        gensPlotted,genNames,loadsPlotted,loadNames=[],[],[],[]
+        plotted_gens,names_gens,plotted_loads,names_loads=[],[],[],[]
         minGen=min(getattrL(generators,'Pmin'))
         maxGen=max(getattrL(generators,'Pmax'))
 
@@ -198,28 +229,29 @@ class Solution_ED(Solution):
         ax=plot.axes()
         for gen in generators:
             if gen.status(t):
-                gensPlotted.append( gen.cost_model.plot_derivative(P=value(gen.power(t)),linestyle='-') )
-                genNames.append(gen.name)
+                plotted_gens.append( gen.cost_model.plot_derivative(P=value(gen.power(t)),linestyle='-') )
+                names_gens.append(gen.name)
         for load in loads: 
             if load.kind=='bidding': 
-                loadsPlotted.append( load.bid(t).plot_derivative(P=value(load.power(t)),linestyle=':') )
-                loadNames.append(load.name)
+                plotted_loads.append( load.bid(t).plot_derivative(P=value(load.power(t)),linestyle=':') )
+                names_loads.append(load.name)
         if price is not None: 
             grayColor='.75'
             plot.plot([minGen,maxGen],[price,price],'--k',color=grayColor)
             plot.text(maxGen, price, '{p:0.2f} $/MWh'.format(p=price),color=grayColor,horizontalalignment='right')
         
         plot.xlabel('P [MWh]')        
-        if loadsPlotted:     plot.ylabel('Marginal Cost-Benifit [$/MWh]')
+        if plotted_loads:     plot.ylabel('Marginal Cost-Benifit [$/MWh]')
         else:                plot.ylabel('Marginal Cost [$/MWh]')
         prettify_axes(ax)
         
+        #plot.xlim(xmin=0,xmax=)
         ymin,_ = plot.ylim()
         if ymin<0: plot.ylim(ymin=0)        
 
-        legendGens=plot.legend(gensPlotted, genNames, fancybox=True,title='Generators:',loc='best')
-        if loadsPlotted:
-            plot.legend(loadsPlotted, loadNames, fancybox=True,title='Loads:',loc='best')
+        legendGens=plot.legend(plotted_gens, names_gens, fancybox=True,title='Generators:',loc='best')
+        if plotted_loads:
+            plot.legend(plotted_loads, names_loads, fancybox=True,title='Loads:',loc='best')
             plot.gca().add_artist(legendGens) #add first legend to the axes manually bcs multiple legends get overwritten
         
         self.savevisualization(filename='dispatch.png')
@@ -227,42 +259,53 @@ class Solution_ED(Solution):
         if show_cost_also:
             #show a plot of the cost space, illustrating the linearization
             plot.figure()
-            gensPlotted_price=gensPlotted
-            gensPlotted,genNames,loadsPlotted,loadNames=[],[],[],[]
+            gensPlotted_price=plotted_gens
+            plotted_gens,names_gens,plotted_loads,names_loads=[],[],[],[]
             for g,gen in enumerate(generators):
                 if gen.status(t):
-                    gensPlotted.append( gen.cost_model.plot(P=value(gen.power(t)),linestyle='-',color=gensPlotted_price[g].get_color()) )
-                    genNames.append(gen.name)
+                    plotted_gens.append( gen.cost_model.plot(P=value(gen.power(t)),linestyle='-',color=gensPlotted_price[g].get_color()) )
+                    names_gens.append(gen.name)
             for load in loads: 
                 if load.kind=='bidding': 
-                    loadsPlotted.append( load.bid(t).plot(P=value(load.power(t)),linestyle=':') )
-                    loadNames.append(load.name)        
+                    plotted_loads.append( load.bid(t).plot(P=value(load.power(t)),linestyle=':') )
+                    names_loads.append(load.name)        
             plot.xlabel('P [MWh]')
-            if loadsPlotted:     plot.ylabel('Cost-Benifit [$/h]')
+            if plotted_loads:     plot.ylabel('Cost-Benifit [$/h]')
             else:                plot.ylabel('Cost [$/h]')
-            legendGens=plot.legend(gensPlotted, genNames, fancybox=True,title='Generators:',loc='best')
-            if loadsPlotted:
-                plot.legend(loadsPlotted, loadNames, fancybox=True,title='Loads:',loc='best')
+            legendGens=plot.legend(plotted_gens, names_gens, fancybox=True,title='Generators:',loc='best')
+            if plotted_loads:
+                plot.legend(plotted_loads, names_loads, fancybox=True,title='Loads:',loc='best')
                 plot.gca().add_artist(legendGens) #add first legend to the axes manually bcs multiple legends get overwritten
             
             self.savevisualization(filename='dispatch-cost.png')        
-    def saveCSV(self,filename='dispatch.csv'):
+    def saveCSV(self,filename=None):
         '''economic dispatch generator solution values in spreadsheet form'''
+        if filename is None: filename=joindir(self.datadir,'dispatch.csv')
         def niceTF(value): return 0 if value==0 else 1
         def nice_zeros(value): return 0 if value==0 else value
         
         t=self.times[0]
         generators=self.generators()
-        
+        output_loads= [load for load in self.loads() if getattr(load,'kind',None) in ['bidding','shifting']]
         fields,data=[],[]
-        fields.append('generator name');  data.append(getattrL(generators,'name'))
-        fields.append('u');  data.append([niceTF(g.status(t)) for g in generators])
-        fields.append('P');  data.append([nice_zeros(g.power(t)) for g in generators])
-        fields.append('IC');  data.append([nice_zeros(g.incrementalcost(t)) for g in generators])
-        writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))        
+        components=flatten([generators,output_loads])
+        fields.append('name')
+        data.append(getattrL(components,'name'))
+        
+        fields.append('u');   
+        data.append([niceTF(g.status(t)) for g in components])
+        
+        fields.append('P')
+        data.append([nice_zeros(g.power(t)) for g in components])
+        
+        fields.append('IC')
+        data.append([nice_zeros(g.incrementalcost(t)) for g in components])
+        
+        writeCSV(fields,transpose(data),filename=filename)        
 class Solution_OPF(Solution): 
-    def visualization(self,filename='powerflow.png'): 
+    def visualization(self,filename=None): 
         '''power flow visualization'''
+        if filename is None: filename=joindir(self.datadir,'powerflow.png')
         import networkx as nx
         buses,lines,t=self.buses(),self.lines(),self.times[0]
         
@@ -287,7 +330,7 @@ class Solution_OPF(Solution):
         nx.draw_networkx_edges(G,edgelist=atLimLines,edge_color='r',pos=pos,width=Plines,alpha=0.5)
         self.savevisualization(filename)
         
-    def saveCSV(self,filename='powerflow'):
+    def saveCSV(self,filename=None,filename_lines=None):
         '''OPF generator and line power values in spreadsheet form''' 
         t=self.times[0]
         
@@ -296,25 +339,30 @@ class Solution_OPF(Solution):
         fields.append('u');  data.append(self.get_values('generators','status',t))
         fields.append('P');  data.append(self.get_values('generators','power',t))
         fields.append('IC');  data.append(self.get_values('generators','incrementalcost',t))
-        writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename+'-generators.csv'))           
+        if filename is None: filename=joindir(self.datadir,'powerflow-generators.csv')
+        writeCSV(fields,transpose(data),filename=filename)           
+        
         
         fields,data=[],[]
         fields.append('from');  data.append(self.get_values('lines','From'))
         fields.append('to');  data.append(self.get_values('lines','To'))
         fields.append('power'); data.append(self.get_values('lines','power',t))
-        fields.append('congestion shadow price'); data.append(self.line_prices[t])
-        writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename+'-lines.csv'))        
+        fields.append('congestion shadow price'); data.append(self.line_prices[str(t)])
+        if filename_lines is None: filename_lines=joindir(self.datadir,'powerflow-lines.csv') 
+        writeCSV(fields,transpose(data),filename=filename_lines)        
     
     def info_price(self,t): return [] #built into bus info
 class Solution_UC(Solution):
     def info_lines(self,t): return []
     def info_buses(self,t): return []
-    def saveCSV(self,filename='commitment.csv'):
+    def saveCSV(self,filename=None):
         '''generator power values and statuses for unit commitment'''
+        if filename is None: filename=joindir(self.datadir,'commitment.csv')
         times=self.times
         fields,data=[],[]
         fields.append('times');  data.append([t.Start for t in times])
-        fields.append('prices'); data.append([self.lmps[t][0] for t in times])
+        fields.append('prices'); data.append([self.lmps[str(t)][0] for t in times]) 
+
         for gen in self.generators(): 
             if gen.is_controllable:
                 fields.append('status: '+str(gen.name))
@@ -325,13 +373,21 @@ class Solution_UC(Solution):
             fields.append('load power: '+str(load.name))
             data.append([value(load.power(t)) for t in times])
         
-        writeCSV(fields,transpose(data),filename=joindir(self.datadir,filename))
+        writeCSV(fields,transpose(data),filename=filename)
     
-    def visualization(self,filename='commitment.png',withPrices=True,withInitial=False,seperate_legend=False):
+    def visualization(self,filename=None,withPrices=True,withInitial=False,filename_DR=None):
         '''generator output visualization for unit commitment'''
-        prices=[self.lmps[t][0] for t in self.times]
-        stack_plot_UC(self.generators(),self.times,prices,self.datadir,withInitial,withPrices,seperate_legend)
+        if filename is None: filename=joindir(self.datadir,'commitment.png')
+        prices=[self.lmps[str(t)][0] for t in self.times]
+        stack_plot_UC(self.generators(),self.times,prices,self.datadir,withPrices=withPrices,withInitial=withInitial)
         self.savevisualization(filename)
+        DR_loads=filter(lambda d: getattr(d, 'kind','') in ['shifting','bidding','shifting-bidding'], self.loads())
+        if DR_loads:
+            interval= int(DR_loads[0].interval_hours) if (len(self.times)<=24 and len(DR_loads)==1 and 'shifting' in getattr(DR_loads[0], 'kind','')) else None
+            stack_plot_UC(DR_loads,self.times,prices,withPrices=withPrices,hours_tick_interval=interval)
+            if filename_DR is None: filename_DR=joindir(self.datadir,'commitment-DR.png')
+            self.savevisualization(filename_DR)
+        
 
 class Solution_SCUC(Solution_UC):
     def visualization(self): logging.warning('no visualization for SCUC. Spreadsheet output is valid, except for the price column is the price on first bus only.')
@@ -358,9 +414,18 @@ class Solution_UC_multistage(Solution_UC):
     def _sum_over(self,attrib,stage_solutions): return sum(getattr(sln, attrib) for sln in stage_solutions)     
     def _get_costs(self,stage_solutions):
         self.fuelcost_generation=self._sum_over('fuelcost_generation',stage_solutions)
-        self.truecost_generation=self._sum_over('truecost_generation',stage_solutions)
+        self.fuelcost_true_generation=self._sum_over('fuelcost_true_generation',stage_solutions)
+        self.totalcost_generation=self._sum_over('totalcost_generation',stage_solutions)
         self.load_shed=          self._sum_over('load_shed',stage_solutions)
         self._get_cost_error()       
+    def info_cost(self):
+        return ['objective cost={}'.format(self.objective),
+        'total generation costs={}'.format(self.totalcost_generation),
+        'linearized fuel cost of generation={}'.format(self.fuelcost_generation),
+        ' non-linearized cost of generation={}'.format(self.fuelcost_true_generation),
+        'percentage difference\t\t={diff:.2%}'.format(diff=self.costerror),
+        ]
+    
     def _get_prices(self,stage_solutions):
         self.lmps={}
         for stage in stage_solutions: self.lmps.update(stage.lmps)
@@ -370,6 +435,8 @@ class Solution_UC_multistage(Solution_UC):
         out.extend(self.info_cost())
         out.extend(self.info_shedding())
         print '\n'.join(out)
+    def info_generators(self): return []
+    def info_loads(self): return []
     def info_status(self):
         return ['solved multistage problem in a in total of {time:0.4f} sec'.format(time=self.solve_time)]
     def info_shedding(self):
@@ -379,46 +446,53 @@ def _colormap(numcolors,colormapName='gist_rainbow',mincolor=1):
     cm = matplotlib.cm.get_cmap(colormapName)
     return [cm(1.*i/numcolors) for i in range(mincolor,numcolors+mincolor)]      
 
-def stack_plot_UC(generators,times,prices,datadir,withInitial=False,withPrices=True,seperate_legend=False):
+def stack_plot_UC(generators,times,prices,
+                  datadir=None,
+                  withInitial=False,
+                  withPrices=True,
+                  seperate_legend=False,
+                  hours_tick_interval=None
+                  ):
     withPrices=withPrices and any(prices)
-    bigFont={'fontsize':15}
+    font_big={'fontsize':15}
     figWidth=.85; figLeft=(1-figWidth)/2
-    yLabel_pos={'x':-0.09,'y':0.5}
+    yLabel_pos={'x':-0.12,'y':0.5}
     
-    fig=plot.figure(figsize=(10, 4), dpi=120)
+    fig=plot.figure(figsize=(10, 4), dpi=180)
     ax=plot.axes([figLeft,.1,figWidth,.6])
-    ax.set_ylabel('energy [MWh]',ha='center',**bigFont)
+    ax.set_ylabel('energy [MWh]',ha='center',**font_big)
     ax.yaxis.set_label_coords(**yLabel_pos)
     prettify_axes(ax)
     
     alpha_initialTime=0.2
     
-    gensPlotted,loadsPlotted,yLabels=[],[],[]
+    gens_plotted,legend_labels=[],[]
     
     T=[t.Start for t in times.wInitial]
-    barWidth = times.intervalhrs / 24.0 #maplotlib dates have base of 1day
+    bar_width = times.intervalhrs / 24.0 #maplotlib dates have base of 1day
     initWidth = times.initialTime.intervalhrs / 24.0        
-    stackBottom=[0]*len(T)
+    stack_bottom=[0]*len(T)
     
     
-    def addtostackplot(ax,time,power,color, gensPlotted,stackBottom):
+    def addtostackplot(ax,time,power,color, gens_plotted,stack_bottom):
         #add initial time to stackplot
         if withInitial:
-            ax.bar(time[0],power[0],bottom=stackBottom[0],color=color, edgecolor=color, alpha=alpha_initialTime, width=initWidth)
+            ax.bar(time[0],power[0],bottom=stack_bottom[0],color=color, linewidth=.01, alpha=alpha_initialTime, width=initWidth)
         #add commitment times to stackplot
-        plt=ax.bar(time[1:],power[1:],bottom=stackBottom[1:],color=color, edgecolor=color,width=barWidth)
+        plt=ax.bar(time[1:],power[1:],bottom=stack_bottom[1:],color=color, linewidth=.01, width=bar_width)
         #add power to stack bottom
-        stackBottom=elementwiseAdd(power,stackBottom)
+        stack_bottom=elementwiseAdd(power,stack_bottom)
         #add to list of gens plotted
-        gensPlotted.append(plt[0])
-        return gensPlotted,stackBottom
+        gens_plotted.append(plt[0])
+        return gens_plotted,stack_bottom
     
     if len(generators)<=5:
         colors=_colormap(len(generators),colormapName='Blues')
         for g,gen in enumerate(generators):
-            Pgen=[gen.power(t) for t in times.wInitial]
-            gensPlotted,stackBottom=addtostackplot(ax,T,Pgen,colors[g], gensPlotted,stackBottom)
-            yLabels.append(gen.name)
+            if withInitial: Pgen=[gen.power(t) for t in times.wInitial]
+            else: Pgen=[gen.power(t) if t!=times.initialTime else 0 for t in times.wInitial]
+            gens_plotted,stack_bottom=addtostackplot(ax,T,Pgen,colors[g], gens_plotted,stack_bottom)
+            legend_labels.append(gen.name)
     else:     
         #group generators by kind
         kind_map=dict(ngst='shoulder NG',ngcc='shoulder NG',nggt='peaker NG',chp='CHP')
@@ -434,43 +508,26 @@ def stack_plot_UC(generators,times,prices,datadir,withInitial=False,withPrices=T
         
         for kind,Pgen in power_by_kind.iteritems():
             if Pgen is None: continue
-            gensPlotted,stackBottom=addtostackplot(ax,T,Pgen,colors[ordered_kinds.index(kind)], gensPlotted,stackBottom)
-            yLabels.append(kind)
+            gens_plotted,stack_bottom=addtostackplot(ax,T,Pgen,colors[ordered_kinds.index(kind)], gens_plotted,stack_bottom)
+            legend_labels.append(kind)    
     
-
-    
-    #show demand response loads
-    stackBottom=stackBottom[1:] #loads don't have initial time info
-    
-    convert_to_GW=True if max(stackBottom)>20000 else False
-    
-#    for load in loads:
-#        color='.8' #gray
-#        if load.kind in ['shifting','bidding']:
-#            Pd=[value(load.power(t)) for t in times]
-#            stackBottom=elementwiseAdd([-1*P for P in Pd],stackBottom)
-#            plt=ax.bar(T[1:],Pd,bottom=stackBottom,alpha=.5,color=color,edgecolor=color,width=barWidth,hatch="/")
-#            loadsPlotted.append(plt[0])
-#            yLabels.append(load.name)
-#            if fewunits: colors.append(color)
-#            else: colors[load.kind] = color
-#        else: pass
+    convert_to_GW=True if max(stack_bottom)>20000 else False
     
     #show prices
     if withPrices:
         prices=replace_all(prices, config.cost_load_shedding, None)
         prices_wo_none=[p for p in prices if p is not None]
         if prices_wo_none:
-            axesPrice = plot.axes([figLeft,.75,figWidth,.2],sharex=ax)
-            axesPrice.step(T[1:]+[times.End],prices+[prices[-1]],  where='post') #start from 1 past initial time
-            axesPrice.set_ylabel('price\n[$/MWh]',ha='center',**bigFont)
-            axesPrice.yaxis.set_label_coords(**yLabel_pos)
-            plot.setp(axesPrice.get_xticklabels(), visible=False)
+            axes_price = plot.axes([figLeft,.75,figWidth,.2],sharex=ax)
+            axes_price.step(T[1:]+[times.End],prices+[prices[-1]],  where='post') #start from 1 past initial time
+            axes_price.set_ylabel('price\n[$/MWh]',ha='center',**font_big)
+            axes_price.yaxis.set_label_coords(**yLabel_pos)
+            plot.setp(axes_price.get_xticklabels(), visible=False)
             #format the price axis nicely
             plot.ylim((.9*min(prices_wo_none),1.1*max(prices_wo_none)))
-            axesPrice.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(5))
-            prettify_axes(axesPrice)
-            
+            axes_price.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(5))
+            prettify_axes(axes_price)
+        
     ax.xaxis_date()
     
     for label in ax.get_xticklabels():
@@ -478,38 +535,43 @@ def stack_plot_UC(generators,times,prices,datadir,withInitial=False,withPrices=T
         label.set_rotation(30)        
     
     #format the time axis nicely
-    if 24*10>times.spanhrs>48:
-        ax.xaxis.set_major_locator(matplotlib.dates.DayLocator())
-        ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y-%m-%d'))
-        ax.xaxis.set_minor_locator(matplotlib.dates.HourLocator())
-    elif times.spanhrs<48:
-        ax.xaxis.set_major_locator(matplotlib.dates.HourLocator())
+    if hours_tick_interval is None:
+        if 24*10>times.spanhrs>48:
+            ax.xaxis.set_major_locator(matplotlib.dates.DayLocator())
+            ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y-%m-%d'))
+            ax.xaxis.set_minor_locator(matplotlib.dates.HourLocator())
+        elif times.spanhrs<48:
+            ax.xaxis.set_major_locator(matplotlib.dates.HourLocator())
+            ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M'))
+        #otherwise use defaults
+    else:
+        ax.xaxis.set_major_locator(matplotlib.dates.HourLocator(interval=hours_tick_interval))
         ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%H:%M'))
-    #otherwise use defaults  
+        
     
     #format the power axis nicely
     if convert_to_GW:
         labels_power=ax.get_yticks()
         labels_power=[P/1000 for P in labels_power]
         ax.set_yticklabels(labels_power)
-        ax.set_ylabel('energy [GWh]',ha='center',**bigFont)
+        ax.set_ylabel('energy [GWh]',ha='center',**font_big)
     ax.autoscale_view()        
 
     #add the legend
-    plottedL=loadsPlotted[::-1]+gensPlotted[::-1]    
+    plottedL=gens_plotted[::-1]    
 #    shrink_axis(ax,0.30)
-#    if withPrices: shrink_axis(axesPrice,0.30)
+#    if withPrices: shrink_axis(axes_price,0.30)
     legend_font=FontProperties()
     legend_font.set_size('small')
     
     if seperate_legend:
         figlegend = plot.figure()
-        figlegend.legend(plottedL, yLabels[::-1],prop=legend_font,loc='center')
+        figlegend.legend(plottedL, legend_labels[::-1],prop=legend_font,loc='center')
         figlegend.savefig(joindir(datadir,'commitment-legend.png'))
         plot.close(figlegend)
     else:
-        ax.legend(plottedL, yLabels[::-1],prop=legend_font)#,loc='center left', bbox_to_anchor=(1, 0.5))
-    
+        ax.legend(plottedL, legend_labels[::-1],prop=legend_font)#,loc='center left', bbox_to_anchor=(1, 0.5))
+
 def shrink_axis(ax,percent_horizontal=0.20,percent_vertical=0):
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width * (1-percent_horizontal), box.height*(1-percent_vertical)])

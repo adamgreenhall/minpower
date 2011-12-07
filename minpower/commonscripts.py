@@ -93,7 +93,7 @@ def readCSV(filenm,validFields='all'):
             for entry in row:
                 entry=entry.strip()
                 if entry.strip()=='': newRow.append( repForBlankStrings )
-                elif checkForNumbers: newRow.append( stringToNumberConversion(entry) )
+                elif checkForNumbers: newRow.append( convert_str2num(entry) )
                 else: newRow.append(entry)
             #if not all(e=='' for e in newRow): 
             outData.append(newRow)
@@ -122,6 +122,22 @@ def readCSV(filenm,validFields='all'):
         
         return data,fieldsChecked    
 
+def csv2dicts(filename,field_map=None):
+    def valid_cell(name,val): return name is not None and val.strip()!='' 
+    with open(filename,'r') as csvfile:
+        try: dialect = csv.Sniffer().sniff(csvfile.read(4048))
+        except: dialect = csv.excel
+        csvfile.seek(0)
+        raw_data=list(csv.DictReader(csvfile, dialect=dialect))
+    if field_map is not None: 
+        try: data=[{field_map[drop_case_spaces(name)]:convert_str2num(val) for name,val in row.items() if valid_cell(name,val)} for row in raw_data]
+        except: 
+            print raw_data
+            raise
+    else:
+        data=[{name:convert_str2num(val) for name,val in row.items() if valid_cell(name,val)} for row in raw_data]
+    return data 
+
 def writeCSV(fields,data,filename):
     with open(filename, 'w+') as f:
         writer = csv.writer(f)
@@ -129,7 +145,8 @@ def writeCSV(fields,data,filename):
         writer.writerows(data)
         
 #################### string stuff ##################
-def stringToNumberConversion(s):
+def convert_str2num(s):
+    s=s.strip()
     try: return int(s)
     except ValueError: 
         try: return float(s)

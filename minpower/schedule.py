@@ -3,8 +3,8 @@ Time and schedule related models.
 """
 
 import dateutil
-from commonscripts import hours,parseTime, readCSV,getclass_inlist, drop_case_spaces,transpose,frange,getattrL,getTimeFormat
-
+from commonscripts import hours,parseTime, readCSV,getclass_inlist, drop_case_spaces,transpose,frange,getattrL,getTimeFormat,writeCSV
+from operator import attrgetter
 
 class Time(object):
     """
@@ -39,15 +39,18 @@ class Time(object):
         intervalStepHrs=hours(interval)
         rangeLenHrs = hours(self.End-self.Start)
         return [self.Start + hours(t) for t in frange(0,rangeLenHrs,intervalStepHrs)]
-    def __sub__(self, other): return self.End-other.Start
-    def __add__(self, other): return self.Start+other
+    def time_passed_since(self,other): return self.End - other.Start
+#    def __sub__(self, other): return self.End-other.Start
+#    def __eq__(self, other): return self.__dict__ == other.__dict__ if type(other) is type(self) else False
+#    def __ne__(self, other): return not self.__eq__(other)
+#    def __cmp__(self, other): return self.__eq__(other) #cmp(self.Start,other.Start)
     def __str__(self): 
         try: return 't{ind:02d}'.format(ind=self.index)    
         except ValueError: return 't{ind}'.format(ind=self.index) #index is str    
     def __unicode__(self):
         return unicode(self.Start)+' to '+unicode(self.End)
     def __repr__(self): return repr(self.Start)
-def makeTimes(datetimeL):
+def make_times(datetimeL):
     '''convert list of :py:class:`datetime.datetime` objects to :class:`~schedule.Timelist` object'''
     S=datetimeL[0]
     I=datetimeL[1] - S #interval
@@ -115,86 +118,90 @@ class Timelist(object):
         if initialTime: self.initialTime= initialTime
         else: self.initialTime = Time(Start=self.Start-self.interval, interval=self.interval,index='Init')
         self.wInitial = tuple([self.initialTime] + list(self.times))
-    def subdivide(self,hrsperdivision=24,hrsinterval=None,overlap_hrs=0): #offset_hrs=0
+    def subdivide(self,division_hrs=24,interval_hrs=None,overlap_hrs=0,offset_hrs=0):
         """
         Subdivide a list of times into serval stages,  each stage
-        spanning `hrsperdivision` with intervals of `hrsinterval`.
+        spanning `division_hrs` with intervals of `interval_hrs`.
         
         :param hoursperdivision: time span of each stage (excluding overlap)
-        :param hrsinterval: (optional) time span of each interval
+        :param interval_hrs: (optional) time span of each interval
           for each stage. If not specified, `intervalhrs` is used.
         :param overlap_hrs: (optional) overlap between time stages, default is 0 
         
         typical use:
         
         >>> t=make_times_basic(8)
-        >>> t.subdivide(hrsperdivision=4)
+        >>> t.subdivide(division_hrs=4)
         [[1,2,3,4],[5,6,7,8]]
         
         but should also be able to handle longer intervals:
         
-        >>> t.subdivide(hrsperdivision=4,hrsinterval=2)
+        >>> t.subdivide(division_hrs=4,interval_hrs=2)
         [[1,3],[5,7]]
         
         and handle arbitary overlaps:
         
-        >>> t.subdivide(hrsperdivision=4,overlap_hrs=2)
+        >>> t.subdivide(division_hrs=4,overlap_hrs=2)
         [[1,2,3,4,5,6],[4,5,6,7,8]]
         
         """
-        def chunks(L, n,overlap=0):
-            """ Yield successive n-sized chunks from L, with optional overlap."""
-            if n!=int(n): raise ValueError('rounding step size for time subdivision from {n} to {nr} not allowed'.format(n=n,nr=round(n)))
-            if overlap!=int(overlap): raise ValueError('overlap size for time subdivision from {n} to {nr} not allowed'.format(n=overlap,nr=round(overlap)))
-            n=int(n)
-            overlap=int(overlap)
-            stages=[]
-            for i in xrange(0, len(L), n): 
-                stages.append( Timelist(L[i:i+n+overlap]) )
-            else:
-                #the last stage has no overlap and can contain less than the full n intervals
-                stages[-1]=Timelist(L[i:])
-            return stages
         def timeslice(tStart,tEnd,index): return Time(Start=tStart,End=tEnd,index=index)
         
-        if hrsinterval is None: hrsinterval=self.intervalhrs
-        overlap_intervals = overlap_hrs/hrsinterval
-        
-        
-        
-        if hrsinterval==self.intervalhrs and hrsperdivision==self.intervalhrs: return self
-        elif hrsinterval==self.intervalhrs: 
-            newtimesL=chunks(self,n=hrsperdivision/self.intervalhrs,overlap=overlap_intervals)
-        elif hrsinterval>self.intervalhrs:
-            steps=hrsinterval/self.intervalhrs
+        if interval_hrs is None: interval_hrs=self.intervalhrs
+        span_intervals= division_hrs/interval_hrs
+        overlap_intervals = overlap_hrs/interval_hrs
+        offset_intervals = offset_hrs/interval_hrs
+        intervals={'span':span_intervals,'overlap':overlap_intervals,'offset':offset_intervals}
+        for nm,val in intervals.items():
+            if val!=int(val): 
+                msg='for time subdivision {nm} must be an integer number of intervals (is {val})'.format(nm=nm,val=val)
+                raise ValueError(msg)
+            intervals[nm]=int(val)
+            
+        if interval_hrs==self.intervalhrs and division_hrs==self.intervalhrs: return self
+        elif interval_hrs==self.intervalhrs: 
+            newtimesL=divide_into_stages(self,**intervals)
+        elif interval_hrs>self.intervalhrs:
+            steps=interval_hrs/self.intervalhrs
             if steps==int(steps): steps=int(steps)
-            else: raise ValueError('Native Timelist interval is i={i}, while proposed interval is j={j}. j/i must be an integer.'.format(i=self.intervalhrs,j=hrsinterval))
+            else: raise ValueError('Native Timelist interval is i={i}, while proposed interval is j={j}. j/i must be an integer.'.format(i=self.intervalhrs,j=interval_hrs))
             
             longertimeL = Timelist([timeslice(self[i].Start, self[i+steps-1].End,i) for i in range(0,len(self)-steps+1,steps)])
-            newtimesL = chunks(longertimeL,hrsperdivision/hrsinterval,overlap_intervals)
+            newtimesL = divide_into_stages(longertimeL,**intervals)
 
         for t,stage in enumerate(newtimesL): 
-            if t>0:        stage.setInitial( newtimesL[t-1][-1-int(overlap_hrs/hrsinterval)] )
+            if t>0:        stage.setInitial( newtimesL[t-1][-1-intervals['overlap']] )
             elif t==0: stage.setInitial( self.initialTime )
-            stage.non_overlap_times = stage[:-1-int(overlap_intervals)+1] if overlap_intervals>0 else stage
+            stage.non_overlap_times = stage[:-1-int(intervals['overlap'])+1] if intervals['overlap']>0 else stage
         else:
             #the last stage has no overlap and may not cover the whole division
             stage.non_overlap_times = stage
         return newtimesL
         
-        
-def makeSchedule(filename,times):
+
+def divide_into_stages(L, span=0,overlap=0,offset=0):
+    """divide list into stage_size-sized chunks, with optional overlap."""
+    stages=[]
+    for i in xrange(offset, len(L), span): 
+        stages.append( Timelist(L[i:i+span+overlap]) )
+    else:
+        #the last stage has no overlap and can contain less than the full stage_size intervals
+        stages[-1]=Timelist(L[i:])
+    return stages
+     
+def make_schedule(filename,times=None):
     """
     Read time and power information from spreadsheet file.
     """
-    mapFieldsToAttributes={
-        'time':'time','t':'time',
-        'power':'P','p':'P','demand':'P','pd':'P','load':'P','wind':'P'}
-    validFields=mapFieldsToAttributes.keys()
+    map_field_attr={
+        'time':'time','t':'time','times':'time',
+        'power':'energy','p':'energy','demand':'energy','pd':'energy','load':'energy','wind':'energy','energy':'energy'}
+    valid_fields=map_field_attr.keys()
     
-    data,fields=readCSV(filename,validFields)
-    attributes=[mapFieldsToAttributes[drop_case_spaces(f)] for f in fields]
-    data_power=transpose(data)[attributes.index('P')] 
+    data,fields=readCSV(filename,valid_fields)
+    attributes=[map_field_attr[drop_case_spaces(f)] for f in fields]
+    data_power=transpose(data)[attributes.index('energy')]
+    if times is None: times=make_times(parse_timestrings(transpose(data)[attributes.index('time')]))
     return Schedule(times,data_power)
     
 class Schedule(object):
@@ -204,21 +211,23 @@ class Schedule(object):
     :py:class:`~schedule.Time` objects.
     """
     def __init__(self,times=None,P=None):
-        self.P=dict(zip(times,P))
+        self.energy=dict(zip(times,P))
         self.interval=times.interval
         self.intervalhrs = times.intervalhrs
-        self.maxvalue=max(self.P.values())
+        self.maxvalue=max(self.energy.values())
     def __imul__(self,multiplier):
         """
         Multiplies each power value in schedule by a multiplier.        
         Usage: schedule*=.9 
         would give a schedule with 90 percent of the power.
         """
-        for t,p in self.P.iteritems():
-            self.P[t]=p*multiplier
+        for t,p in self.energy.items():
+            self.energy[t]=p*multiplier
         return self
+    def times(self):
+        return Timelist(sorted(self.energy.keys(),key=attrgetter('Start','End')))
     def __repr__(self):
-        return repr(sorted([(str(t),p) for t,p in self.P.iteritems()]))    
+        return repr(sorted([(str(t),p) for t,p in self.energy.items()]))    
     def get_energy(self,timeperiod):
         """
         get the amount of energy in a time period 
@@ -226,8 +235,8 @@ class Schedule(object):
         if the timeperiod is in the schedule things are simple:
 
         >>> times=Timelist([Time(Start='1:00'),Time(Start='2:00'),Time(Start='3:00')])
-        >>> P=[100,210,100]
-        >>> s=Schedule(P=P,times=times)
+        >>> energy=[100,210,100]
+        >>> s=Schedule(energy=energy,times=times)
         >>> s.get_energy(times[0])
         100
 
@@ -238,9 +247,9 @@ class Schedule(object):
         >>> s.get_energy(tLarger)
         310.0
         """
-        times=self.P.keys()
-        try: return self.P[timeperiod]
+        try: return self.energy[timeperiod]
         except KeyError:
+            times=self.energy.keys()
             if timeperiod.interval>self.interval: 
                 #energy of time is sum all energy in times within
                 tstarts=timeperiod.Range(self.interval)
@@ -250,11 +259,16 @@ class Schedule(object):
                 t=getattrL(times,'Start').index(timeperiod.Start)
                 return self.get_energy(times[t])
             else: raise
+    def saveCSV(self,filename='schedule.csv'):
+        data=sorted(self.energy.items(),key=lambda t_e: t_e[0].Start)
+        data=[(row[0].Start,row[1]) for row in data]
+        fields=['times','energy']
+        writeCSV(fields,data,filename=filename)
 class FixedSchedule(Schedule):
     '''A simple "schedule" which has only one power output''' 
-    def __init__(self,times=None,P=None): self.P=P
-    def get_energy(self,timeperiod=None): return self.P
-    def __repr__(self): return 'FixedSchedule<P={}>'.format(self.P)
+    def __init__(self,times=None,P=None): self.energy=P
+    def get_energy(self,timeperiod=None): return self.energy
+    def __repr__(self): return 'FixedSchedule<energy={}>'.format(self.energy)
 def just_one_time():
     """For a single-time problem, generate a Timelist with just one time in it."""
     return Timelist([Time(Start='0:00',index=0)])

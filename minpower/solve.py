@@ -13,29 +13,6 @@ import powersystems
 import results
 import config
 from commonscripts import joindir,show_clock
-
-import objgraph,inspect,random
-from pympler.classtracker import ClassTracker
-from pympler.classtracker_stats import HtmlStats
-
-from coopr import pyomo
-from coopr.opt.base.solvers import IOptSolver,OptSolver
-
-profile_memory=False
-tracker=ClassTracker()
-if profile_memory:
-    for cls in [pyomo.ConcreteModel,pyomo.Var,pyomo.base.var._VarElement,
-                pyomo.Constraint,Problem,
-                IOptSolver,OptSolver,
-                ]:
-        tracker.track_class(cls)
-
-def show_backref_chain(name):
-    try: objgraph.show_chain(objgraph.find_backref_chain( random.choice(objgraph.by_type(name)),inspect.ismodule),filename='{}-chain.png'.format(name))
-    except: print 'couldnt find a reference to {} -- skip plotting'.format(name)
-def show_backrefs(name):
-    try: objgraph.show_backrefs(random.choice(objgraph.by_type(name)),filename='{}-backrefs.png'.format(name))
-    except: print 'no objects of type {} -- skipping plotting'.format(name)
     
 def problem(datadir='.',
         shell=True,
@@ -81,10 +58,7 @@ def problem(datadir='.',
                 #spinning_reserve_requirement=0,
                 dispatch_decommit_allowed=dispatch_decommit_allowed,)
     
-    logging.debug('power system set up {}'.format(show_clock()))
-    
-    tracker.create_snapshot('prob. created')
-    
+    logging.debug('power system set up {}'.format(show_clock()))    
     if times.spanhrs<=hours_commitment:
         solution=create_solve_problem(power_system,times,datadir,solver,problemfile,get_duals)
     else: #split into multiple stages and solve
@@ -98,16 +72,10 @@ def problem(datadir='.',
         solution=results.make_multistage_solution(power_system,stage_times,datadir,stage_solutions)
         logging.info('problem solved in {} ... finished at {}'.format(solution.solve_time,show_clock()))
     
-    tracker.create_snapshot('solutions solved')
-    
     if shell: solution.show()
     if csv: solution.saveCSV()
     if visualization: solution.visualization()
     if solution_file: solution.save(solution_file)
-    if profile_memory:
-        HtmlStats(tracker=tracker).create_html('profile.html')
-        #show_backref_chain('_VarElement')
-        #show_backrefs('_VarElement')
     return solution
 
 def create_solve_problem(power_system,times,datadir,solver,problemfile=False,get_duals=True):
@@ -198,7 +166,6 @@ def solve_multistage(power_system,times,datadir,
 
     for t_stage in stage_times:
         logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
-        tracker.create_snapshot('stage started {}'.format(t_stage[0].Start))
         set_initialconditions(buses,t_stage.initialTime)
         
         try: stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile,get_duals)
@@ -213,7 +180,6 @@ def solve_multistage(power_system,times,datadir,
         logging.debug('solved... get results... {}'.format(show_clock(showclock)))
         get_finalconditions(power_system,t_stage)
         stage_solutions.append(stage_solution)
-        #tracker.create_snapshot('stage finished {}'.format(t_stage[0].Start))
     return stage_solutions,stage_times
 
   

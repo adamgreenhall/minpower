@@ -3,12 +3,7 @@
     optimization problems. Matplotlib and networkx are used for
     visualization.
 """
-
-#from guppy import hpy
-#import objgraph,inspect,random,gc
 import yaml
-#import meliae 
-
 import logging
 from collections import OrderedDict
 

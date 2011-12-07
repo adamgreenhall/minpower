@@ -25,12 +25,12 @@ setup(
         ],
     install_requires=[
         'Coopr>=3.1.5409',
+        'scipy>=0.9',
         'matplotlib>=1.0.1',
         'networkx>=1.5',
-        'scipy>=0.9',
-        'ordereddict>=1.1',
-        'progressbar>=2.3',
         'python-dateutil>=1.4.1',
+        'ordereddict>=1.1',
+        'PyYAML>=3.10',
     ],
     tests_require=['Attest>=0.5.2'],
 

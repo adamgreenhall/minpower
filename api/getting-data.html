@@ -56,16 +56,16 @@ Also extract the time information and create a <a class="reference internal" hre
 object.</p>
 <dl class="function">
 <dt id="get_data.build_class_list">
-<tt class="descclassname">get_data.</tt><tt class="descname">build_class_list</tt><big>(</big><em>filename</em>, <em>model</em>, <em>field_attr_map</em>, <em>times=None</em><big>)</big><a class="reference internal" href="../_modules/get_data.html#build_class_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.build_class_list" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">get_data.</tt><tt class="descname">build_class_list</tt><big>(</big><em>data</em>, <em>model</em>, <em>datadir</em>, <em>times=None</em>, <em>model_schedule=&lt;function make_schedule at 0x10629da28&gt;</em><big>)</big><a class="reference internal" href="../_modules/get_data.html#build_class_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.build_class_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create list of class instances from data in a spreadsheet.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>filename</strong> &#8211; the spreadsheet file (currently just .csv)</li>
-<li><strong>classname</strong> &#8211; the <a class="reference internal" href="power-systems.html#module-powersystems" title="powersystems"><tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt></a> class to map the data to</li>
-<li><strong>field_attr_map</strong> &#8211; the map from field name (the first row of the spreadsheet) to attribute (the class)</li>
+<li><strong>data</strong> &#8211; a list of dictionaries describing the parameters</li>
+<li><strong>model</strong> &#8211; the <a class="reference internal" href="power-systems.html#module-powersystems" title="powersystems"><tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt></a> class to map the data to</li>
+<li><strong>datadir</strong> &#8211; the directory where the data (and schedule files are)</li>
 <li><strong>times</strong> &#8211; for <a class="reference internal" href="power-systems.html#module-powersystems" title="powersystems"><tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt></a> classes which have schedule file information,
 a master:class:<cite>~schedule.Timelist</cite> list to pass to <a class="reference internal" href="time.html#schedule.Schedule" title="schedule.Schedule"><tt class="xref py py-class docutils literal"><span class="pre">Schedule</span></tt></a></li>
 </ul>
@@ -108,15 +108,15 @@ for UC problems if not specified.)</li>
 
 <dl class="function">
 <dt id="get_data.setup_initialcond">
-<tt class="descclassname">get_data.</tt><tt class="descname">setup_initialcond</tt><big>(</big><em>filename</em>, <em>generators</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/get_data.html#setup_initialcond"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.setup_initialcond" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read initial conditions from a spreadsheet and
+<tt class="descclassname">get_data.</tt><tt class="descname">setup_initialcond</tt><big>(</big><em>data</em>, <em>generators</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/get_data.html#setup_initialcond"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.setup_initialcond" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a list of initial conditions parameters and
 add information to each <a class="reference internal" href="power-systems.html#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt></a> 
 object.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="get_data.setup_times">
-<tt class="descclassname">get_data.</tt><tt class="descname">setup_times</tt><big>(</big><em>file_gens</em>, <em>file_loads</em>, <em>datadir</em><big>)</big><a class="reference internal" href="../_modules/get_data.html#setup_times"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.setup_times" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">get_data.</tt><tt class="descname">setup_times</tt><big>(</big><em>generators_data</em>, <em>loads_data</em>, <em>datadir</em><big>)</big><a class="reference internal" href="../_modules/get_data.html#setup_times"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.setup_times" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create list of <a class="reference internal" href="time.html#schedule.Time" title="schedule.Time"><tt class="xref py py-class docutils literal"><span class="pre">Time</span></tt></a> objects 
 from the schedule files. If there are no schedule
 files (as in ED,OPF), create just a single
@@ -126,9 +126,9 @@ files (as in ED,OPF), create just a single
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>file_gens</strong> &#8211; spreadsheet of generator data</li>
-<li><strong>file_loads</strong> &#8211; spreadsheet of load data</li>
-<li><strong>datadir</strong> &#8211; directory of data</li>
+<li><strong>generators_data</strong> &#8211; list of dictionaries each describing a generator</li>
+<li><strong>loads_data</strong> &#8211; list of dictionaries each describing a load</li>
+<li><strong>datadir</strong> &#8211; the directory containing the data</li>
 </ul>
 </td>
 </tr>

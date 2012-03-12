@@ -27,6 +27,7 @@ parser.add_argument('--logfile','-l',type=str,default=False,
 parser.add_argument('--solution_file',type=str,default=False,
                    help='save solution file to disk')
 parser.add_argument('--profile',action="store_true",default=False,help='run cProfile and output to minpower.profile')
+parser.add_argument('--error','-e',action="store_true",default=False,help='redirect error messages to the standard output (useful for debugging on remote machines)')
                     
 #figure out the command line arguments
 args = parser.parse_args()
@@ -78,4 +79,9 @@ if args.profile:
 
 else:
     #solve the problem with those arguments
-    solve.problem(directory,**inputs)
+    try: solve.problem(directory,**inputs)
+    except:
+        if args.error: 
+            print 'There was an error:'
+            traceback.print_exc(file=sys.stdout)
+        else: raise

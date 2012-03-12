@@ -214,11 +214,15 @@ class Generator(OptimizationObject):
     def cost(self,time): 
         '''total cost at time (operating + startup + shutdown)'''
         return self.operatingcost(time)+self.cost_startup(time)+self.cost_shutdown(time)
-    def cost_startup(self,time): return self.get_variable('startupcost',time)
-    def cost_shutdown(self,time): return self.get_variable('shutdowncost',time) 
+    def cost_startup(self,time): return self.get_variable('startupcost',time) if self.startupcost!=0 else 0
+    def cost_shutdown(self,time): return self.get_variable('shutdowncost',time) if self.shutdowncost!=0 else 0
     def operatingcost(self,time): 
         '''cost of real power production at time (based on bid model approximation).'''
         return self.bid(time).output()
+    def cost_first_stage(self,times):
+        return sum(self.cost_startup(time)+self.cost_shutdown(time) for time in times)
+    def cost_second_stage(self,times): return sum(self.operatingcost(time) for time in times)
+    
     def truecost(self,time):
         '''exact cost of real power production at time (based on exact bid polynomial).'''
 <<<<<<< HEAD
@@ -526,6 +530,8 @@ class Generator_nonControllable(Generator):
 
         if Pmax is None: self.Pmax = self.schedule.maxvalue
         self.is_controllable=False
+        self.startupcost=0
+        self.shutdowncost=0
         self.build_cost_model()
         self.init_optimization()
     def power(self,time): return self.schedule.get_energy(time)
@@ -595,9 +601,6 @@ class Generator_nonControllable(Generator):
 >>>>>>> refactored powersystems. moving on to bidding
     def truecost(self,time): return self.cost(time)
     def incrementalcost(self,time): return self.fuelcost*self.cost_model.output_incremental(self.power(time))
-
-        
-
 
 class Load(OptimizationObject):
     """
@@ -1002,18 +1005,24 @@ class PowerSystem(OptimizationObject):
     def loads(self): return flatten(bus.loads for bus in self.buses)
     def generators(self): return flatten(bus.generators for bus in self.buses)
     def create_variables(self,times):
+        self.add_variable('cost first stage','C1')
+        self.add_variable('cost second stage','C2')        
         for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
         logging.debug('... created power system vars... returning... {}'.format(show_clock()))
         return self.all_variables(times)
     def create_objective(self,times):
-        return sum(bus.create_objective(times) for bus in self.buses) + sum(line.create_objective(times) for line in self.lines)
+        #return sum(bus.create_objective(times) for bus in self.buses) + sum(line.create_objective(times) for line in self.lines)
+        return self.variables['cost_first_stage_system']+self.variables['cost_second_stage_system']
     def create_constraints(self,times):
         for bus in self.buses: bus.create_constraints(times,self.Bmatrix,self.buses)
         for line in self.lines: line.create_constraints(times,self.buses)
         #a system reserve constraint would go here
+        self.add_constraint('system cost first stage',None,expression=self.variables['cost_first_stage_system']==sum(gen.cost_first_stage(times) for gen in self.generators()))
+        self.add_constraint('system cost second stage',None,expression=self.variables['cost_second_stage_system']==sum(gen.cost_second_stage(times) for gen in self.generators()))
+
         return self.all_constraints(times)
-    
+    def iden(self,time): return 'system'
     
 #def power_to_energy(P,time):
 #    return P*time.intervalhrs

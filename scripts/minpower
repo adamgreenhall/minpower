@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import argparse,os
+import argparse,os,traceback,sys
 from minpower import solve,config
 from minpower.tests import test
 

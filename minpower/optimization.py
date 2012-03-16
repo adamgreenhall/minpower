@@ -54,7 +54,8 @@ class Problem(object):
         logging.info('Solving with {s} ... {t}'.format(s=solver,t=show_clock()))
         instance=self.model.create()
         logging.debug('... model created ... {t}'.format(t=show_clock()))     
-        results,elapsed=cooprsolve(instance)
+        
+        results,elapsed=cooprsolve(instance,suffixes=[])
         
         self.statusText = str(results.solver[0]['Termination condition'])
         if (not self.statusText =='optimal' and solver!='cbc') or self.statusText=='infeasible':
@@ -90,7 +91,7 @@ class Problem(object):
             logging.info('resolving fixed-integer LP for duals')
             instance.preprocess()
             try:
-                results,elapsed=cooprsolve(instance)
+                results,elapsed=cooprsolve(instance,suffixes=['dual'])
                 self.solutionTime+=elapsed
             except RuntimeError:
                 logging.error('coopr raised an error in solving. keep the files for debugging.')

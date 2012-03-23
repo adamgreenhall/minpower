@@ -37,6 +37,7 @@
   _gaq.push(['_trackPageview']);
 </script>
 <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+<script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js?config=default"></script>
 
   </head>
   <body>  
@@ -75,8 +76,13 @@ problems and solving them.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="solve.create_solve_problem">
+<tt class="descclassname">solve.</tt><tt class="descname">create_solve_problem</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>datadir</em>, <em>solver</em>, <em>problemfile=False</em>, <em>get_duals=True</em><big>)</big><a class="reference internal" href="../_modules/solve.html#create_solve_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.create_solve_problem" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="solve.problem">
-<tt class="descclassname">solve.</tt><tt class="descname">problem</tt><big>(</big><em>datadir='.'</em>, <em>shell=True</em>, <em>problemfile=False</em>, <em>visualization=True</em>, <em>csv=True</em>, <em>solver='gurobi'</em>, <em>num_breakpoints=11</em>, <em>hours_commitment=24</em>, <em>hours_commitment_overlap=0</em>, <em>get_duals=True</em>, <em>dispatch_decommit_allowed=False</em>, <em>logging_level=10</em>, <em>logging_file=False</em><big>)</big><a class="reference internal" href="../_modules/solve.html#problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.problem" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">solve.</tt><tt class="descname">problem</tt><big>(</big><em>datadir='.'</em>, <em>shell=True</em>, <em>problemfile=False</em>, <em>visualization=True</em>, <em>csv=True</em>, <em>solver='gurobi'</em>, <em>num_breakpoints=11</em>, <em>hours_commitment=24</em>, <em>hours_commitment_overlap=0</em>, <em>get_duals=True</em>, <em>dispatch_decommit_allowed=False</em>, <em>logging_level=20</em>, <em>logging_file=False</em>, <em>solution_file=False</em><big>)</big><a class="reference internal" href="../_modules/solve.html#problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.problem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Solve a optimization problem specified by spreadsheets in a directory.
 Read in data, create and solve the problem, and return solution.
 The problem type is determined by the data.</p>
@@ -108,7 +114,7 @@ The problem type is determined by the data.</p>
 
 <dl class="function">
 <dt id="solve.solve_multistage">
-<tt class="descclassname">solve.</tt><tt class="descname">solve_multistage</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>datadir</em>, <em>solver='gurobi'</em>, <em>interval_hours=None</em>, <em>stage_hours=24</em>, <em>overlap_hours=0</em>, <em>writeproblem=False</em>, <em>get_duals=True</em>, <em>showclock=True</em><big>)</big><a class="reference internal" href="../_modules/solve.html#solve_multistage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.solve_multistage" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">solve.</tt><tt class="descname">solve_multistage</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>datadir</em>, <em>solver='gurobi'</em>, <em>interval_hours=None</em>, <em>stage_hours=24</em>, <em>overlap_hours=0</em>, <em>problemfile=False</em>, <em>get_duals=True</em>, <em>showclock=True</em><big>)</big><a class="reference internal" href="../_modules/solve.html#solve_multistage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.solve_multistage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Solve a rolling or multi-stage power systems optimization problem.
 Each stage will be one optimization run. A stage&#8217;s final
 conditions will be the next stage&#8217;s initial condition.</p>

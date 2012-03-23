@@ -37,6 +37,7 @@
   _gaq.push(['_trackPageview']);
 </script>
 <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+<script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js?config=default"></script>
 
   </head>
   <body>  
@@ -121,6 +122,11 @@ spreadsheet output, e.g. <tt class="xref py py-class docutils literal"><span cla
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="results.Solution.save">
+<tt class="descname">save</tt><big>(</big><em>filename=None</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.save" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="results.Solution.savevisualization">
 <tt class="descname">savevisualization</tt><big>(</big><em>filename=None</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution.savevisualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution.savevisualization" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the visualization to a file</p>
@@ -150,13 +156,13 @@ spreadsheet output, e.g. <tt class="xref py py-class docutils literal"><span cla
 
 <dl class="method">
 <dt id="results.Solution_ED.saveCSV">
-<tt class="descname">saveCSV</tt><big>(</big><em>filename='dispatch.csv'</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_ED.saveCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_ED.saveCSV" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">saveCSV</tt><big>(</big><em>filename=None</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_ED.saveCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_ED.saveCSV" title="Permalink to this definition">¶</a></dt>
 <dd><p>economic dispatch generator solution values in spreadsheet form</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="results.Solution_ED.visualization">
-<tt class="descname">visualization</tt><big>(</big><em>show_cost_also=False</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_ED.visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_ED.visualization" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">visualization</tt><big>(</big><em>filename=None</em>, <em>show_cost_also=False</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_ED.visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_ED.visualization" title="Permalink to this definition">¶</a></dt>
 <dd><p>economic dispatch visualization of linearized incremental cost</p>
 </dd></dl>
 
@@ -173,13 +179,13 @@ spreadsheet output, e.g. <tt class="xref py py-class docutils literal"><span cla
 
 <dl class="method">
 <dt id="results.Solution_OPF.saveCSV">
-<tt class="descname">saveCSV</tt><big>(</big><em>filename='powerflow'</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_OPF.saveCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_OPF.saveCSV" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">saveCSV</tt><big>(</big><em>filename=None</em>, <em>filename_lines=None</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_OPF.saveCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_OPF.saveCSV" title="Permalink to this definition">¶</a></dt>
 <dd><p>OPF generator and line power values in spreadsheet form</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="results.Solution_OPF.visualization">
-<tt class="descname">visualization</tt><big>(</big><em>filename='powerflow.png'</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_OPF.visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_OPF.visualization" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">visualization</tt><big>(</big><em>filename=None</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_OPF.visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_OPF.visualization" title="Permalink to this definition">¶</a></dt>
 <dd><p>power flow visualization</p>
 </dd></dl>
 
@@ -212,13 +218,13 @@ spreadsheet output, e.g. <tt class="xref py py-class docutils literal"><span cla
 
 <dl class="method">
 <dt id="results.Solution_UC.saveCSV">
-<tt class="descname">saveCSV</tt><big>(</big><em>filename='commitment.csv'</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC.saveCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC.saveCSV" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">saveCSV</tt><big>(</big><em>filename=None</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC.saveCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC.saveCSV" title="Permalink to this definition">¶</a></dt>
 <dd><p>generator power values and statuses for unit commitment</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="results.Solution_UC.visualization">
-<tt class="descname">visualization</tt><big>(</big><em>filename='commitment.png'</em>, <em>withPrices=True</em>, <em>withInitial=False</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC.visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC.visualization" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">visualization</tt><big>(</big><em>filename=None</em>, <em>withPrices=True</em>, <em>withInitial=False</em>, <em>filename_DR=None</em><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC.visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC.visualization" title="Permalink to this definition">¶</a></dt>
 <dd><p>generator output visualization for unit commitment</p>
 </dd></dl>
 
@@ -230,6 +236,21 @@ spreadsheet output, e.g. <tt class="xref py py-class docutils literal"><span cla
 <dd><p>Bases: <a class="reference internal" href="#results.Solution_UC" title="results.Solution_UC"><tt class="xref py py-class docutils literal"><span class="pre">results.Solution_UC</span></tt></a></p>
 <p>Muti-stage unit commitment. Each stage represents one optimization problem.
 Each element of the list :param:stage_solutions is a <a class="reference internal" href="#results.Solution_UC" title="results.Solution_UC"><tt class="xref py py-class docutils literal"><span class="pre">Solution_UC</span></tt></a> object.</p>
+<dl class="method">
+<dt id="results.Solution_UC_multistage.info_cost">
+<tt class="descname">info_cost</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC_multistage.info_cost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC_multistage.info_cost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution_UC_multistage.info_generators">
+<tt class="descname">info_generators</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC_multistage.info_generators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC_multistage.info_generators" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="results.Solution_UC_multistage.info_loads">
+<tt class="descname">info_loads</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC_multistage.info_loads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC_multistage.info_loads" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="results.Solution_UC_multistage.info_shedding">
 <tt class="descname">info_shedding</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/results.html#Solution_UC_multistage.info_shedding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.Solution_UC_multistage.info_shedding" title="Permalink to this definition">¶</a></dt>
@@ -272,6 +293,11 @@ Each element of the list :param:stage_solutions is a <a class="reference interna
 </dd></dl>
 
 <dl class="function">
+<dt id="results.make_multistage_solution_standalone">
+<tt class="descclassname">results.</tt><tt class="descname">make_multistage_solution_standalone</tt><big>(</big><em>power_system</em>, <em>stage_times</em>, <em>datadir</em>, <em>stage_solution_files</em><big>)</big><a class="reference internal" href="../_modules/results.html#make_multistage_solution_standalone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.make_multistage_solution_standalone" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="results.make_solution">
 <tt class="descclassname">results.</tt><tt class="descname">make_solution</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/results.html#make_solution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.make_solution" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a <tt class="xref py py-class docutils literal"><span class="pre">solution.Solution</span></tt> object for a power system over times.</p>
@@ -306,7 +332,7 @@ Each element of the list :param:stage_solutions is a <a class="reference interna
 
 <dl class="function">
 <dt id="results.stack_plot_UC">
-<tt class="descclassname">results.</tt><tt class="descname">stack_plot_UC</tt><big>(</big><em>generators</em>, <em>times</em>, <em>prices</em>, <em>withInitial=False</em>, <em>withPrices=True</em><big>)</big><a class="reference internal" href="../_modules/results.html#stack_plot_UC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.stack_plot_UC" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">results.</tt><tt class="descname">stack_plot_UC</tt><big>(</big><em>generators</em>, <em>times</em>, <em>prices</em>, <em>datadir=None</em>, <em>withInitial=False</em>, <em>withPrices=True</em>, <em>seperate_legend=False</em>, <em>hours_tick_interval=None</em><big>)</big><a class="reference internal" href="../_modules/results.html#stack_plot_UC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#results.stack_plot_UC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>

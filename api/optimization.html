@@ -37,6 +37,7 @@
   _gaq.push(['_trackPageview']);
 </script>
 <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+<script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js?config=default"></script>
 
   </head>
   <body>  
@@ -49,8 +50,7 @@
             
   <div class="section" id="module-optimization">
 <span id="optimization"></span><h1>Optimization<a class="headerlink" href="#module-optimization" title="Permalink to this headline">¶</a></h1>
-<p>An optimization command library.
-Currently uses pulp but is transitioning to using coopr.</p>
+<p>An optimization command library for Minpower.</p>
 <dl class="exception">
 <dt id="optimization.OptimizationError">
 <em class="property">exception </em><tt class="descclassname">optimization.</tt><tt class="descname">OptimizationError</tt><big>(</big><em>ivalue</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationError" title="Permalink to this definition">¶</a></dt>
@@ -127,7 +127,7 @@ a shortcut methods, like <a class="reference internal" href="power-systems.html#
 <dt id="optimization.OptimizationObject.create_objective">
 <tt class="descname">create_objective</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.create_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.create_objective" title="Permalink to this definition">¶</a></dt>
 <dd><p>Individual class defined.
-Create the contribution to the objective (cost) expression.
+Return the contribution to the objective (cost) expression.
 :returns: an expression, the default is 0</p>
 </dd></dl>
 
@@ -239,12 +239,6 @@ defined, make it a hash of the object to ensure the index is unique.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="optimization.filter_optimization_objects">
-<tt class="descclassname">optimization.</tt><tt class="descname">filter_optimization_objects</tt><big>(</big><em>objects</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#filter_optimization_objects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.filter_optimization_objects" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filter variables or constraints by times.</p>
-</dd></dl>
-
-<dl class="function">
 <dt id="optimization.newProblem">
 <tt class="descclassname">optimization.</tt><tt class="descname">newProblem</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/optimization.html#newProblem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.newProblem" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -264,11 +258,6 @@ defined, make it a hash of the object to ensure the index is unique.</p>
 :param low: low limit of variable
 :param high: high limit of variable</p>
 </dd></dl>
-
-<dl class="function">
-<dt id="optimization.sum_vars">
-<tt class="descclassname">optimization.</tt><tt class="descname">sum_vars</tt><big>(</big><em>variables</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#sum_vars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.sum_vars" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="function">
 <dt id="optimization.value">

@@ -152,7 +152,7 @@ class Problem(object):
             self.write(problem_filename)
             logging.disable(current_log_level)
                 
-        if not self.status: return
+        if not self.solved: return
         
         instance.load(results)
 #        instance._load_solution(results.solution(0), ignore_invalid_labels=True )
@@ -161,13 +161,9 @@ class Problem(object):
         
         def resolvefixvariables(instance,results):
             active_vars= instance.active_components(pyomo.Var)
-            need_to_resolve=False
-            for _,var in active_vars.items():
-                if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet):
-                    var.fixed=True
-                    need_to_resolve=True
+            for var in active_vars.values():
+                if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet): var.fixed=True
             
-            if not need_to_resolve: return instance,results
             logging.info('resolving fixed-integer LP for duals')
             instance.preprocess()
             try:
@@ -649,7 +645,11 @@ class OptimizationObject(object):
         name=self._t_id(name,time)
         self.constraints[name]=new_constraint(name,expression)
 
-    def get_variable(self,name,time): return self.variables[self._t_id(name,time)]
+    def get_variable(self,name,time): 
+        try: return self.variables[self._t_id(name,time)]
+        except KeyError:
+            print self.variables.keys()
+            raise
     def get_constraint(self,name,time): return self.constraints[self._t_id(name,time)]
     
     def add_components(self,objL,name):

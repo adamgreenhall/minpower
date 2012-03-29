@@ -472,7 +472,7 @@ class Solution_OPF(Solution):
 class Solution_UC(Solution):
     def info_lines(self,t): return []
     def info_buses(self,t): return []
-    def saveCSV(self,filename=None):
+    def saveCSV(self,filename=None,save_final_status=False):
         '''generator power values and statuses for unit commitment'''
         if filename is None: filename=joindir(self.datadir,'commitment.csv')
         times=self.times
@@ -486,11 +486,14 @@ class Solution_UC(Solution):
                 data.append([1 if value(gen.status(t))==1 else 0 for t in times])
             fields.append('power: '+str(gen.name))
             data.append([value(gen.power(t)) for t in times])
-        for load in self.loads():
-            fields.append('load power: '+str(load.name))
-            data.append([value(load.power(t)) for t in times])
-        
+        try: 
+            for load in self.loads():
+                fields.append('load power: '+str(load.name))
+                data.append([value(load.power(t)) for t in times])
+        except KeyError:
+            pass
         writeCSV(fields,transpose(data),filename=filename)
+<<<<<<< HEAD
     
 <<<<<<< HEAD
     def visualization(self,filename='commitment.png',withPrices=True,withInitial=False,seperate_legend=False):
@@ -688,6 +691,23 @@ class Solution_UC(Solution):
         stack_plot_UC(self.generators(),self.times,prices,self.datadir,withInitial,withPrices,seperate_legend)
 >>>>>>> add seperate legend for UC viz. option
 =======
+=======
+        
+        if save_final_status:
+            filename=joindir(self.datadir,'statuses-final.csv')
+            fields,data=[],[]
+            fields.append('generators')
+            data.append([gen.name for gen in self.generators()])
+            
+            t_final=self.times[-1]
+            fields.append('status')
+            data.append([gen.status(t_final) for gen in self.generators()])
+            fields.append('hours')
+            data.append([gen.gethrsinstatus(t_final,self.times) for gen in self.generators()])
+            
+            writeCSV(fields,transpose(data),filename=filename)
+            
+>>>>>>> clean up handling of solving for duals (no need to test for if need to resolve)
     def visualization(self,filename=None,withPrices=True,withInitial=False,filename_DR=None):
         '''generator output visualization for unit commitment'''
         if filename is None: filename=joindir(self.datadir,'commitment.png')

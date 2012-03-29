@@ -186,13 +186,16 @@ def problem(datadir='.',
 
 def create_solve_problem(power_system,times,datadir,solver,problemfile=False,get_duals=True):
     problem=create_problem(power_system,times)
-    if problemfile: problemfile=joindir(datadir,'problem-formulation.lp')
+    problem_filename=joindir(datadir,'problem-formulation.lp')
+    if problemfile: problemfile=problem_filename
+    
     problem.solve(solver,problem_filename=problemfile,get_duals=get_duals)
     
     if problem.solved:
         solution=results.make_solution(power_system,times,problem=problem,datadir=datadir)
     else: 
         raise OptimizationError('problem not solved')
+        problem.write(problem_filename)
     return solution
 def create_problem(power_system,times):
     """
@@ -414,7 +417,10 @@ def solve_multistage(power_system,times,datadir,
             logging.critical('Stage infeasible, re-running with load shedding.')
             power_system.set_load_shedding(True)
             #save problem formulation for degbugging in case of infeasibility
-            stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile=True,get_duals=get_duals)
+            try: stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile=True,get_duals=get_duals)
+            except OptimizationError:
+                stage_solutions[-1].saveCSV(joindir(datadir,'last-stage-solved-commitment.csv'),save_final_status=True) 
+                raise OptimizationError('failed to solve, even with load shedding.')
             power_system.set_load_shedding(False)
 
         logging.debug('solved... get results... {}'.format(show_clock(showclock)))

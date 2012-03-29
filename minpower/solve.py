@@ -80,8 +80,7 @@ def problem(datadir='.',
 
 def create_solve_problem(power_system,times,datadir,solver,problemfile=False,get_duals=True):
     create_problem(power_system,times)
-    problem_filename=joindir(datadir,'problem-formulation.lp')
-    if problemfile: problemfile=problem_filename
+    if problemfile: problemfile=joindir(datadir,'problem-formulation.lp')
     
     power_system.solve(solver,problem_filename=problemfile,get_duals=get_duals)
     solution=results.make_solution(power_system,times,datadir=datadir)
@@ -107,15 +106,7 @@ def create_problem(power_system,times):
     logging.debug('created objective {}'.format(show_clock()))
     power_system.create_constraints(times)
     logging.debug('created constraints {}'.format(show_clock()))
-    #return make_opt_problem(variables,constraints,objective)
     return
-
-#def make_opt_problem(variables,constraints,objective):
-#    prob=Problem()
-#    for v in variables.values(): prob.add_variable(v)
-#    for c in constraints.values(): prob.add_constraint(c)
-#    prob.add_objective(objective)
-#    return prob
 
 
 def solve_multistage(power_system,times,datadir,
@@ -170,14 +161,16 @@ def solve_multistage(power_system,times,datadir,
                 gen.finalstatus=gen.getstatus(t=next_stage_first_time,times=times)
 
 
-    for t_stage in stage_times:
-        logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
+    for stg,t_stage in enumerate(stage_times):
+        print 'Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock))
+        #logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
         set_initialconditions(buses,t_stage.initialTime)
         
         try: stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile,get_duals)
         except OptimizationError:
             #re-do stage, with load shedding allowed
             logging.critical('Stage infeasible, re-running with load shedding.')
+            power_system.reset_model()
             power_system.set_load_shedding(True)
             #save problem formulation for degbugging in case of infeasibility
             try: stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile=True,get_duals=get_duals)
@@ -189,6 +182,9 @@ def solve_multistage(power_system,times,datadir,
         logging.debug('solved... get results... {}'.format(show_clock(showclock)))
         get_finalconditions(power_system,t_stage)
         stage_solutions.append(stage_solution)
+        
+        if stg<len(stage_times)-1: power_system.reset_model()
+    power_system.write_model('final.lp')
     return stage_solutions,stage_times
 
   

@@ -6,7 +6,7 @@ and  :class:`~powersystems.Line`. Each of these objects inherits
 an optimization framework from :class:`~optimization.OptimizationObject`.
 """
 
-from optimization import value,dual,OptimizationObject
+from optimization import value,dual,OptimizationObject,OptimizationProblem
 from commonscripts import hours,drop_case_spaces,flatten,getattrL,unique,update_attributes,show_clock
 import config, bidding
 from schedule import FixedSchedule
@@ -490,7 +490,7 @@ class Bus(OptimizationObject):
     def iden(self,t):   return str(self)+str(t)
     def __str__(self):  return 'i{ind}'.format(ind=self.index)
     
-class PowerSystem(OptimizationObject):
+class PowerSystem(OptimizationProblem):
     '''
     Power systems object which is the container for all other components.
     
@@ -593,14 +593,16 @@ class PowerSystem(OptimizationObject):
         for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
         logging.debug('... created power system vars... returning... {}'.format(show_clock()))
-        return self.all_variables(times)
+        for var in self.all_variables(times): self.add_variable(var)
+        
     def create_objective(self,times):
-        return sum(bus.create_objective(times) for bus in self.buses) + sum(line.create_objective(times) for line in self.lines)
+        obj=sum(bus.create_objective(times) for bus in self.buses) + sum(line.create_objective(times) for line in self.lines)
+        self.add_objective(obj)
     def create_constraints(self,times):
         for bus in self.buses: bus.create_constraints(times,self.Bmatrix,self.buses)
         for line in self.lines: line.create_constraints(times,self.buses)
         #a system reserve constraint would go here
-        return self.all_constraints(times)
+        for constraint in self.all_constraints(times).values(): self.add_constraint(constraint)
     
     
 #def power_to_energy(P,time):

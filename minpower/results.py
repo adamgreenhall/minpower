@@ -87,18 +87,15 @@ class Solution(object):
     Each problem type has its own class for visualization and 
     spreadsheet output, e.g. :class:`~solution.Solution_ED`. 
     '''
-    def __init__(self,power_system,times,problem,datadir='.'):
-        update_attributes(self,locals(),exclude=['problem'])
+    def __init__(self,power_system,times,datadir='.'):
+        update_attributes(self,locals())
         self.power_system.update_variables()
         
         #objgraph.show_backrefs([problem.variables.values()[0]], filename='variable-backref-post-solve.png')
         #objgraph.show_chain(
         #    objgraph.find_backref_chain( problem.variables.values()[0],inspect.ismodule),filename='variable-backref-post-solve-module-chain.png')
         
-        if not problem.solved: 
-            logging.error('Problem solve was not completed. Status {s}.'.format(s=problem.status))
-            return
-        self._get_problem_info(problem)
+        self._get_problem_info()
         self._get_costs()
         self._get_prices()
         self.power_system.clear_constraints()
@@ -108,11 +105,9 @@ class Solution(object):
         #leakers=objgraph.get_leaking_objects()
         #objgraph.show_most_common_types(objects=leakers)
         #objgraph.show_refs(leakers[:3], refcounts=True, filename='leakers.png')
-    def _get_problem_info(self,problem):
-        self.solve_time  =problem.solutionTime
-        self.objective  =float(value(problem.objective))
-        self.active_constraints = sum([dual(c)!=0 for c in problem.constraints.values()])
-        self.total_constraints = len(problem.constraints)
+    def _get_problem_info(self):
+        self.solve_time  =self.power_system.solution_time
+        self.objective  =float(value(self.power_system.objective))
 
     def _get_costs(self):
         generators=self.generators()

@@ -10,141 +10,6 @@ import logging,time
 import config
 from commonscripts import update_attributes,show_clock
 
-class Problem(object):
-    '''an optimization problem/model based on pyomo'''
-    def __init__(self):
-        self.model=pyomo.ConcreteModel('power system problem')
-        self.solved=False
-    def add_objective(self,expression,sense=pyomo.minimize):
-        '''add an objective to the problem'''            
-        self.model.objective=pyomo.Objective(name='objective',rule=expression,sense=sense)
-    def add_variable(self,variable):
-        '''add a single variable to the problem'''
-        try: self._add_component(variable.name,variable)
-        except AttributeError: pass #just a number, don't add to vars
-    def add_constraint(self,constraint):
-        '''add a single constraint to the problem'''
-        self._add_component(constraint.name,constraint)
-    def solve(self,solver=config.optimization_solver,problem_filename=False,get_duals=True):
-        '''
-        Solve the optimization problem.
-        
-        :param solver: name of solver (lowercase string).
-        :param problem_filename: write MIP problem formulation to a file, if a file name is specified
-        :param get_duals: get the duals, or prices, of the optimization problem
-        '''
-        
-        current_log_level = logging.getLogger().getEffectiveLevel()      
-                    
-        def cooprsolve(instance,suffixes=['dual'],keepFiles=False):
-            if not keepFiles: logging.getLogger().setLevel(logging.WARNING) 
-            opt_solver = cooprsolver.SolverFactory(solver)
-            if opt_solver is None: 
-                msg='solver "{}" not found'.format(solver)
-                raise OptimizationError(msg)
-            start = time.time()
-            results= opt_solver.solve(instance,suffixes=suffixes) #,keepFiles=keepFiles
-            try: opt_solver._symbol_map=None #this should mimic the memory leak bugfix at: software.sandia.gov/trac/coopr/changeset/5449
-            except AttributeError: pass      #should remove after this fix becomes part of a release 
-            elapsed = (time.time() - start)
-            logging.getLogger().setLevel(current_log_level)
-            return results,elapsed
-        
-        
-        logging.info('Solving with {s} ... {t}'.format(s=solver,t=show_clock()))
-        instance=self.model.create()
-        logging.debug('... model created ... {t}'.format(t=show_clock()))     
-        
-        results,elapsed=cooprsolve(instance,suffixes=[])
-        
-        self.statusText = str(results.solver[0]['Termination condition'])
-        if (not self.statusText =='optimal' and solver!='cbc') or self.statusText=='infeasible':
-            logging.critical('problem not solved. Solver terminated with status: "{}"'.format(self.statusText))
-            self.status=self.solved=False
-        else:
-            self.status=self.solved=True
-            self.solutionTime =elapsed #results.Solver[0]['Wallclock time']
-            logging.info('Problem solved in {}s.'.format(self.solutionTime))
-            logging.debug('... {t}'.format(t=show_clock()))
-        
-        if problem_filename:
-            logging.disable(logging.CRITICAL) #disable coopr's funny loggings when writing lp files.  
-            self.write(problem_filename)
-            logging.disable(current_log_level)
-                
-        if not self.solved: return
-        
-        instance.load(results)
-#        instance._load_solution(results.solution(0), ignore_invalid_labels=True )
-        logging.debug('... solution loaded ... {t}'.format(t=show_clock()))
-
-        
-        def resolvefixvariables(instance,results):
-            active_vars= instance.active_components(pyomo.Var)
-            for var in active_vars.values():
-                if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet): var.fixed=True
-            
-            logging.info('resolving fixed-integer LP for duals')
-            instance.preprocess()
-            try:
-                results,elapsed=cooprsolve(instance,suffixes=['dual'])
-                self.solutionTime+=elapsed
-            except RuntimeError:
-                logging.error('coopr raised an error in solving. keep the files for debugging.')
-                results= cooprsolve(instance, keepFiles=True)    
-            
-            instance.load(results)
-            return instance,results
-
-        if get_duals: 
-            try: instance,results = resolvefixvariables(instance,results)
-            except RuntimeError:
-                logging.error('in re-solving for the duals. the duals will be set to default value.')
-            logging.debug('... LP problem solved ... {t}'.format(t=show_clock()))    
-                
-        try: self.objective = results.Solution.objective['objective'].value #instance.active_components(pyomo.Objective)['objective']
-        except AttributeError:
-            self.objective = results.Solution.objective['__default_objective__'].value
-            
-        self.constraints = instance.active_components(pyomo.Constraint)
-        self.variables =   instance.active_components(pyomo.Var)
-
-        return 
-    def __getattr__(self,name):
-        try: return getattr(self.model,name)
-        except AttributeError:
-            msg='the model has no variable/constraint/attribute named "{n}"'.format(n=name)
-            raise AttributeError(msg)
-
-def value(variable):
-    '''
-    Value of an optimization variable after the problem is solved.
-    If passed a numeric value, will return the number.
-    '''
-    try: return variable.value
-    except AttributeError: return variable #just a number
-
-def dual(constraint,index=None):
-    '''Dual of optimization constraint, after the problem is solved.'''
-    return constraint[index].dual
-def newProblem(): return Problem()
-def new_variable(name='',kind='Continuous',low=-1000000,high=1000000):
-    '''
-    Create an optimization variable.
-    :param name: name of optimization variable.
-    :param kind: type of variable, specified by string. {Continuous or Binary/Boolean}
-    :param low: low limit of variable
-    :param high: high limit of variable
-    '''
-    return pyomo.Var(name=name,bounds=(low,high),domain=variable_kinds[kind])
-def new_constraint(name,expression): 
-    '''Create an optimization constraint.'''
-    return pyomo.Constraint(name=name,rule=expression)
-
-
-
-
-
 class OptimizationObject(object):
     '''
     A template for an optimization object. 
@@ -290,6 +155,146 @@ class OptimizationObject(object):
             except AttributeError:
                 #child is a list of objects
                 for c in child: c.clear_constraints()
+
+
+class OptimizationProblem(OptimizationObject):
+    '''an optimization problem/model based on pyomo'''
+    def __init__(self):
+        self.init_optimization()
+    def init_optimization(self):
+        self._model=pyomo.ConcreteModel('power system problem')
+        self.solved=False
+        self.children=dict()
+        self.variables=dict()
+        self.constraints=dict()
+    def add_objective(self,expression,sense=pyomo.minimize):
+        '''add an objective to the problem'''            
+        self._model.objective=pyomo.Objective(name='objective',rule=expression,sense=sense)
+    def add_variable(self,variable):
+        '''add a single variable to the problem'''
+        try: self._model._add_component(variable.name,variable)
+        except AttributeError: pass #just a number, don't add to vars
+    def add_constraint(self,constraint):
+        '''add a single constraint to the problem'''
+        self._model._add_component(constraint.name,constraint)
+    def write_model(self,filename): self._model.write(filename)
+    def solve(self,solver=config.optimization_solver,problem_filename=False,get_duals=True):
+        '''
+        Solve the optimization problem.
+        
+        :param solver: name of solver (lowercase string).
+        :param problem_filename: write MIP problem formulation to a file, if a file name is specified
+        :param get_duals: get the duals, or prices, of the optimization problem
+        '''
+        
+        current_log_level = logging.getLogger().getEffectiveLevel()      
+                    
+        def cooprsolve(instance,suffixes=['dual'],keepFiles=False):
+            if not keepFiles: logging.getLogger().setLevel(logging.WARNING) 
+            opt_solver = cooprsolver.SolverFactory(solver)
+            if opt_solver is None: 
+                msg='solver "{}" not found'.format(solver)
+                raise OptimizationError(msg)
+            start = time.time()
+            results= opt_solver.solve(instance,suffixes=suffixes) #,keepFiles=keepFiles
+            try: opt_solver._symbol_map=None #this should mimic the memory leak bugfix at: software.sandia.gov/trac/coopr/changeset/5449
+            except AttributeError: pass      #should remove after this fix becomes part of a release 
+            elapsed = (time.time() - start)
+            logging.getLogger().setLevel(current_log_level)
+            return results,elapsed
+        
+        
+        logging.info('Solving with {s} ... {t}'.format(s=solver,t=show_clock()))
+        instance=self._model.create()
+        logging.debug('... model created ... {t}'.format(t=show_clock()))     
+        
+        results,elapsed=cooprsolve(instance,suffixes=[])
+        
+        status_text = str(results.solver[0]['Termination condition'])
+        if (not status_text =='optimal' and solver!='cbc') or status_text=='infeasible':
+            logging.critical('problem not solved. Solver terminated with status: "{}"'.format(status_text))
+            self.solved=False
+        else:
+            self.solved=True
+            self.solution_time =elapsed #results.Solver[0]['Wallclock time']
+            logging.info('Problem solved in {}s.'.format(self.solution_time))
+            logging.debug('... {t}'.format(t=show_clock()))
+        
+        if problem_filename:
+            logging.disable(logging.CRITICAL) #disable coopr's funny loggings when writing lp files.  
+            self.write_model(problem_filename)
+            logging.disable(current_log_level)
+                
+        if not self.solved: 
+            self.write_model('unsolved-problem-formulation.lp')
+            OptimizationError('problem not solved')
+        
+        instance.load(results)
+#        instance._load_solution(results.solution(0), ignore_invalid_labels=True )
+        logging.debug('... solution loaded ... {t}'.format(t=show_clock()))
+
+        
+        def resolvefixvariables(instance,results):
+            active_vars= instance.active_components(pyomo.Var)
+            for var in active_vars.values():
+                if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet): var.fixed=True
+            
+            logging.info('resolving fixed-integer LP for duals')
+            instance.preprocess()
+            try:
+                results,elapsed=cooprsolve(instance,suffixes=['dual'])
+                self.solution_time+=elapsed
+            except RuntimeError:
+                logging.error('coopr raised an error in solving. keep the files for debugging.')
+                results= cooprsolve(instance, keepFiles=True)    
+            
+            instance.load(results)
+            return instance,results
+
+        if get_duals: 
+            try: instance,results = resolvefixvariables(instance,results)
+            except RuntimeError:
+                logging.error('in re-solving for the duals. the duals will be set to default value.')
+            logging.debug('... LP problem solved ... {t}'.format(t=show_clock()))    
+                
+        try: self.objective = results.Solution.objective['objective'].value #instance.active_components(pyomo.Objective)['objective']
+        except AttributeError:
+            self.objective = results.Solution.objective['__default_objective__'].value
+            
+        self.constraints = instance.active_components(pyomo.Constraint)
+        self.variables =   instance.active_components(pyomo.Var)
+
+        return 
+
+def value(variable):
+    '''
+    Value of an optimization variable after the problem is solved.
+    If passed a numeric value, will return the number.
+    '''
+    try: return variable.value
+    except AttributeError: return variable #just a number
+
+def dual(constraint,index=None):
+    '''Dual of optimization constraint, after the problem is solved.'''
+    return constraint[index].dual
+def newProblem(): return Problem()
+def new_variable(name='',kind='Continuous',low=-1000000,high=1000000):
+    '''
+    Create an optimization variable.
+    :param name: name of optimization variable.
+    :param kind: type of variable, specified by string. {Continuous or Binary/Boolean}
+    :param low: low limit of variable
+    :param high: high limit of variable
+    '''
+    return pyomo.Var(name=name,bounds=(low,high),domain=variable_kinds[kind])
+def new_constraint(name,expression): 
+    '''Create an optimization constraint.'''
+    return pyomo.Constraint(name=name,rule=expression)
+
+
+
+
+
 
 class OptimizationError(Exception):
     '''Error that occurs within solving an optimization problem.'''

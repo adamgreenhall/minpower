@@ -152,6 +152,7 @@ class Generator(OptimizationObject):
     def getstatus(self,t,times): return dict(u=value(self.status(t)),P=value(self.power(t)),hoursinstatus=self.gethrsinstatus(t,times))
     def plot_cost_curve(self,P=None,filename=None): self.cost_model.plot(P,filename)
     def gethrsinstatus(self,tm,times):
+        if not self.is_controllable: return None
         status=value(self.status(tm))
         timesClipped=times[:times.index(tm)]
         try: 
@@ -536,10 +537,9 @@ class PowerSystem(OptimizationObject):
             
     def set_load_shedding(self,is_allowed):
         '''set system mode for load shedding'''
-        for bus in self.buses:
-            for load in bus.loads:
-                load.shedding_allowed=is_allowed 
-                load.cost_shedding=self.cost_load_shedding
+        for load in self.loads():
+            load.shedding_allowed=is_allowed 
+            load.cost_shedding=self.cost_load_shedding
              
     def make_buses_list(self,loads,generators):
         """

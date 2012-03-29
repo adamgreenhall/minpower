@@ -727,6 +727,10 @@ class OptimizationProblem(OptimizationObject):
         '''add a single constraint to the problem'''
         self._model._add_component(constraint.name,constraint)
     def write_model(self,filename): self._model.write(filename)
+    def reset_model(self): 
+        self._model=[]
+        self.solved=False
+        self._model=pyomo.ConcreteModel() 
     def solve(self,solver=config.optimization_solver,problem_filename=False,get_duals=True):
         '''
         Solve the optimization problem.
@@ -776,7 +780,7 @@ class OptimizationProblem(OptimizationObject):
                 
         if not self.solved: 
             self.write_model('unsolved-problem-formulation.lp')
-            OptimizationError('problem not solved')
+            raise OptimizationError('problem not solved')
         
         instance.load(results)
 #        instance._load_solution(results.solution(0), ignore_invalid_labels=True )

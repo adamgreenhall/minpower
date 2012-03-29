@@ -31,7 +31,10 @@ def make_loads_times(Pd=200,Pdt=None,**kwargs):
     
     return dict(loads=loads,times=times)
 
-def solve_problem(generators,loads=None,times=None, gen_init=None, lines=None, solver=config.optimization_solver,load_shedding_allowed=False,problem_filename=False):
+def solve_problem(generators,loads=None,times=None, gen_init=None, lines=None, 
+                  solver=config.optimization_solver,load_shedding_allowed=False,problem_filename=False,
+                  get_duals=False
+                  ):
     if lines is None: lines=[]
 
     if len(times)>0: 
@@ -57,9 +60,13 @@ def solve_problem(generators,loads=None,times=None, gen_init=None, lines=None, s
     
     power_system=powersystems.PowerSystem(generators,loads,lines,load_shedding_allowed=load_shedding_allowed)
     problem=solve.create_problem(power_system,times)
+<<<<<<< HEAD
 >>>>>>> reworking unit test library - major rework on make_load -> make_loads_times
     problem.solve(solver=solver,problem_filename=problem_filename)
 >>>>>>> added write lp file option to test_utils solve_problem
+=======
+    problem.solve(solver=solver,problem_filename=problem_filename,get_duals=get_duals)
+>>>>>>> clean up duals handling in tests
     if problem.solved:
         power_system.update_variables()
     else:

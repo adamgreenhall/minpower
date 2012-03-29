@@ -7,7 +7,7 @@ problems and solving them.
 
 import logging
 
-from optimization import OptimizationError,Problem
+from optimization import OptimizationError
 import get_data
 import powersystems
 import results
@@ -185,17 +185,14 @@ def problem(datadir='.',
     return solution
 
 def create_solve_problem(power_system,times,datadir,solver,problemfile=False,get_duals=True):
-    problem=create_problem(power_system,times)
+    create_problem(power_system,times)
     problem_filename=joindir(datadir,'problem-formulation.lp')
     if problemfile: problemfile=problem_filename
     
-    problem.solve(solver,problem_filename=problemfile,get_duals=get_duals)
+    power_system.solve(solver,problem_filename=problemfile,get_duals=get_duals)
+    solution=results.make_solution(power_system,times,datadir=datadir)
     
-    if problem.solved:
-        solution=results.make_solution(power_system,times,problem=problem,datadir=datadir)
-    else: 
-        raise OptimizationError('problem not solved')
-        problem.write(problem_filename)
+        
     return solution
 def create_problem(power_system,times):
     """
@@ -262,12 +259,13 @@ def create_problem(power_system,times):
 =======
     
     
-    prob=Problem()
+    
     logging.debug('initialized problem {}'.format(show_clock()))
-    variables =power_system.create_variables(times)
+    power_system.create_variables(times)
     logging.debug('created variables {}'.format(show_clock()))
-    objective=power_system.create_objective(times)
+    power_system.create_objective(times)
     logging.debug('created objective {}'.format(show_clock()))
+<<<<<<< HEAD
     constraints=power_system.create_constraints(times)
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -324,6 +322,20 @@ def create_problem_multistage(buses,lines,times,datadir,intervalHrs=None,stageHr
     for c in constraints.values(): prob.add_constraint(c)
     prob.add_objective(objective)
     return prob
+=======
+    power_system.create_constraints(times)
+    logging.debug('created constraints {}'.format(show_clock()))
+    #return make_opt_problem(variables,constraints,objective)
+    return
+
+#def make_opt_problem(variables,constraints,objective):
+#    prob=Problem()
+#    for v in variables.values(): prob.add_variable(v)
+#    for c in constraints.values(): prob.add_constraint(c)
+#    prob.add_objective(objective)
+#    return prob
+
+>>>>>>> basic conversion of power_system to OptimziationProblem object
 
 >>>>>>> documentation overhaul - up to schedule
 def solve_multistage(power_system,times,datadir,

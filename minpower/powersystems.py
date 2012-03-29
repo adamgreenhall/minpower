@@ -17,6 +17,7 @@ import bidding
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> add non-controllable gen to ED. added remote script- not yet working.
 from optimization import newVar,value,sumVars
 <<<<<<< HEAD
@@ -81,6 +82,9 @@ import logging
 =======
 from optimization import value,dual,OptimizationObject
 >>>>>>> merged in changes from DR_model
+=======
+from optimization import value,dual,OptimizationObject,OptimizationProblem
+>>>>>>> basic conversion of power_system to OptimziationProblem object
 from commonscripts import hours,drop_case_spaces,flatten,getattrL,unique,update_attributes,show_clock
 import config, bidding
 from schedule import FixedSchedule
@@ -904,8 +908,12 @@ class Load_Fixed(Load):
 >>>>>>> refactored powersystems. moving on to bidding
 =======
     
+<<<<<<< HEAD
 >>>>>>> set all system level parameters as attributes of relevant objects within powersystem init
 class PowerSystem(OptimizationObject):
+=======
+class PowerSystem(OptimizationProblem):
+>>>>>>> basic conversion of power_system to OptimziationProblem object
     '''
     Power systems object which is the container for all other components.
     
@@ -1010,19 +1018,30 @@ class PowerSystem(OptimizationObject):
         for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
         logging.debug('... created power system vars... returning... {}'.format(show_clock()))
-        return self.all_variables(times)
+        for var in self.all_variables(times): self.add_variable(var)
+        
     def create_objective(self,times):
+<<<<<<< HEAD
         #return sum(bus.create_objective(times) for bus in self.buses) + sum(line.create_objective(times) for line in self.lines)
         return self.variables['cost_first_stage_system']+self.variables['cost_second_stage_system']
+=======
+        obj=sum(bus.create_objective(times) for bus in self.buses) + sum(line.create_objective(times) for line in self.lines)
+        self.add_objective(obj)
+>>>>>>> basic conversion of power_system to OptimziationProblem object
     def create_constraints(self,times):
         for bus in self.buses: bus.create_constraints(times,self.Bmatrix,self.buses)
         for line in self.lines: line.create_constraints(times,self.buses)
         #a system reserve constraint would go here
+<<<<<<< HEAD
         self.add_constraint('system cost first stage',None,expression=self.variables['cost_first_stage_system']==sum(gen.cost_first_stage(times) for gen in self.generators()))
         self.add_constraint('system cost second stage',None,expression=self.variables['cost_second_stage_system']==sum(gen.cost_second_stage(times) for gen in self.generators()))
 
         return self.all_constraints(times)
     def iden(self,time): return 'system'
+=======
+        for constraint in self.all_constraints(times).values(): self.add_constraint(constraint)
+    
+>>>>>>> basic conversion of power_system to OptimziationProblem object
     
 #def power_to_energy(P,time):
 #    return P*time.intervalhrs

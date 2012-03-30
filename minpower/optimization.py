@@ -739,8 +739,6 @@ class OptimizationProblem(OptimizationObject):
         :param problem_filename: write MIP problem formulation to a file, if a file name is specified
         :param get_duals: get the duals, or prices, of the optimization problem
         '''
-        
-        current_log_level = logging.getLogger().getEffectiveLevel()      
                     
         def cooprsolve(instance,suffixes=['dual'],keepFiles=False):
             if not keepFiles: logging.getLogger().setLevel(logging.WARNING) 
@@ -753,7 +751,7 @@ class OptimizationProblem(OptimizationObject):
             try: opt_solver._symbol_map=None #this should mimic the memory leak bugfix at: software.sandia.gov/trac/coopr/changeset/5449
             except AttributeError: pass      #should remove after this fix becomes part of a release 
             elapsed = (time.time() - start)
-            logging.getLogger().setLevel(current_log_level)
+            logging.getLogger().setLevel(config.logging_level)
             return results,elapsed
         
         
@@ -774,9 +772,9 @@ class OptimizationProblem(OptimizationObject):
             logging.debug('... {t}'.format(t=show_clock()))
         
         if problem_filename:
-            logging.disable(logging.CRITICAL) #disable coopr's funny loggings when writing lp files.  
+            logging.getLogger().setLevel(logging.CRITICAL) #disable coopr's funny loggings when writing lp files.  
             self.write_model(problem_filename)
-            logging.disable(current_log_level)
+            logging.getLogger().setLevel(config.logging_level)
                 
         if not self.solved: 
             self.write_model('unsolved-problem-formulation.lp')

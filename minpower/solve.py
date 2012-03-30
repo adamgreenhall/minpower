@@ -162,14 +162,14 @@ def solve_multistage(power_system,times,datadir,
 
 
     for stg,t_stage in enumerate(stage_times):
-        print 'Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock))
-        #logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
+        #print 'Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock))
+        logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
         set_initialconditions(buses,t_stage.initialTime)
         
         try: stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile,get_duals)
         except OptimizationError:
             #re-do stage, with load shedding allowed
-            logging.critical('Stage infeasible, re-running with load shedding.')
+            logging.critical('stage infeasible, re-running with load shedding.')
             power_system.reset_model()
             power_system.set_load_shedding(True)
             #save problem formulation for degbugging in case of infeasibility
@@ -183,7 +183,11 @@ def solve_multistage(power_system,times,datadir,
         get_finalconditions(power_system,t_stage)
         stage_solutions.append(stage_solution)
         
+        power_system.write_model(joindir(datadir,'stage{}.lp'.format(stg)))
+        stage_solutions[-1].saveCSV(joindir(datadir,'stage{}.csv'.format(stg))) 
         if stg<len(stage_times)-1: power_system.reset_model()
+        
+        
     power_system.write_model('final.lp')
     return stage_solutions,stage_times
 

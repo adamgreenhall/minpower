@@ -645,11 +645,12 @@ class OptimizationObject(object):
             self.variables[name] =  pyomo.Var(name=short_name, **map_args(**kwargs)) #new_variable(name=short_name,**kwargs)
         else:
             self.variables[name] = fixed_value
-        if kwargs.get('high')>0:
-            print map_args(**kwargs)
-            print kwargs.get('low'),kwargs.get('high')
-            self.variables[name].pprint()
-            barf
+        # if kwargs.get('high')>0:
+        #     print map_args(**kwargs)
+        #     print kwargs.get('low'),kwargs.get('high')
+        #     self.variables[name].pprint()
+        #     print self.variables[name].bounds
+        #     barf
 
     def add_constraint(self,name,time,expression): 
         '''Create a new constraint and add it to the constraints dictionary.'''
@@ -729,7 +730,14 @@ class OptimizationProblem(OptimizationObject):
         self._model.objective=pyomo.Objective(name='objective',rule=expression,sense=sense)
     def add_variable(self,variable):
         '''add a single variable to the problem'''
-        try: self._model._add_component(variable.name,variable)
+        #pass
+        #TODO: it isn't clear if this step is nescessary at all
+        # coopr is picking up vars and constraints from the Opt.Obj.s but isn't getting the bounds
+        try: 
+            self._model._add_component(variable.name,variable)
+            #print variable.pprint()
+            #self._model.pprint()
+            #barf
         except AttributeError: pass #just a number, don't add to vars
     def add_constraint(self,constraint):
         '''add a single constraint to the problem'''

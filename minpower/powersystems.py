@@ -1018,7 +1018,7 @@ class PowerSystem(OptimizationProblem):
         for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
         logging.debug('... created power system vars... returning... {}'.format(show_clock()))
-        for var in self.all_variables(times): self.add_variable(var)
+        for var in self.all_variables(times).values(): self.add_variable(var)
         
     def create_objective(self,times):
 <<<<<<< HEAD

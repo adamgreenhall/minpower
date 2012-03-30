@@ -364,12 +364,14 @@ class Solution_UC(Solution):
                 data.append([1 if value(gen.status(t))==1 else 0 for t in times])
             fields.append('power: '+str(gen.name))
             data.append([value(gen.power(t)) for t in times])
-        try: 
-            for load in self.loads():
-                fields.append('load power: '+str(load.name))
-                data.append([value(load.power(t)) for t in times])
-        except KeyError:
-            pass
+        for load in self.loads():
+            fields.append('load power: '+str(load.name))
+            data.append([value(load.power(t)) for t in times])
+            shed=[value(load.shed(t)) for t in times]
+            print 'shed',sum(shed)
+            if sum(shed)>0:
+                fields.append('load shed: '+str(load.name))
+                data.append(shed)
         writeCSV(fields,transpose(data),filename=filename)
         
         if save_final_status:

@@ -173,7 +173,10 @@ def solve_multistage(power_system,times,datadir,
             power_system.reset_model()
             power_system.set_load_shedding(True)
             #save problem formulation for degbugging in case of infeasibility
-            try: stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile=True,get_duals=get_duals)
+            try: 
+                stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile=True,get_duals=get_duals)
+                stage_solution.saveCSV(joindir(datadir,'stage{}.csv'.format(stg)))
+                power_system.write_model(joindir(datadir,'stage{}.lp'.format(stg)))
             except OptimizationError:
                 stage_solutions[-1].saveCSV(joindir(datadir,'last-stage-solved-commitment.csv'),save_final_status=True) 
                 raise OptimizationError('failed to solve, even with load shedding.')
@@ -183,8 +186,6 @@ def solve_multistage(power_system,times,datadir,
         get_finalconditions(power_system,t_stage)
         stage_solutions.append(stage_solution)
         
-        power_system.write_model(joindir(datadir,'stage{}.lp'.format(stg)))
-        stage_solutions[-1].saveCSV(joindir(datadir,'stage{}.csv'.format(stg))) 
         if stg<len(stage_times)-1: power_system.reset_model()
         
         

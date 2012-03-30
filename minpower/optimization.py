@@ -634,14 +634,22 @@ class OptimizationObject(object):
         '''
         Create a new variable and add it to the variables dictionary.
         Parameters include those for `meth:optimization.new_variable`.
-        '''        
+        '''
+        def map_args(kind='Continuous',low=None,high=None):
+            return dict(bounds=(low,high),domain=variable_kinds[kind]) 
+        
         if short_name is None: short_name=name
         name=self._t_id(name,time)
         short_name=self._t_id(short_name,time)
         if fixed_value is None:
-            self.variables[name] = new_variable(name=short_name,**kwargs)
+            self.variables[name] =  pyomo.Var(name=short_name, **map_args(**kwargs)) #new_variable(name=short_name,**kwargs)
         else:
             self.variables[name] = fixed_value
+        if kwargs.get('high')>0:
+            print map_args(**kwargs)
+            print kwargs.get('low'),kwargs.get('high')
+            self.variables[name].pprint()
+            barf
 
     def add_constraint(self,name,time,expression): 
         '''Create a new constraint and add it to the constraints dictionary.'''
@@ -728,7 +736,7 @@ class OptimizationProblem(OptimizationObject):
         self._model._add_component(constraint.name,constraint)
     def write_model(self,filename): self._model.write(filename)
     def reset_model(self): 
-        self._model=[]
+        self._model=None
         self.solved=False
         self._model=pyomo.ConcreteModel() 
     def solve(self,solver=config.optimization_solver,problem_filename=False,get_duals=True):
@@ -828,8 +836,8 @@ def value(variable):
 def dual(constraint,index=None):
     '''Dual of optimization constraint, after the problem is solved.'''
     return constraint[index].dual
-def newProblem(): return Problem()
-def new_variable(name='',kind='Continuous',low=-1000000,high=1000000):
+
+def new_variable(name='',kind='Continuous',low=None,high=None):
     '''
     Create an optimization variable.
     :param name: name of optimization variable.

@@ -118,6 +118,7 @@ class Solution(object):
         self.fuelcost_generation=float(sum( c for c in flatten(gen_fuel_costs_pwlmodel) ))
         self.fuelcost_true_generation=float(sum( c for c in flatten(gen_fuel_costs_polynomial) ))
         self.load_shed = sum( sum(load.shed(t) for load in self.loads()) for t in times )
+        if self.load_shed>0: logging.warning('{} of MW load was shed'.format(self.load_shed))
         self._get_cost_error()
     def _get_cost_error(self):
         try: self.costerror=abs(self.fuelcost_generation-self.fuelcost_true_generation)/self.fuelcost_true_generation
@@ -368,7 +369,6 @@ class Solution_UC(Solution):
             fields.append('load power: '+str(load.name))
             data.append([value(load.power(t)) for t in times])
             shed=[value(load.shed(t)) for t in times]
-            print 'shed',sum(shed)
             if sum(shed)>0:
                 fields.append('load shed: '+str(load.name))
                 data.append(shed)

@@ -30,6 +30,7 @@ class Bid(OptimizationObject):
         self.init_optimization()
         self.variables['input'] = input_var
         self.variables['status']= status_var 
+        self.name='bid_'+owner_iden+time_iden
     def output_true(self,input_val): 
         '''true output value of bid'''
         return self.model.output_true(input_val)

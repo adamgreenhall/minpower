@@ -6,7 +6,8 @@ from coopr.opt.base import solvers as cooprsolver
 
 variable_kinds = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyomo.Boolean)
 
-import logging,time
+import logging,time,weakref
+
 import config
 from commonscripts import update_attributes,show_clock
 
@@ -48,7 +49,7 @@ class OptimizationObject(object):
         
         :returns: dictionary of variables belonging to the object and all its children (components)
         '''
-        return self.all_variables(times)
+        return #self.all_variables(times)
     def create_objective(self,times):
         '''
         Individual class defined.
@@ -67,21 +68,12 @@ class OptimizationObject(object):
         
         :returns: dictionary of constraints belonging to the object and all its children (components)
         '''
-        return self.all_constraints(times)
+        return #self.all_constraints(times)
  
-    def update_variables(self):
-        '''Replace the object and its children's variables with their numeric value.'''
-        for name,var in self.variables.items(): 
-            self.variables[name]=value(var)
-            try: var._varval=[]
-            except AttributeError: pass
-        for child in self.children.values(): 
-            try: child.update_variables()
-            except AttributeError:
-                for c in child: c.update_variables() 
     def _t_id(self,name,time): return name.replace(' ','_')+'_'+self.iden(time)
+    def _id(self,name): return name.replace(' ','_')+'_'+str(self)
     
-    def add_variable(self,name,short_name=None,time=None,fixed_value=None,**kwargs):
+    def add_variable(self,name,short_name=None,time=None,fixed_value=None,index=None,**kwargs):
         '''
         Create a new variable and add it to the variables dictionary.
         Parameters include those for `meth:optimization.new_variable`.
@@ -90,48 +82,74 @@ class OptimizationObject(object):
             return dict(bounds=(low,high),domain=variable_kinds[kind]) 
         
         if short_name is None: short_name=name
-        name=self._t_id(name,time)
-        short_name=self._t_id(short_name,time)
-        if fixed_value is None:
-            self.variables[name] =  pyomo.Var(name=short_name, **map_args(**kwargs)) #new_variable(name=short_name,**kwargs)
+        if index is None:
+            name=self._t_id(name,time)
+            short_name=self._t_id(short_name,time)
+            if fixed_value is None:
+                var=pyomo.Var(name=short_name, **map_args(**kwargs)) #new_variable(name=short_name,**kwargs)
+            else:
+                var=fixed_value
         else:
-            self.variables[name] = fixed_value
-        # if kwargs.get('high')>0:
-        #     print map_args(**kwargs)
-        #     print kwargs.get('low'),kwargs.get('high')
-        #     self.variables[name].pprint()
-        #     print self.variables[name].bounds
-        #     barf
+            name=self._id(name)
+            short_name=self._id(short_name)
+
+            if fixed_value is None: 
+                var=pyomo.Var(index,name=short_name,**map_args(**kwargs))
+            else: 
+                fixed_var=pyomo.Param(index,name=name)
+                for i in index: fixed_var[i]=fixed_value
+                var=fixed_var
+        
+        self._parent_problem().add_variable(var)
 
     def add_constraint(self,name,time,expression): 
         '''Create a new constraint and add it to the constraints dictionary.'''
         name=self._t_id(name,time)
-        self.constraints[name]=new_constraint(name,expression)
+        #self.constraints[name]=new_constraint(name,expression)
+        self._parent_problem().add_constraint(new_constraint(name,expression))
+    def add_set(self,name,items): self._model._add_component(name,pyomo.Set(initialize=items,name=name))
+        
+    def get_variable(self,name,time,indexed=False):
+        if indexed: 
+            var_name=self._id(name)
+            index=str(time)
+            return self._parent_problem().get_component(var_name)[index]
+        else: 
+            var_name=self._t_id(name,time)
+            return self._parent_problem().get_component(var_name)
 
-    def get_variable(self,name,time): 
-        try: return self.variables[self._t_id(name,time)]
-        except KeyError:
-            print self.variables.keys()
-            raise
-    def get_constraint(self,name,time): return self.constraints[self._t_id(name,time)]
+    def get_constraint(self,name,time): return self._parent_problem().get_component(self._t_id(name,time))
     
-    def add_components(self,objL,name):
+    def add_children(self,objects,name):
         '''Add a child :class:`~optimization.OptimizationObject` to this object.''' 
-        self.children[name]=objL 
-        setattr(self,name,objL)
-    def add_component(self,obj,name,time): 
-        '''Add a child :class:`~optimization.OptimizationObject` dependent on time to this object.'''
-        self.children[self._t_id(name,time)]=obj    
-    def get_component(self,name,time=None): 
+        self.children[name]=objects
+        try: 
+            #if objects is actually a dictionary
+            for child in self.children[name].values(): child._parent_problem=self._parent_problem
+        except AttributeError:
+            for child in self.children[name]: child._parent_problem=self._parent_problem
+
+        setattr(self,name,objects)        
+    # def add_component(self,obj):
+    #     obj._parent_problem=self._parent_problem
+    #     self.children[obj.name]=obj
+        
+        
+    def get_child(self,name,time=None): 
         '''Get a child :class:`~optimization.OptimizationObject` dependent on time from this object.'''
-        return self.children[self._t_id(name,time)]
+        try: 
+            if time is None: return self.children[name]
+            else: return self.children[name][time] 
+        except KeyError: 
+            print self.children.keys()
+            raise
     #def get_cost(self,times): return self.objective+sum([child.get_cost(times) for child in self.children])
     def iden(self,time):
         '''
         Individual class defined.
         Identifing string for the object, depending on time. Used to name variables and constraints for the object.  
         '''
-        msg='the iden() method must be overwritten for a child of the OptimizationObject class'
+        msg='the iden() method must be overwritten for a child of the OptimizationObject class. this one is '+str(type(self))
         raise NotImplementedError(msg)
         return 'some unique identifying string'
     def __str__(self): 
@@ -141,29 +159,29 @@ class OptimizationObject(object):
         You probably want to override this one with a more descriptive string.
         '''
         return 'opt_obj{ind}'.format(ind=self.index)
-    def all_variables(self,times):
-        '''return variables from object and children within times'''
-        variables=self.variables
-        for child in self.children.values(): 
-            try: variables.update(child.all_variables(times))
-            except AttributeError:
-                [variables.update(c.all_variables(times)) for c in child]
-        return variables
-    def all_constraints(self,times): 
-        '''return constraints from object and children within times'''
-        constraints=self.constraints
-        for child in self.children.values(): 
-            try: constraints.update(child.all_constraints(times))
-            except AttributeError:
-                [constraints.update(c.all_constraints(times)) for c in child]
-        return constraints
-    def clear_constraints(self):
-        self.constraints={}
-        for child in self.children.values(): 
-            try: child.clear_constraints()
-            except AttributeError:
-                #child is a list of objects
-                for c in child: c.clear_constraints()
+    # def all_variables(self,times):
+    #     '''return variables from object and children within times'''
+    #     variables=self.variables
+    #     for child in self.children.values(): 
+    #         try: variables.update(child.all_variables(times))
+    #         except AttributeError:
+    #             [variables.update(c.all_variables(times)) for c in child]
+    #     return variables
+    # def all_constraints(self,times): 
+    #     '''return constraints from object and children within times'''
+    #     constraints=self.constraints
+    #     for child in self.children.values(): 
+    #         try: constraints.update(child.all_constraints(times))
+    #         except AttributeError:
+    #             [constraints.update(c.all_constraints(times)) for c in child]
+    #     return constraints
+    # def clear_constraints(self):
+    #     self.constraints={}
+    #     for child in self.children.values(): 
+    #         try: child.clear_constraints()
+    #         except AttributeError:
+    #             #child is a list of objects
+    #             for c in child: c.clear_constraints()
 
 
 class OptimizationProblem(OptimizationObject):
@@ -176,28 +194,50 @@ class OptimizationProblem(OptimizationObject):
         self.children=dict()
         self.variables=dict()
         self.constraints=dict()
+    def add_children(self,objL,name):
+        '''Add a child :class:`~optimization.OptimizationObject` to this object.''' 
+        self.children[name]=objL
+        setattr(self,name,objL)
+        for child in self.children[name]:
+            child._parent_problem=weakref.ref(self)
+
     def add_objective(self,expression,sense=pyomo.minimize):
         '''add an objective to the problem'''            
         self._model.objective=pyomo.Objective(name='objective',rule=expression,sense=sense)
     def add_variable(self,variable):
         '''add a single variable to the problem'''
-        #pass
-        #TODO: it isn't clear if this step is nescessary at all
-        # coopr is picking up vars and constraints from the Opt.Obj.s but isn't getting the bounds
-        try: 
-            self._model._add_component(variable.name,variable)
-            #print variable.pprint()
-            #self._model.pprint()
-            #barf
-        except AttributeError: pass #just a number, don't add to vars
+        self._model._add_component(variable.name,variable)
     def add_constraint(self,constraint):
         '''add a single constraint to the problem'''
         self._model._add_component(constraint.name,constraint)
+
+    def get_component(self,name): 
+        '''Get an optimization component'''
+        try: return getattr(self._model,name)
+        except AttributeError:
+            print 'error getting ',name
+            self.show_model()
+            raise 
+
     def write_model(self,filename): self._model.write(filename)
     def reset_model(self): 
         self._model=None
         self.solved=False
         self._model=pyomo.ConcreteModel() 
+    def show_model(self):
+        components=self._model.components._component
+        items = [pyomo.Set, pyomo.Param, pyomo.Var, pyomo.Objective, pyomo.Constraint]
+        for item in items:
+            if not item in components: continue
+            keys = components[item].keys()
+            keys.sort()
+            print len(keys), item.__name__+" Declarations"
+            for key in keys: components[item][key].pprint()
+            print ""
+    def update_variables(self):
+        '''Replace the variables with their numeric value.'''
+        for name,var in self._model.active_components(pyomo.Var).items(): setattr(self._model,name,value(var))
+            
     def solve(self,solver=config.optimization_solver,problem_filename=False,get_duals=True):
         '''
         Solve the optimization problem.
@@ -279,8 +319,8 @@ class OptimizationProblem(OptimizationObject):
         except AttributeError:
             self.objective = results.Solution.objective['__default_objective__'].value
             
-        self.constraints = instance.active_components(pyomo.Constraint)
-        self.variables =   instance.active_components(pyomo.Var)
+        #self.constraints = instance.active_components(pyomo.Constraint)
+        #self.variables =   instance.active_components(pyomo.Var)
 
         return 
 

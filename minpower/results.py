@@ -89,7 +89,7 @@ class Solution(object):
     '''
     def __init__(self,power_system,times,datadir='.'):
         update_attributes(self,locals())
-        self.power_system.update_variables()
+        #self.power_system.update_variables()
         
         #objgraph.show_backrefs([problem.variables.values()[0]], filename='variable-backref-post-solve.png')
         #objgraph.show_chain(
@@ -98,7 +98,7 @@ class Solution(object):
         self._get_problem_info()
         self._get_costs()
         self._get_prices()
-        self.power_system.clear_constraints()
+        #self.power_system.clear_constraints()
         #gc.collect()
         #objgraph.show_backrefs([problem.constraints.values()[0]], filename='constraints-backref-post-solve.png')
         #objgraph.show_chain(objgraph.find_backref_chain(objgraph.by_type('Constraint')[0],inspect.ismodule),filename='constraint-backref-post-solve-chain.png')
@@ -137,8 +137,8 @@ class Solution(object):
     def get_values(self,kind='generators',attrib='power',time=None):
         '''Get the attributes of all objects of a certain kind at a given time.'''
         method={'generators':self.generators,'loads':self.loads,'lines':self.lines,'buses':self.buses}
-        if time is not None: return [getattr(obj, attrib)(time) for obj in method[kind]()]
-        else: return [getattr(obj, attrib) for obj in method[kind]()]
+        if time is not None: return [value(getattr(obj, attrib)(time)) for obj in method[kind]()]
+        else: return [value(getattr(obj, attrib)) for obj in method[kind]()]
         
     def savevisualization(self,filename=None):
         '''Save the visualization to a file'''

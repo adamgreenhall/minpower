@@ -98,6 +98,7 @@ class Solution(object):
         self._get_problem_info()
         self._get_costs()
         self._get_prices()
+        self._get_outputs()
         #self.power_system.clear_constraints()
         #gc.collect()
         #objgraph.show_backrefs([problem.constraints.values()[0]], filename='constraints-backref-post-solve.png')
@@ -109,16 +110,19 @@ class Solution(object):
         self.solve_time  =self.power_system.solution_time
         self.objective  =float(value(self.power_system.objective))
 
+    def _get_outputs(self):
+        self.generators_power =[self.get_values('generators','power',time) for time in self.times]
+        self.generators_status=[self.get_values('generators','status',time) for time in self.times]
+
     def _get_costs(self):
         generators=self.generators()
         times=getattr(self.times,'non_overlap_times',self.times)
-        gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t)) for t in times] for gen in generators]
+        gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t,evaluate=True)) for t in times] for gen in generators]
         gen_fuel_costs_polynomial = [[gen.truecost(t) for t in times] for gen in generators]
-        self.totalcost_generation = sum(flatten([[float(gen.cost(t)) for t in times] for gen in generators]))
+        self.totalcost_generation = sum(flatten([[float(gen.cost(t,evaluate=True)) for t in times] for gen in generators]))
         self.fuelcost_generation=float(sum( c for c in flatten(gen_fuel_costs_pwlmodel) ))
         self.fuelcost_true_generation=float(sum( c for c in flatten(gen_fuel_costs_polynomial) ))
         self.load_shed = sum( sum(load.shed(t) for load in self.loads()) for t in times )
-        if self.load_shed>0: logging.warning('{} of MW load was shed'.format(self.load_shed))
         self._get_cost_error()
     def _get_cost_error(self):
         try: self.costerror=abs(self.fuelcost_generation-self.fuelcost_true_generation)/self.fuelcost_true_generation
@@ -178,8 +182,8 @@ class Solution(object):
         buses=self.buses()
         out=['bus info:',
              'name={}'.format(getattrL(buses,'name')),
-             'Pinj={}'.format([ bus.Pgen(t) - bus.Pload(t) for bus in buses]),
-             'angle={}'.format(self.get_values('buses','angle',t)),
+             'Pinj={}'.format([ bus.Pgen(t,evaluate=True) - bus.Pload(t,evaluate=True) for bus in buses]),
+             'angle={}'.format(self.get_values('buses','angle',t) if len(buses)>1 else []),
              'LMP={}'.format(self.lmps[str(t)])]    
         return out    
     def info_lines(self,t):
@@ -359,12 +363,12 @@ class Solution_UC(Solution):
         fields.append('times');  data.append([t.Start for t in times])
         fields.append('prices'); data.append([self.lmps[str(t)][0] for t in times]) 
 
-        for gen in self.generators(): 
+        for g,gen in enumerate(self.generators()): 
             if gen.is_controllable:
                 fields.append('status: '+str(gen.name))
-                data.append([1 if value(gen.status(t))==1 else 0 for t in times])
+                data.append([1 if self.generators_status[g][t]==1 else 0 for t,time in enumerate(times)])
             fields.append('power: '+str(gen.name))
-            data.append([value(gen.power(t)) for t in times])
+            data.append(self.generators_power[g])
         for load in self.loads():
             fields.append('load power: '+str(load.name))
             data.append([value(load.power(t)) for t in times])
@@ -421,10 +425,13 @@ class Solution_UC_multistage(Solution_UC):
         self.solve_time = self._sum_over('solve_time',stage_solutions)
         #self.active_constraints = sum([dual(c)!=0 for nm,c in constraints.items()])
         #self.total_constraints = len(constraints)
-        
+        self._get_outputs(stage_solutions)
         self._get_costs(stage_solutions)
         self._get_prices(stage_solutions)
     def _sum_over(self,attrib,stage_solutions): return sum(getattr(sln, attrib) for sln in stage_solutions)     
+    def _get_outputs(self,stage_solutions):
+        self.generators_power=flatten([stage.generators_power for stage in stage_solutions])
+        self.generators_status=flatten([stage.generators_status for stage in stage_solutions])
     def _get_costs(self,stage_solutions):
         self.fuelcost_generation=self._sum_over('fuelcost_generation',stage_solutions)
         self.fuelcost_true_generation=self._sum_over('fuelcost_true_generation',stage_solutions)

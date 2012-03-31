@@ -56,9 +56,9 @@ class Bid(OptimizationObject):
         constraintD=self.model.get_time_constraints(self.variables,self.owner_iden,self.time_iden)
         for nm,expr in constraintD.items(): self.add_constraint(nm,self.time,expr)
         return self.constraints
-    def output(self): 
+    def output(self,evaluate=False): 
         '''The output of the bid, given an input.'''
-        return self.model.output(self.variables,self.owner_iden,self.time_iden)   
+        return self.model.output(self.variables,self.owner_iden,self.time_iden,evaluate)   
     def __str__(self): return 'bid{t}'.format(t=str(self.time))
     def iden(self,*args): return 'bid{t}'.format(t=str(self.time))
 
@@ -172,8 +172,9 @@ class PWLmodel(object):
             name='midSegment {iden} b{bnum}'.format(iden=iden,bnum=b)
             constraints[name]                = ( F[b] <= sum([S[b-1],S[b]]) )
         return constraints
-    def output(self,variables,owner_iden,time_iden): 
+    def output(self,variables,owner_iden,time_iden,evaluate=False): 
         F = [variables[self._f_name(f,owner_iden,time_iden)] for f in range(len(self.bp_inputs))]
+        if evaluate: F=map(value,F)
         return sum( elementwiseMultiply(F,self.bp_outputs) )
     def output_true(self,input_val): return float(polyval( self.poly_curve, value(input_val) ))
     def output_incremental(self,input_var):  return float(polyval( polyder(self.poly_curve),value(input_var) ))
@@ -274,7 +275,9 @@ class convexPWLmodel(PWLmodel):
             nm='cost_linearized_{oi}_b{b}_{ti}'.format(oi=owner_iden,b=b,ti=time_iden)
             constraints[nm]= variables['bidCost_'+owner_iden+time_iden] >= line(variables['input'])
         return constraints
-    def output(self,variables,iden_owner,iden_time): return variables['bidCost_'+iden_owner+iden_time]
+    def output(self,variables,iden_owner,iden_time,evaluate=False): 
+        out=variables['bidCost_'+iden_owner+iden_time]
+        return out if not evaluate else value(out)
 class LinearModel(PWLmodel):
     '''
     A simple linear model for a linear polynomial.
@@ -291,11 +294,11 @@ class LinearModel(PWLmodel):
 
     def get_time_variables(self,*args,**kwargs): return {}
     def get_time_constraints(self,*args,**kwargs): return {}
-    def output(self,variables,owner_iden,time_iden):
-        try: fixed_term=self.poly_curve.c[1]*variables['status']
+    def output(self,variables,owner_iden,time_iden,evaluate=False):
+        try: fixed_term=self.poly_curve.c[1]*(variables['status'] if not evaluate else value(variables['status']))
         except IndexError: fixed_term=0 #constant cost
-        linear_term = self.poly_curve.c[0]*variables['input']
-        return fixed_term + linear_term
+        linear_term = self.poly_curve.c[0]*(variables['input'] if not evaluate else value(variables['input']))
+        return (fixed_term + linear_term) if not evaluate else float(fixed_term + linear_term) 
     
     
 def isLinear(P):

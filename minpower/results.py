@@ -127,8 +127,8 @@ class Solution(object):
         self.lmps={}
         self.line_prices={}
         for t in self.times: 
-            self.lmps[str(t)]=self.get_values('buses','price',t)
-            self.line_prices[str(t)]=self.get_values('lines','price',t)
+            self.lmps[str(t)]=[bus.price(t) for bus in self.buses()]
+            self.line_prices[str(t)]=[line.price(t) for line in self.lines()]
         
     def buses(self): return self.power_system.buses
     def lines(self): return self.power_system.lines

@@ -295,7 +295,10 @@ class OptimizationProblem(OptimizationObject):
         def resolvefixvariables(instance,results):
             active_vars= instance.active_components(pyomo.Var)
             for var in active_vars.values():
-                if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet): var.fixed=True
+                if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet): 
+                    if var.is_indexed(): 
+                        for key,ind_var in var.iteritems(): ind_var.fixed=True
+                    else: var.fixed=True
             
             logging.info('resolving fixed-integer LP for duals')
             instance.preprocess()

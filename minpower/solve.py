@@ -404,6 +404,7 @@ def solve_multistage(power_system,times,datadir,
 >>>>>>> testing memory differences (pulled some code for create_solve_problem from DR_update)
         t_back=overlap_hours/times.intervalhrs
         next_stage_first_time = times[-1-int(t_back)]         
+<<<<<<< HEAD
         for bus in power_system.buses:
 >>>>>>> rework of multistage results - testing
             for gen in bus.generators:
@@ -417,6 +418,10 @@ def solve_multistage(power_system,times,datadir,
                 gen.update_variables()
 >>>>>>> minor changes for multistage
                 gen.finalstatus=gen.getstatus(t=next_stage_first_time,times=times)
+=======
+        for gen in power_system.generators():
+            gen.finalstatus=gen.getstatus(t=next_stage_first_time,times=times)
+>>>>>>> add evaluate option to costs (coopr sums). add storage of generation power and status for UC results
 
 >>>>>>> working rolling UC overlap hours
 

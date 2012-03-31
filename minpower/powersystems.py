@@ -213,10 +213,11 @@ class Generator(OptimizationObject):
     def power_change(self,t,times):
         '''change in output between power between t and t-1'''
         if t>0: previous_power=self.power(times[t-1])
-        else:   previous_power=self.power(times.initialTime)
+        else:   previous_power=self.initial_power
         return self.power(times[t])-previous_power
-    def cost(self,time): 
+    def cost(self,time,evaluate=False): 
         '''total cost at time (operating + startup + shutdown)'''
+<<<<<<< HEAD
         return self.operatingcost(time)+self.cost_startup(time)+self.cost_shutdown(time)
 <<<<<<< HEAD
     def cost_startup(self,time): return self.get_variable('startupcost',time) if self.startupcost!=0 else 0
@@ -232,6 +233,18 @@ class Generator(OptimizationObject):
         return sum(self.cost_startup(time)+self.cost_shutdown(time) for time in times)
     def cost_second_stage(self,times): return sum(self.operatingcost(time) for time in times)
     
+=======
+        return self.operatingcost(time,evaluate)+self.cost_startup(time,evaluate)+self.cost_shutdown(time,evaluate)
+    def cost_startup(self,time,evaluate=False): 
+        c=self.get_variable('startupcost',time,indexed=True)
+        return c if not evaluate else value(c) 
+    def cost_shutdown(self,time,evaluate=False): 
+        c=self.get_variable('shutdowncost',time,indexed=True)
+        return c if not evaluate else value(c) 
+    def operatingcost(self,time,evaluate=False): 
+        '''cost of real power production at time (based on bid model approximation).'''
+        return self.bid(time).output(evaluate)
+>>>>>>> add evaluate option to costs (coopr sums). add storage of generation power and status for UC results
     def truecost(self,time):
         '''exact cost of real power production at time (based on exact bid polynomial).'''
 <<<<<<< HEAD
@@ -264,7 +277,7 @@ class Generator(OptimizationObject):
             return hours(tm.End-t_lastchange.Start)
         except StopIteration: #no changes over whole time period
             h=hours(tm.End-times[0].Start)
-            if value(self.status(times.initialTime)) == status: h+=self.initial_status_hours
+            if value(self.initial_status) == status: h+=self.initial_status_hours
             return h
     
     def set_initial_condition(self,time=None, P=None, u=True, hoursinstatus=100):
@@ -487,12 +500,12 @@ class Generator(OptimizationObject):
 
             #initial ramp rate
             if self.rampratemax is not None:
-                if self.power(tInitial) + self.rampratemax < self.Pmax:
+                if self.initial_power + self.rampratemax < self.Pmax:
                     E=self.power(times[0]) - self.intial_power <= self.rampratemax
                     self.add_constraint('ramp lim high', tInitial, E)
                     
             if self.rampratemin is not None:
-                if self.power(tInitial) + self.rampratemin > self.Pmin:
+                if self.initial_power + self.rampratemin > self.Pmin:
                     E=self.rampratemin <= self.power(times[0]) - self.intial_power
                     self.add_constraint('ramp lim low', tInitial, E) 
             
@@ -615,6 +628,7 @@ class Generator_nonControllable(Generator):
     def create_variables(self,times): return {}
 >>>>>>> set all system level parameters as attributes of relevant objects within powersystem init
     def create_constraints(self,times): return {}
+<<<<<<< HEAD
 >>>>>>> first working pass through solver (results still needs major rework
     def cost(self,time): return self.operatingcost(time)
 <<<<<<< HEAD
@@ -630,6 +644,10 @@ class Generator_nonControllable(Generator):
 =======
     def operatingcost(self,time): return self.cost_model.output_true( self.power(time) )
 >>>>>>> refactored powersystems. moving on to bidding
+=======
+    def cost(self,time,evaluate=False): return self.operatingcost(time)
+    def operatingcost(self,time,evaluate=False): return self.cost_model.output_true( self.power(time) )
+>>>>>>> add evaluate option to costs (coopr sums). add storage of generation power and status for UC results
     def truecost(self,time): return self.cost(time)
     def incrementalcost(self,time): return self.fuelcost*self.cost_model.output_incremental(self.power(time))
 
@@ -778,8 +796,12 @@ class Bus(OptimizationObject):
 =======
     def angle(self,time): return self.get_variable('angle',time)
     def price(self,time): return dual(self.get_constraint('power balance',time))
-    def Pgen(self,t):   return sum(gen.power(t) for gen in self.generators)
-    def Pload(self,t):  return sum(ld.power(t) for ld in self.loads)
+    def Pgen(self,t,evaluate=False):
+        if evaluate: return sum(value(gen.power(t)) for gen in self.generators)
+        else: return sum(gen.power(t) for gen in self.generators)
+    def Pload(self,t,evaluate=False):  
+        if evaluate: return sum(value(ld.power(t)) for ld in self.loads)
+        else: return sum(ld.power(t) for ld in self.loads)
     def power_balance(self,t,Bmatrix,allBuses):
         if len(allBuses)==1: lineFlowsFromBus=0
         else: lineFlowsFromBus=sum([Bmatrix[self.index][otherBus.index]*otherBus.angle(t) for otherBus in allBuses]) #P_{ij}=sum_{i} B_{ij}*theta_j ???

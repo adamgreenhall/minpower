@@ -665,7 +665,10 @@ class OptimizationObject(object):
         if indexed: 
             var_name=self._id(name)
             index=str(time)
-            return self._parent_problem().get_component(var_name)[index]
+            try: return self._parent_problem().get_component(var_name)[index]
+            except KeyError:
+                self._parent_problem().show_model()
+                raise
         else: 
             var_name=self._t_id(name,time)
             return self._parent_problem().get_component(var_name)

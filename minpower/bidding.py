@@ -87,6 +87,7 @@ class Bid(OptimizationObject):
         self.variables['input'] = input_var
         self.variables['status']= status_var 
 <<<<<<< HEAD
+<<<<<<< HEAD
     def output_true(self,input_val): return self.model.output_true(input_val)
     def output_incremental(self,input_val):  return self.model.output_incremental(input_val)
 <<<<<<< HEAD
@@ -94,6 +95,9 @@ class Bid(OptimizationObject):
     def plotDeriv(self,**kwargs): return self.model.plotDeriv(**kwargs)
 =======
 =======
+=======
+        self.name='bid_'+owner_iden+time_iden
+>>>>>>> major overahual on setting up variables/constraints directly to the parent problem. this allows the use of sets, variable lists. still need to cleanup (including dual values).
     def output_true(self,input_val): 
         '''true output value of bid'''
         return self.model.output_true(input_val)

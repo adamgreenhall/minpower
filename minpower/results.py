@@ -127,9 +127,13 @@ class Solution(object):
 =======
     def __init__(self,power_system,times,datadir='.'):
         update_attributes(self,locals())
+<<<<<<< HEAD
 >>>>>>> basic conversion of power_system to OptimziationProblem object
         self.power_system.update_variables()
 >>>>>>> major cleanup of results.py. still need to tackle the multistage commitments
+=======
+        #self.power_system.update_variables()
+>>>>>>> major overahual on setting up variables/constraints directly to the parent problem. this allows the use of sets, variable lists. still need to cleanup (including dual values).
         
         #objgraph.show_backrefs([problem.variables.values()[0]], filename='variable-backref-post-solve.png')
         #objgraph.show_chain(
@@ -180,7 +184,7 @@ class Solution(object):
 >>>>>>> basic conversion of power_system to OptimziationProblem object
         self._get_costs()
         self._get_prices()
-        self.power_system.clear_constraints()
+        #self.power_system.clear_constraints()
         #gc.collect()
         #objgraph.show_backrefs([problem.constraints.values()[0]], filename='constraints-backref-post-solve.png')
         #objgraph.show_chain(objgraph.find_backref_chain(objgraph.by_type('Constraint')[0],inspect.ismodule),filename='constraint-backref-post-solve-chain.png')
@@ -219,8 +223,8 @@ class Solution(object):
     def get_values(self,kind='generators',attrib='power',time=None):
         '''Get the attributes of all objects of a certain kind at a given time.'''
         method={'generators':self.generators,'loads':self.loads,'lines':self.lines,'buses':self.buses}
-        if time is not None: return [getattr(obj, attrib)(time) for obj in method[kind]()]
-        else: return [getattr(obj, attrib) for obj in method[kind]()]
+        if time is not None: return [value(getattr(obj, attrib)(time)) for obj in method[kind]()]
+        else: return [value(getattr(obj, attrib)) for obj in method[kind]()]
         
     def savevisualization(self,filename=None):
 <<<<<<< HEAD

@@ -201,14 +201,14 @@ class Generator(OptimizationObject):
         
     def power(self,time=None): 
         '''real power output at time'''
-        return self.get_variable('power',time)
+        return self.get_variable('power',time,indexed=True)
     def status(self,time): 
         '''on/off status at time'''
-        return self.get_variable('status',time)
+        return self.get_variable('status',time,indexed=True)
     def status_change(self,t,times): 
         '''is the unit changing status between t and t-1'''
         if t>0: previous_status=self.status(times[t-1])
-        else:   previous_status=self.status(times.initialTime)
+        else:   previous_status=self.initial_status
         return self.status(times[t]) - previous_status
     def power_change(self,t,times):
         '''change in output between power between t and t-1'''
@@ -218,8 +218,13 @@ class Generator(OptimizationObject):
     def cost(self,time): 
         '''total cost at time (operating + startup + shutdown)'''
         return self.operatingcost(time)+self.cost_startup(time)+self.cost_shutdown(time)
+<<<<<<< HEAD
     def cost_startup(self,time): return self.get_variable('startupcost',time) if self.startupcost!=0 else 0
     def cost_shutdown(self,time): return self.get_variable('shutdowncost',time) if self.shutdowncost!=0 else 0
+=======
+    def cost_startup(self,time): return self.get_variable('startupcost',time,indexed=True)
+    def cost_shutdown(self,time): return self.get_variable('shutdowncost',time,indexed=True) 
+>>>>>>> major overahual on setting up variables/constraints directly to the parent problem. this allows the use of sets, variable lists. still need to cleanup (including dual values).
     def operatingcost(self,time): 
         '''cost of real power production at time (based on bid model approximation).'''
         return self.bid(time).output()
@@ -247,7 +252,7 @@ class Generator(OptimizationObject):
         return self.bid(time).output_incremental(self.power(time)) if value(self.status(time)) else None
     def bid(self,time):
         ''':class:`~bidding.Bid` object for time'''
-        return self.get_component('bid', time) 
+        return self.get_child('bids', time) 
     def getstatus(self,t,times): return dict(u=value(self.status(t)),P=value(self.power(t)),hoursinstatus=self.gethrsinstatus(t,times))
     def plot_cost_curve(self,P=None,filename=None): self.cost_model.plot(P,filename)
     def gethrsinstatus(self,tm,times):
@@ -259,15 +264,15 @@ class Generator(OptimizationObject):
             return hours(tm.End-t_lastchange.Start)
         except StopIteration: #no changes over whole time period
             h=hours(tm.End-times[0].Start)
-            if value(self.status(times.initialTime)) == status: h+=self.initialStatusHours
+            if value(self.status(times.initialTime)) == status: h+=self.initial_status_hours
             return h
     
     def set_initial_condition(self,time=None, P=None, u=True, hoursinstatus=100):
         '''Set the initial condition at time.'''
         if P is None: P=(self.Pmax-self.Pmin)/2 #set default power as median output
-        self.add_variable('status', 'u', time, fixed_value=u)
-        self.add_variable('power', 'P', time, fixed_value=P*u) #note: this eliminates ambiguity of off status with power non-zero output
-        self.initialStatusHours = hoursinstatus
+        self.initial_status=u
+        self.initial_power =P*u #note: this eliminates ambiguity of off status with power non-zero output
+        self.initial_status_hours = hoursinstatus
     def build_cost_model(self):
         ''' create a cost model for bidding with :meth:`~bidding.makeModel` '''
         if getattr(self,'heatratestring',None) is not None: 
@@ -285,6 +290,7 @@ class Generator(OptimizationObject):
         Also create the :class:`bidding.Bid` objects.
         '''
         commitment_problem= len(times)>1 or self.dispatch_decommit_allowed
+<<<<<<< HEAD
         for time in times:
             self.add_variable('power','P',time,low=0,high=self.Pmax)
             if commitment_problem: #UC problem
@@ -390,6 +396,23 @@ class Generator(OptimizationObject):
 =======
 >>>>>>> debugging times for problem creation
             bid=bidding.Bid(
+=======
+
+        self.add_variable('power', index=times.set, low=0, high=self.Pmax)
+        
+        if commitment_problem:
+            self.add_variable('status', index=times.set, kind='Binary',fixed_value=True if self.mustrun else None)
+            self.add_variable('capacity',index=times.set, low=0,high=self.Pmax)
+            self.add_variable('startupcost',index=times.set, low=0,high=self.startupcost, fixed_value=0 if self.startupcost==0 else None)
+            self.add_variable('shutdowncost',index=times.set, low=0,high=self.shutdowncost, fixed_value=0 if self.shutdowncost==0 else None)
+        else: #ED or OPF problem, no commitments
+            t=times[0]
+            self.add_variable('status',       time=t,fixed_value=True)
+            self.add_variable('startupcost',  time=t,fixed_value=0)
+            self.add_variable('shutdowncost', time=t,fixed_value=0)
+
+        bids=dict(zip(times,[bidding.Bid(
+>>>>>>> major overahual on setting up variables/constraints directly to the parent problem. this allows the use of sets, variable lists. still need to cleanup (including dual values).
                     model=self.cost_model,
 <<<<<<< HEAD
 >>>>>>> refactored powersystems. moving on to bidding
@@ -401,11 +424,11 @@ class Generator(OptimizationObject):
                     status_var=self.status(time),
 >>>>>>> first working pass through solver (results still needs major rework
                     owner_iden=str(self),
-                    time_iden=str(time))
-            bid.create_variables()
-            self.add_component(bid,'bid',time)
-        
+                    time_iden=str(time)) for time in times]))
+        self.add_children(bids,'bids')
+        for time in times: self.bid(time).create_variables()
         #logging.debug('created {} variables {}'.format(str(self),show_clock()))
+<<<<<<< HEAD
         return self.all_variables(times)
 <<<<<<< HEAD
     
@@ -423,6 +446,9 @@ class Generator(OptimizationObject):
         self.initialStatusHours = hoursinstatus
 =======
 =======
+=======
+        return
+>>>>>>> major overahual on setting up variables/constraints directly to the parent problem. this allows the use of sets, variable lists. still need to cleanup (including dual values).
     def create_objective(self,times):
 <<<<<<< HEAD
         self.objective=sum_vars(self.cost(time) for time in times)
@@ -445,12 +471,12 @@ class Generator(OptimizationObject):
             tInitial = times.initialTime
             tEnd = len(times)
             if self.minuptime>0:
-                up_intervals_remaining=roundoff((self.minuptime - self.initialStatusHours)/times.intervalhrs)
-                min_up_intervals_remaining_init =   int(min(tEnd, up_intervals_remaining*self.status(tInitial) ))
+                up_intervals_remaining=roundoff((self.minuptime - self.initial_status_hours)/times.intervalhrs)
+                min_up_intervals_remaining_init =   int(min(tEnd, up_intervals_remaining*self.initial_status ))
             else: min_up_intervals_remaining_init=0
             if self.mindowntime>0:
-                down_intervals_remaining=roundoff((self.mindowntime - self.initialStatusHours)/times.intervalhrs)
-                min_down_intervals_remaining_init = int(min(tEnd,down_intervals_remaining*(self.status(tInitial)==0)))
+                down_intervals_remaining=roundoff((self.mindowntime - self.initial_status_hours)/times.intervalhrs)
+                min_down_intervals_remaining_init = int(min(tEnd,down_intervals_remaining*(self.initial_status==0)))
             else: min_down_intervals_remaining_init=0
             #initial up down time
             if min_up_intervals_remaining_init>0: 
@@ -462,12 +488,12 @@ class Generator(OptimizationObject):
             #initial ramp rate
             if self.rampratemax is not None:
                 if self.power(tInitial) + self.rampratemax < self.Pmax:
-                    E=self.power(times[0]) - self.power(tInitial) <= self.rampratemax
+                    E=self.power(times[0]) - self.intial_power <= self.rampratemax
                     self.add_constraint('ramp lim high', tInitial, E)
                     
             if self.rampratemin is not None:
                 if self.power(tInitial) + self.rampratemin > self.Pmin:
-                    E=self.rampratemin <= self.power(times[0]) - self.power(tInitial)
+                    E=self.rampratemin <= self.power(times[0]) - self.intial_power
                     self.add_constraint('ramp lim low', tInitial, E) 
             
             
@@ -477,7 +503,7 @@ class Generator(OptimizationObject):
         
         for t,time in enumerate(times):
             #bid curve constraints
-            self.get_component('bid', time).create_constraints()
+            self.bid(time).create_constraints()
             #min/max power
             if self.Pmin>0: self.add_constraint('min gen power', time, self.power(time)>=self.status(time)*self.Pmin)
             self.add_constraint('max gen power', time, self.power(time)<=self.status(time)*self.Pmax)
@@ -510,7 +536,7 @@ class Generator(OptimizationObject):
                 self.add_constraint('shutdown cost', time, self.cost_shutdown(time)>=self.shutdowncost*-1*self.status_change(t, times))
                 
         
-        return self.all_constraints(times)        
+        return
         
     def __str__(self): return 'g{ind}'.format(ind=self.index)
     def __int__(self): return self.index
@@ -693,7 +719,7 @@ class Line(OptimizationObject):
             self.add_constraint('line flow',t,line_flow_ij)
             self.add_constraint('line limit high',t,self.power(t)<=self.Pmax)
             self.add_constraint('line limit low',t,self.Pmin<=self.power(t))
-        return self.all_constraints(times)
+        return 
     def __str__(self): return 'k{ind}'.format(ind=self.index)
     def __int__(self): return self.index
     def iden(self,t): return str(self)+str(t)
@@ -759,8 +785,8 @@ class Bus(OptimizationObject):
         else: lineFlowsFromBus=sum([Bmatrix[self.index][otherBus.index]*otherBus.angle(t) for otherBus in allBuses]) #P_{ij}=sum_{i} B_{ij}*theta_j ???
         return sum([ -lineFlowsFromBus,-self.Pload(t),self.Pgen(t) ])
     def create_variables(self,times):
-        self.add_components(self.generators,'generators')
-        self.add_components(self.loads,'loads')
+        self.add_children(self.generators,'generators')
+        self.add_children(self.loads,'loads')
         logging.debug('added bus {} components - generators and loads {}'.format(self.name,show_clock()))
 #        if len(self.generators)<50:
         for gen in self.generators: gen.create_variables(times)             
@@ -777,7 +803,7 @@ class Bus(OptimizationObject):
         logging.debug('created load variables {}'.format(show_clock()))
         for time in times: self.add_variable('angle',time=time)
         logging.debug('created bus variables ... returning {}'.format(show_clock()))
-        return self.all_variables(times)
+        return
     def create_objective(self,times):
         return sum(gen.create_objective(times) for gen in self.generators) + \
             sum(load.create_objective(times) for load in self.loads)
@@ -896,7 +922,7 @@ class Load_Fixed(Load):
 
 =======
                 self.add_constraint('swing bus',time, self.angle(time)==0)#swing bus has angle=0
-        return self.all_constraints(times)
+        return
     # def clear_constraints(self):
     #     self.constraints={}
     #     for gen in self.generators: gen.clear_constraints()
@@ -941,8 +967,8 @@ class PowerSystem(OptimizationProblem):
         self.create_admittance_matrix(buses,lines)
         self.init_optimization()
         
-        self.add_components(buses,'buses')
-        self.add_components(lines,'lines')
+        self.add_children(buses,'buses')
+        self.add_children(lines,'lines')
         
         #add system mode parameters to relevant components
         self.set_load_shedding(load_shedding_allowed) #set load shedding
@@ -1009,16 +1035,21 @@ class PowerSystem(OptimizationProblem):
             self.Bmatrix[busTo.index,busFrom.index]+=-1/line.X
         for i in range(0,nB): 
             self.Bmatrix[i,i]=-1*sum(self.Bmatrix[i,:])
-            
     def loads(self): return flatten(bus.loads for bus in self.buses)
     def generators(self): return flatten(bus.generators for bus in self.buses)
     def create_variables(self,times):
+<<<<<<< HEAD
         self.add_variable('cost first stage','C1')
         self.add_variable('cost second stage','C2')        
+=======
+        self.add_set('times',[str(t) for t in times])
+        times.set=self._model.times
+        
+>>>>>>> major overahual on setting up variables/constraints directly to the parent problem. this allows the use of sets, variable lists. still need to cleanup (including dual values).
         for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
         logging.debug('... created power system vars... returning... {}'.format(show_clock()))
-        for var in self.all_variables(times).values(): self.add_variable(var)
+        #for var in self.all_variables(times).values(): self.add_variable(var)
         
     def create_objective(self,times):
 <<<<<<< HEAD
@@ -1033,6 +1064,7 @@ class PowerSystem(OptimizationProblem):
         for line in self.lines: line.create_constraints(times,self.buses)
         #a system reserve constraint would go here
 <<<<<<< HEAD
+<<<<<<< HEAD
         self.add_constraint('system cost first stage',None,expression=self.variables['cost_first_stage_system']==sum(gen.cost_first_stage(times) for gen in self.generators()))
         self.add_constraint('system cost second stage',None,expression=self.variables['cost_second_stage_system']==sum(gen.cost_second_stage(times) for gen in self.generators()))
 
@@ -1040,6 +1072,9 @@ class PowerSystem(OptimizationProblem):
     def iden(self,time): return 'system'
 =======
         for constraint in self.all_constraints(times).values(): self.add_constraint(constraint)
+=======
+        #for constraint in self.all_constraints(times).values(): self.add_constraint(constraint)
+>>>>>>> major overahual on setting up variables/constraints directly to the parent problem. this allows the use of sets, variable lists. still need to cleanup (including dual values).
     
 >>>>>>> basic conversion of power_system to OptimziationProblem object
     

@@ -13,7 +13,8 @@ import powersystems
 import results
 import config
 from commonscripts import joindir,show_clock
-    
+import time as timer
+
 def problem(datadir='.',
         shell=True,
         problemfile=False,
@@ -49,6 +50,7 @@ def problem(datadir='.',
     """
     
     _setup_logging(logging_level,logging_file)
+    start_time = timer.time()
     logging.debug('Minpower reading {} {}'.format(datadir, show_clock()))
     generators,loads,lines,times=get_data.parsedir(datadir)
     logging.debug('data read {}'.format(show_clock()))
@@ -140,6 +142,7 @@ def problem(datadir='.',
                                                        )
         solution=results.make_multistage_solution(power_system,stage_times,datadir,stage_solutions)
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> rework of multistage results - testing
         logging.info('problem solved in {}'.format(solution.solve_time))
 >>>>>>> major cleanup of results.py. still need to tackle the multistage commitments
@@ -153,6 +156,8 @@ def problem(datadir='.',
     
 <<<<<<< HEAD
     tracker.create_snapshot('solutions solved')
+=======
+>>>>>>> clean up problem time reporting
     
 >>>>>>> setting up pympler test
 =======
@@ -170,6 +175,7 @@ def problem(datadir='.',
     if solution_file: solution.save(solution_file)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     HtmlStats(tracker=tracker).create_html('profile.html')
     show_backref_chain('_VarElement')
     show_backrefs('_VarElement')
@@ -182,6 +188,9 @@ def problem(datadir='.',
 >>>>>>> memory and processor profiling
 =======
 >>>>>>> added yaml to setup.py reqs. cleanup
+=======
+    logging.info('total time: {}s'.format(timer.time()-start_time))
+>>>>>>> clean up problem time reporting
     return solution
 
 def create_solve_problem(power_system,times,datadir,solver,problemfile=False,get_duals=True):

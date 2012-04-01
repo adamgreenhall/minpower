@@ -63,24 +63,6 @@ def make_multistage_solution(power_system,*args,**kwargs):
     if power_system.lines: logging.warning('no visualization for multistage SCUC yet')
     return Solution_UC_multistage(power_system,*args,**kwargs)
 
-def make_multistage_solution_standalone(power_system,stage_times,datadir,stage_solution_files):
-    #print 'stage files are:',stage_solution_files
-    stage_solutions=[]
-    generators=power_system.generators()
-    for filename in stage_solution_files:
-        with open(filename,'r') as f: stage_solutions.append(yaml.load(f))
-    for sln in stage_solutions:
-        for time in sln.times.non_overlap_times:
-            for g,status in enumerate(sln.generators_status[time]):
-                generators[g].add_variable('status', 'u', time,fixed_value=status)
-            for g,power in enumerate(sln.generators_power[time]):
-                generators[g].add_variable('power', 'P', time,fixed_value=power)
-#        lmp_times=sorted(sln.lmps.keys())
-#        for t,time in enumerate(sln.times):
-#            sln.lmps[time]=sln.lmps[lmp_times[t]]
-    return Solution_UC_multistage(power_system,stage_times,datadir,stage_solutions)
-
-
 class Solution(object):
     '''
     Solution information template for a power system over times.
@@ -112,7 +94,7 @@ class Solution(object):
 
     def _get_outputs(self):
         self.generators_power =[self.get_values('generators','power',time) for time in self.times]
-        self.generators_status=[self.get_values('generators','status',time) for time in self.times]
+        self.generators_status=[[s==1 for s in self.get_values('generators','status',time)] for time in self.times]
 
     def _get_costs(self):
         generators=self.generators()
@@ -366,9 +348,9 @@ class Solution_UC(Solution):
         for g,gen in enumerate(self.generators()): 
             if gen.is_controllable:
                 fields.append('status: '+str(gen.name))
-                data.append([1 if self.generators_status[g][t]==1 else 0 for t,time in enumerate(times)])
+                data.append([self.generators_status[t][g] for t,time in enumerate(times)])
             fields.append('power: '+str(gen.name))
-            data.append(self.generators_power[g])
+            data.append([self.generators_power[t][g] for t,time in enumerate(times)])
         for load in self.loads():
             fields.append('load power: '+str(load.name))
             data.append([value(load.power(t)) for t in times])

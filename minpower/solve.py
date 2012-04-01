@@ -13,7 +13,8 @@ import powersystems
 import results
 import config
 from commonscripts import joindir,show_clock
-    
+import time as timer
+
 def problem(datadir='.',
         shell=True,
         problemfile=False,
@@ -49,6 +50,7 @@ def problem(datadir='.',
     """
     
     _setup_logging(logging_level,logging_file)
+    start_time = timer.time()
     logging.debug('Minpower reading {} {}'.format(datadir, show_clock()))
     generators,loads,lines,times=get_data.parsedir(datadir)
     logging.debug('data read {}'.format(show_clock()))
@@ -70,12 +72,12 @@ def problem(datadir='.',
                                                        problemfile=problemfile,
                                                        )
         solution=results.make_multistage_solution(power_system,stage_times,datadir,stage_solutions)
-        logging.info('problem solved in {} ... finished at {}'.format(solution.solve_time,show_clock()))
     
     if shell: solution.show()
     if csv: solution.saveCSV()
     if visualization: solution.visualization()
     if solution_file: solution.save(solution_file)
+    logging.info('total time: {}s'.format(timer.time()-start_time))
     return solution
 
 def create_solve_problem(power_system,times,datadir,solver,problemfile=False,get_duals=True):

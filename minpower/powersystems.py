@@ -501,7 +501,7 @@ class Generator(OptimizationObject):
             #initial ramp rate
             if self.rampratemax is not None:
                 if self.initial_power + self.rampratemax < self.Pmax:
-                    E=self.power(times[0]) - self.intial_power <= self.rampratemax
+                    E=self.power(times[0]) - self.initial_power <= self.rampratemax
                     self.add_constraint('ramp lim high', tInitial, E)
             
             if self.rampratemin is not None:

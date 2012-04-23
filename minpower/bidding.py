@@ -165,7 +165,7 @@ class PWLmodel(object):
 
         constraints['oneActiveSegment '+iden]= sum(S)== status_var 
         constraints['fractionSums '+iden]    = sum(F) == status_var 
-        constraints['computeInput '+iden]    = input_var == sum( elementwiseMultiply(F,self.bp_inputs) )
+        #constraints['computeInput '+iden]    = input_var == sum( elementwiseMultiply(F,self.bp_inputs) )
         constraints['firstSegment '+iden]    = F[0]<=S[0]
         constraints['lastSegment '+iden]     = F[-1]<=S[-1]
         for b in range(1,self.num_breakpoints-1): 

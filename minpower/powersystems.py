@@ -195,7 +195,8 @@ class Generator(OptimizationObject):
         
         if commitment_problem:
             self.add_variable('status', index=times.set, kind='Binary',fixed_value=True if self.mustrun else None)
-            self.add_variable('capacity',index=times.set, low=0,high=self.Pmax)
+            #only use capacity if reserve req. 
+            #self.add_variable('capacity',index=times.set, low=0,high=self.Pmax)
             self.add_variable('startupcost',index=times.set, low=0,high=self.startupcost, fixed_value=0 if self.startupcost==0 else None)
             self.add_variable('shutdowncost',index=times.set, low=0,high=self.shutdowncost, fixed_value=0 if self.shutdowncost==0 else None)
         else: #ED or OPF problem, no commitments

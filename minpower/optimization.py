@@ -80,15 +80,21 @@ class OptimizationObject(object):
         '''
         def map_args(kind='Continuous',low=None,high=None):
             return dict(bounds=(low,high),domain=variable_kinds[kind]) 
-        
+        orig_name=name
         if short_name is None: short_name=name
         if index is None:
             name=self._t_id(name,time)
             short_name=self._t_id(short_name,time)
             if fixed_value is None:
                 var=pyomo.Var(name=short_name, **map_args(**kwargs)) #new_variable(name=short_name,**kwargs)
+                self._parent_problem().add_variable(var)
             else:
-                var=fixed_value
+                var=pyomo.Param(name=short_name,default=fixed_value)
+                #add var
+                self._parent_problem().add_variable(var)
+                #and set value
+                var=self.get_variable(orig_name,time)
+                var[None]=fixed_value
         else:
             name=self._id(name)
             short_name=self._id(short_name)
@@ -100,7 +106,7 @@ class OptimizationObject(object):
                 for i in index: fixed_var[i]=fixed_value
                 var=fixed_var
         
-        self._parent_problem().add_variable(var)
+            self._parent_problem().add_variable(var)
 
     def add_constraint(self,name,time,expression): 
         '''Create a new constraint and add it to the constraints dictionary.'''

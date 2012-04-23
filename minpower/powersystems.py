@@ -200,10 +200,9 @@ class Generator(OptimizationObject):
             self.add_variable('startupcost',index=times.set, low=0,high=self.startupcost, fixed_value=0 if self.startupcost==0 else None)
             self.add_variable('shutdowncost',index=times.set, low=0,high=self.shutdowncost, fixed_value=0 if self.shutdowncost==0 else None)
         else: #ED or OPF problem, no commitments
-            t=times[0]
-            self.add_variable('status',       time=t,fixed_value=True)
-            self.add_variable('startupcost',  time=t,fixed_value=0)
-            self.add_variable('shutdowncost', time=t,fixed_value=0)
+            self.add_variable('status',       index=times.set,fixed_value=True)
+            self.add_variable('startupcost',  index=times.set,fixed_value=0)
+            self.add_variable('shutdowncost', index=times.set,fixed_value=0)
 
         bids=dict(zip(times,[bidding.Bid(
                     model=self.cost_model,
@@ -410,18 +409,17 @@ class Line(OptimizationObject):
         update_attributes(self,locals()) #load in inputs
         if self.Pmin is None: self.Pmin=-1*self.Pmax #reset default to be -Pmax
         self.init_optimization()
-    def power(self,time): return self.get_variable('power',time)
+    def power(self,time): return self.get_variable('power',time,indexed=True)
     def price(self,time):
         '''congestion price on line'''
         return dual(self.get_constraint('line flow',time))
     def create_variables(self,times):
-        for time in times: self.add_variable('power','P',time)
-        return self.all_variables(times)
+        self.add_variable('power',index=times.set)
     def create_constraints(self,times,buses):
         '''create the constraints for a line over all times'''
+        busNames=getattrL(buses,'name')
+        iFrom,iTo=busNames.index(self.From),busNames.index(self.To)
         for t in times:
-            busNames=getattrL(buses,'name')
-            iFrom,iTo=busNames.index(self.From),busNames.index(self.To)
             line_flow_ij=self.power(t) == (1/self.X) * (buses[iFrom].angle(t) - buses[iTo].angle(t))
             self.add_constraint('line flow',t,line_flow_ij)
             self.add_constraint('line limit high',t,self.power(t)<=self.Pmax)

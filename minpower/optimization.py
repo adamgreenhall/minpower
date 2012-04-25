@@ -335,6 +335,7 @@ class OptimizationProblem(OptimizationObject):
         #self.variables =   instance.active_components(pyomo.Var)
 
         return 
+    def __str__(self): return 'power_system_problem'
 
 def value(variable):
     '''

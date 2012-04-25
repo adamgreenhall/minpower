@@ -493,7 +493,8 @@ class Generator(OptimizationObject):
             else: min_down_intervals_remaining_init=0
             #initial up down time
             if min_up_intervals_remaining_init>0: 
-                self.add_constraint('minuptime', tInitial, 0==sum([(1-self.status(times[t])) for t in range(min_up_intervals_remaining_init)]))
+                self.add_constraint('minuptime', tInitial, 0>=sum([(1-self.status(times[t])) for t in range(min_up_intervals_remaining_init)]))
+                sum([(1-self.status(times[t])) for t in range(min_up_intervals_remaining_init)]).pprint()
             if min_down_intervals_remaining_init>0: 
                 self.add_constraint('mindowntime', tInitial, 0==sum([self.status(times[t]) for t in range(min_down_intervals_remaining_init)]))
 
@@ -669,9 +670,14 @@ class Load(OptimizationObject):
                  ):
         update_attributes(self,locals()) #load in inputs
         self.init_optimization()
-    def power(self,time): 
-        return self.get_variable('power',time,indexed=True) if self.shedding_allowed else self.schedule.get_energy(time)
-    def shed(self,time): return self.schedule.get_energy(time) - self.power(time)
+    def power(self,time,evaluate=False): 
+        if self.shedding_allowed:
+            power=self.get_variable('power',time,indexed=True)
+            if evaluate: power=value(power)
+            return power
+        else: 
+            return self.schedule.get_energy(time)
+    def shed(self,time,evaluate=False): return self.schedule.get_energy(time) - self.power(time,evaluate)
     def cost(self,time): return self.cost_shedding*self.shed(time) 
     def create_variables(self,times):
         if self.shedding_allowed:
@@ -702,8 +708,12 @@ class Load_Fixed(Load):
         update_attributes(self,locals(),exclude=['p']) #load in inputs
         self.Pfixed = P
         self.init_optimization()
-    def shed(self,time): return self.Pfixed- value(self.power(time))
-    def power(self,time=None): return self.get_variable('power',time) if self.shedding_allowed else self.Pfixed 
+    def shed(self,time,evaluate=False): return self.Pfixed- self.power(time,evaluate)
+    def power(self,time=None,evaluate=False): 
+        if self.shedding_allowed:
+            return self.get_variable('power',time) if evaluate else value(self.get_variable('power',time))
+        else: return self.Pfixed
+        
     def create_variables(self,times=None):
         if self.shedding_allowed:
             for time in times: self.add_variable('power','Pd',time,low=0,high=self.Pfixed)

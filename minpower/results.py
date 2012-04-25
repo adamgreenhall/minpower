@@ -190,7 +190,7 @@ class Solution(object):
         self.totalcost_generation = sum(flatten([[float(gen.cost(t,evaluate=True)) for t in times] for gen in generators]))
         self.fuelcost_generation=float(sum( c for c in flatten(gen_fuel_costs_pwlmodel) ))
         self.fuelcost_true_generation=float(sum( c for c in flatten(gen_fuel_costs_polynomial) ))
-        self.load_shed = sum( sum(load.shed(t) for load in self.loads()) for t in times )
+        self.load_shed = sum( sum(load.shed(t,evaluate=True) for load in self.loads()) for t in times )
         self._get_cost_error()
     def _get_cost_error(self):
         try: self.costerror=abs(self.fuelcost_generation-self.fuelcost_true_generation)/self.fuelcost_true_generation

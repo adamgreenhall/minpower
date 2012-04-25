@@ -12,12 +12,13 @@ from schedule import Timelist
 from optimization import value,dual
 import config
 
-import matplotlib
-import matplotlib.pyplot as plot
-from matplotlib.font_manager import FontProperties
+for_publication=True
 
-
-def prettify_plots(for_publication=True):
+try: 
+    import matplotlib
+    import matplotlib.pyplot as plot
+    do_plotting=True
+    #prettify plots
     plot.rc("xtick", direction="out")
     plot.rc("ytick", direction="out")
     plot.rc("ytick",labelsize='small')
@@ -26,13 +27,11 @@ def prettify_plots(for_publication=True):
     if for_publication:
         plot.rc("font",size=16)
         plot.rc("font",family="serif")
-        
-def prettify_axes(ax):
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.get_xaxis().tick_bottom()
-    ax.get_yaxis().tick_left()
-prettify_plots()
+except ImportError:
+    logger.warning("Can't import matplotlib -- skipping plotting.")
+    do_plotting=False
+
+
 
 def classify_problem(times,power_system):
     '''
@@ -198,6 +197,7 @@ class Solution_ED(Solution):
     def info_buses(self,t): return []
     def visualization(self,filename=None,show_cost_also=False):
         ''' economic dispatch visualization of linearized incremental cost'''
+        if not do_plotting: return
         if filename is None: filename=joindir(self.datadir,'dispatch.png')
         t=self.times[0]
         price=self.lmps[str(t)][0]
@@ -287,8 +287,13 @@ class Solution_ED(Solution):
 class Solution_OPF(Solution): 
     def visualization(self,filename=None): 
         '''power flow visualization'''
+        if not do_plotting: return
         if filename is None: filename=joindir(self.datadir,'powerflow.png')
-        import networkx as nx
+        try: import networkx as nx
+        except ImportError:
+            logging.warning("Could'nt import networkx -- skipping plotting.")
+            return
+        
         buses,lines,t=self.buses(),self.lines(),self.times[0]
         
         G=nx.DiGraph()
@@ -376,6 +381,7 @@ class Solution_UC(Solution):
             
     def visualization(self,filename=None,withPrices=True,filename_DR=None):
         '''generator output visualization for unit commitment'''
+        if not do_plotting: return
         if filename is None: filename=joindir(self.datadir,'commitment.png')
         prices=[self.lmps[str(t)][0] for t in self.times]
         stack_plot_UC(self,self.generators(),self.times,prices,self.datadir, withPrices=withPrices)
@@ -557,7 +563,7 @@ def stack_plot_UC(solution,generators,times,prices,
     plottedL=gens_plotted[::-1]    
 #    shrink_axis(ax,0.30)
 #    if withPrices: shrink_axis(axes_price,0.30)
-    legend_font=FontProperties()
+    legend_font=matplotlib.font_manager.FontProperties()
     legend_font.set_size('small')
     
     if seperate_legend:
@@ -568,7 +574,11 @@ def stack_plot_UC(solution,generators,times,prices,
     else:
         ax.legend(plottedL, legend_labels[::-1],prop=legend_font)#,loc='center left', bbox_to_anchor=(1, 0.5))
 
+def prettify_axes(ax):
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.get_xaxis().tick_bottom()
+    ax.get_yaxis().tick_left()
 def shrink_axis(ax,percent_horizontal=0.20,percent_vertical=0):
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width * (1-percent_horizontal), box.height*(1-percent_vertical)])
-    

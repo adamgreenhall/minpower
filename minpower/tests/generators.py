@@ -26,9 +26,8 @@ def power_maximum():
         make_cheap_gen(Pmax=Pmax),
         make_expensive_gen()
         ]
-    solve_problem(generators,**make_loads_times(Pd))
-    
-    assert generators[0].power(singletime[0]) == Pmax
+    power_system,times=solve_problem(generators,**make_loads_times(Pd))
+    assert generators[0].power(times[0]) == Pmax
     
 @generation.test
 def power_minimum():
@@ -43,8 +42,8 @@ def power_minimum():
         make_cheap_gen(),
         make_expensive_gen(Pmin=Pmin)
         ]
-    solve_problem(generators,**make_loads_times(Pd))
-    assert generators[1].power(singletime[0]) == Pmin
+    power_system,times=solve_problem(generators,**make_loads_times(Pd))
+    assert generators[1].power(times[0]) == Pmin
 
 @generation.test
 def ramp_up():
@@ -60,6 +59,7 @@ def ramp_up():
         ]
     initial = [{'P':250},{'P':250}]
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[250,350]))
+    print generators[1]._parent_problem()
     assert generators[0].power(times[1]) - generators[0].power(times[0]) == ramp_limit
     
 @generation.test
@@ -94,7 +94,7 @@ def ramp_up_initial():
     initial = [{'P':250},{'P':250}]
     
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[350,350]))
-    ramp_rate = generators[0].power(times[0]) - generators[0].power(times.initialTime)
+    ramp_rate = generators[0].power(times[0]) - generators[0].initial_power
     assert ramp_rate == ramp_limit
 
 
@@ -112,7 +112,7 @@ def ramp_down_initial():
     initial = [{'P':250},{'P':250}]
     
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[300,300]))
-    ramp_rate = generators[1].power(times[0]) - generators[1].power(times.initialTime)
+    ramp_rate = generators[1].power(times[0]) - generators[1].initial_power
     assert ramp_rate == ramp_limit
 
 

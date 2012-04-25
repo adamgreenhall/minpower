@@ -11,12 +11,11 @@ import logging
 logging.basicConfig( level=logging.INFO, format='%(levelname)s: %(message)s')
 
 tracker=ClassTracker()
-for cls in [pyomo.ConcreteModel,pyomo.Var,pyomo.base.var._VarElement,
-            pyomo.Constraint,optimization.Problem]:
+for cls in [pyomo.ConcreteModel,pyomo.Var,pyomo.base.var._VarElement,pyomo.Constraint,optimization.OptimizationProblem]:
     tracker.track_class(cls)
 
 def simple_problem():
-    prob=optimization.newProblem()
+    prob=optimization.OptimizationProblem()
     tracker.create_snapshot('prob. init')
     x= optimization.new_variable('x',low=0,high=3)
     y= optimization.new_variable('y',low=0,high=1)
@@ -31,9 +30,9 @@ def simple_problem():
 
 def test_one_solver(solver_name):
     prob=simple_problem()
-    prob.solve(solver=solver_name)
+    prob.solve(solver=solver_name,get_duals=False)
     tracker.create_snapshot('prob. solved')
-    status=prob.status
+    status=prob.solved
     del prob
     tracker.create_snapshot('prob. deleted')
     if solver_name=='glpk':

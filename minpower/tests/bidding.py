@@ -56,9 +56,9 @@ def cubic_non_convex():
     c=.2
     d=.0001
     generators=[ Generator(costcurvestring='{}+{}P+{}P^2 - {}P^3'.format(a,b,c,d)) ]
-    _,times=solve_problem(generators,**make_loads_times(Pd))
-    
-    cost = Assert(generators[0].bid(times[0]).output())
+    power_system,times=solve_problem(generators,**make_loads_times(Pd))
+
+    cost = Assert(generators[0].bid(times[0]).output(evaluate=True))
     actual_cost = a+ b*Pd+ c*Pd**2 + -1*d*Pd**3
     assert actual_cost <= cost <= 1.05*actual_cost
 

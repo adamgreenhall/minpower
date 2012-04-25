@@ -420,7 +420,7 @@ class Generator(OptimizationObject):
             self.add_variable('startupcost',index=times.set, low=0,high=self.startupcost, fixed_value=0 if self.startupcost==0 else None)
             self.add_variable('shutdowncost',index=times.set, low=0,high=self.shutdowncost, fixed_value=0 if self.shutdowncost==0 else None)
         else: #ED or OPF problem, no commitments
-            self.add_variable('status',       index=times.set,fixed_value=True)
+            self.add_variable('status',       index=times.set,fixed_value=1)
             self.add_variable('startupcost',  index=times.set,fixed_value=0)
             self.add_variable('shutdowncost', index=times.set,fixed_value=0)
 
@@ -669,13 +669,17 @@ class Load(OptimizationObject):
                  ):
         update_attributes(self,locals()) #load in inputs
         self.init_optimization()
-    def power(self,time): return self.get_variable('power',time) if self.shedding_allowed else self.schedule.get_energy(time)
+    def power(self,time): 
+        return self.get_variable('power',time,indexed=True) if self.shedding_allowed else self.schedule.get_energy(time)
     def shed(self,time): return self.schedule.get_energy(time) - self.power(time)
     def cost(self,time): return self.cost_shedding*self.shed(time) 
     def create_variables(self,times):
         if self.shedding_allowed:
-            for time in times: self.add_variable('power','Pd',time,low=0,high=self.schedule.get_energy(time))
-
+            self.add_variable('power',index=times.set,low=0)
+    def create_constraints(self,times):
+        if self.shedding_allowed:
+            for time in times:
+                self.add_constraint('max_load_power',time,self.power(time)<=self.schedule.get_energy(time))
     def create_objective(self,times):
         return sum([ self.cost(time) for time in times])
 

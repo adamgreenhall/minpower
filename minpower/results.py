@@ -296,7 +296,7 @@ class Solution_OPF(Solution):
             Pinj=value(bus.Pgen(t)) - value(bus.Pload(t))
             G.add_node(bus.name, Pinj=Pinj)
         for line in lines:
-            P=line.power(t)
+            P=value(line.power(t))
             if P>=0: G.add_edge(line.From,line.To,P=P,Plim=line.Pmax)
             else: G.add_edge(line.To,line.From,P=-P,Plim=-line.Pmin)
         
@@ -374,18 +374,18 @@ class Solution_UC(Solution):
             
             writeCSV(fields,transpose(data),filename=filename)
             
-    def visualization(self,filename=None,withPrices=True,withInitial=False,filename_DR=None):
+    def visualization(self,filename=None,withPrices=True,filename_DR=None):
         '''generator output visualization for unit commitment'''
         if filename is None: filename=joindir(self.datadir,'commitment.png')
         prices=[self.lmps[str(t)][0] for t in self.times]
-        stack_plot_UC(self.generators(),self.times,prices,self.datadir,withPrices=withPrices,withInitial=withInitial)
+        stack_plot_UC(self,self.generators(),self.times,prices,self.datadir, withPrices=withPrices)
         self.savevisualization(filename)
-        DR_loads=filter(lambda d: getattr(d, 'kind','') in ['shifting','bidding','shifting-bidding'], self.loads())
-        if DR_loads:
-            interval= int(DR_loads[0].interval_hours) if (len(self.times)<=24 and len(DR_loads)==1 and 'shifting' in getattr(DR_loads[0], 'kind','')) else None
-            stack_plot_UC(DR_loads,self.times,prices,withPrices=withPrices,hours_tick_interval=interval)
-            if filename_DR is None: filename_DR=joindir(self.datadir,'commitment-DR.png')
-            self.savevisualization(filename_DR)
+        # DR_loads=filter(lambda d: getattr(d, 'kind','') in ['shifting','bidding','shifting-bidding'], self.loads())
+        # if DR_loads:
+        #     interval= int(DR_loads[0].interval_hours) if (len(self.times)<=24 and len(DR_loads)==1 and 'shifting' in getattr(DR_loads[0], 'kind','')) else None
+        #     stack_plot_UC(DR_loads,self.times,prices,withPrices=withPrices,hours_tick_interval=interval)
+        #     if filename_DR is None: filename_DR=joindir(self.datadir,'commitment-DR.png')
+        #     self.savevisualization(filename_DR)
         
 
 class Solution_SCUC(Solution_UC):
@@ -448,9 +448,8 @@ def _colormap(numcolors,colormapName='gist_rainbow',mincolor=1):
     cm = matplotlib.cm.get_cmap(colormapName)
     return [cm(1.*i/numcolors) for i in range(mincolor,numcolors+mincolor)]      
 
-def stack_plot_UC(generators,times,prices,
+def stack_plot_UC(solution,generators,times,prices,
                   datadir=None,
-                  withInitial=False,
                   withPrices=True,
                   seperate_legend=False,
                   hours_tick_interval=None
@@ -470,18 +469,14 @@ def stack_plot_UC(generators,times,prices,
     
     gens_plotted,legend_labels=[],[]
     
-    T=[t.Start for t in times.wInitial]
+    T=[t.Start for t in times]
     bar_width = times.intervalhrs / 24.0 #maplotlib dates have base of 1day
-    initWidth = times.initialTime.intervalhrs / 24.0        
     stack_bottom=[0]*len(T)
     
     
     def addtostackplot(ax,time,power,color, gens_plotted,stack_bottom):
-        #add initial time to stackplot
-        if withInitial:
-            ax.bar(time[0],power[0],bottom=stack_bottom[0],color=color, linewidth=.01, alpha=alpha_initialTime, width=initWidth)
         #add commitment times to stackplot
-        plt=ax.bar(time[1:],power[1:],bottom=stack_bottom[1:],color=color, linewidth=.01, width=bar_width)
+        plt=ax.bar(time,power,bottom=stack_bottom,color=color, linewidth=.01, width=bar_width)
         #add power to stack bottom
         stack_bottom=elementwiseAdd(power,stack_bottom)
         #add to list of gens plotted
@@ -491,8 +486,7 @@ def stack_plot_UC(generators,times,prices,
     if len(generators)<=5:
         colors=_colormap(len(generators),colormapName='Blues')
         for g,gen in enumerate(generators):
-            if withInitial: Pgen=[gen.power(t) for t in times.wInitial]
-            else: Pgen=[gen.power(t) if t!=times.initialTime else 0 for t in times.wInitial]
+            Pgen=[solution.generators_power[t][g] for t,time in enumerate(times)]#[value(gen.power(t)) for t in times]
             gens_plotted,stack_bottom=addtostackplot(ax,T,Pgen,colors[g], gens_plotted,stack_bottom)
             legend_labels.append(gen.name)
     else:     
@@ -501,12 +495,12 @@ def stack_plot_UC(generators,times,prices,
         ordered_kinds=['nuclear','coal','CHP','other','shoulder NG','peaker NG','wind']
         colors=_colormap(len(ordered_kinds),colormapName='Blues')
         power_by_kind=OrderedDict(zip(ordered_kinds,[None]*len(ordered_kinds)))
-        for gen in generators:
+        for g,gen in enumerate(generators):
             kind=gen.kind.lower() if gen.kind.lower() in ordered_kinds else kind_map.get(gen.kind.lower(),'other')
             if power_by_kind[kind] is None:
-                power_by_kind[kind]=[value(gen.power(t)) for t in times.wInitial]
+                power_by_kind[kind]= [solution.generators_power[t][g] for t,time in enumerate(times)]#[value(gen.power(t)) for t in times]
             else:
-                power_by_kind[kind]=elementwiseAdd([value(gen.power(t)) for t in times.wInitial],power_by_kind[kind])
+                power_by_kind[kind]=elementwiseAdd([solution.power_generation[t][g] for t,time in enumerate(times)],power_by_kind[kind]) #[value(gen.power(t)) for t in times]
         
         for kind,Pgen in power_by_kind.iteritems():
             if Pgen is None: continue
@@ -521,7 +515,7 @@ def stack_plot_UC(generators,times,prices,
         prices_wo_none=[p for p in prices if p is not None]
         if prices_wo_none:
             axes_price = plot.axes([figLeft,.75,figWidth,.2],sharex=ax)
-            axes_price.step(T[1:]+[times.End],prices+[prices[-1]],  where='post') #start from 1 past initial time
+            axes_price.step(T+[times.End],prices+[prices[-1]],  where='post') #start from 1 past initial time
             axes_price.set_ylabel('price\n[$/MWh]',ha='center',**font_big)
             axes_price.yaxis.set_label_coords(**yLabel_pos)
             plot.setp(axes_price.get_xticklabels(), visible=False)

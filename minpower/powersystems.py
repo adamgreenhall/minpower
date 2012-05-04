@@ -236,11 +236,15 @@ class Generator(OptimizationObject):
 =======
         return self.operatingcost(time,evaluate)+self.cost_startup(time,evaluate)+self.cost_shutdown(time,evaluate)
     def cost_startup(self,time,evaluate=False): 
-        c=self.get_variable('startupcost',time,indexed=True)
-        return c if not evaluate else value(c) 
+        if self.startupcost==0: return 0
+        else:
+            c=self.get_variable('startupcost',time,indexed=True)
+            return c if not evaluate else value(c) 
     def cost_shutdown(self,time,evaluate=False): 
-        c=self.get_variable('shutdowncost',time,indexed=True)
-        return c if not evaluate else value(c) 
+        if self.shutdowncost==0: return 0
+        else: 
+            c=self.get_variable('shutdowncost',time,indexed=True)
+            return c if not evaluate else value(c) 
     def operatingcost(self,time,evaluate=False): 
         '''cost of real power production at time (based on bid model approximation).'''
         return self.bid(time).output(evaluate)
@@ -414,11 +418,11 @@ class Generator(OptimizationObject):
         self.add_variable('power', index=times.set, low=0, high=self.Pmax)
         
         if commitment_problem:
-            self.add_variable('status', index=times.set, kind='Binary',fixed_value=True if self.mustrun else None)
+            self.add_variable('status', index=times.set, kind='Binary',fixed_value=1 if self.mustrun else None)
             #only use capacity if reserve req. 
             #self.add_variable('capacity',index=times.set, low=0,high=self.Pmax)
-            self.add_variable('startupcost',index=times.set, low=0,high=self.startupcost, fixed_value=0 if self.startupcost==0 else None)
-            self.add_variable('shutdowncost',index=times.set, low=0,high=self.shutdowncost, fixed_value=0 if self.shutdowncost==0 else None)
+            if self.startupcost>0:  self.add_variable('startupcost',index=times.set, low=0,high=self.startupcost)                                                                                                                            
+            if self.shutdowncost>0: self.add_variable('shutdowncost',index=times.set, low=0,high=self.shutdowncost)
         else: #ED or OPF problem, no commitments
             self.add_variable('status',       index=times.set,fixed_value=1)
             self.add_variable('startupcost',  index=times.set,fixed_value=0)
@@ -494,7 +498,6 @@ class Generator(OptimizationObject):
             #initial up down time
             if min_up_intervals_remaining_init>0: 
                 self.add_constraint('minuptime', tInitial, 0>=sum([(1-self.status(times[t])) for t in range(min_up_intervals_remaining_init)]))
-                sum([(1-self.status(times[t])) for t in range(min_up_intervals_remaining_init)]).pprint()
             if min_down_intervals_remaining_init>0: 
                 self.add_constraint('mindowntime', tInitial, 0==sum([self.status(times[t]) for t in range(min_down_intervals_remaining_init)]))
 

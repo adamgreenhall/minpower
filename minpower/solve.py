@@ -15,7 +15,7 @@ import config
 from commonscripts import joindir,show_clock
 import time as timer
 
-def problem(datadir='.',
+def solve_problem(datadir='.',
         shell=True,
         problemfile=False,
         visualization=True,
@@ -192,3 +192,68 @@ def _setup_logging(level,filename=False):
     if filename:
         logging.basicConfig( level=level, format='%(levelname)s: %(message)s',filename=filename)
     else: logging.basicConfig( level=level, format='%(levelname)s: %(message)s')
+
+
+def main():
+    import argparse,os,traceback,sys
+
+    parser = argparse.ArgumentParser(description='Minpower command line interface')
+    parser.add_argument('directory', type=str, 
+                       help='the direcory of the problem you want to solve (or name of minpower demo case)')
+    parser.add_argument('--solver','-s',  type=str, default=config.optimization_solver,
+                       help='the solver name used to solve the problem (e.g. cplex, gurobi, glpk)')
+    parser.add_argument('--visualization','-v',action="store_true", default=False,
+                      help='save a visualization of the solution')
+    parser.add_argument('--breakpoints','-b',  type=int, default=config.default_num_breakpoints,
+                       help='number of breakpoints to use in piece-wise linearization of polynomial costs')
+    parser.add_argument('--commitment_hours','-c', type=int, default=config.default_hours_commitment,
+                       help='number hours per commitment in a rolling UC (exclusive of overlap)')
+    parser.add_argument('--overlap_hours','-o', type=int, default=config.default_hours_commitment_overlap,
+                       help='number hours to overlap commitments in a rolling UC')      
+    parser.add_argument('--problemfile','-p',action="store_true", default=False,
+                       help='flag to write the problem formulation to a problem-formulation.lp file -- useful for debugging')
+    parser.add_argument('--duals_off','-u',action="store_true", default=False,
+                      help='flag to skip getting the the duals, or prices, of the optimization problem')
+    parser.add_argument('--dispatch_decommit_allowed','-d', action="store_true", default=False,
+                        help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
+    parser.add_argument('--logfile','-l',type=str,default=False,
+                       help='log file, default is to log to terminal')
+    parser.add_argument('--solution_file',type=str,default=False,
+                       help='save solution file to disk')
+    parser.add_argument('--profile',action="store_true",default=False,help='run cProfile and output to minpower.profile')
+    parser.add_argument('--error','-e',action="store_true",default=False,help='redirect error messages to the standard output (useful for debugging on remote machines)')
+                    
+    #figure out the command line arguments
+    args = parser.parse_args()
+
+    directory=args.directory
+
+    if not os.path.isdir(directory):
+        msg='There is no folder named "{}".'.format(directory)
+        raise OSError(msg)
+
+    inputs=dict(solver=args.solver,
+              num_breakpoints=args.breakpoints,
+              hours_commitment=args.commitment_hours,
+              hours_commitment_overlap=args.overlap_hours,
+              dispatch_decommit_allowed=args.dispatch_decommit_allowed,
+              visualization=args.visualization,
+              get_duals=not args.duals_off,
+              problemfile=args.problemfile,
+              logging_file=args.logfile,
+              solution_file=args.solution_file)
+    if args.profile:
+        print 'run profile'
+        import cProfile
+        prof = cProfile.Profile()
+        prof.runcall(solve.problem, directory, **inputs)
+        prof.dump_stats('minpower.profile')
+
+    else:
+        #solve the problem with those arguments
+        try: solve_problem(directory,**inputs)
+        except:
+            if args.error: 
+                print 'There was an error:'
+                traceback.print_exc(file=sys.stdout)
+            else: raise

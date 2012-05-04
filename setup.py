@@ -16,18 +16,19 @@
 from setuptools import setup, find_packages
 setup(
     name = "minpower",
-    version = "2.1",
-    download_url = "https://github.com/adamgreenhall/minpower/zipball/v2.1",
+    version = "3.0",
+    download_url = "https://github.com/adamgreenhall/minpower/zipball/v3.0",
 
-    scripts= [
-        'scripts/minpower',
-        'scripts/remote-minpower',
-        ],
+    entry_points="""
+    [console_scripts]
+    minpower = minpower.solve:main
+    """,
+
     install_requires=[
         'Coopr>=3.1.5409',
         'scipy>=0.9',
-        'matplotlib>=1.0.1',
-        'networkx>=1.5',
+        # 'matplotlib>=1.0.1',
+        # 'networkx>=1.5',
         'python-dateutil>=1.4.1',
         'ordereddict>=1.1',
         'PyYAML>=3.10',

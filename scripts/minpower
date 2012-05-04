@@ -79,7 +79,7 @@ if args.profile:
 
 else:
     #solve the problem with those arguments
-    try: solve.problem(directory,**inputs)
+    try: solve.solve_problem(directory,**inputs)
     except:
         if args.error: 
             print 'There was an error:'

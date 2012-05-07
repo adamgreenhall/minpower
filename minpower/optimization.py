@@ -654,9 +654,8 @@ class OptimizationObject(object):
             if fixed_value is None: 
                 var=pyomo.Var(index,name=short_name,**map_args(**kwargs))
             else: 
-                fixed_var=pyomo.Param(index,name=name)
-                for i in index: fixed_var[i]=fixed_value
-                var=fixed_var
+                var=pyomo.Param(index,name=name)
+                for i in index: var[i]=fixed_value
         
             self._parent_problem().add_variable(var)
 
@@ -667,7 +666,7 @@ class OptimizationObject(object):
         self._parent_problem().add_constraint(new_constraint(name,expression))
     def add_set(self,name,items): self._model._add_component(name,pyomo.Set(initialize=items,name=name))
         
-    def get_variable(self,name,time,indexed=False):
+    def get_variable(self,name,time=None,indexed=False):
         if indexed: 
             var_name=self._id(name)
             index=str(time)
@@ -797,7 +796,14 @@ class OptimizationProblem(OptimizationObject):
             print ""
     def update_variables(self):
         '''Replace the variables with their numeric value.'''
-        for name,var in self._model.active_components(pyomo.Var).items(): setattr(self._model,name,value(var))
+        for name,var in self._model.active_components(pyomo.Var).items(): 
+            try: setattr(self._model,name,value(var))
+            except ValueError: 
+                #for boolean sets this doesnt work due to rounding
+                if var.domain==pyomo.Boolean:
+                    setattr(self._model,name,int(value(var)))
+                else: raise
+                
             
     def solve(self,solver=config.optimization_solver,problem_filename=False,get_duals=True):
         '''

@@ -28,7 +28,7 @@ try:
         plot.rc("font",size=16)
         plot.rc("font",family="serif")
 except ImportError:
-    logger.warning("Can't import matplotlib -- skipping plotting.")
+    logging.warning("Can't import matplotlib -- skipping plotting.")
     do_plotting=False
 
 

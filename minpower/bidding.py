@@ -410,7 +410,7 @@ class convexPWLmodel(PWLmodel):
             constraints[nm]= bid.output() >= line(bid.input())
         return constraints
     def output(self,bid,evaluate=False): 
-        out=bid.get_variable('bidCost_'+bid.iden_owner+bid.iden_time)
+        out=bid.get_variable('bidCost_'+bid.owner_iden+bid.time_iden)
         return out if not evaluate else value(out)
 class LinearModel(PWLmodel):
     '''

@@ -1,5 +1,5 @@
 from commonscripts import elementwiseMultiply,update_attributes
-from optimization import value,new_variable,OptimizationObject
+from optimization import value,OptimizationObject
 from config import default_num_breakpoints
 
 from scipy import linspace, polyval, polyder, interp, poly1d
@@ -29,8 +29,7 @@ class Bid(OptimizationObject):
     def __init__(self,model,time,owner_iden,time_iden,input_var=0,status_var=True):
         update_attributes(self,locals(),exclude=['input_var','status_var'])
         self.init_optimization()
-        self.variables['input'] = input_var
-        self.variables['status']= status_var 
+        self.variables=dict(input=input_var,status=status_var)
         self.name='bid_'+owner_iden+time_iden
     def output_true(self,input_val): 
         '''true output value of bid'''
@@ -52,16 +51,13 @@ class Bid(OptimizationObject):
         for vp in variable_parameters: self.add_variable(**vp)
     def create_constraints(self):
         '''
-        Create the constraints for a bid by calling its model's :meth:`get_time_constraint` method.
+        Create the constraints for a bid by calling its model's :meth:`get_time_constraints` method.
         :return: a dictionary of the bid's constraints 
         '''
         constraintD=self.model.get_time_constraints(self)
         for nm,expr in constraintD.items(): self.add_constraint(nm,self.time,expr)
-        return self.constraints
-    def output(self,evaluate=False): 
-        '''The output of the bid, given an input.'''
-        return self.model.output(self,self.owner_iden,self.time_iden,evaluate)  
-    def input(self,evaluate=False): return self.variables['input'] if not evaluate else value(self.variables['input'])
+    def output(self,evaluate=False): return self.model.output(self,evaluate)  
+    def input(self,evaluate=False):  return self.variables['input'] if not evaluate else value(self.variables['input'])
     def status(self,evaluate=False): return self.variables['status'] if not evaluate else value(self.variables['status'])
     def __str__(self): return 'bid{t}'.format(t=str(self.time))
     def iden(self,*args): return 'bid{t}'.format(t=str(self.time))
@@ -175,8 +171,8 @@ class PWLmodel(object):
             name='midSegment {iden} b{bnum}'.format(iden=iden,bnum=b)
             constraints[name]                = ( F[b] <= sum([S[b-1],S[b]]) )
         return constraints
-    def output(self,bid,owner_iden,time_iden,evaluate=False): 
-        F = [bid.get_variable(self._f_name(f,owner_iden,time_iden)) for f in range(len(self.bp_inputs))]
+    def output(self,bid,evaluate=False): 
+        F = [bid.get_variable(self._f_name(f,bid.owner_iden,bid.time_iden)) for f in range(len(self.bp_inputs))]
         if evaluate: F=map(value,F)
         return sum( elementwiseMultiply(F,self.bp_outputs) )
     def output_true(self,input_val): return float(polyval( self.poly_curve, value(input_val) ))
@@ -279,8 +275,8 @@ class convexPWLmodel(PWLmodel):
             nm='cost_linearized_{oi}_b{b}_{ti}'.format(oi=bid.owner_iden,b=b,ti=bid.time_iden)
             constraints[nm]= bid.output() >= line(bid.input())
         return constraints
-    def output(self,bid,iden_owner,iden_time,evaluate=False): 
-        out=bid.get_variable('bidCost_'+iden_owner+iden_time)
+    def output(self,bid,evaluate=False): 
+        out=bid.get_variable('bidCost_'+bid.iden_owner+bid.iden_time)
         return out if not evaluate else value(out)
 class LinearModel(PWLmodel):
     '''
@@ -298,7 +294,7 @@ class LinearModel(PWLmodel):
 
     def get_variable_params(self,*args,**kwargs): return []
     def get_time_constraints(self,bid): return {}
-    def output(self,bid,owner_iden,time_iden,evaluate=False):
+    def output(self,bid,evaluate=False):
         try: fixed_term=self.poly_curve.c[1]*bid.status(evaluate)
         except IndexError: fixed_term=0 #constant cost
         linear_term = self.poly_curve.c[0]*bid.input(evaluate)

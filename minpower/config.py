@@ -94,7 +94,6 @@ cost_load_shedding = 1000 #$/MWh
 default_num_breakpoints=11
 default_hours_commitment=24
 default_hours_commitment_overlap=0
-optimization_package='coopr' #'pulp'
 
 optimization_solver='glpk'
 available_solvers = ['glpk','gurobi']#['glpk','gurobi','cplex']

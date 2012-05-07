@@ -468,6 +468,10 @@ def _setup_logging(level,filename=False):
 
 
 def main():
+    '''
+    The command line interface for minpower. Described by:
+    minpower --help
+    '''
     import argparse,os,traceback,sys
 
     parser = argparse.ArgumentParser(description='Minpower command line interface')

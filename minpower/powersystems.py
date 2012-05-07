@@ -306,7 +306,7 @@ class Generator(OptimizationObject):
     def create_variables(self,times):
         '''
         Create the optimization variables for a generator over all times. 
-        Also create the :class:`bidding.Bid` objects.
+        Also create the :class:`bidding.Bid` objects and their variables.
         '''
 <<<<<<< HEAD
         commitment_problem= len(times)>1 or self.dispatch_decommit_allowed
@@ -491,6 +491,7 @@ class Generator(OptimizationObject):
 
         commitment_problem= len(times)>1        
         if commitment_problem:
+            #set initial and final time constraints
             tInitial = times.initialTime
             tEnd = len(times)
             if self.minuptime>0:
@@ -725,7 +726,7 @@ class Load_Fixed(Load):
         
     def create_variables(self,times=None):
         if self.shedding_allowed:
-            for time in times: self.add_variable('power','Pd',time,low=0,high=self.Pfixed)
+            for time in times: self.add_variable('power',time=time,low=0,high=self.Pfixed)
         
 class Line(OptimizationObject):
     """

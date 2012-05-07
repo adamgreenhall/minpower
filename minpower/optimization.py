@@ -549,8 +549,8 @@ def new_constraint(name,expression):
 >>>>>>> basic conversion of power_system to OptimziationProblem object
 class OptimizationObject(object):
     '''
-    A template for an optimization object. 
-    Override the methods of the template with your own.
+    A base class for an optimization object. 
+    This also serves as a template for how :class:`~OptimizationObject`s are structured.
     '''
     def __init__(self,*args,**kwargs):
         '''
@@ -564,10 +564,10 @@ class OptimizationObject(object):
         
     def init_optimization(self):
         '''
-        Initialize optimization components: add containers for variables, 
-        constraints, and an objective component. If the index is not
-        defined, make it a hash of the object to ensure the index is unique.
+        Initialize optimization components: add a container for children.
+        If the index is not defined, make it a hash of the object to ensure the index is unique.
         '''
+<<<<<<< HEAD
         self.variables=dict()
         self.constraints=dict()
 <<<<<<< HEAD
@@ -578,6 +578,8 @@ class OptimizationObject(object):
 =======
 =======
 >>>>>>> dropped some comments
+=======
+>>>>>>> update docs
         self.children=dict()
         if getattr(self,'index',None) is None: self.index=hash(self)
         if getattr(self,'name',None)=='': self.name = self.index+1 #1 and up naming
@@ -597,9 +599,12 @@ class OptimizationObject(object):
         Variables will be accessible by using
         :meth:`~optimization.OptimiationObject.get_variable` (or by adding
         a shortcut methods, like :meth:`~powersystems.Generator.power`).
+<<<<<<< HEAD
 >>>>>>> dropped pulp from optimization module. clean up docstrings.
         
         :returns: dictionary of variables belonging to the object and all its children (components)
+=======
+>>>>>>> update docs
         '''
         return #self.all_variables(times)
     def create_objective(self,times):
@@ -617,18 +622,22 @@ class OptimizationObject(object):
         Constraints will be accessible by using
         :meth:`~optimization.OptimiationObject.get_constraint` (or by adding
         a shortcut methods, like :meth:`~powersystems.Bus.price`.
-        
-        :returns: dictionary of constraints belonging to the object and all its children (components)
         '''
         return #self.all_constraints(times)
  
     def _t_id(self,name,time): return name.replace(' ','_')+'_'+self.iden(time)
     def _id(self,name): return name.replace(' ','_')+'_'+str(self)
     
-    def add_variable(self,name,short_name=None,time=None,fixed_value=None,index=None,**kwargs):
+    def add_variable(self,name,time=None,fixed_value=None,index=None,**kwargs):
         '''
-        Create a new variable and add it to the variables dictionary.
-        Parameters include those for `meth:optimization.new_variable`.
+        Create a new variable and add it to the object's variables and the model's variables.
+        :param name: name of optimization variable.
+        :param kind: type of variable, specified by string. {Continuous or Binary/Boolean}
+        :param low: low limit of variable
+        :param high: high limit of variable
+        :param fixed_value: a fixed value for a variable (making it a parameter)
+        :param time: a single time for a variable
+        :param index: a :class:`pyomo.Set` over which a variable is created
         '''
         def map_args(kind='Continuous',low=None,high=None):
             return dict(bounds=(low,high),domain=variable_kinds[kind]) 
@@ -660,11 +669,10 @@ class OptimizationObject(object):
             self._parent_problem().add_variable(var)
 
     def add_constraint(self,name,time,expression): 
-        '''Create a new constraint and add it to the constraints dictionary.'''
+        '''Create a new constraint and add it to the object's constraints and the model's constraints.'''
         name=self._t_id(name,time)
         #self.constraints[name]=new_constraint(name,expression)
         self._parent_problem().add_constraint(new_constraint(name,expression))
-    def add_set(self,name,items): self._model._add_component(name,pyomo.Set(initialize=items,name=name))
         
     def get_variable(self,name,time=None,indexed=False):
         if indexed: 
@@ -770,6 +778,9 @@ class OptimizationProblem(OptimizationObject):
     def add_constraint(self,constraint):
         '''add a single constraint to the problem'''
         self._model._add_component(constraint.name,constraint)
+    def add_set(self,name,items):         
+        '''add a :class:`pyomo.Set` to the problem'''
+        self._model._add_component(name,pyomo.Set(initialize=items,name=name))
 
     def get_component(self,name): 
         '''Get an optimization component'''

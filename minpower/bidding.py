@@ -1,5 +1,5 @@
 from commonscripts import elementwiseMultiply,update_attributes
-from optimization import value,new_variable,OptimizationObject
+from optimization import value,OptimizationObject
 from config import default_num_breakpoints
 
 <<<<<<< HEAD
@@ -85,6 +85,7 @@ class Bid(OptimizationObject):
         update_attributes(self,locals(),exclude=['input_var','status_var'])
 >>>>>>> redo of bid, bid.model input and status variable handling
         self.init_optimization()
+<<<<<<< HEAD
         self.variables['input'] = input_var
         self.variables['status']= status_var 
 <<<<<<< HEAD
@@ -97,6 +98,9 @@ class Bid(OptimizationObject):
 =======
 =======
 =======
+=======
+        self.variables=dict(input=input_var,status=status_var)
+>>>>>>> update docs
         self.name='bid_'+owner_iden+time_iden
 >>>>>>> major overahual on setting up variables/constraints directly to the parent problem. this allows the use of sets, variable lists. still need to cleanup (including dual values).
     def output_true(self,input_val): 
@@ -121,16 +125,13 @@ class Bid(OptimizationObject):
         for vp in variable_parameters: self.add_variable(**vp)
     def create_constraints(self):
         '''
-        Create the constraints for a bid by calling its model's :meth:`get_time_constraint` method.
+        Create the constraints for a bid by calling its model's :meth:`get_time_constraints` method.
         :return: a dictionary of the bid's constraints 
         '''
         constraintD=self.model.get_time_constraints(self)
         for nm,expr in constraintD.items(): self.add_constraint(nm,self.time,expr)
-        return self.constraints
-    def output(self,evaluate=False): 
-        '''The output of the bid, given an input.'''
-        return self.model.output(self,self.owner_iden,self.time_iden,evaluate)  
-    def input(self,evaluate=False): return self.variables['input'] if not evaluate else value(self.variables['input'])
+    def output(self,evaluate=False): return self.model.output(self,evaluate)  
+    def input(self,evaluate=False):  return self.variables['input'] if not evaluate else value(self.variables['input'])
     def status(self,evaluate=False): return self.variables['status'] if not evaluate else value(self.variables['status'])
     def __str__(self): return 'bid{t}'.format(t=str(self.time))
     def iden(self,*args): return 'bid{t}'.format(t=str(self.time))
@@ -250,6 +251,7 @@ class PWLmodel(object):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     def output(self,F,solution=None): 
         return sum( [ value(Fval,solution)*self.bpOutputs[f] for f,Fval in enumerate(F)] )
 =======
@@ -298,6 +300,10 @@ class PWLmodel(object):
     def output(self,bid,owner_iden,time_iden,evaluate=False): 
         F = [bid.get_variable(self._f_name(f,owner_iden,time_iden)) for f in range(len(self.bp_inputs))]
 >>>>>>> clean up variables in bids
+=======
+    def output(self,bid,evaluate=False): 
+        F = [bid.get_variable(self._f_name(f,bid.owner_iden,bid.time_iden)) for f in range(len(self.bp_inputs))]
+>>>>>>> update docs
         if evaluate: F=map(value,F)
 >>>>>>> add evaluate option to costs (coopr sums). add storage of generation power and status for UC results
         return sum( elementwiseMultiply(F,self.bp_outputs) )
@@ -403,8 +409,8 @@ class convexPWLmodel(PWLmodel):
             nm='cost_linearized_{oi}_b{b}_{ti}'.format(oi=bid.owner_iden,b=b,ti=bid.time_iden)
             constraints[nm]= bid.output() >= line(bid.input())
         return constraints
-    def output(self,bid,iden_owner,iden_time,evaluate=False): 
-        out=bid.get_variable('bidCost_'+iden_owner+iden_time)
+    def output(self,bid,evaluate=False): 
+        out=bid.get_variable('bidCost_'+bid.iden_owner+bid.iden_time)
         return out if not evaluate else value(out)
 class LinearModel(PWLmodel):
     '''
@@ -422,7 +428,7 @@ class LinearModel(PWLmodel):
 
     def get_variable_params(self,*args,**kwargs): return []
     def get_time_constraints(self,bid): return {}
-    def output(self,bid,owner_iden,time_iden,evaluate=False):
+    def output(self,bid,evaluate=False):
         try: fixed_term=self.poly_curve.c[1]*bid.status(evaluate)
         except IndexError: fixed_term=0 #constant cost
         linear_term = self.poly_curve.c[0]*bid.input(evaluate)

@@ -8,6 +8,7 @@ results.txt
 MANIFEST
 doc/publish.py
 doc/Makefile
+minpower.egg-info/
 doc/_build/*
 addons/*.py
 *commitment.csv

@@ -27,6 +27,7 @@ setup(
     install_requires=[
         'Coopr>=3.1.5409',
         'coopr.core>=1.0',
+        'pyutilib>=4.0',
         'scipy>=0.9',
         # 'matplotlib>=1.0.1',
         # 'networkx>=1.5',

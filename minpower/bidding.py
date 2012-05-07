@@ -46,20 +46,23 @@ class Bid(OptimizationObject):
     
     def create_variables(self):
         '''Call the :attr:model and get any additional variables from it.'''
-        self.variables.update(self.model.get_time_variables(self.variables['input'],
-                                                            self.variables['status'],
-                                                            self.owner_iden,self.time_iden))
+        variable_parameters=self.model.get_variable_params(self.input(),
+                                                           self.status(),
+                                                           self.owner_iden,self.time_iden)
+        for vp in variable_parameters: self.add_variable(**vp)
     def create_constraints(self):
         '''
         Create the constraints for a bid by calling its model's :meth:`get_time_constraint` method.
         :return: a dictionary of the bid's constraints 
         '''
-        constraintD=self.model.get_time_constraints(self.variables,self.owner_iden,self.time_iden)
+        constraintD=self.model.get_time_constraints(self)
         for nm,expr in constraintD.items(): self.add_constraint(nm,self.time,expr)
         return self.constraints
     def output(self,evaluate=False): 
         '''The output of the bid, given an input.'''
-        return self.model.output(self.variables,self.owner_iden,self.time_iden,evaluate)   
+        return self.model.output(self,self.owner_iden,self.time_iden,evaluate)  
+    def input(self,evaluate=False): return self.variables['input'] if not evaluate else value(self.variables['input'])
+    def status(self,evaluate=False): return self.variables['status'] if not evaluate else value(self.variables['status'])
     def __str__(self): return 'bid{t}'.format(t=str(self.time))
     def iden(self,*args): return 'bid{t}'.format(t=str(self.time))
 
@@ -132,37 +135,36 @@ class PWLmodel(object):
         return linePlotted            
     def _f_name(self,bpNum,owner_iden,time_iden):  return '{oi}_f{bpNum}_{ti}'.format(bpNum=bpNum,oi=owner_iden,ti=time_iden)
     def _s_name(self,segNum,owner_iden,time_iden): return '{oi}_s{segNum}_{ti}'.format(segNum=segNum,oi=owner_iden,ti=time_iden)
-    def get_time_variables(self,input_var,status_var,owner_iden,time_iden):
-        variables={}
+    def get_variable_params(self,input_var,status_var,owner_iden,time_iden):
+        variables=[]
         self.do_segmentation()
         #S: segment of cost curve is active
         #F: breakpoint weighting fraction
         for segNum in range(len(self.segments)):
             name=self._s_name(segNum,owner_iden,time_iden)
-            variables[name] = new_variable(kind='Binary', name=name)
+            variables.append(dict(kind='Binary', name=name))
          
         for bpNum in range(len(self.bp_inputs)):
             name=self._f_name(bpNum,owner_iden,time_iden)
-            variables[name] = new_variable(low=0,high=1,  name=name)
+            variables.append(dict(low=0,high=1, name=name))
         return variables 
-    def get_time_constraints(self,variables,owner_iden,time_iden):
+    def get_time_constraints(self,bid):
         """
         Create the constraints for a single time instance of 
           a piecewise linear model. 
           
-        :param variables: a dictionary of the variables for the bid
-        :param iden: identifying string for the bidder and time interval
+        :param bid: the parent bid
         
-        :returns: a dictionary of constraints
+        :returns: a dictionary of constraint name-expression pairs
         """
         constraints=dict()
-        iden=owner_iden+time_iden
-        input_var=variables['input']
-        status_var=variables['status']
+        iden=bid.owner_iden+bid.time_iden
+        input_var=bid.input()
+        status_var=bid.status()
         #if type(status_var)==type(True): status_var=1 if status_var else 0 #convert bool to integer for coopr 
         
-        S = [variables[self._s_name(s,owner_iden,time_iden)] for s in range(len(self.segments))] 
-        F = [variables[self._f_name(f,owner_iden,time_iden)] for f in range(len(self.bp_inputs))]
+        S = [bid.get_variable(self._s_name(s,bid.owner_iden,bid.time_iden)) for s in range(len(self.segments))] 
+        F = [bid.get_variable(self._f_name(f,bid.owner_iden,bid.time_iden)) for f in range(len(self.bp_inputs))]
 
         constraints['oneActiveSegment '+iden]= sum(S)== status_var 
         constraints['fractionSums '+iden]    = sum(F) == status_var 
@@ -173,8 +175,8 @@ class PWLmodel(object):
             name='midSegment {iden} b{bnum}'.format(iden=iden,bnum=b)
             constraints[name]                = ( F[b] <= sum([S[b-1],S[b]]) )
         return constraints
-    def output(self,variables,owner_iden,time_iden,evaluate=False): 
-        F = [variables[self._f_name(f,owner_iden,time_iden)] for f in range(len(self.bp_inputs))]
+    def output(self,bid,owner_iden,time_iden,evaluate=False): 
+        F = [bid.get_variable(self._f_name(f,owner_iden,time_iden)) for f in range(len(self.bp_inputs))]
         if evaluate: F=map(value,F)
         return sum( elementwiseMultiply(F,self.bp_outputs) )
     def output_true(self,input_val): return float(polyval( self.poly_curve, value(input_val) ))
@@ -265,19 +267,20 @@ class convexPWLmodel(PWLmodel):
          
         if P is not None: plot(P,polyval(polyder(self.poly_curve),P), 'o', c=linePlotted.get_color(), markersize=8, linewidth=2, alpha=0.7)
         return linePlotted
-    def get_time_variables(self,input_var,status_var,owner_iden,time_iden):
-        variables={}
+    def get_variable_params(self,input_var,status_var,owner_iden,time_iden):
+        variables=[]
         name = 'bidCost_'+owner_iden+time_iden
-        variables[name] = new_variable(name=name,high=float(max(self.bp_outputs)))
+        variables.append(dict(name=name,high=float(max(self.bp_outputs))))
         return variables
-    def get_time_constraints(self,variables,owner_iden,time_iden):
+    def get_time_constraints(self,bid):
+        #create name expression pairs
         constraints=dict()
         for b,line in enumerate(self.segment_lines): 
-            nm='cost_linearized_{oi}_b{b}_{ti}'.format(oi=owner_iden,b=b,ti=time_iden)
-            constraints[nm]= variables['bidCost_'+owner_iden+time_iden] >= line(variables['input'])
+            nm='cost_linearized_{oi}_b{b}_{ti}'.format(oi=bid.owner_iden,b=b,ti=bid.time_iden)
+            constraints[nm]= bid.output() >= line(bid.input())
         return constraints
-    def output(self,variables,iden_owner,iden_time,evaluate=False): 
-        out=variables['bidCost_'+iden_owner+iden_time]
+    def output(self,bid,iden_owner,iden_time,evaluate=False): 
+        out=bid.get_variable('bidCost_'+iden_owner+iden_time)
         return out if not evaluate else value(out)
 class LinearModel(PWLmodel):
     '''
@@ -293,12 +296,12 @@ class LinearModel(PWLmodel):
         update_attributes(self,locals(),exclude=['polyText','multiplier'])
         self.poly_curve = multiplier * parsePolynomial(polyText)
 
-    def get_time_variables(self,*args,**kwargs): return {}
-    def get_time_constraints(self,*args,**kwargs): return {}
-    def output(self,variables,owner_iden,time_iden,evaluate=False):
-        try: fixed_term=self.poly_curve.c[1]*(variables['status'] if not evaluate else value(variables['status']))
+    def get_variable_params(self,*args,**kwargs): return []
+    def get_time_constraints(self,bid): return {}
+    def output(self,bid,owner_iden,time_iden,evaluate=False):
+        try: fixed_term=self.poly_curve.c[1]*bid.status(evaluate)
         except IndexError: fixed_term=0 #constant cost
-        linear_term = self.poly_curve.c[0]*(variables['input'] if not evaluate else value(variables['input']))
+        linear_term = self.poly_curve.c[0]*bid.input(evaluate)
         return (fixed_term + linear_term) if not evaluate else float(fixed_term + linear_term) 
     
     

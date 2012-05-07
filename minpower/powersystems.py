@@ -113,6 +113,7 @@ class Generator(OptimizationObject):
         update_attributes(self,locals()) #load in inputs     
         if self.rampratemin is None and self.rampratemax is not None: self.rampratemin = -1*self.rampratemax
         self.is_controllable=True
+        self.commitment_problem=True
         self.build_cost_model()
         self.init_optimization()
         
@@ -121,7 +122,8 @@ class Generator(OptimizationObject):
         return self.get_variable('power',time,indexed=True)
     def status(self,time): 
         '''on/off status at time'''
-        return self.get_variable('status',time,indexed=True)
+        if self.commitment_problem: return self.get_variable('status',time,indexed=True)
+        else: return 1
     def status_change(self,t,times): 
         '''is the unit changing status between t and t-1'''
         if t>0: previous_status=self.status(times[t-1])
@@ -136,12 +138,12 @@ class Generator(OptimizationObject):
         '''total cost at time (operating + startup + shutdown)'''
         return self.operatingcost(time,evaluate)+self.cost_startup(time,evaluate)+self.cost_shutdown(time,evaluate)
     def cost_startup(self,time,evaluate=False): 
-        if self.startupcost==0: return 0
+        if self.startupcost==0 or not self.commitment_problem: return 0
         else:
             c=self.get_variable('startupcost',time,indexed=True)
             return c if not evaluate else value(c) 
     def cost_shutdown(self,time,evaluate=False): 
-        if self.shutdowncost==0: return 0
+        if self.shutdowncost==0 or not self.commitment_problem: return 0
         else: 
             c=self.get_variable('shutdowncost',time,indexed=True)
             return c if not evaluate else value(c) 
@@ -193,20 +195,19 @@ class Generator(OptimizationObject):
         Create the optimization variables for a generator over all times. 
         Also create the :class:`bidding.Bid` objects.
         '''
-        commitment_problem= len(times)>1 or self.dispatch_decommit_allowed
-
+        self.commitment_problem= len(times)>1 or self.dispatch_decommit_allowed
         self.add_variable('power', index=times.set, low=0, high=self.Pmax)
         
-        if commitment_problem:
+        if self.commitment_problem:
             self.add_variable('status', index=times.set, kind='Binary',fixed_value=1 if self.mustrun else None)
             #only use capacity if reserve req. 
             #self.add_variable('capacity',index=times.set, low=0,high=self.Pmax)
             if self.startupcost>0:  self.add_variable('startupcost',index=times.set, low=0,high=self.startupcost)                                                                                                                            
             if self.shutdowncost>0: self.add_variable('shutdowncost',index=times.set, low=0,high=self.shutdowncost)
-        else: #ED or OPF problem, no commitments
-            self.add_variable('status',       index=times.set,fixed_value=1)
-            self.add_variable('startupcost',  index=times.set,fixed_value=0)
-            self.add_variable('shutdowncost', index=times.set,fixed_value=0)
+        # else: #ED or OPF problem, no commitments
+            # self.add_variable('status',       index=times.set,fixed_value=1)
+            # self.add_variable('startupcost',  index=times.set,fixed_value=0)
+            # self.add_variable('shutdowncost', index=times.set,fixed_value=0)
 
         bids=dict(zip(times,[bidding.Bid(
                     model=self.cost_model,

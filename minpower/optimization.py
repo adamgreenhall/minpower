@@ -80,15 +80,13 @@ class OptimizationObject(object):
         def map_args(kind='Continuous',low=None,high=None):
             return dict(bounds=(low,high),domain=variable_kinds[kind]) 
         orig_name=name
-        if short_name is None: short_name=name
         if index is None:
             name=self._t_id(name,time)
-            short_name=self._t_id(short_name,time)
             if fixed_value is None:
-                var=pyomo.Var(name=short_name, **map_args(**kwargs)) #new_variable(name=short_name,**kwargs)
+                var=pyomo.Var(name=name, **map_args(**kwargs)) #new_variable(name=short_name,**kwargs)
                 self._parent_problem().add_variable(var)
             else:
-                var=pyomo.Param(name=short_name,default=fixed_value)
+                var=pyomo.Param(name=name,default=fixed_value)
                 #add var
                 self._parent_problem().add_variable(var)
                 #and set value
@@ -96,10 +94,9 @@ class OptimizationObject(object):
                 var[None]=fixed_value
         else:
             name=self._id(name)
-            short_name=self._id(short_name)
 
             if fixed_value is None: 
-                var=pyomo.Var(index,name=short_name,**map_args(**kwargs))
+                var=pyomo.Var(index,name=name,**map_args(**kwargs))
             else: 
                 var=pyomo.Param(index,name=name)
                 for i in index: var[i]=fixed_value

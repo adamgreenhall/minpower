@@ -655,6 +655,6 @@ class PowerSystem(OptimizationProblem):
         for bus in self.buses: bus.create_constraints(times,self.Bmatrix,self.buses)
         for line in self.lines: line.create_constraints(times,self.buses)
         #a system reserve constraint would go here
-        self.add_constraint('system cost first stage',self.cost_first_stage()>=sum(gen.cost_first_stage(times) for gen in self.generators()))
-        self.add_constraint('system cost second stage',self.cost_second_stage()>=sum(gen.cost_second_stage(times) for gen in self.generators()))
+        self.add_constraint('system_cost_first_stage',self.cost_first_stage()==sum(gen.cost_first_stage(times) for gen in self.generators()))
+        self.add_constraint('system_cost_second_stage',self.cost_second_stage()==sum(gen.cost_second_stage(times) for gen in self.generators()))
     def iden(self,time): return 'system'

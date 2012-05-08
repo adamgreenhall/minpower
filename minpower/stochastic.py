@@ -12,7 +12,7 @@ from coopr.pyomo import *
 from coopr.pysp.phutils import *
 from math import fabs, ceil
 
-from optimization import Problem
+from optimization import OptimizationProblem
 import gc,logging
 from datetime import timedelta,datetime
 # import ipdb; ipdb.set_trace()
@@ -44,53 +44,48 @@ def construct_simple_scenario_tree(probabilities):
 def define_stage_variables(scenario_tree,power_system,times):
     # scenario_tree.Stages.pprint()
     # scenario_tree.StageVariables.pprint()
+
     variables_first_stage=Set()
     variables_second_stage=Set()
     for gen in power_system.generators():
         if not getattr(gen,'has_scenarios',False):
-            for time in times:
-                variables_first_stage.add(gen._t_id('u',time))
-                variables_second_stage.add(gen._t_id('P',time))
+            variables_first_stage.add(gen.get_variable('status',indexed=True,time=None))
+            variables_second_stage.add(gen.get_variable('power',indexed=True,time=None))
         
     # variables_first_stage.pprint()
     scenario_tree.StageVariables['first stage']=variables_first_stage
     scenario_tree.StageVariables['second stage']=variables_second_stage
     
-    scenario_tree.StageCostVariable['first stage']=power_system._t_id('C1')
-    scenario_tree.StageCostVariable['second stage']=power_system._t_id('C2')    
+    power_system.show_model()
+    scenario_tree.StageCostVariable['first stage']=power_system.cost_first_stage()
+    scenario_tree.StageCostVariable['second stage']=power_system.cost_second_stage()
 
-def create_problem_with_scenarios(problem,power_system,times,scenariotreeinstance,stage_hours,overlap_hours):
-    def construct_scenario_instances(problem,tree):
-        # gc.disable()
-        gen_w_scenarios=filter(lambda gen: getattr(gen,'has_scenarios',False),power_system.generators())[0]
-        
-        scenario_instances={}
-        for s,scenario in enumerate(tree._scenarios):
-            #print 'scenario: {s}'.format(s=s)
-            scenario_instance=problem.model.clone()
-            
-            power=getattr(scenario_instance,'P_{}'.format(str(gen_w_scenarios)))
-            for time in times: power[str(time)]=gen_w_scenarios.scenario_values[s][time]
-            
-            #power.pprint()
-            scenario_instance.preprocess()
-            scenario_instances[scenario._name] = scenario_instance
-            
-        else:
-            #print '-'*20
-            # gc.enable()
-            return scenario_instances
-    
-    scenario_tree=ScenarioTree(scenarioinstance=problem.model, scenariotreeinstance=scenariotreeinstance)
+def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_hours,overlap_hours):
+    scenario_tree=ScenarioTree(scenarioinstance=power_system._model, scenariotreeinstance=scenariotreeinstance)
     if scenario_tree.validate()==False: raise ValueError('not a valid scenario tree')
-    scenario_instances=construct_scenario_instances(problem,scenario_tree)
-    # problem.model.pprint()
+    
+    #construct scenario instances
+    # gc.disable()
+    gen_w_scenarios=filter(lambda gen: getattr(gen,'has_scenarios',False),power_system.generators())[0]
+    
+    scenario_instances={}
+    for s,scenario in enumerate(scenario_tree._scenarios):
+        #print 'scenario: {s}'.format(s=s)
+        scenario_instance=power_system._model.clone()
+        
+        power=getattr(scenario_instance,'power_{}'.format(str(gen_w_scenarios)))
+        #set the values of the parameter for this scenario
+        for time in times: power[str(time)]=gen_w_scenarios.scenario_values[s][time]
+        
+        #power.pprint()
+        scenario_instance.preprocess()
+        scenario_instances[scenario._name] = scenario_instance    
+
     scenario_tree.defineVariableIndexSets(scenario_instances)
     full_problem_instance=create_ef_instance(scenario_tree, scenario_instances)
-    
     #full_problem_instance.pprint()
     
-    
+    #relax the non-anticipatory constraints on the generator status variables beyond the UC time horizon
     start=times[0].Start+timedelta(hours=stage_hours)
     try: 
         tStart=[t.Start for t in times].index(start)
@@ -110,10 +105,13 @@ def create_problem_with_scenarios(problem,power_system,times,scenariotreeinstanc
     
     #full_problem_instance.pprint()
     #full_problem_instance.write('problem.lp')
-    
-    
-    full_problem=Problem(instance=full_problem_instance)
-    return full_problem,scenario_tree,scenario_instances
+    # full_problem=OptimizationProblem(instance=full_problem_instance)
+    # return full_problem,scenario_tree,scenario_instances
+    power_system.stochastic_formulation=True
+    power_system._stochastic_instance=full_problem_instance
+    power_system._scenario_tree=scenario_tree
+    power_system._scenario_instances=scenario_instances
+    return power_system
 
 def get_scenario_based_costs(scenario_tree,scenario_instances):
     #scenario_tree.pprintCosts(scenario_instances)

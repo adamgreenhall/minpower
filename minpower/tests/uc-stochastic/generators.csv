@@ -1,0 +1,4 @@
+name,cost curve equation,scenarios filename,Pmin,Pmax,startup cost
+baseload,10P,,0,460,0
+peaker,20P,,5,100,2000
+wind,wind,wind_scenarios.csv,0,50,0

@@ -10,6 +10,7 @@ import powersystems
 import schedule
 from addons import *
 from commonscripts import csv2dicts,csvColumn,flatten,unique,drop_case_spaces,joindir
+from stochastic import construct_simple_scenario_tree
 
 import os,sys,logging
 
@@ -21,10 +22,11 @@ fields_gens={
     'rampratemin':'rampratemin','rampratemax':'rampratemax',
     'minuptime':'minuptime','uptimemin':'minuptime',
     'mindowntime':'mindowntime','downtimemin':'mindowntime',
-    'costcurveequation':'costcurvestring', 
+    'costcurveequation':'costcurvestring','cost':'costcurvestring',
     'heatrateequation':'heatratestring','fuelcost':'fuelcost',
     'startupcost':'startupcost','shutdowncost':'shutdowncost',
-    'schedulefilename':'schedulefilename','mustrun':'mustrun'}
+    'schedulefilename':'schedulefilename','mustrun':'mustrun',
+    'scenariosfilename':'scenariosfilename'}
 fields_loads={'name':'name','bus':'bus','type':'kind','kind':'kind',
             'p':'P','pd':'P', 'power':'P',
             'pmin':'Pmin','pmax':'Pmax',
@@ -80,7 +82,10 @@ def parsedir(datadir='.',
     lines=build_class_list(lines_data,powersystems.Line,datadir)    
     #add initial conditions
     setup_initialcond(init_data,generators,times)
-    return generators,loads,lines,times
+    
+    #setup scenario tree (if applicable)
+    scenario_tree=setup_scenarios(generators,times)
+    return generators,loads,lines,times,scenario_tree
 
 def setup_initialcond(data,generators,times):
     '''
@@ -140,12 +145,16 @@ def build_class_list(data,model,datadir,times=None,model_schedule=schedule.make_
     for row in data:
         model_row,model_schedule_row=get_model(row)
         schedulefilename=row.pop('schedulefilename',None)
+        scenariosfilename=row.pop('scenariosfilename',None)
         if schedulefilename is not None: row['schedule']=model_schedule_row(joindir(datadir,schedulefilename),times)
+        elif scenariosfilename is not None: model_row=powersystems.Generator_Stochastic
+
         try: obj=model_row(index=index, **row)
         except TypeError:
             msg='{} model got unexpected parameter'.format(model_row)
             print msg
             raise
+        if scenariosfilename is not None: obj.scenarios_filename=joindir(datadir,scenariosfilename)
         all_models.append( obj )
         index+=1
     return all_models
@@ -196,3 +205,25 @@ def setup_times(generators_data,loads_data,datadir):
         #need to get a unique list
         time_dates=sorted(unique(time_dates))
     return schedule.make_times(time_dates)
+
+def setup_scenarios(generators,times):
+    # no_scenario_indexes=[]
+    has_scenarios=[]
+    for gen in generators:
+        if getattr(gen,'scenarios_filename',None) is not None: has_scenarios.append(gen.index)
+    
+    if len(has_scenarios)>1:
+        raise NotImplementedError('more than one generator with scenarios. have not coded this case yet.')
+    elif len(has_scenarios)==0: #deterministic model
+        return None
+        
+    #select the one gen with scenarios
+    gen=generators[has_scenarios[0]]
+    gen.has_scenarios=True
+    gen.scenario_values=[]
+    data=csv2dicts(gen.scenarios_filename)
+    probabilities=[row['probability'] for row in data]
+    for row in data:
+        row.pop('probability')
+        gen.scenario_values.append(dict( (times[t],row[time]) for t,time in enumerate(sorted(row.iterkeys())) ))
+    return construct_simple_scenario_tree(probabilities)

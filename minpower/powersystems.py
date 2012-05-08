@@ -339,12 +339,37 @@ class Generator_nonControllable(Generator):
             self.schedule.energy[time]=P 
         except AttributeError: pass #fixed schedule
     def getstatus(self,t,times): return {}
-    def create_variables(self,times): return {}
-    def create_constraints(self,times): return {}
+    def create_variables(self,times): return
+    def create_constraints(self,times): return
     def cost(self,time,evaluate=False): return self.operatingcost(time)
     def operatingcost(self,time,evaluate=False): return self.cost_model.output_true( self.power(time) )
     def truecost(self,time): return self.cost(time)
     def incrementalcost(self,time): return self.fuelcost*self.cost_model.output_incremental(self.power(time))
+
+class Generator_Stochastic(Generator_nonControllable):
+    """
+    Describes a generator with a stochastic power output.
+    """
+    def __init__(self,
+                 scenario_values=None,
+                 fuelcost=1,costcurvestring='0',
+                 mustrun=False,
+                 Pmin=0,Pmax=None,
+                 name='',index=None,bus=None,kind='wind',**kwargs):
+        update_attributes(self,locals()) #load in inputs
+        self.is_controllable=False
+        self.is_stochastic=True
+        self.build_cost_model()
+        self.init_optimization()
+    def power(self,time): return self.get_variable('power',time=time,indexed=True)
+    def create_variables(self,times):
+        self.add_parameter('power',index=times.set)
+        power=self.power(time=None)
+        for time in times: power[str(time)]=self.scenario_values[0][time] #initialize to first scenario value
+        return
+    def cost_startup(self,time): return 0
+    def cost_shutdown(self,time): return 0
+
 
 class Load(OptimizationObject):
     """

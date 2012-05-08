@@ -639,18 +639,17 @@ class OptimizationObject(object):
         :param time: a single time for a variable
         :param index: a :class:`pyomo.Set` over which a variable is created
         '''
-        def map_args(kind='Continuous',low=None,high=None):
-            return dict(bounds=(low,high),domain=variable_kinds[kind]) 
+        def map_args(kind='Continuous',low=None,high=None): return dict(bounds=(low,high),domain=variable_kinds[kind]) 
         orig_name=name
         if index is None:
             name=self._t_id(name,time)
             if fixed_value is None:
                 var=pyomo.Var(name=name, **map_args(**kwargs)) #new_variable(name=short_name,**kwargs)
-                self._parent_problem().add_variable(var)
+                self._parent_problem().add_variable_to_problem(var)
             else:
                 var=pyomo.Param(name=name,default=fixed_value)
                 #add var
-                self._parent_problem().add_variable(var)
+                self._parent_problem().add_variable_to_problem(var)
                 #and set value
                 var=self.get_variable(orig_name,time)
                 var[None]=fixed_value
@@ -663,13 +662,12 @@ class OptimizationObject(object):
                 var=pyomo.Param(index,name=name)
                 for i in index: var[i]=fixed_value
         
-            self._parent_problem().add_variable(var)
+            self._parent_problem().add_variable_to_problem(var)
 
     def add_constraint(self,name,time,expression): 
         '''Create a new constraint and add it to the object's constraints and the model's constraints.'''
         name=self._t_id(name,time)
-        #self.constraints[name]=new_constraint(name,expression)
-        self._parent_problem().add_constraint(new_constraint(name,expression))
+        self._parent_problem().add_constraint_to_problem(new_constraint(name,expression))
         
     def get_variable(self,name,time=None,indexed=False):
         if indexed: 
@@ -769,16 +767,22 @@ class OptimizationProblem(OptimizationObject):
     def add_objective(self,expression,sense=pyomo.minimize):
         '''add an objective to the problem'''            
         self._model.objective=pyomo.Objective(name='objective',rule=expression,sense=sense)
-    def add_variable(self,variable):
+    def add_variable_to_problem(self,variable):
         '''add a single variable to the problem'''
         self._model._add_component(variable.name,variable)
-    def add_constraint(self,constraint):
+    def add_constraint_to_problem(self,constraint):
         '''add a single constraint to the problem'''
         self._model._add_component(constraint.name,constraint)
     def add_set(self,name,items):         
         '''add a :class:`pyomo.Set` to the problem'''
         self._model._add_component(name,pyomo.Set(initialize=items,name=name))
-
+    def add_variable(self,name,**kwargs):
+        '''create a new variable and add it to the root problem'''
+        def map_args(kind='Continuous',low=None,high=None): return dict(bounds=(low,high),domain=variable_kinds[kind]) 
+        var=pyomo.Var(name=name, **map_args(**kwargs))
+        self._model._add_component(name,var)
+    def add_constraint(self,name,expression):
+        self._model._add_component(name,new_constraint(name,expression))
     def get_component(self,name): 
         '''Get an optimization component'''
         try: return getattr(self._model,name)

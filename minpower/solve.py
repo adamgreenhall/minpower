@@ -6,14 +6,12 @@ problems and solving them.
 """
 
 import logging
+import time as timer
 
 from optimization import OptimizationError
-import get_data
-import powersystems
-import results
-import config
+import config, get_data, powersystems, stochastic, results
 from commonscripts import joindir,show_clock
-import time as timer
+
 
 def solve_problem(datadir='.',
         shell=True,
@@ -52,7 +50,7 @@ def solve_problem(datadir='.',
     _setup_logging(logging_level,logging_file)
     start_time = timer.time()
     logging.debug('Minpower reading {} {}'.format(datadir, show_clock()))
-    generators,loads,lines,times=get_data.parsedir(datadir)
+    generators,loads,lines,times,scenario_tree=get_data.parsedir(datadir)
     logging.debug('data read {}'.format(show_clock()))
     power_system=powersystems.PowerSystem(generators,loads,lines,                 
                 num_breakpoints=num_breakpoints,
@@ -61,6 +59,7 @@ def solve_problem(datadir='.',
                 dispatch_decommit_allowed=dispatch_decommit_allowed,)
     
     logging.debug('power system set up {}'.format(show_clock()))    
+<<<<<<< HEAD
     if times.spanhrs<=hours_commitment:
 <<<<<<< HEAD
         problem=create_problem(power_system,times)
@@ -132,8 +131,19 @@ def solve_problem(datadir='.',
 =======
         solution=create_solve_problem(power_system,times,datadir,solver,problemfile,get_duals)
 >>>>>>> testing memory differences (pulled some code for create_solve_problem from DR_update)
+=======
+    if times.spanhrs<=hours_commitment+hours_commitment_overlap:
+        solution=create_solve_problem(power_system,times,datadir,
+                                      solver=solver,
+                                      scenario_tree=scenario_tree,
+                                      problemfile=problemfile,
+                                      get_duals=get_duals,
+                                      stage_hours=hours_commitment,
+                                      overlap_hours=hours_commitment_overlap)
+>>>>>>> clean up stochastic.py for power_system._model system
     else: #split into multiple stages and solve
         stage_solutions,stage_times=solve_multistage(power_system,times,datadir,
+                                                       scenario_tree=scenario_tree,
                                                        solver=solver,
                                                        get_duals=get_duals,
                                                        stage_hours=hours_commitment,
@@ -193,11 +203,25 @@ def solve_problem(datadir='.',
 >>>>>>> clean up problem time reporting
     return solution
 
-def create_solve_problem(power_system,times,datadir,solver,problemfile=False,get_duals=True):
-    create_problem(power_system,times)
+def create_solve_problem(power_system,times,datadir,solver,
+    scenario_tree=None,problemfile=False,get_duals=True,
+    stage_hours=24,overlap_hours=0):
     if problemfile: problemfile=joindir(datadir,'problem-formulation.lp')
     
+    create_problem(power_system,times)
+    
+    stochastic_formulation=False
+    if scenario_tree is not None: 
+        stochastic_formulation=True
+        stochastic.define_stage_variables(scenario_tree,power_system,times)
+        power_system= stochastic.create_problem_with_scenarios(power_system,times,scenario_tree, stage_hours,overlap_hours)
+    
     power_system.solve(solver,problem_filename=problemfile,get_duals=get_duals)
+    
+    # if stochastic_formulation:
+    #     power_system.scenario_tree=scenario_tree
+    #     power_system.scenario_instances=scenario_instances
+
     solution=results.make_solution(power_system,times,datadir=datadir)
     
         
@@ -265,8 +289,6 @@ def create_problem(power_system,times):
 #   if filename is not None: prob.write(filename)
 >>>>>>> debugging solution constraint problem
 =======
-    
-    
     
     logging.debug('initialized problem {}'.format(show_clock()))
     power_system.create_variables(times)

@@ -645,11 +645,11 @@ class OptimizationObject(object):
             name=self._t_id(name,time)
             if fixed_value is None:
                 var=pyomo.Var(name=name, **map_args(**kwargs)) #new_variable(name=short_name,**kwargs)
-                self._parent_problem().add_variable_to_problem(var)
+                self._parent_problem().add_component_to_problem(var)
             else:
                 var=pyomo.Param(name=name,default=fixed_value)
                 #add var
-                self._parent_problem().add_variable_to_problem(var)
+                self._parent_problem().add_component_to_problem(var)
                 #and set value
                 var=self.get_variable(orig_name,time)
                 var[None]=fixed_value
@@ -662,21 +662,29 @@ class OptimizationObject(object):
                 var=pyomo.Param(index,name=name)
                 for i in index: var[i]=fixed_value
         
-            self._parent_problem().add_variable_to_problem(var)
+            self._parent_problem().add_component_to_problem(var)
 
+
+    def add_parameter(self,name,index=None,default=None):
+        name=self._id(name)
+        self._parent_problem().add_component_to_problem(pyomo.Param(index,name=name,default=default))
+        
     def add_constraint(self,name,time,expression): 
         '''Create a new constraint and add it to the object's constraints and the model's constraints.'''
         name=self._t_id(name,time)
-        self._parent_problem().add_constraint_to_problem(new_constraint(name,expression))
+        self._parent_problem().add_component_to_problem(new_constraint(name,expression))
         
     def get_variable(self,name,time=None,indexed=False):
         if indexed: 
             var_name=self._id(name)
-            index=str(time)
-            try: return self._parent_problem().get_component(var_name)[index]
-            except KeyError:
-                self._parent_problem().show_model()
-                raise
+            if time is None: 
+                return self._parent_problem().get_component(var_name)
+            else: 
+                index=str(time)
+                try: return self._parent_problem().get_component(var_name)[index]
+                except KeyError:
+                    self._parent_problem().show_model()
+                    raise
         else: 
             var_name=self._t_id(name,time)
             return self._parent_problem().get_component(var_name)
@@ -753,6 +761,7 @@ class OptimizationProblem(OptimizationObject):
         self.init_optimization()
     def init_optimization(self):
         self._model=pyomo.ConcreteModel('power system problem')
+        self.stochastic_formulation=False
         self.solved=False
         self.children=dict()
         self.variables=dict()
@@ -764,15 +773,12 @@ class OptimizationProblem(OptimizationObject):
         for child in self.children[name]:
             child._parent_problem=weakref.ref(self)
 
+    def add_component_to_problem(self,component):
+        '''add a optimization component to the model'''
+        self._model._add_component(component.name,component)
     def add_objective(self,expression,sense=pyomo.minimize):
         '''add an objective to the problem'''            
         self._model.objective=pyomo.Objective(name='objective',rule=expression,sense=sense)
-    def add_variable_to_problem(self,variable):
-        '''add a single variable to the problem'''
-        self._model._add_component(variable.name,variable)
-    def add_constraint_to_problem(self,constraint):
-        '''add a single constraint to the problem'''
-        self._model._add_component(constraint.name,constraint)
     def add_set(self,name,items):         
         '''add a :class:`pyomo.Set` to the problem'''
         self._model._add_component(name,pyomo.Set(initialize=items,name=name))
@@ -842,8 +848,12 @@ class OptimizationProblem(OptimizationObject):
         
         
         logging.info('Solving with {s} ... {t}'.format(s=solver,t=show_clock()))
-        instance=self._model.create()
-        logging.debug('... model created ... {t}'.format(t=show_clock()))     
+
+        if self.stochastic_formulation:
+            instance=self._stochastic_instance
+        else: 
+            instance=self._model.create()
+            logging.debug('... model created ... {t}'.format(t=show_clock()))     
         
         results,elapsed=cooprsolve(instance,suffixes=[])
         

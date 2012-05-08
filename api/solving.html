@@ -24,7 +24,7 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="top" title="minpower" href="../index.html" />
     <link rel="up" title="Documentation" href="index.html" />
@@ -36,7 +36,6 @@
   _gaq.push(['_setAccount', 'UA-24659622-2']);
   _gaq.push(['_trackPageview']);
 </script>
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   </head>
   <body>  
@@ -121,7 +120,7 @@ conditions will be the next stage&#8217;s initial condition.</p>
 
 <dl class="function">
 <dt id="solve.solve_problem">
-<tt class="descclassname">solve.</tt><tt class="descname">solve_problem</tt><big>(</big><em>datadir='.'</em>, <em>shell=True</em>, <em>problemfile=False</em>, <em>visualization=True</em>, <em>csv=True</em>, <em>solver='glpk'</em>, <em>num_breakpoints=11</em>, <em>hours_commitment=24</em>, <em>hours_commitment_overlap=0</em>, <em>get_duals=True</em>, <em>dispatch_decommit_allowed=False</em>, <em>logging_level=20</em>, <em>logging_file=False</em>, <em>solution_file=False</em><big>)</big><a class="reference internal" href="../_modules/solve.html#solve_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.solve_problem" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">solve.</tt><tt class="descname">solve_problem</tt><big>(</big><em>datadir='.'</em>, <em>shell=True</em>, <em>problemfile=False</em>, <em>visualization=False</em>, <em>csv=True</em>, <em>solver='glpk'</em>, <em>num_breakpoints=11</em>, <em>hours_commitment=24</em>, <em>hours_commitment_overlap=0</em>, <em>get_duals=True</em>, <em>dispatch_decommit_allowed=False</em>, <em>logging_level=20</em>, <em>logging_file=False</em>, <em>solution_file=False</em><big>)</big><a class="reference internal" href="../_modules/solve.html#solve_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.solve_problem" title="Permalink to this definition">¶</a></dt>
 <dd><p>Solve a optimization problem specified by spreadsheets in a directory.
 Read in data, create and solve the problem, and return solution.
 The problem type is determined by the data.</p>

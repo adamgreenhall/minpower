@@ -41,7 +41,7 @@ def main(solver=config.optimization_solver):
             os.system('python {s}'.format(s=hasPyscript(testDir)[0]))
         else:
             try: 
-                solve.problem(datadir=testDir,solver=solver)
+                solve.solve_problem(datadir=testDir,solver=solver)
                 sys.stdout = sys.__stdout__ #switch back to standard outputting
                 fError.close()
                 os.remove(joindir(testDir,'error.txt'))

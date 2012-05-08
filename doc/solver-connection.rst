@@ -16,8 +16,8 @@ Windows
 
 * open Control Panel, System and Security, System, and click `Advanced System Settings <_static/controlpanel.png>`_
 * open the Advanced tab, and click `Environment Variables <_static/systemproperties.png>`_
-* `select Path <_static/environmentvars.png>`_ in the User Variables list and click **Edit**
-* add your solver install directory to the end of the `Variable value <_static/editpath_glpk.png>`_, e.g.::
+* `select PATH <_static/environmentvars.png>`_ in the User Variables list and click **Edit**
+* add your solver install directory to the end of the `Variable value <_static/editpath_glpk.png>`_, e.g. here is the GLPK path location on my machine::
     
     ;C:\Program Files (x86)\GnuWin32\bin
 

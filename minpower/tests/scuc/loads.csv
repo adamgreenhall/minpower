@@ -1,0 +1,4 @@
+name,       bus,     P,schedule filename
+UW,         Seattle, ,seattle.csv
+paper mill, Tacoma,  0,
+smelter,    Olympia, 50,

@@ -27,7 +27,7 @@ extensions = [
           #'numpydoc'
           ]
 # extensions.append('mathjax')
-mathjax_path = 'http://mathjax.connectmv.com/MathJax.js'
+mathjax_path = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
 
 intersphinx_mapping = {'python': ('http://docs.python.org/release/2.7.1/', None)}
 

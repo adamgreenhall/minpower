@@ -48,7 +48,7 @@ Example Solution
 
 The result is a plot (``dispatch.png``):
 
-    .. image:: ../minpower/tests/ed-WW-3-7/dispatch.png
+    .. image:: ./_static/dispatch-demo.png
        :width: 500 px
 
 and a spreadsheet (``dispatch.csv``):

@@ -35,8 +35,7 @@
   _gaq.push(['_setAccount', 'UA-24659622-2']);
   _gaq.push(['_trackPageview']);
 </script>
-<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
-<script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js?config=default"></script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   </head>
   <body>  
@@ -69,53 +68,52 @@
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
  
 </div>
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api/optimization.html#optimization.OptimizationObject.add_component">add_component() (optimization.OptimizationObject method)</a>
+  <dt><a href="api/optimization.html#optimization.OptimizationObject.add_children">add_children() (optimization.OptimizationObject method)</a>
   </dt>
 
-      
-  <dt><a href="api/optimization.html#optimization.OptimizationObject.add_components">add_components() (optimization.OptimizationObject method)</a>
+      <dd><dl>
+        
+  <dt><a href="api/optimization.html#optimization.OptimizationProblem.add_children">(optimization.OptimizationProblem method)</a>
   </dt>
 
+      </dl></dd>
       
   <dt><a href="api/optimization.html#optimization.OptimizationObject.add_constraint">add_constraint() (optimization.OptimizationObject method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="api/optimization.html#optimization.Problem.add_constraint">(optimization.Problem method)</a>
+  <dt><a href="api/optimization.html#optimization.OptimizationProblem.add_constraint">(optimization.OptimizationProblem method)</a>
   </dt>
 
       </dl></dd>
       
-  <dt><a href="api/optimization.html#optimization.Problem.add_objective">add_objective() (optimization.Problem method)</a>
+  <dt><a href="api/optimization.html#optimization.OptimizationProblem.add_objective">add_objective() (optimization.OptimizationProblem method)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/optimization.html#optimization.OptimizationProblem.add_set">add_set() (optimization.OptimizationProblem method)</a>
+  </dt>
+
       
   <dt><a href="api/optimization.html#optimization.OptimizationObject.add_variable">add_variable() (optimization.OptimizationObject method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="api/optimization.html#optimization.Problem.add_variable">(optimization.Problem method)</a>
+  <dt><a href="api/optimization.html#optimization.OptimizationProblem.add_variable">(optimization.OptimizationProblem method)</a>
   </dt>
 
       </dl></dd>
-      
-  <dt><a href="api/optimization.html#optimization.OptimizationObject.all_constraints">all_constraints() (optimization.OptimizationObject method)</a>
-  </dt>
-
-      
-  <dt><a href="api/optimization.html#optimization.OptimizationObject.all_variables">all_variables() (optimization.OptimizationObject method)</a>
-  </dt>
-
       
   <dt><a href="api/power-systems.html#powersystems.Bus.angle">angle() (powersystems.Bus method)</a>
   </dt>
@@ -167,10 +165,6 @@
   </dt>
 
       
-  <dt><a href="api/optimization.html#optimization.OptimizationObject.clear_constraints">clear_constraints() (optimization.OptimizationObject method)</a>
-  </dt>
-
-      
   <dt><a href="api/bids.html#bidding.convexPWLmodel">convexPWLmodel (class in bidding)</a>
   </dt>
 
@@ -196,12 +190,12 @@
   <dt><a href="api/power-systems.html#powersystems.Generator.cost_startup">cost_startup() (powersystems.Generator method)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api/power-systems.html#powersystems.PowerSystem.create_admittance_matrix">create_admittance_matrix() (powersystems.PowerSystem method)</a>
   </dt>
 
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api/bids.html#bidding.Bid.create_constraints">create_constraints() (bidding.Bid method)</a>
   </dt>
@@ -225,6 +219,10 @@
 
         
   <dt><a href="api/power-systems.html#powersystems.Line.create_constraints">(powersystems.Line method)</a>
+  </dt>
+
+        
+  <dt><a href="api/power-systems.html#powersystems.Load.create_constraints">(powersystems.Load method)</a>
   </dt>
 
         
@@ -367,7 +365,11 @@
 
       </dl></dd>
       
-  <dt><a href="api/optimization.html#optimization.OptimizationObject.get_component">get_component() (optimization.OptimizationObject method)</a>
+  <dt><a href="api/optimization.html#optimization.OptimizationObject.get_child">get_child() (optimization.OptimizationObject method)</a>
+  </dt>
+
+      
+  <dt><a href="api/optimization.html#optimization.OptimizationProblem.get_component">get_component() (optimization.OptimizationProblem method)</a>
   </dt>
 
       
@@ -409,20 +411,6 @@
 
       </dl></dd>
       
-  <dt><a href="api/bids.html#bidding.convexPWLmodel.get_time_variables">get_time_variables() (bidding.convexPWLmodel method)</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="api/bids.html#bidding.LinearModel.get_time_variables">(bidding.LinearModel method)</a>
-  </dt>
-
-        
-  <dt><a href="api/bids.html#bidding.PWLmodel.get_time_variables">(bidding.PWLmodel method)</a>
-  </dt>
-
-      </dl></dd>
-      
   <dt><a href="api/results.html#results.Solution.get_values">get_values() (results.Solution method)</a>
   </dt>
 
@@ -430,6 +418,20 @@
   <dt><a href="api/optimization.html#optimization.OptimizationObject.get_variable">get_variable() (optimization.OptimizationObject method)</a>
   </dt>
 
+      
+  <dt><a href="api/bids.html#bidding.convexPWLmodel.get_variable_params">get_variable_params() (bidding.convexPWLmodel method)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/bids.html#bidding.LinearModel.get_variable_params">(bidding.LinearModel method)</a>
+  </dt>
+
+        
+  <dt><a href="api/bids.html#bidding.PWLmodel.get_variable_params">(bidding.PWLmodel method)</a>
+  </dt>
+
+      </dl></dd>
       
   <dt><a href="api/power-systems.html#powersystems.Generator.gethrsinstatus">gethrsinstatus() (powersystems.Generator method)</a>
   </dt>
@@ -538,8 +540,6 @@
   </dt>
 
       </dl></dd>
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api/results.html#results.Solution.info_loads">info_loads() (results.Solution method)</a>
   </dt>
@@ -550,6 +550,8 @@
   </dt>
 
       </dl></dd>
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api/results.html#results.Solution.info_price">info_price() (results.Solution method)</a>
   </dt>
@@ -576,6 +578,16 @@
       </dl></dd>
       
   <dt><a href="api/optimization.html#optimization.OptimizationObject.init_optimization">init_optimization() (optimization.OptimizationObject method)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="api/optimization.html#optimization.OptimizationProblem.init_optimization">(optimization.OptimizationProblem method)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="api/bids.html#bidding.Bid.input">input() (bidding.Bid method)</a>
   </dt>
 
       
@@ -641,15 +653,15 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="api/solving.html#solve.main">main() (in module solve)</a>
+  </dt>
+
+      
   <dt><a href="api/power-systems.html#powersystems.PowerSystem.make_buses_list">make_buses_list() (powersystems.PowerSystem method)</a>
   </dt>
 
       
   <dt><a href="api/results.html#results.make_multistage_solution">make_multistage_solution() (in module results)</a>
-  </dt>
-
-      
-  <dt><a href="api/results.html#results.make_multistage_solution_standalone">make_multistage_solution_standalone() (in module results)</a>
   </dt>
 
       
@@ -692,14 +704,10 @@
   <dt><a href="api/optimization.html#optimization.new_constraint">new_constraint() (in module optimization)</a>
   </dt>
 
-      
-  <dt><a href="api/optimization.html#optimization.new_variable">new_variable() (in module optimization)</a>
-  </dt>
-
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api/optimization.html#optimization.newProblem">newProblem() (in module optimization)</a>
+  <dt><a href="api/optimization.html#optimization.new_variable">new_variable() (in module optimization)</a>
   </dt>
 
   </dl></td>
@@ -732,6 +740,10 @@
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/optimization.html#optimization.OptimizationProblem">OptimizationProblem (class in optimization)</a>
+  </dt>
+
       
   <dt><a href="api/bids.html#bidding.Bid.output">output() (bidding.Bid method)</a>
   </dt>
@@ -836,6 +848,8 @@
   </dt>
 
       </dl></dd>
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api/power-systems.html#powersystems.Generator.power">power() (powersystems.Generator method)</a>
   </dt>
@@ -862,8 +876,6 @@
   <dt><a href="api/power-systems.html#powersystems.Bus.power_balance">power_balance() (powersystems.Bus method)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api/power-systems.html#powersystems.Generator.power_change">power_change() (powersystems.Generator method)</a>
   </dt>
@@ -881,10 +893,6 @@
   </dt>
 
       
-  <dt><a href="api/results.html#results.prettify_plots">prettify_plots() (in module results)</a>
-  </dt>
-
-      
   <dt><a href="api/power-systems.html#powersystems.Bus.price">price() (powersystems.Bus method)</a>
   </dt>
 
@@ -894,14 +902,6 @@
   </dt>
 
       </dl></dd>
-      
-  <dt><a href="api/optimization.html#optimization.Problem">Problem (class in optimization)</a>
-  </dt>
-
-      
-  <dt><a href="api/solving.html#solve.problem">problem() (in module solve)</a>
-  </dt>
-
       
   <dt><a href="api/bids.html#bidding.PWLmodel">PWLmodel (class in bidding)</a>
   </dt>
@@ -914,6 +914,10 @@
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api/time.html#schedule.Time.Range">Range() (schedule.Time method)</a>
+  </dt>
+
+      
+  <dt><a href="api/optimization.html#optimization.OptimizationProblem.reset_model">reset_model() (optimization.OptimizationProblem method)</a>
   </dt>
 
   </dl></td>
@@ -1009,6 +1013,10 @@
 
       </dl></dd>
       
+  <dt><a href="api/optimization.html#optimization.OptimizationProblem.show_model">show_model() (optimization.OptimizationProblem method)</a>
+  </dt>
+
+      
   <dt><a href="api/results.html#results.shrink_axis">shrink_axis() (in module results)</a>
   </dt>
 
@@ -1043,7 +1051,7 @@
   </dt>
 
       
-  <dt><a href="api/optimization.html#optimization.Problem.solve">solve() (optimization.Problem method)</a>
+  <dt><a href="api/optimization.html#optimization.OptimizationProblem.solve">solve() (optimization.OptimizationProblem method)</a>
   </dt>
 
       
@@ -1051,14 +1059,22 @@
   </dt>
 
       
+  <dt><a href="api/solving.html#solve.solve_problem">solve_problem() (in module solve)</a>
+  </dt>
+
+      
   <dt><a href="api/results.html#results.stack_plot_UC">stack_plot_UC() (in module results)</a>
   </dt>
 
       
-  <dt><a href="api/power-systems.html#powersystems.Generator.status">status() (powersystems.Generator method)</a>
+  <dt><a href="api/bids.html#bidding.Bid.status">status() (bidding.Bid method)</a>
   </dt>
 
       <dd><dl>
+        
+  <dt><a href="api/power-systems.html#powersystems.Generator.status">(powersystems.Generator method)</a>
+  </dt>
+
         
   <dt><a href="api/power-systems.html#powersystems.Generator_nonControllable.status">(powersystems.Generator_nonControllable method)</a>
   </dt>
@@ -1125,7 +1141,7 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api/optimization.html#optimization.OptimizationObject.update_variables">update_variables() (optimization.OptimizationObject method)</a>
+  <dt><a href="api/optimization.html#optimization.OptimizationProblem.update_variables">update_variables() (optimization.OptimizationProblem method)</a>
   </dt>
 
   </dl></td>
@@ -1158,6 +1174,16 @@
   </dt>
 
       </dl></dd>
+  </dl></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api/optimization.html#optimization.OptimizationProblem.write_model">write_model() (optimization.OptimizationProblem method)</a>
+  </dt>
+
   </dl></td>
 </tr></table>
 
@@ -1210,7 +1236,6 @@
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
 <div class="social">
-<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
 <div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
 </div>
         </div>

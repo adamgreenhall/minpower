@@ -35,8 +35,7 @@
   _gaq.push(['_setAccount', 'UA-24659622-2']);
   _gaq.push(['_trackPageview']);
 </script>
-<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
-<script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js?config=default"></script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   </head>
   <body>  
@@ -53,19 +52,31 @@
 <p>Basic full installation:</p>
 <ol class="arabic simple">
 <li><a class="reference external" href="http://activestate.com/activepython/downloads">ActivePython 2.7</a></li>
-<li><tt class="docutils literal"><span class="pre">pypm</span> <span class="pre">install</span> <span class="pre">minpower</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">minpower</span></tt></li>
 <li><a class="reference external" href="http://www.gnu.org/s/glpk">GLPK</a> (<a class="reference external" href="http://gnuwin32.sourceforge.net/packages/glpk.htm">Win</a>, <a class="reference external" href="http://www.arnab-deka.com/posts/2010/02/installing-glpk-on-a-mac/">Mac</a>)</li>
 </ol>
 </div>
 <div class="section" id="get-python">
 <h2>1. Get Python<a class="headerlink" href="#get-python" title="Permalink to this headline">¶</a></h2>
-<p>For new-to-Python folks, install <a class="reference external" href="http://activestate.com/activepython/downloads">ActivePython 2.7</a>. It makes the installation of a bunch of scientific <abbr title="add-ons in Python terms">packages</abbr> very easy - the way it should be.</p>
+<div class="section" id="new-to-python">
+<h3>New to Python<a class="headerlink" href="#new-to-python" title="Permalink to this headline">¶</a></h3>
+<p>For new-to-Python folks, install <a class="reference external" href="http://activestate.com/activepython/downloads">ActivePython 2.7</a>. It makes the installation of a bunch of scientific <abbr title="add-ons in Python terms">packages</abbr> very easy - the way it should be. Note that the 32-bit version is free for Windows, while for the 64-bit version only the Business Edition has a package manager.</p>
+<p>For Windows users, add the following to the end of your PATH environment variable:</p>
+<div class="highlight-python"><pre>C:\Python27\;C:\Python27\Scripts\</pre>
+</div>
+<p>and create a new PYTHONPATH environment variable and set it to:</p>
+<div class="highlight-python"><pre>C:\Python27</pre>
+</div>
+</div>
+<div class="section" id="old-python-user">
+<h3>Old Python User<a class="headerlink" href="#old-python-user" title="Permalink to this headline">¶</a></h3>
 <p>For experienced Python users, <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">minpower</span></tt> should work just fine. If that command doesn&#8217;t work, it is probably a failure to build scipy/numpy from source - try downloading the pre-built binary for your system from <a class="reference external" href="http://www.scipy.org/Download">SciPy</a>.</p>
+</div>
 </div>
 <div class="section" id="get-minpower">
 <h2>2. Get Minpower<a class="headerlink" href="#get-minpower" title="Permalink to this headline">¶</a></h2>
 <p>Simply run:</p>
-<div class="highlight-python"><pre>pypm install minpower</pre>
+<div class="highlight-python"><pre>pip install minpower</pre>
 </div>
 </div>
 <div class="section" id="get-a-solver">
@@ -73,13 +84,14 @@
 <p>Minpower has been tested with <a class="reference external" href="http://www.gnu.org/s/glpk">GLPK</a>, <a class="reference external" href="http://gurobi.com">Gurboi</a>, and <a class="reference external" href="http://www.ibm.com/software/integration/optimization/cplex-optimizer">CPLEX</a>.</p>
 <p>But you can almost certainly use your favorite - here&#8217;s <a class="reference external" href="https://software.sandia.gov/trac/coopr/wiki/GettingStarted/Solvers">the full list</a>.</p>
 <p>Not sure which to try? Here&#8217;s a quick rundown on <a class="reference internal" href="solvers.html"><em>solvers</em></a>.</p>
+<p>You will need to add the solver to your path. See <a class="reference internal" href="solver-connection.html"><em>guide to solver-to-Python connection</em></a>.</p>
 </div>
 <div class="section" id="test-it-out">
 <h2>Test it out<a class="headerlink" href="#test-it-out" title="Permalink to this headline">¶</a></h2>
-<p>Go ahead and try to solve one of the test cases first, like:</p>
+<p>Go ahead and download  <a class="reference external" href="https://github.com/downloads/adamgreenhall/minpower/uc.zip">the basic unit commitment test case</a> and try and solve it first, using the terminal:</p>
 <div class="highlight-python"><pre>minpower uc</pre>
 </div>
-<p>If you get an error about the problem not being solved - Python doesn&#8217;t know where your solver is. To fix this here&#8217;s a <a class="reference internal" href="solver-connection.html"><em>guide to solver-to-Python connection</em></a>.</p>
+<p>If you get an error about the problem not being solved - Python probably doesn&#8217;t know where your solver is. To fix this here&#8217;s a <a class="reference internal" href="solver-connection.html"><em>guide to solver-to-Python connection</em></a>.</p>
 </div>
 </div>
 
@@ -94,7 +106,11 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="why-minpower.html">Why Minpower</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#get-python">1. Get Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#get-python">1. Get Python</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#new-to-python">New to Python</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#old-python-user">Old Python User</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#get-minpower">2. Get Minpower</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#get-a-solver">3. Get a Solver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#test-it-out">Test it out</a></li>
@@ -137,7 +153,6 @@
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
 <div class="social">
-<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
 <div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
 </div>
         </div>

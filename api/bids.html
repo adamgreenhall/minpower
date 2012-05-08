@@ -36,8 +36,7 @@
   _gaq.push(['_setAccount', 'UA-24659622-2']);
   _gaq.push(['_trackPageview']);
 </script>
-<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
-<script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js?config=default"></script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   </head>
   <body>  
@@ -77,7 +76,7 @@ do not store time dependent information.</p>
 <dl class="method">
 <dt id="bidding.Bid.create_constraints">
 <tt class="descname">create_constraints</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/bidding.html#Bid.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid.create_constraints" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create the constraints for a bid by calling its model&#8217;s <tt class="xref py py-meth docutils literal"><span class="pre">get_time_constraint()</span></tt> method.
+<dd><p>Create the constraints for a bid by calling its model&#8217;s <tt class="xref py py-meth docutils literal"><span class="pre">get_time_constraints()</span></tt> method.
 :return: a dictionary of the bid&#8217;s constraints</p>
 </dd></dl>
 
@@ -93,10 +92,14 @@ do not store time dependent information.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="bidding.Bid.input">
+<tt class="descname">input</tt><big>(</big><em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#Bid.input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid.input" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="bidding.Bid.output">
-<tt class="descname">output</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/bidding.html#Bid.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid.output" title="Permalink to this definition">¶</a></dt>
-<dd><p>The output of the bid, given an input.</p>
-</dd></dl>
+<tt class="descname">output</tt><big>(</big><em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#Bid.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid.output" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="bidding.Bid.output_incremental">
@@ -120,6 +123,11 @@ do not store time dependent information.</p>
 <tt class="descname">plot_derivative</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#Bid.plot_derivative"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid.plot_derivative" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="method">
+<dt id="bidding.Bid.status">
+<tt class="descname">status</tt><big>(</big><em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#Bid.status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -131,17 +139,17 @@ This class exists to keep the calling conventions the same
 as those in <a class="reference internal" href="#bidding.PWLmodel" title="bidding.PWLmodel"><tt class="xref py py-class docutils literal"><span class="pre">PWLmodel</span></tt></a>.</p>
 <dl class="method">
 <dt id="bidding.LinearModel.get_time_constraints">
-<tt class="descname">get_time_constraints</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#LinearModel.get_time_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.LinearModel.get_time_constraints" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_time_constraints</tt><big>(</big><em>bid</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#LinearModel.get_time_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.LinearModel.get_time_constraints" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="bidding.LinearModel.get_time_variables">
-<tt class="descname">get_time_variables</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#LinearModel.get_time_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.LinearModel.get_time_variables" title="Permalink to this definition">¶</a></dt>
+<dt id="bidding.LinearModel.get_variable_params">
+<tt class="descname">get_variable_params</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#LinearModel.get_variable_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.LinearModel.get_variable_params" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="bidding.LinearModel.output">
-<tt class="descname">output</tt><big>(</big><em>variables</em>, <em>owner_iden</em>, <em>time_iden</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#LinearModel.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.LinearModel.output" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">output</tt><big>(</big><em>bid</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#LinearModel.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.LinearModel.output" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -178,7 +186,7 @@ the polynomial (currently the default comes from <tt class="xref py py-mod docut
 
 <dl class="method">
 <dt id="bidding.PWLmodel.get_time_constraints">
-<tt class="descname">get_time_constraints</tt><big>(</big><em>variables</em>, <em>owner_iden</em>, <em>time_iden</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#PWLmodel.get_time_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.PWLmodel.get_time_constraints" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_time_constraints</tt><big>(</big><em>bid</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#PWLmodel.get_time_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.PWLmodel.get_time_constraints" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Create the constraints for a single time instance of </dt>
 <dd>a piecewise linear model.</dd>
@@ -187,27 +195,22 @@ the polynomial (currently the default comes from <tt class="xref py py-mod docut
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variables</strong> &#8211; a dictionary of the variables for the bid</li>
-<li><strong>iden</strong> &#8211; identifying string for the bidder and time interval</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>bid</strong> &#8211; the parent bid</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a dictionary of constraints</p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a dictionary of constraint name-expression pairs</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="method">
-<dt id="bidding.PWLmodel.get_time_variables">
-<tt class="descname">get_time_variables</tt><big>(</big><em>input_var</em>, <em>status_var</em>, <em>owner_iden</em>, <em>time_iden</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#PWLmodel.get_time_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.PWLmodel.get_time_variables" title="Permalink to this definition">¶</a></dt>
+<dt id="bidding.PWLmodel.get_variable_params">
+<tt class="descname">get_variable_params</tt><big>(</big><em>input_var</em>, <em>status_var</em>, <em>owner_iden</em>, <em>time_iden</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#PWLmodel.get_variable_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.PWLmodel.get_variable_params" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="bidding.PWLmodel.output">
-<tt class="descname">output</tt><big>(</big><em>variables</em>, <em>owner_iden</em>, <em>time_iden</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#PWLmodel.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.PWLmodel.output" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">output</tt><big>(</big><em>bid</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#PWLmodel.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.PWLmodel.output" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -256,17 +259,17 @@ general <a class="reference internal" href="#bidding.PWLmodel" title="bidding.PW
 
 <dl class="method">
 <dt id="bidding.convexPWLmodel.get_time_constraints">
-<tt class="descname">get_time_constraints</tt><big>(</big><em>variables</em>, <em>owner_iden</em>, <em>time_iden</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#convexPWLmodel.get_time_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.convexPWLmodel.get_time_constraints" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_time_constraints</tt><big>(</big><em>bid</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#convexPWLmodel.get_time_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.convexPWLmodel.get_time_constraints" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="bidding.convexPWLmodel.get_time_variables">
-<tt class="descname">get_time_variables</tt><big>(</big><em>input_var</em>, <em>status_var</em>, <em>owner_iden</em>, <em>time_iden</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#convexPWLmodel.get_time_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.convexPWLmodel.get_time_variables" title="Permalink to this definition">¶</a></dt>
+<dt id="bidding.convexPWLmodel.get_variable_params">
+<tt class="descname">get_variable_params</tt><big>(</big><em>input_var</em>, <em>status_var</em>, <em>owner_iden</em>, <em>time_iden</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#convexPWLmodel.get_variable_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.convexPWLmodel.get_variable_params" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="bidding.convexPWLmodel.output">
-<tt class="descname">output</tt><big>(</big><em>variables</em>, <em>iden_owner</em>, <em>iden_time</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#convexPWLmodel.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.convexPWLmodel.output" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">output</tt><big>(</big><em>bid</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/bidding.html#convexPWLmodel.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.convexPWLmodel.output" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -392,7 +395,6 @@ Heavily adapted from <a class="reference external" href="http://bit.ly/polynomia
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
 <div class="social">
-<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
 <div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
 </div>
         </div>

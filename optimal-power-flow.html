@@ -35,8 +35,7 @@
   _gaq.push(['_setAccount', 'UA-24659622-2']);
   _gaq.push(['_trackPageview']);
 </script>
-<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
-<script type="text/javascript" src="http://mathjax.connectmv.com/MathJax.js?config=default"></script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   </head>
   <body>  
@@ -118,16 +117,16 @@ smelter,    Olympia, 50
 </ul>
 <p>There are also spreadsheet outputs of generator information (<tt class="docutils literal"><span class="pre">powerflow-generators.csv</span></tt>):</p>
 <div class="highlight-python"><pre>generator name,u,P,IC
-cheap,True,4.50000000005,5.09
-mid grade,True,49.9999999999,8.0
-expensive,True,45.5,10.91
+cheap,1,4.50000000005,5.09
+mid grade,1,49.9999999999,8.0
+expensive,1,45.5000000001,10.91
 </pre>
 </div>
 <p>and line information (<tt class="docutils literal"><span class="pre">powerflow-lines.csv</span></tt>):</p>
 <div class="highlight-python"><pre>from,to,power,congestion shadow price
 Seattle,Tacoma,-3.0,-7.5
-Olympia,Tacoma,-1.5,0.0
-Olympia,Seattle,1.5,0.0
+Olympia,Tacoma,-1.50000000005,0.0
+Olympia,Seattle,1.49999999995,0.0
 </pre>
 </div>
 <p>Each line&#8217;s real power flow is output. Lines that have congestion will show a positive shadow price.
@@ -199,7 +198,6 @@ positive shadow price.</em></p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
 <div class="social">
-<div class="plusone"><g:plusone annotation="none"></g:plusone></div>
 <div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
 </div>
         </div>

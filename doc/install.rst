@@ -6,18 +6,27 @@ Installation
     Basic full installation:
 
     #. `ActivePython 2.7 <http://activestate.com/activepython/downloads>`_
-    #. ``pypm install minpower``
+    #. ``pip install minpower``
     #. `GLPK <http://www.gnu.org/s/glpk>`_ (`Win <http://gnuwin32.sourceforge.net/packages/glpk.htm>`_, `Mac <http://www.arnab-deka.com/posts/2010/02/installing-glpk-on-a-mac/>`_)
 
 1. Get Python
 --------------
+
+New to Python
+++++++++++++++++
 For new-to-Python folks, install `ActivePython 2.7 <http://activestate.com/activepython/downloads>`_. It makes the installation of a bunch of scientific :abbr:`packages (add-ons in Python terms)` very easy - the way it should be. Note that the 32-bit version is free for Windows, while for the 64-bit version only the Business Edition has a package manager. 
 
-For Windows users, add:: 
+For Windows users, add the following to the end of your PATH environment variable:: 
 
   C:\Python27\;C:\Python27\Scripts\
 
-to your PATH environment variable and create a new PYTHONPATH environment variable and add ``C:\Python27``.
+and create a new PYTHONPATH environment variable and set it to::
+  
+  C:\Python27
+
+
+Old Python User
+++++++++++++++++
 
 For experienced Python users, ``pip install minpower`` should work just fine. If that command doesn't work, it is probably a failure to build scipy/numpy from source - try downloading the pre-built binary for your system from `SciPy <http://www.scipy.org/Download>`_.
 
@@ -42,7 +51,7 @@ You will need to add the solver to your path. See :doc:`guide to solver-to-Pytho
 Test it out
 ------------
 
-Go ahead and download `the basic unit commitment:<https://github.com/downloads/adamgreenhall/minpower/uc.zip test case>`_ and try and solve it first, like::
+Go ahead and download  `the basic unit commitment test case <https://github.com/downloads/adamgreenhall/minpower/uc.zip>`_ and try and solve it first, using the terminal::
 
     minpower uc
 

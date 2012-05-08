@@ -614,26 +614,22 @@ class PowerSystem(OptimizationProblem):
     def loads(self): return flatten(bus.loads for bus in self.buses)
     def generators(self): return flatten(bus.generators for bus in self.buses)
     def create_variables(self,times):
-        self.add_variable('cost first stage','C1')
-        self.add_variable('cost second stage','C2')        
+        self.add_variable('cost_first_stage')
+        self.add_variable('cost_second_stage')        
         self.add_set('times',[str(t) for t in times])
         times.set=self._model.times
         for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
         logging.debug('... created power system vars... returning... {}'.format(show_clock()))
         #for var in self.all_variables(times).values(): self.add_variable(var)
-        
-    def create_objective(self,times):
-        #return self.variables['cost_first_stage_system']+self.variables['cost_second_stage_system']
-        obj=sum(bus.create_objective(times) for bus in self.buses) + sum(line.create_objective(times) for line in self.lines)
-        self.add_objective(obj)
+    def cost_first_stage(self): return self.get_component('cost_first_stage')    
+    def cost_second_stage(self): return self.get_component('cost_second_stage')
+    def create_objective(self,times): 
+        self.add_objective(self.cost_first_stage()+self.cost_second_stage())
     def create_constraints(self,times):
         for bus in self.buses: bus.create_constraints(times,self.Bmatrix,self.buses)
         for line in self.lines: line.create_constraints(times,self.buses)
         #a system reserve constraint would go here
-        self.add_constraint('system cost first stage',None,expression=self.variables['cost_first_stage_system']==sum(gen.cost_first_stage(times) for gen in self.generators()))
-        self.add_constraint('system cost second stage',None,expression=self.variables['cost_second_stage_system']==sum(gen.cost_second_stage(times) for gen in self.generators()))
-    def iden(self,time): return 'system'    
-#def power_to_energy(P,time):
-#    return P*time.intervalhrs
-
+        self.add_constraint('system cost first stage',self.cost_first_stage()>=sum(gen.cost_first_stage(times) for gen in self.generators()))
+        self.add_constraint('system cost second stage',self.cost_second_stage()>=sum(gen.cost_second_stage(times) for gen in self.generators()))
+    def iden(self,time): return 'system'

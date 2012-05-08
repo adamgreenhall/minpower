@@ -70,27 +70,13 @@ class Solution(object):
     '''
     def __init__(self,power_system,times,datadir='.'):
         update_attributes(self,locals())
-        #self.power_system.update_variables()
-        
-        #objgraph.show_backrefs([problem.variables.values()[0]], filename='variable-backref-post-solve.png')
-        #objgraph.show_chain(
-        #    objgraph.find_backref_chain( problem.variables.values()[0],inspect.ismodule),filename='variable-backref-post-solve-module-chain.png')
-        
         self._get_problem_info()
         self._get_costs()
         self._get_prices()
         self._get_outputs()
-        #self.power_system.clear_constraints()
-        #gc.collect()
-        #objgraph.show_backrefs([problem.constraints.values()[0]], filename='constraints-backref-post-solve.png')
-        #objgraph.show_chain(objgraph.find_backref_chain(objgraph.by_type('Constraint')[0],inspect.ismodule),filename='constraint-backref-post-solve-chain.png')
-        #leakers=objgraph.get_leaking_objects()
-        #objgraph.show_most_common_types(objects=leakers)
-        #objgraph.show_refs(leakers[:3], refcounts=True, filename='leakers.png')
     def _get_problem_info(self):
         self.solve_time  =self.power_system.solution_time
         self.objective  =float(value(self.power_system.objective))
-
     def _get_outputs(self):
         self.generators_power =[self.get_values('generators','power',time) for time in self.times]
         self.generators_status=[[s==1 for s in self.get_values('generators','status',time)] for time in self.times]

@@ -18,7 +18,7 @@ import time as timer
 def solve_problem(datadir='.',
         shell=True,
         problemfile=False,
-        visualization=True,
+        visualization=False,
         csv=True,
         solver=config.optimization_solver,
         num_breakpoints=config.default_num_breakpoints,

@@ -1152,6 +1152,7 @@ class PowerSystem(OptimizationProblem):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         self.add_constraint('system cost first stage',None,expression=self.variables['cost_first_stage_system']==sum(gen.cost_first_stage(times) for gen in self.generators()))
         self.add_constraint('system cost second stage',None,expression=self.variables['cost_second_stage_system']==sum(gen.cost_second_stage(times) for gen in self.generators()))
 
@@ -1199,3 +1200,8 @@ def _call_generator_create_variables(gen,times): return gen.create_variables(tim
         self.add_constraint('system cost second stage',self.cost_second_stage()>=sum(gen.cost_second_stage(times) for gen in self.generators()))
     def iden(self,time): return 'system'
 >>>>>>> working two stage costs
+=======
+        self.add_constraint('system_cost_first_stage',self.cost_first_stage()==sum(gen.cost_first_stage(times) for gen in self.generators()))
+        self.add_constraint('system_cost_second_stage',self.cost_second_stage()==sum(gen.cost_second_stage(times) for gen in self.generators()))
+    def iden(self,time): return 'system'
+>>>>>>> rename stage cost constraint to underscore

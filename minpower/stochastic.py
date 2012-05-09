@@ -45,20 +45,23 @@ def define_stage_variables(scenario_tree,power_system,times):
     # scenario_tree.Stages.pprint()
     # scenario_tree.StageVariables.pprint()
 
+    #create sets of variable names (not actual variables) for each stage
     variables_first_stage=Set()
     variables_second_stage=Set()
     for gen in power_system.generators():
         if not getattr(gen,'has_scenarios',False):
-            if gen.is_controllable: variables_first_stage.add(gen.get_variable('status',indexed=True,time=None)) 
-            variables_second_stage.add(gen.get_variable('power',indexed=True,time=None))
+            if gen.is_controllable: variables_first_stage.add(str(gen.get_variable('status',indexed=True,time=None))+'[*]')  
+            variables_second_stage.add(str(gen.get_variable('power',indexed=True,time=None))+'[*]')
+            #note - appending '[*]' to the indicies is required to get pysp to assign all the variables in the array to a stage 
         
     # variables_first_stage.pprint()
     scenario_tree.StageVariables['first stage']=variables_first_stage
     scenario_tree.StageVariables['second stage']=variables_second_stage
     
-    power_system.show_model()
-    scenario_tree.StageCostVariable['first stage']=power_system.cost_first_stage()
-    scenario_tree.StageCostVariable['second stage']=power_system.cost_second_stage()
+    #power_system._model=power_system._model.create()
+    #power_system._model.pprint()
+    scenario_tree.StageCostVariable['first stage']=str(power_system.cost_first_stage())
+    scenario_tree.StageCostVariable['second stage']=str(power_system.cost_second_stage())
 
 def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_hours,overlap_hours):
     scenario_tree=ScenarioTree(scenarioinstance=power_system._model, scenariotreeinstance=scenariotreeinstance)

@@ -57,10 +57,12 @@ def load_shedding():
     Pdt=[110,Pdt1,110]
     power_system,times=solve_problem(generators,get_duals=True,load_shedding_allowed=True,**make_loads_times(Pdt=Pdt))
     load=power_system.loads()[0]
-    load_t1=load.power(times[1])
-    load_t1_shed=load.shed(times[1])
+    load_t1=load.power(times[1],evaluate=True)
+    load_t1_shed=load.shed(times[1],evaluate=True)
     price_t1 = power_system.buses[0].price(times[1])
-    assert load_t1==Pmax and load_t1_shed==Pdt1-Pmax and price_t1==config.cost_load_shedding
+    assert load_t1==Pmax 
+    assert load_t1_shed==Pdt1-Pmax
+    assert price_t1==config.cost_load_shedding
 
 if __name__ == "__main__": 
     uc.run()

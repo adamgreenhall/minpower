@@ -4,7 +4,7 @@ An optimization command library for Minpower.
 import coopr.pyomo as pyomo
 from coopr.opt.base import solvers as cooprsolver
 
-pyomo.base.numvalue.KnownConstants[True]=pyomo.base.numvalue.NumericConstant(None, None, 1)
+pyomo.base.numvalue.KnownConstants[True]=pyomo.base.numvalue.NumericConstant(None, None, 1.0)
 
 variable_kinds = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyomo.Boolean)
 
@@ -98,11 +98,14 @@ class OptimizationObject(object):
 
             if fixed_value is None: 
                 var=pyomo.Var(index,name=name,**map_args(**kwargs))
+                self._parent_problem().add_component_to_problem(var)
             else: 
-                var=pyomo.Param(index,name=name)
+                var=pyomo.Param(index,name=name,default=fixed_value)
+                self._parent_problem().add_component_to_problem(var)
+                var=self._parent_problem().get_component(name)
                 for i in index: var[i]=fixed_value
         
-            self._parent_problem().add_component_to_problem(var)
+            
 
 
     def add_parameter(self,name,index=None,default=None):

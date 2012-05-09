@@ -49,7 +49,7 @@ def define_stage_variables(scenario_tree,power_system,times):
     variables_second_stage=Set()
     for gen in power_system.generators():
         if not getattr(gen,'has_scenarios',False):
-            variables_first_stage.add(gen.get_variable('status',indexed=True,time=None))
+            if gen.is_controllable: variables_first_stage.add(gen.get_variable('status',indexed=True,time=None)) 
             variables_second_stage.add(gen.get_variable('power',indexed=True,time=None))
         
     # variables_first_stage.pprint()

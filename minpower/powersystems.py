@@ -398,7 +398,9 @@ class Load(OptimizationObject):
         else: 
             return self.schedule.get_energy(time)
     def shed(self,time,evaluate=False): return self.schedule.get_energy(time) - self.power(time,evaluate)
-    def cost(self,time): return self.cost_shedding*self.shed(time) 
+    def cost(self,time): return self.cost_shedding*self.shed(time)
+    def cost_first_stage(self,times): return 0
+    def cost_second_stage(self,times): return sum(self.cost(time) for time in times)
     def create_variables(self,times):
         if self.shedding_allowed:
             self.add_variable('power',index=times.set,low=0)
@@ -520,9 +522,13 @@ class Bus(OptimizationObject):
         for time in times: self.add_variable('angle',time=time)
         logging.debug('created bus variables ... returning {}'.format(show_clock()))
         return
-    def create_objective(self,times):
-        return sum(gen.create_objective(times) for gen in self.generators) + \
-            sum(load.create_objective(times) for load in self.loads)
+    def create_objective(self,times): return self.cost_first_stage(times) + self.cost_second_stage(times)
+    def cost_first_stage(self,times):
+        return sum(gen.cost_first_stage(times) for gen in self.generators) + \
+            sum(load.cost_first_stage(times) for load in self.loads)
+    def cost_second_stage(self,times):
+        return sum(gen.cost_second_stage(times) for gen in self.generators) + \
+            sum(load.cost_second_stage(times) for load in self.loads)            
     def create_constraints(self,times,Bmatrix,buses):
         for gen in self.generators: gen.create_constraints(times)
         for load in self.loads: load.create_constraints(times)
@@ -655,6 +661,6 @@ class PowerSystem(OptimizationProblem):
         for bus in self.buses: bus.create_constraints(times,self.Bmatrix,self.buses)
         for line in self.lines: line.create_constraints(times,self.buses)
         #a system reserve constraint would go here
-        self.add_constraint('system_cost_first_stage',self.cost_first_stage()==sum(gen.cost_first_stage(times) for gen in self.generators()))
-        self.add_constraint('system_cost_second_stage',self.cost_second_stage()==sum(gen.cost_second_stage(times) for gen in self.generators()))
+        self.add_constraint('system_cost_first_stage',self.cost_first_stage()==sum(bus.cost_first_stage(times) for bus in self.buses))
+        self.add_constraint('system_cost_second_stage',self.cost_second_stage()==sum(bus.cost_second_stage(times) for bus in self.buses))
     def iden(self,time): return 'system'

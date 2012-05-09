@@ -375,6 +375,7 @@ def solve_multistage(power_system,times,datadir,
                               interval_hours=None,
                               stage_hours=config.default_hours_commitment,
                               overlap_hours=config.default_hours_commitment_overlap,
+                              scenario_tree=None,                              
                               problemfile=False,
                               get_duals=True,
                               showclock=True):
@@ -405,6 +406,7 @@ def solve_multistage(power_system,times,datadir,
     buses=power_system.buses
     stage_solutions=[]
 
+    if scenario_tree is not None: raise NotImplementedError()
     
     def set_initialconditions(buses,initTime):
         for bus in buses:
@@ -461,14 +463,14 @@ def solve_multistage(power_system,times,datadir,
         logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
         set_initialconditions(buses,t_stage.initialTime)
         
-        try: stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile,get_duals)
+        try: stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,scenario_tree,problemfile,get_duals)
         except OptimizationError:
             #re-do stage, with load shedding allowed
             logging.critical('stage infeasible, re-running with load shedding.')
             power_system.reset_model()
             power_system.set_load_shedding(True)
             try: 
-                stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile=True,get_duals=get_duals)
+                stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,scenario_tree,problemfile=True,get_duals=get_duals)
             except OptimizationError:
                 stage_solutions[-1].saveCSV(joindir(datadir,'last-stage-solved-commitment.csv'),save_final_status=True) 
                 raise OptimizationError('failed to solve, even with load shedding.')

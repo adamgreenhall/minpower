@@ -4,6 +4,8 @@ An optimization command library for Minpower.
 import coopr.pyomo as pyomo
 from coopr.opt.base import solvers as cooprsolver
 
+pyomo.base.numvalue.KnownConstants[True]=pyomo.base.numvalue.NumericConstant(None, None, 1)
+
 variable_kinds = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyomo.Boolean)
 
 import logging,time,weakref

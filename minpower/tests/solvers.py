@@ -20,12 +20,12 @@ logging.basicConfig( level=logging.INFO, format='%(levelname)s: %(message)s')
 def simple_problem():
     prob=optimization.OptimizationProblem()
     if mem_tracking: tracker.create_snapshot('prob. init')
-    x= optimization.new_variable('x',low=0,high=3)
-    y= optimization.new_variable('y',low=0,high=1)
-    prob.add_variable(x)
-    prob.add_variable(y)
+    prob.add_variable('x',low=0,high=3)
+    prob.add_variable('y',low=0,high=1)
+    x=prob.get_component('x')
+    y=prob.get_component('y')
     prob.add_objective(y-4*x)
-    prob.add_constraint(optimization.new_constraint('',x+y<=2))
+    prob.add_constraint('ineq',x+y<=2)
     if mem_tracking: tracker.create_snapshot('prob. created')
     return prob 
 

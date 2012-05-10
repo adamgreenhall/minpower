@@ -125,10 +125,10 @@ def get_scenario_based_costs(scenario_tree,scenario_instances):
         else: continue
     return costs
 
-def update_variables(problem,power_system,times):
+def update_variables(power_system,times):
     '''Convert all variables into dictionaries of their solved values, keyed by scenario'''
     first_scenario=True
-    for scenario_name,scenario in problem.scenario_instances.items():
+    for scenario_name,scenario in power_system._scenario_instances.items():
         for var_name,var in scenario.active_components(Var).items():
             if first_scenario: 
                 power_system.variables[var_name]={scenario_name: var.value}

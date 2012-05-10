@@ -328,16 +328,24 @@ class OptimizationProblem(OptimizationObject):
         logging.debug('... solution loaded ... {t}'.format(t=show_clock()))
 
         
-        def resolvefixvariables(instance,results):
+        def fix_variables(instance):
             active_vars= instance.active_components(pyomo.Var)
             for var in active_vars.values():
                 if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet): 
                     if var.is_indexed(): 
                         for key,ind_var in var.iteritems(): ind_var.fixed=True
                     else: var.fixed=True
-            
+        
+        def resolve_with_fixed_variables(instance,results):
             logging.info('resolving fixed-integer LP for duals')
+            if self.stochastic_formulation:
+                fix_variables(instance)
+                for scenario_block in instance.active_components(pyomo.Block).values():
+                    fix_variables(scenario_block)
+            else:
+                fix_variables(instance)
             instance.preprocess()
+            
             try:
                 results,elapsed=cooprsolve(instance,suffixes=['dual'])
                 self.solution_time+=elapsed
@@ -349,7 +357,7 @@ class OptimizationProblem(OptimizationObject):
             return instance,results
 
         if get_duals: 
-            try: instance,results = resolvefixvariables(instance,results)
+            try: instance,results = resolve_with_fixed_variables(instance,results)
             except RuntimeError:
                 logging.error('in re-solving for the duals. the duals will be set to default value.')
             logging.debug('... LP problem solved ... {t}'.format(t=show_clock()))    
@@ -359,9 +367,9 @@ class OptimizationProblem(OptimizationObject):
         
         def get_objective(name):
             try: return results.Solution.objective[name].value
-            except AttributeError: return results.Solution.objective['objective'].value
-        obj_name='__default_objective__'
-        #if self.stochastic_formulation and not get_duals: obj_name='MASTER'
+            except AttributeError: return results.Solution.objective['__default_objective__'].value
+        obj_name='objective'
+        if self.stochastic_formulation: obj_name='MASTER'
         #print results.Solution.objective
         #print get_duals,self.stochastic_formulation,obj_name
         self.objective = get_objective(obj_name)

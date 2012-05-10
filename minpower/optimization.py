@@ -908,11 +908,16 @@ class OptimizationProblem(OptimizationObject):
             except RuntimeError:
                 logging.error('in re-solving for the duals. the duals will be set to default value.')
             logging.debug('... LP problem solved ... {t}'.format(t=show_clock()))    
-                
-        try: self.objective = results.Solution.objective['objective'].value #instance.active_components(pyomo.Objective)['objective']
-        except AttributeError:
-            self.objective = results.Solution.objective['__default_objective__'].value
-            
+        
+        def get_objective(name):
+            try: return results.Solution.objective[name].value
+            except AttributeError: return results.Solution.objective['objective'].value
+        obj_name='__default_objective__'
+        #if self.stochastic_formulation and not get_duals: obj_name='MASTER'
+        #print results.Solution.objective
+        #print get_duals,self.stochastic_formulation,obj_name
+        self.objective = get_objective(obj_name)
+        
         #self.constraints = instance.active_components(pyomo.Constraint)
         #self.variables =   instance.active_components(pyomo.Var)
 

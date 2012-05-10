@@ -150,4 +150,3 @@ def update_variables(power_system,times):
 #                # otherwise, it wouldn't be referenced in the stage!!!
 #                value = solution_variable[None].value
 #                print tree_node_name+" "+variable.name+"="+str(value)
-    return costs

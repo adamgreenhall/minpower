@@ -120,9 +120,6 @@ def get_scenario_based_costs(scenario_tree,scenario_instances):
         scenarios=node._scenarios
         if len(scenarios)==1: costs[node._scenarios[0]._name]=node.computeExpectedNodeCost(scenario_instances)
         else: continue
-<<<<<<< HEAD
-    return costs
-=======
     return costs
 
 def update_variables(power_system,times):
@@ -153,4 +150,4 @@ def update_variables(power_system,times):
 #                # otherwise, it wouldn't be referenced in the stage!!!
 #                value = solution_variable[None].value
 #                print tree_node_name+" "+variable.name+"="+str(value)
->>>>>>> running stochastic uc
+    return costs

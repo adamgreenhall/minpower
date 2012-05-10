@@ -454,7 +454,6 @@ class Solution_Stochsatic(Solution):
         update_attributes(self,locals())
         self.scenarios=sorted(self.power_system._scenario_instances.keys())
         self.power_system._scenario_tree.snapshotSolutionFromInstances(self.power_system._scenario_instances)
-        #stochastic.update_variables(self.power_system,times)
         
         self._get_problem_info()
         self._get_costs()

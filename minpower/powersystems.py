@@ -372,6 +372,35 @@ class Generator_Stochastic(Generator_nonControllable):
     def cost_shutdown(self,time): return 0
 
 
+class Hydro_Generator(Generator):
+    """
+    A hydro plant model, including the upstream reservoir. 
+    Has constraints and variables which are significantly different from conventional generators.
+    """
+    def __init__(self,
+                 name,bus=None,index=None,
+                 downstream_reservior=None,
+                 delay_downstream=0,
+                 volume_min=0, volume_max=None,
+                 volume_initial=0,
+                 volume_final=None,
+                 outflow_min=0, outflow_max=None,
+                 power_min=0, power_max=None,
+                 production_curve_string='10Q',
+                 production_curve_correction_string='-0.1V',
+                 head_correction_string='0',
+                 inflow_schedule=None
+                 ):        
+        update_attributes(self,locals()) #load in inputs
+        print 'build model'
+    def status(self,*args,**kwargs): return True
+
+    def cost(self,time): return 0
+    def cost_startup(self,time): return 0
+    def cost_shutdown(self,time): return 0
+
+    
+        
 class Load(OptimizationObject):
     """
     Describes a power system load (demand).

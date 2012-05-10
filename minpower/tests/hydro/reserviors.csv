@@ -1,5 +1,0 @@
-"name"	"upstream reservoirs"	"delay downstream"	"min volume"	"max volume"	"initial volume"	"end volume"	"min outflow"	"max outflow"	"min power"	"max power"	"production curve"	"production correction curve"	"inflow schedule"
-1		2	80	150	100	120	5	15	0	500	"-50+10Q-0.42Q^2"	"0.90V-0.0042V^2"	"inflow_1"
-2		3	60	120	80	70	6	15	0	500	"-70+9.5Q-0.30Q^2"	"1.14V-0.0040V^2"	"inflow_2"
-3	"1 2"	4	100	240	170	170	10	30	0	500	"-40+5.5Q-0.30Q^2"	"0.55V-0.0016V^2"	"inflow_3"
-4	3		70	160	120	140	13	25	0	500	"-90+14Q-0.31Q^2"	"1.44V-0.0030V^2"	"inflow_4"

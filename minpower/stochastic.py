@@ -128,22 +128,20 @@ def get_scenario_based_costs(scenario_tree,scenario_instances):
 def update_variables(power_system,times):
     '''Convert all variables into dictionaries of their solved values, keyed by scenario'''
     first_scenario=True
-    for scenario_name,scenario in power_system._scenario_instances.items():
+    variable_names=power_system._model.active_components(Var).keys()
+    values=dict([(nm,{}) for nm in variable_names])
+    for s,scenario in power_system._scenario_instances.items():
         for var_name,var in scenario.active_components(Var).items():
-            if first_scenario: 
-                power_system.variables[var_name]={scenario_name: var.value}
-            else: 
-                power_system.variables[var_name][scenario_name]=var.value
-        
-        for param_name,param in scenario.active_components(Param).items():
-            for time in times:
-                name=param_name+"[{t}]".format(t=str(time))
-                if first_scenario:
-                    power_system.variables[name]={scenario_name: param[str(time)].value}
-                else:
-                    power_system.variables[name][scenario_name]= param[str(time)].value
-                    
-        else: first_scenario=False                
+            if var.is_indexed(): values[var_name][s]=dict([(idx,var_val.value) for idx,var_val in var.iteritems()])
+            else: values[var_name][s]=var.value
+    power_system._per_scenario_values=values
+        # for param_name,param in scenario.active_components(Param).items():
+        #     for time in times:
+        #         name=param_name+"[{t}]".format(t=str(time))
+        #         if first_scenario:
+        #             power_system.variables[name]={scenario_name: param[str(time)].value}
+        #         else:
+        #             power_system.variables[name][scenario_name]= param[str(time)].value
         
         #values=[params[0]['P_g2'][str(self.times[0])].value ]
 #    for tree_node_name,tree_node in sorted(problem.scenario_tree._tree_node_map.items()):

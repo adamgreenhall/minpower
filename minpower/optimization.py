@@ -359,6 +359,9 @@ class OptimizationProblem(OptimizationObject):
                 logging.error('in re-solving for the duals. the duals will be set to default value.')
             logging.debug('... LP problem solved ... {t}'.format(t=show_clock()))    
         
+        if self.stochastic_formulation:
+            self._scenario_tree.snapshotSolutionFromInstances(self._scenario_instances)
+        
         def get_objective(name):
             try: return results.Solution.objective[name].value
             except AttributeError: return results.Solution.objective['objective'].value

@@ -54,7 +54,7 @@ fields_hydro={
     'productioncurve':'production_curve_string',
     'productioncurvecorrection':'production_curve_correction_string',
     'headcorrection':'head_correction_string',
-    'inflowschedule':'inflow_scehdule_filename' }
+    'inflowschedule':'inflow_schedule_filename' }
     
 def parsedir(datadir='.',
         file_gens='generators.csv',
@@ -105,7 +105,7 @@ def parsedir(datadir='.',
     setup_initialcond(init_data,generators,times)
     
     #setup hydro if applicable
-    hydro_generators=setup_hydro(hydro_data,powersystems.HydroGenerator,datadir,times)
+    hydro_generators=setup_hydro(hydro_data,datadir,times)
     
     #setup scenario tree (if applicable)
     scenario_tree=setup_scenarios(generators,times)
@@ -252,13 +252,13 @@ def setup_scenarios(generators,times):
         gen.scenario_values.append(dict( (times[t],row[time]) for t,time in enumerate(sorted(row.iterkeys())) ))
     return construct_simple_scenario_tree(probabilities)
 
-def setup_hydro(data,model,datadir,times):
+def setup_hydro(data,datadir,times):
     if not data: return []
     hydro_generators=[]
     for row in data:
         inflow_schedule_filename=row.pop('inflow_schedule_filename',None)
         if inflow_schedule_filename is not None: row['inflow_schedule']=schedule.make_schedule(joindir(datadir,inflow_schedule_filename),times)
-        hydro_generators.append(model(row))
+        hydro_generators.append(powersystems.Hydro_Generator(**row))
     print hydro_generators
     barf
     return hydro_generators

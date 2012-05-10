@@ -128,7 +128,6 @@ class OptimizationObject(object):
         else: 
             var_name=self._t_id(name,time)
             return self._parent_problem().get_component(var_name,scenario)
-
     def get_constraint(self,name,time): return self._parent_problem().get_component(self._t_id(name,time))
     
     def add_children(self,objects,name):

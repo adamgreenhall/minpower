@@ -119,12 +119,12 @@ class Generator(OptimizationObject):
         self.build_cost_model()
         self.init_optimization()
         
-    def power(self,time=None): 
+    def power(self,time=None,scenario=None): 
         '''real power output at time'''
-        return self.get_variable('power',time,indexed=True)
-    def status(self,time=None): 
+        return self.get_variable('power',time,scenario=scenario,indexed=True)
+    def status(self,time=None,scenario=None): 
         '''on/off status at time'''
-        if self.commitment_problem: return self.get_variable('status',time,indexed=True)
+        if self.commitment_problem: return self.get_variable('status',time,scenario=scenario,indexed=True)
         else: return 1
     def status_change(self,t,times): 
         '''is the unit changing status between t and t-1'''
@@ -349,8 +349,8 @@ class Generator_nonControllable(Generator):
         self.shutdowncost=0
         self.build_cost_model()
         self.init_optimization()
-    def power(self,time=None): return self.schedule.get_energy(time)
-    def status(self,time=None): return True
+    def power(self,time): return self.schedule.get_energy(time)
+    def status(self,time=None,scenarios=None): return True
     def set_initial_condition(self,time=None, P=None, u=None, hoursinstatus=None):
         try: 
             if P is None: P=sorted(self.schedule.energy.items())[0][1] #set initial value to first value
@@ -386,7 +386,7 @@ class Generator_Stochastic(Generator_nonControllable):
         self.is_stochastic=True
         self.build_cost_model()
         self.init_optimization()
-    def power(self,time): return self.get_variable('power',time=time,indexed=True)
+    def power(self,time,scenario=None): return self.get_variable('power',time=time,scenario=scenario,indexed=True)
     def create_variables(self,times):
         self.add_parameter('power',index=times.set)
         power=self.power(time=None)
@@ -674,8 +674,8 @@ class PowerSystem(OptimizationProblem):
         for line in self.lines: line.create_variables(times)
         logging.debug('... created power system vars... returning... {}'.format(show_clock()))
         #for var in self.all_variables(times).values(): self.add_variable(var)
-    def cost_first_stage(self): return self.get_component('cost_first_stage')    
-    def cost_second_stage(self): return self.get_component('cost_second_stage')
+    def cost_first_stage(self,scenario=None): return self.get_component('cost_first_stage',scenario=scenario)    
+    def cost_second_stage(self,scenario=None): return self.get_component('cost_second_stage',scenario=scenario)
     def create_objective(self,times): 
         self.add_objective(self.cost_first_stage()+self.cost_second_stage())
     def create_constraints(self,times):

@@ -117,21 +117,17 @@ class OptimizationObject(object):
         name=self._t_id(name,time)
         self._parent_problem().add_component_to_problem(new_constraint(name,expression))
         
-    def get_variable(self,name,time=None,indexed=False):
+    def get_variable(self,name,time=None,indexed=False,scenario=None):
         if indexed: 
             var_name=self._id(name)
             if time is None: 
-                return self._parent_problem().get_component(var_name)
+                return self._parent_problem().get_component(var_name,scenario)
             else: 
                 index=str(time)
-                try: return self._parent_problem().get_component(var_name)[index]
-                except KeyError:
-                    self._parent_problem().show_model()
-                    raise
+                return self._parent_problem().get_component(var_name,scenario)[index]
         else: 
             var_name=self._t_id(name,time)
-            return self._parent_problem().get_component(var_name)
-    
+            return self._parent_problem().get_component(var_name,scenario)
     def get_constraint(self,name,time): return self._parent_problem().get_component(self._t_id(name,time))
     
     def add_children(self,objects,name):
@@ -232,14 +228,21 @@ class OptimizationProblem(OptimizationObject):
         self._model._add_component(name,var)
     def add_constraint(self,name,expression):
         self._model._add_component(name,new_constraint(name,expression))
-    def get_component(self,name): 
+    def get_component(self,name,scenario=None): 
         '''Get an optimization component'''
-        try: return getattr(self._model,name)
-        except AttributeError:
-            print 'error getting ',name
-            self.show_model()
-            raise 
-
+        if scenario is None:
+            try: return getattr(self._model,name)
+            except (AttributeError,KeyError) as NotInModelError:
+                print 'error getting ',name
+                self.show_model()
+                raise 
+        else: 
+            try: return getattr(self._scenario_instances[scenario],name)
+            except AttributeError:
+                print 'error getting ',name
+                self._scenario_instances[scenario].pprint()
+                raise
+            
     def write_model(self,filename): self._model.write(filename)
     def reset_model(self):
         #piecewise models leak memory
@@ -409,3 +412,12 @@ class OptimizationError(Exception):
         Exception.__init__( self, self.value)
 
     def __str__(self): return self.value
+class NotInModelError(Exception):
+    '''Error that occurs when trying to find a component in the optimization model.'''
+    def __init__(self, ivalue):
+        if ivalue: self.value=ivalue
+        else: self.value="Not in Model Error: the component you are looking for wasn't found in the model"
+        Exception.__init__( self, self.value)
+
+    def __str__(self): return self.value
+    

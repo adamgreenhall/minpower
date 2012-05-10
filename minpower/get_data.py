@@ -38,12 +38,31 @@ fields_initial={
     'p':'P','pg':'P','power':'P',
     'hoursinstatus':'hoursinstatus',
     'ic':None}
+
+fields_hydro={
+    'name':'name','bus':'bus',
+    'downstreamreservoir':'downstream_reservior',
+    'delaydownstream':'delay_downstream',
+    'minvolume':'volume_min',
+    'maxvolume':'volume_max',
+    'initialvolume':'volume_initial',
+    'finalvolume':'volume_final',
+    'minoutflow':'outflow_min',
+    'maxoutflow':'outflow_max',
+    'minpower':'power_min',
+    'maxpower':'power_max',
+    'productioncurve':'production_curve_string',
+    'productioncurvecorrection':'production_curve_correction_string',
+    'headcorrection':'head_correction_string',
+    'inflowschedule':'inflow_scehdule_filename' }
     
 def parsedir(datadir='.',
         file_gens='generators.csv',
         file_loads='loads.csv',
         file_lines='lines.csv',
-        file_init='initial.csv'):
+        file_init='initial.csv',
+        file_hydro='hydro.csv'
+        ):
     """
     Import data from spreadsheets and build lists of
     :mod:`powersystems` classes.
@@ -55,6 +74,7 @@ def parsedir(datadir='.',
     :param file_init:    spreadsheet of initial time generator data
         (not required for ED,OPF problems. Defaults will be used
         for UC problems if not specified.)
+    :param file_hydro:    spreadsheet of hydro generation data (not required if no hydro system)
     
     :return generators:, list of :class:`~powersystems.Generator` objects 
     :return loads:, list of :class:`~Load` objects
@@ -70,7 +90,8 @@ def parsedir(datadir='.',
     except IOError: lines_data=[]
     try: init_data=csv2dicts(file_init,field_map=fields_initial)
     except IOError: init_data=[]
-    
+    try: hydro_data=csv2dicts(file_hydro, field_map=fields_hydro)
+    except IOError: hydro_data=[]
     
     #create times
     times=setup_times(generators_data,loads_data,datadir)
@@ -82,6 +103,9 @@ def parsedir(datadir='.',
     lines=build_class_list(lines_data,powersystems.Line,datadir)    
     #add initial conditions
     setup_initialcond(init_data,generators,times)
+    
+    #setup hydro if applicable
+    hydro_generators=setup_hydro(hydro_data,powersystems.HydroGenerator,datadir,times)
     
     #setup scenario tree (if applicable)
     scenario_tree=setup_scenarios(generators,times)
@@ -227,3 +251,14 @@ def setup_scenarios(generators,times):
         row.pop('probability')
         gen.scenario_values.append(dict( (times[t],row[time]) for t,time in enumerate(sorted(row.iterkeys())) ))
     return construct_simple_scenario_tree(probabilities)
+
+def setup_hydro(data,model,datadir,times):
+    if not data: return []
+    hydro_generators=[]
+    for row in data:
+        inflow_schedule_filename=row.pop('inflow_schedule_filename',None)
+        if inflow_schedule_filename is not None: row['inflow_schedule']=schedule.make_schedule(joindir(datadir,inflow_schedule_filename),times)
+        hydro_generators.append(model(row))
+    print hydro_generators
+    barf
+    return hydro_generators

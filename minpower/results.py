@@ -451,7 +451,7 @@ class Solution_Stochsatic(Solution):
         update_attributes(self,locals())
         self.scenarios=sorted(self.power_system._scenario_instances.keys())
         self.power_system._scenario_tree.snapshotSolutionFromInstances(self.power_system._scenario_instances)
-        stochastic.update_variables(self.power_system,times)
+        #stochastic.update_variables(self.power_system,times)
         
         self._get_problem_info()
         self._get_costs()
@@ -465,22 +465,24 @@ class Solution_Stochsatic(Solution):
         self.expected_cost = root_node.computeExpectedNodeCost(instances)
         self.cost_per_scenario=stochastic.get_scenario_based_costs(tree,instances)
     def _get_cost_error(self): pass
-#        try: self.costerror=abs(self.fuelcost_generation-self.fuelcost_true_generation)/self.fuelcost_true_generation
-#        except ZeroDivisionError: self.costerror=0
     def _get_prices(self): pass
-#        self.lmps={}
-#        self.line_prices={}
-#        for t in self.times: 
-#            self.lmps[str(t)]=self.get_values('buses','price',t)
-#            self.line_prices[str(t)]=self.get_values('lines','price',t)
+    def _get_outputs(self):
+        generators= self.power_system.generators()
+        self.generators_power=dict([(s,{}) for s in self.scenarios])
+        self.generators_status=dict([(s,{}) for s in self.scenarios])
+        for s in self.scenarios:
+            for time in self.times:
+                self.generators_power[s][time] =[value(gen.power(time,s)) for gen in generators]
+                self.generators_status[s][time] =[value(gen.status(time,s))==1 for gen in generators]
+
     def info_cost(self):
         return ["expected cost= {}".format(self.expected_cost),
                 "scenario costs: {}".format(self.cost_per_scenario)]
-    def info_generators(self,t):
-        out=['generator info:']
-        if len(self.buses())>1: out.append('bus={}'.format(self.get_values('generators','bus')))
-        out.extend(['name={}'.format(self.get_values('generators','name')),
-                    'u={}'.format(self.get_values('generators','status',t))])
+    def info_generators(self,s):
+        out=['  name={}'.format(','.join(gen.name for gen in self.generators()))]
+        for time in self.times:
+            out.extend(['  {} power={}'.format(str(time),self.generators_power[s][time]),
+                        '  {} status={}'.format(str(time),self.generators_status[s][time])])
         return out
     def show(self):
         '''Display the solution information to the terminal'''
@@ -489,45 +491,28 @@ class Solution_Stochsatic(Solution):
         out.extend(['Solution information','-'*20])
         out.extend(self.info_cost())
         
-        for t in self.times:
-                out.append('{tm}: {start}'.format(tm=t,start=t.Start))
-                out.extend(self.info_generators(t))
+        for s in self.scenarios:
+                out.append('scenario {s}:'.format(s=s))
+                out.extend(self.info_generators(s))
         print '\n'.join(out)
         #P=self.generators()[2].power(self.times[0])
         #print P.name,values
 
-    def get_values(self,kind='generators',attrib='power',time=None,scenario=None):
-        '''Get the attributes of all objects of a certain kind at a given time and scenario.'''
-        method={'generators':self.generators,'loads':self.loads,'lines':self.lines,'buses':self.buses}
-        if time is not None:
-            out=[]
-            for obj in method[kind]():
-                var=getattr(obj, attrib)(time)
-                var.pprint()
-                #self.power_system.show_model()
-                self.power_system._stochastic_instance.pprint()
-                barf
-                try: out.append(var)
-                except AttributeError: out.append(var)
-                except KeyError: out.append(var.name)
-            return out
-        else: return [getattr(obj, attrib) for obj in method[kind]()]
-    def value(self,var,scenario): 
-        try: return self.power_system.variables[var.name][scenario]
-        except AttributeError: var
 class Solution_Stochastic_UC(Solution_Stochsatic):
     def saveCSV(self,filename=None):
         '''generator power values and statuses for unit commitment'''
         if filename is None: filename=joindir(self.datadir,'commitment.csv')
         data=[]
         fields=['generators','times','scenarios','power','status']
-        for gen in self.generators():
+        for g,gen in enumerate(self.generators()):
             for time in self.times:
                 for scenario in self.scenarios:
-                    try: row=[gen.name,str(time.Start),scenario,self.value(gen.power(time),scenario),self.value(gen.status(time),scenario)]
-                    except KeyError:
-                        print gen.power(time) 
-                        raise
+                    row=[gen.name, 
+                         str(time.Start), 
+                         scenario, 
+                         self.generators_power[scenario][time][g],
+                         self.generators_status[scenario][time][g]
+                         ]
                     data.append(row)
         writeCSV(fields,data,filename=filename)
 

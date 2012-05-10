@@ -10,7 +10,7 @@ from collections import OrderedDict
 from commonscripts import flatten,transpose,elementwiseAdd, getattrL,within,writeCSV,joindir,replace_all,update_attributes
 from schedule import Timelist
 from optimization import value,dual
-import config
+import config,stochastic
 
 for_publication=True
 
@@ -44,6 +44,8 @@ def classify_problem(times,power_system):
     elif len(times)==1: kind='OPF'
     elif not power_system.lines: kind='UC'
     else: kind='SCUC'
+    
+    if any(getattr(g,'is_stochastic',False) for g in power_system.generators()): kind='stochastic_'+kind
     return kind
 
 def make_solution(power_system,times,**kwargs):
@@ -53,7 +55,13 @@ def make_solution(power_system,times,**kwargs):
     :param times: a :class:`~schedule.Timelist` object
     :param power_system: a :class:`~powersystems.PowerSystem` object    
     '''
-    problem_type=dict(ED=Solution_ED, OPF=Solution_OPF, UC=Solution_UC, SCUC=Solution_SCUC)
+    problem_type=dict(
+        ED=Solution_ED, 
+        OPF=Solution_OPF, 
+        UC=Solution_UC, 
+        SCUC=Solution_SCUC,
+        stochastic_UC=Solution_Stochastic_UC
+        )
     kind=classify_problem(times,power_system)
     return problem_type[kind](power_system,times,**kwargs)
 
@@ -435,6 +443,93 @@ class Solution_UC_multistage(Solution_UC):
         return ['solved multistage problem in a total solver time of {time:0.4f} sec'.format(time=self.solve_time)]
     def info_shedding(self):
         return ['total load shed={}MW'.format(self.load_shed) if self.load_shed>0 else '']
+
+
+class Solution_Stochsatic(Solution):
+    def __init__(self,power_system,times,datadir='.'):
+        update_attributes(self,locals())
+        self.scenarios=sorted(self.power_system._scenario_instances.keys())
+        self.power_system._scenario_tree.snapshotSolutionFromInstances(self.power_system._scenario_instances)
+        stochastic.update_variables(self.power_system,times)
+        
+        self._get_problem_info()
+        self._get_costs()
+        self._get_prices()
+        self._get_outputs()
+        
+    def _get_costs(self):
+        instances=self.power_system._scenario_instances
+        tree=self.power_system._scenario_tree
+        root_node = tree._stages[0]._tree_nodes[0]
+        self.expected_cost = root_node.computeExpectedNodeCost(instances)
+        self.cost_per_scenario=stochastic.get_scenario_based_costs(tree,instances)
+    def _get_cost_error(self): pass
+#        try: self.costerror=abs(self.fuelcost_generation-self.fuelcost_true_generation)/self.fuelcost_true_generation
+#        except ZeroDivisionError: self.costerror=0
+    def _get_prices(self): pass
+#        self.lmps={}
+#        self.line_prices={}
+#        for t in self.times: 
+#            self.lmps[str(t)]=self.get_values('buses','price',t)
+#            self.line_prices[str(t)]=self.get_values('lines','price',t)
+    def info_cost(self):
+        return ["expected cost= {}".format(self.expected_cost),
+                "scenario costs: {}".format(self.cost_per_scenario)]
+    def info_generators(self,t):
+        out=['generator info:']
+        if len(self.buses())>1: out.append('bus={}'.format(self.get_values('generators','bus')))
+        out.extend(['name={}'.format(self.get_values('generators','name')),
+                    'u={}'.format(self.get_values('generators','status',t))])
+        return out
+    def show(self):
+        '''Display the solution information to the terminal'''
+        #self.problem.scenario_tree.pprintSolution()
+        out=['']
+        out.extend(['Solution information','-'*20])
+        out.extend(self.info_cost())
+        
+        for t in self.times:
+                out.append('{tm}: {start}'.format(tm=t,start=t.Start))
+                out.extend(self.info_generators(t))
+        print '\n'.join(out)
+        #P=self.generators()[2].power(self.times[0])
+        #print P.name,values
+
+    def get_values(self,kind='generators',attrib='power',time=None,scenario=None):
+        '''Get the attributes of all objects of a certain kind at a given time and scenario.'''
+        method={'generators':self.generators,'loads':self.loads,'lines':self.lines,'buses':self.buses}
+        if time is not None:
+            out=[]
+            for obj in method[kind]():
+                var=getattr(obj, attrib)(time)
+                var.pprint()
+                #self.power_system.show_model()
+                self.power_system._stochastic_instance.pprint()
+                barf
+                try: out.append(var)
+                except AttributeError: out.append(var)
+                except KeyError: out.append(var.name)
+            return out
+        else: return [getattr(obj, attrib) for obj in method[kind]()]
+    def value(self,var,scenario): 
+        try: return self.power_system.variables[var.name][scenario]
+        except AttributeError: var
+class Solution_Stochastic_UC(Solution_Stochsatic):
+    def saveCSV(self,filename=None):
+        '''generator power values and statuses for unit commitment'''
+        if filename is None: filename=joindir(self.datadir,'commitment.csv')
+        data=[]
+        fields=['generators','times','scenarios','power','status']
+        for gen in self.generators():
+            for time in self.times:
+                for scenario in self.scenarios:
+                    try: row=[gen.name,str(time.Start),scenario,self.value(gen.power(time),scenario),self.value(gen.status(time),scenario)]
+                    except KeyError:
+                        print gen.power(time) 
+                        raise
+                    data.append(row)
+        writeCSV(fields,data,filename=filename)
+
 
 def _colormap(numcolors,colormapName='gist_rainbow',mincolor=1):
     cm = matplotlib.cm.get_cmap(colormapName)

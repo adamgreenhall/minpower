@@ -88,28 +88,25 @@ def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_
     full_problem_instance=create_ef_instance(scenario_tree, scenario_instances)
     #full_problem_instance.pprint()
     
-    #relax the non-anticipatory constraints on the generator status variables beyond the UC time horizon
-    start=times[0].Start+timedelta(hours=stage_hours)
-    try: 
-        tStart=[t.Start for t in times].index(start)
-        remove_na=True
-    except ValueError: 
-        remove_na=False
-    if remove_na:
-        for time in times[tStart:]:
-            logging.debug('get rid of NA constraint at ',time)
+    def relax_non_anticipatory_constraints(): 
+        #relax the non-anticipatory constraints on the generator status variables beyond the UC time horizon
+        start=times[0].Start+timedelta(hours=stage_hours)
+        try: horizon_end=[t.Start for t in times].index(start)
+        except ValueError: 
+            return #no times are beyond the UC horizon
+
+        for time in times[horizon_end:]:
+            logging.debug('get rid of NA constraint at '+str(time))
             for scenario in scenario_instances.keys():
                 for gen in power_system.generators():
-                    try: u=gen.status(time).name 
-                    except AttributeError: continue
-                    #print scenario,u
-                    full_problem_instance._clear_attribute('{s}_{u}_None'.format(s=scenario,u=u))
-                    full_problem_instance._clear_attribute('root_{u}'.format(u=u))
+                    if not gen.is_controllable: continue
+                    u=gen.status().name
+                    #print 'clear constraint on {s}_{u}_{t}'.format(s=scenario,u=u,t=str(time))
+                    full_problem_instance._clear_attribute('{s}_{u}_{t}'.format(s=scenario,u=u,t=str(time)))
     
-    #full_problem_instance.pprint()
-    #full_problem_instance.write('problem.lp')
-    # full_problem=OptimizationProblem(instance=full_problem_instance)
-    # return full_problem,scenario_tree,scenario_instances
+    
+    relax_non_anticipatory_constraints()
+    
     power_system.stochastic_formulation=True
     power_system._stochastic_instance=full_problem_instance
     power_system._scenario_tree=scenario_tree

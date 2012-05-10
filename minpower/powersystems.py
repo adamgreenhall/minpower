@@ -391,13 +391,17 @@ class Hydro_Generator(Generator):
                  inflow_schedule=None
                  ):        
         update_attributes(self,locals()) #load in inputs
-        print 'build model'
-    def status(self,*args,**kwargs): return True
-
+        
     def cost(self,time): return 0
+    def status(self,*args,**kwargs): return True
     def cost_startup(self,time): return 0
     def cost_shutdown(self,time): return 0
-
+    def getstatus(self,t,times): return {}
+    def create_variables(self,times):
+        #power
+        #flow
+        #volume
+        return
     
         
 class Load(OptimizationObject):

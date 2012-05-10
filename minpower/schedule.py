@@ -193,15 +193,19 @@ def make_schedule(filename,times=None):
     """
     Read time and power information from spreadsheet file.
     """
-    map_field_attr={
-        'time':'time','t':'time','times':'time',
-        'power':'energy','p':'energy','demand':'energy','pd':'energy','load':'energy','wind':'energy','energy':'energy'}
-    valid_fields=map_field_attr.keys()
+    time_column_names=['time','t','times']
     
-    data,fields=readCSV(filename,valid_fields)
-    attributes=[map_field_attr[drop_case_spaces(f)] for f in fields]
-    data_power=transpose(data)[attributes.index('energy')]
-    if times is None: times=make_times(parse_timestrings(transpose(data)[attributes.index('time')]))
+    data,fields=readCSV(filename)
+    if len(fields)!=2: raise ValueError('Schedules must be made from spreadsheets with two columns - time and amount.')
+    time_col,amount_col=None,None
+    for f,field in enumerate(fields): 
+        if drop_case_spaces(field) in time_column_names: 
+            time_col=f
+            amount_col=f+1
+            break
+            
+    data_power=transpose(data)[amount_col]
+    if times is None: times=make_times(parse_timestrings(transpose(data)[time_col]))
     return Schedule(times,data_power)
     
 class Schedule(object):

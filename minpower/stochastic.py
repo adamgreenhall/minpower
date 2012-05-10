@@ -121,3 +121,32 @@ def get_scenario_based_costs(scenario_tree,scenario_instances):
         if len(scenarios)==1: costs[node._scenarios[0]._name]=node.computeExpectedNodeCost(scenario_instances)
         else: continue
     return costs
+
+def update_variables(power_system,times):
+    '''Convert all variables into dictionaries of their solved values, keyed by scenario'''
+    first_scenario=True
+    variable_names=power_system._model.active_components(Var).keys()
+    values=dict([(nm,{}) for nm in variable_names])
+    for s,scenario in power_system._scenario_instances.items():
+        for var_name,var in scenario.active_components(Var).items():
+            if var.is_indexed(): values[var_name][s]=dict([(idx,var_val.value) for idx,var_val in var.iteritems()])
+            else: values[var_name][s]=var.value
+    power_system._per_scenario_values=values
+        # for param_name,param in scenario.active_components(Param).items():
+        #     for time in times:
+        #         name=param_name+"[{t}]".format(t=str(time))
+        #         if first_scenario:
+        #             power_system.variables[name]={scenario_name: param[str(time)].value}
+        #         else:
+        #             power_system.variables[name][scenario_name]= param[str(time)].value
+        
+        #values=[params[0]['P_g2'][str(self.times[0])].value ]
+#    for tree_node_name,tree_node in sorted(problem.scenario_tree._tree_node_map.items()):
+#        for variable_name, (variable, match_template) in tree_node._stage._variables.iteritems():
+#            indices = sorted(tree_node._variable_indices[variable.name])
+#            solution_variable = tree_node._solutions[variable.name]
+#            if (len(indices) == 1) and (indices[0] == None):
+#                # if this is a singleton variable, then it should necessarily be active -
+#                # otherwise, it wouldn't be referenced in the stage!!!
+#                value = solution_variable[None].value
+#                print tree_node_name+" "+variable.name+"="+str(value)

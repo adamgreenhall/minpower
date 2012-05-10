@@ -824,6 +824,7 @@ class Bus(OptimizationObject):
     def add_timevars(self,times): return self.create_variables(times)
     
 <<<<<<< HEAD
+<<<<<<< HEAD
     def angle(self,time):
         return self.variables['angle_'+self.iden(time)]
     def price(self,time):
@@ -849,6 +850,9 @@ class Bus(OptimizationObject):
             
 =======
     def angle(self,time): return self.get_variable('angle',time)
+=======
+    def angle(self,time): return self.get_variable('angle',time,indexed=True)
+>>>>>>> switch bus angle to indexed variable
     def price(self,time): return dual(self.get_constraint('power balance',time))
     def Pgen(self,t,evaluate=False):
         if evaluate: return sum(value(gen.power(t)) for gen in self.generators)
@@ -877,7 +881,7 @@ class Bus(OptimizationObject):
         logging.debug('created generator variables {}'.format(show_clock()))
         for load in self.loads: load.create_variables(times)
         logging.debug('created load variables {}'.format(show_clock()))
-        for time in times: self.add_variable('angle',time=time)
+        self.add_variable('angle',index=times.set)
         logging.debug('created bus variables ... returning {}'.format(show_clock()))
         return
     def create_objective(self,times): return self.cost_first_stage(times) + self.cost_second_stage(times)

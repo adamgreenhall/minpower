@@ -82,7 +82,7 @@ def parsedir(datadir='.',
     :return times:, list of :class:`~schedule.Timelist` object
     """
     if not os.path.isdir(datadir): raise OSError('data directory "{d}" does not exist'.format(d=datadir) )
-    [file_gens,file_loads,file_lines,file_init]=[joindir(datadir,filename) for filename in (file_gens,file_loads,file_lines,file_init)]
+    [file_gens,file_loads,file_lines,file_init,file_hydro]=[joindir(datadir,filename) for filename in (file_gens,file_loads,file_lines,file_init,file_hydro)]
     
     generators_data=csv2dicts(file_gens,field_map=fields_gens)
     loads_data=csv2dicts(file_loads,field_map=fields_loads)
@@ -105,8 +105,8 @@ def parsedir(datadir='.',
     setup_initialcond(init_data,generators,times)
     
     #setup hydro if applicable
-    hydro_generators=setup_hydro(hydro_data,datadir,times)
-    
+    hydro_generators=setup_hydro(hydro_data,datadir,times,len(generators))
+    generators.extend(hydro_generators)
     #setup scenario tree (if applicable)
     scenario_tree=setup_scenarios(generators,times)
     return generators,loads,lines,times,scenario_tree
@@ -252,13 +252,20 @@ def setup_scenarios(generators,times):
         gen.scenario_values.append(dict( (times[t],row[time]) for t,time in enumerate(sorted(row.iterkeys())) ))
     return construct_simple_scenario_tree(probabilities)
 
-def setup_hydro(data,datadir,times):
+def setup_hydro(data,datadir,times,num_conventional_gen):
     if not data: return []
     hydro_generators=[]
-    for row in data:
+    for i,row in enumerate(data):
         inflow_schedule_filename=row.pop('inflow_schedule_filename',None)
+        row['index']=i+num_conventional_gen
+        if row.get('downstream_reservior',None) is not None: 
+            row['downstream_reservior']+=(num_conventional_gen-1)
         if inflow_schedule_filename is not None: row['inflow_schedule']=schedule.make_schedule(joindir(datadir,inflow_schedule_filename),times)
         hydro_generators.append(powersystems.Hydro_Generator(**row))
-    print hydro_generators
-    barf
+    
+    #label upstream reservoir generator indexes
+    for gen in hydro_generators: 
+        d=gen.downstream_reservior
+        if d is not None:
+            hydro_generators[d-num_conventional_gen].upstream_reservoirs.append(gen.index)
     return hydro_generators

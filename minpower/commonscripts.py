@@ -224,8 +224,6 @@ def subsetexcept(D,exceptL):
     '''dictionary without exceptions list'''
     for e in exceptL: D.pop(e)
     return D
-
-
 def show_memory_backrefs(name):
     import objgraph
     objgraph.show_backrefs(objgraph.by_type(name),filename='backrefs-{}.png'.format(name))
@@ -239,3 +237,8 @@ def show_memory_refs(name):
 def show_memory_growth():
     import objgraph
     objgraph.show_growth()
+def get_leading_number(string):
+    digit=''
+    for s in string:
+        if s.isdigit() or s in ['.','-']: digit+=s
+    return float(digit)

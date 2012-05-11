@@ -7,7 +7,7 @@ an optimization framework from :class:`~optimization.OptimizationObject`.
 """
 
 from optimization import value,dual,OptimizationObject,OptimizationProblem
-from commonscripts import hours,drop_case_spaces,flatten,getattrL,unique,update_attributes,show_clock
+from commonscripts import hours,drop_case_spaces,get_leading_number,flatten,getattrL,unique,update_attributes,show_clock
 import config, bidding
 from schedule import FixedSchedule
 import logging
@@ -393,9 +393,14 @@ class Hydro_Generator(Generator):
                  inflow_schedule=None
                  ):        
         update_attributes(self,locals()) #load in inputs
+        self.init_optimization()
         self.upstream_reservoirs=[]
-        self.production_curve_model=bidding.makeModel(production_curve_string,)
-    
+        self.is_hydro=True
+        self.is_controllable=True
+        self.production_curve_model=bidding.makeModel(production_curve_string)
+        self.production_correction_model=bidding.makeModel(production_curve_correction_string)
+        self.head_correction_constant=get_leading_number(head_correction_string)
+        
     def outflow(self,time=None,scenario=None): return self.get_variable('outflow', time=time, indexed=True, scenario=scenario)
     def spill(self,time=None,scenario=None):   return self.get_variable('spill',   time=time, indexed=True, scenario=scenario)
     def volume(self,time=None,scenario=None):  return self.get_variable('volume',  time=time, indexed=True, scenario=scenario)    
@@ -415,8 +420,10 @@ class Hydro_Generator(Generator):
         the volume correction (based on volume), 
         and the head correction (based on outflow and volume)
         '''
-        return self.production_curve(self.outflow(time)) + self.production_curve_correction(self.volume(time)) + self.head_correction(self.outflow(time),self.volume(time))
+        return self.production_curve(time).output() + self.production_curve_correction(time).output() + self.head_correction(time)
     def production_curve(self,time): return self.get_child('production_curves', time)
+    def production_correction(self,time): return self.get_child('production_corrections', time)
+    def head_correction(self,time): return self.head_correction_constant*self.outflow(time)*self.volume(time)
     
     def cost(self,time): return 0
     def status(self,time=None,scenario=None): return True
@@ -435,11 +442,19 @@ class Hydro_Generator(Generator):
             model=self.production_curve_model,
             time=time,
             input_var=self.outflow(time),
-            status_var=self.status(time),
+            owner_iden=str(self),
+            time_iden=str(time)) for time in times]))
+        production_corrections=dict(zip(times,[bidding.Bid(
+            model=self.production_correction_model,
+            time=time,
+            input_var=self.volume(time),
             owner_iden=str(self),
             time_iden=str(time)) for time in times]))
         self.add_children(production_curves,'production_curves')
-        for time in times: self.production_curve(time).create_variables()
+        self.add_children(production_corrections,'production_corrections')
+        for time in times: 
+            self.production_curve(time).create_variables()
+            self.production_correction(time).create_variables()
 
     def create_constraints(self,times,generators):
         #initial and final volumes
@@ -453,8 +468,8 @@ class Hydro_Generator(Generator):
             self.add_constraint('water balance',time, self.volume_change(t,times)==upstream_inflow + natural_inflow - self.outflow_total(time))
             #production
             self.add_constraint('production', time, self.power(time)==self.production(time))
-        
-        
+            self.production_curve(time).create_constraints()
+            self.production_correction(time).create_constraints()
     
         
 class Load(OptimizationObject):
@@ -616,7 +631,9 @@ class Bus(OptimizationObject):
         return sum(gen.cost_second_stage(times) for gen in self.generators) + \
             sum(load.cost_second_stage(times) for load in self.loads)            
     def create_constraints(self,times,Bmatrix,buses):
-        for gen in self.generators: gen.create_constraints(times)
+        for gen in self.generators: 
+            if getattr(gen,'is_hydro',False): gen.create_constraints(times,self.generators)
+            else: gen.create_constraints(times)
         for load in self.loads: load.create_constraints(times)
         nBus=len(buses)
         for time in times:

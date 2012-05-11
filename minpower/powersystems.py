@@ -7,7 +7,7 @@ an optimization framework from :class:`~optimization.OptimizationObject`.
 """
 
 from optimization import value,dual,OptimizationObject,OptimizationProblem
-from commonscripts import hours,drop_case_spaces,get_leading_number,flatten,getattrL,unique,update_attributes,show_clock
+from commonscripts import hours,drop_case_spaces,get_leading_number,flatten,getattrL,getclass_inlist,unique,update_attributes,show_clock
 import config, bidding
 from schedule import FixedSchedule
 import logging
@@ -113,6 +113,7 @@ class Generator(OptimizationObject):
         update_attributes(self,locals()) #load in inputs     
         if self.rampratemin is None and self.rampratemax is not None: self.rampratemin = -1*self.rampratemax
         self.is_controllable=True
+        self.is_hydro=False
         self.commitment_problem=True
         self.build_cost_model()
         self.init_optimization()
@@ -315,6 +316,7 @@ class Generator_nonControllable(Generator):
 
         if Pmax is None: self.Pmax = self.schedule.maxvalue
         self.is_controllable=False
+        self.is_hydro=False
         self.startupcost=0
         self.shutdowncost=0
         self.build_cost_model()
@@ -352,6 +354,7 @@ class Generator_Stochastic(Generator_nonControllable):
                  name='',index=None,bus=None,kind='wind',**kwargs):
         update_attributes(self,locals()) #load in inputs
         self.is_controllable=False
+        self.is_hydro=False
         self.is_stochastic=True
         self.build_cost_model()
         self.init_optimization()
@@ -385,10 +388,13 @@ class Hydro_Generator(Generator):
                  volume_initial=0,
                  volume_final=None,
                  outflow_min=0, outflow_max=None,
+                 outflow_initial=None,
                  power_min=0, power_max=None,
+                 power_initial=0,
                  spill_min=0, spill_max=None,
+                 spill_initial=0,
                  production_curve_string='10Q',
-                 production_curve_correction_string='-0.1V',
+                 production_curve_correction_string='0',
                  head_correction_string='0',
                  inflow_schedule=None
                  ):        
@@ -397,13 +403,15 @@ class Hydro_Generator(Generator):
         self.upstream_reservoirs=[]
         self.is_hydro=True
         self.is_controllable=True
-        self.production_curve_model=bidding.makeModel(production_curve_string)
+        self.production_curve_model=bidding.makeModel(production_curve_string,min_input=self.outflow_min,max_input=self.outflow_max)
         self.production_correction_model=bidding.makeModel(production_curve_correction_string)
         self.head_correction_constant=get_leading_number(head_correction_string)
+        if self.outflow_initial is None:
+            self.outflow_initial=(self.outflow_max-self.outflow_min)/2.0
         
-    def outflow(self,time=None,scenario=None): return self.get_variable('outflow', time=time, indexed=True, scenario=scenario)
-    def spill(self,time=None,scenario=None):   return self.get_variable('spill',   time=time, indexed=True, scenario=scenario)
-    def volume(self,time=None,scenario=None):  return self.get_variable('volume',  time=time, indexed=True, scenario=scenario)    
+    def outflow(self,time=None,scenario=None): return self.get_variable('outflow', time=str(time), indexed=True, scenario=scenario)
+    def spill(self,time=None,scenario=None):   return self.get_variable('spill',   time=str(time), indexed=True, scenario=scenario)
+    def volume(self,time=None,scenario=None):  return self.get_variable('volume',  time=str(time), indexed=True, scenario=scenario)    
     
     def outflow_total(self,time=None,scenario=None): return self.outflow(time, scenario)+self.spill(time,scenario)
 
@@ -425,14 +433,16 @@ class Hydro_Generator(Generator):
     def production_correction(self,time): return self.get_child('production_corrections', time)
     def head_correction(self,time): return self.head_correction_constant*self.outflow(time)*self.volume(time)
     
-    def cost(self,*args): return 0
-    def operating_cost(self,*args): return 0
-    def cost_first_stage(self,*args): return 0
-    def cost_second_stage(self,*args): return 0
-    def status(self,*args): return True
-    def cost_startup(self,*args): return 0
-    def cost_shutdown(self,*args): return 0
-    def getstatus(self,*args): return {}
+    def cost(self,*a,**k): return 0
+    def operatingcost(self,*a,**k): return 0
+    def incrementalcost(self,*a,**k): return 0
+    def truecost(self,*a,**k): return 0
+    def cost_first_stage(self,*a,**k): return 0
+    def cost_second_stage(self,*a,**k): return 0
+    def status(self,*a,**k): return True
+    def cost_startup(self,*a,**k): return 0
+    def cost_shutdown(self,*a,**k): return 0
+    def getstatus(self,*a,**k): return {}
     
     def create_variables(self,times):
         self.add_variable('power',   index=times.set,low=self.power_min,high=self.power_max)
@@ -461,14 +471,23 @@ class Hydro_Generator(Generator):
 
     def create_constraints(self,times,generators):
         #initial and final volumes
-        self.add_constraint('volume initial', times[0], self.volume(times[0])==self.volume_initial)
-        self.add_constraint('volume final',   times[-1], self.volume(times[-1])>=self.volume_final)
+        self.add_constraint('volume final', times[-1], self.volume(times[-1])>=self.volume_final)
         
+        other_hydro_generators=filter(lambda gen: gen.is_hydro, generators)
+        def upstream_unit_outflow(h,t):
+            upstream_gen=getclass_inlist(other_hydro_generators,h,'index')
+            outflow_time=times[t].Start-hours(upstream_gen.delay_downstream)
+            if outflow_time<times.Start: 
+                return upstream_gen.outflow_initial+upstream_gen.spill_initial
+            else:
+                outflow_time=times.get_time_by_start(outflow_time)
+                return upstream_gen.outflow_total(outflow_time)
         for t,time in enumerate(times):
             #network balance
-            upstream_inflow=sum(generators[r].outflow_total(times[t-generators[r].delay_downstream]) for r in self.upstream_reservoirs)
+            upstream_inflow=sum(upstream_unit_outflow(r,t) for r in self.upstream_reservoirs)
             natural_inflow=self.inflow_schedule.get_amount(time)
             self.add_constraint('water balance',time, self.volume_change(t,times)==upstream_inflow + natural_inflow - self.outflow_total(time))
+            
             #production
             self.add_constraint('production', time, self.power(time)==self.production(time))
             self.production_curve(time).create_constraints()
@@ -635,7 +654,7 @@ class Bus(OptimizationObject):
             sum(load.cost_second_stage(times) for load in self.loads)            
     def create_constraints(self,times,Bmatrix,buses):
         for gen in self.generators: 
-            if getattr(gen,'is_hydro',False): gen.create_constraints(times,self.generators)
+            if gen.is_hydro: gen.create_constraints(times,self.generators)
             else: gen.create_constraints(times)
         for load in self.loads: load.create_constraints(times)
         nBus=len(buses)
@@ -688,11 +707,13 @@ class PowerSystem(OptimizationProblem):
         for load in loads:
                 try: load.cost_breakpoints=num_breakpoints
                 except AttributeError: pass #load has no cost model   
+        
         for gen in generators:
             gen.dispatch_decommit_allowed=dispatch_decommit_allowed
             try: gen.cost_breakpoints=num_breakpoints
             except AttributeError: pass #gen has no cost model
-            
+        
+        self.has_hydro=any(gen.is_hydro for gen in generators)
     def set_load_shedding(self,is_allowed):
         '''set system mode for load shedding'''
         for load in self.loads():

@@ -1,2 +1,2 @@
-name,type,Pmax,startupcost,cost,minuptime
-thermal,nggt,2500,0,10P,0
+name,type,Pmax,startupcost,cost,minuptime,mustrun
+thermal,nggt,2500,0,10P,0,1

@@ -107,7 +107,9 @@ class Timelist(object):
         self.span = self.End - self.Start
         self.spanhrs = hours(self.span)
         self.setInitial(initialTime)
-        
+    def get_time_by_start(self,time):
+        i=[t.Start for t in self.times].index(time)
+        return self.times[i]
     def __repr__(self): return repr(self.times)
     def __contains__(self, item): return item in self.times
     def __len__(self): return len(self.times)

@@ -386,23 +386,75 @@ class Hydro_Generator(Generator):
                  volume_final=None,
                  outflow_min=0, outflow_max=None,
                  power_min=0, power_max=None,
+                 spill_min=0, spill_max=None,
                  production_curve_string='10Q',
                  production_curve_correction_string='-0.1V',
                  head_correction_string='0',
                  inflow_schedule=None
                  ):        
         update_attributes(self,locals()) #load in inputs
-        
+        self.upstream_reservoirs=[]
+        self.production_curve_model=bidding.makeModel(production_curve_string,)
+    
+    def outflow(self,time=None,scenario=None): return self.get_variable('outflow', time=time, indexed=True, scenario=scenario)
+    def spill(self,time=None,scenario=None):   return self.get_variable('spill',   time=time, indexed=True, scenario=scenario)
+    def volume(self,time=None,scenario=None):  return self.get_variable('volume',  time=time, indexed=True, scenario=scenario)    
+    
+    def outflow_total(self,time=None,scenario=None): return self.outflow(time, scenario)+self.spill(time,scenario)
+
+    def volume_change(self,t,times):    
+        '''change in volume between t and t-1'''
+        if t>0: previous_vol=self.volume(times[t-1])
+        else:   previous_vol=self.volume_initial
+        return self.volume(times[t])-previous_vol
+
+    def production(self,time):
+        '''
+        total power production is the sum of:
+        the production curve (based on outflow),
+        the volume correction (based on volume), 
+        and the head correction (based on outflow and volume)
+        '''
+        return self.production_curve(self.outflow(time)) + self.production_curve_correction(self.volume(time)) + self.head_correction(self.outflow(time),self.volume(time))
+    def production_curve(self,time): return self.get_child('production_curves', time)
+    
     def cost(self,time): return 0
-    def status(self,*args,**kwargs): return True
+    def status(self,time=None,scenario=None): return True
     def cost_startup(self,time): return 0
     def cost_shutdown(self,time): return 0
     def getstatus(self,t,times): return {}
+    
     def create_variables(self,times):
-        #power
-        #flow
-        #volume
-        return
+        self.add_variable('power',   index=times.set,low=self.power_min,high=self.power_max)
+        self.add_variable('outflow', index=times.set,low=self.outflow_min,high=self.outflow_max)
+        self.add_variable('spill',   index=times.set,low=self.spill_min,high=self.spill_max)
+        self.add_variable('volume',  index=times.set,low=self.volume_min,high=self.volume_max)
+        
+        #production curve
+        production_curves=dict(zip(times,[bidding.Bid(
+            model=self.production_curve_model,
+            time=time,
+            input_var=self.outflow(time),
+            status_var=self.status(time),
+            owner_iden=str(self),
+            time_iden=str(time)) for time in times]))
+        self.add_children(production_curves,'production_curves')
+        for time in times: self.production_curve(time).create_variables()
+
+    def create_constraints(self,times,generators):
+        #initial and final volumes
+        self.add_constraint('volume initial', times[0], self.volume(times[0])==self.volume_initial)
+        self.add_constraint('volume final',   times[-1], self.volume(times[-1])>=self.volume_final)
+        
+        for t,time in enumerate(times):
+            #network balance
+            upstream_inflow=sum(generators[r].outflow_total(times[t-generators[r].delay_downstream]) for r in self.upstream_reservoirs)
+            natural_inflow=self.inflow_schedule(time)
+            self.add_constraint('water balance',time, self.volume_change(t,times)==upstream_inflow + natural_inflow - self.outflow_total(time))
+            #production
+            self.add_constraint('production', time, self.power(time)==self.production(time))
+        
+        
     
         
 class Load(OptimizationObject):

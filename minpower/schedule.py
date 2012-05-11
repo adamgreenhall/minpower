@@ -232,7 +232,7 @@ class Schedule(object):
         return Timelist(sorted(self.energy.keys(),key=attrgetter('Start','End')))
     def __repr__(self):
         return repr(sorted([(str(t),p) for t,p in self.energy.items()]))    
-    def get_energy(self,timeperiod):
+    def get_amount(self,timeperiod):
         """
         get the amount of energy in a time period 
         
@@ -241,14 +241,14 @@ class Schedule(object):
         >>> times=Timelist([Time(Start='1:00'),Time(Start='2:00'),Time(Start='3:00')])
         >>> energy=[100,210,100]
         >>> s=Schedule(energy=energy,times=times)
-        >>> s.get_energy(times[0])
+        >>> s.get_amount(times[0])
         100
 
         If the timeperiod spans multiple schedule times, energy should
         be summed over each schedule time which the timeperiod contains:
 
         >>> tLarger=Time(Start='1:00',End='3:00')
-        >>> s.get_energy(tLarger)
+        >>> s.get_amount(tLarger)
         310.0
         """
         try: return self.energy[timeperiod]
@@ -258,10 +258,10 @@ class Schedule(object):
                 #energy of time is sum all energy in times within
                 tstarts=timeperiod.Range(self.interval)
                 period_Times=getclass_inlist(times,tstarts,attribute='Start')
-                return sum([self.get_energy(t) for t in period_Times]) *self.intervalhrs
+                return sum([self.get_amount(t) for t in period_Times]) *self.intervalhrs
             elif timeperiod.interval==self.interval:
                 t=getattrL(times,'Start').index(timeperiod.Start)
-                return self.get_energy(times[t])
+                return self.get_amount(times[t])
             else: raise
     def saveCSV(self,filename='schedule.csv'):
         data=sorted(self.energy.items(),key=lambda t_e: t_e[0].Start)
@@ -271,7 +271,7 @@ class Schedule(object):
 class FixedSchedule(Schedule):
     '''A simple "schedule" which has only one power output''' 
     def __init__(self,times=None,P=None): self.energy=P
-    def get_energy(self,timeperiod=None): return self.energy
+    def get_amount(self,timeperiod=None): return self.energy
     def __repr__(self): return 'FixedSchedule<energy={}>'.format(self.energy)
 def just_one_time():
     """For a single-time problem, generate a Timelist with just one time in it."""

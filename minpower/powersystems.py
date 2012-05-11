@@ -319,7 +319,7 @@ class Generator_nonControllable(Generator):
         self.shutdowncost=0
         self.build_cost_model()
         self.init_optimization()
-    def power(self,time): return self.schedule.get_energy(time)
+    def power(self,time): return self.schedule.get_amount(time)
     def status(self,time=None,scenarios=None): return True
     def set_initial_condition(self,time=None, P=None, u=None, hoursinstatus=None):
         try: 
@@ -420,16 +420,19 @@ class Hydro_Generator(Generator):
         the volume correction (based on volume), 
         and the head correction (based on outflow and volume)
         '''
-        return self.production_curve(time).output() + self.production_curve_correction(time).output() + self.head_correction(time)
+        return self.production_curve(time).output() + self.production_correction(time).output() + self.head_correction(time)
     def production_curve(self,time): return self.get_child('production_curves', time)
     def production_correction(self,time): return self.get_child('production_corrections', time)
     def head_correction(self,time): return self.head_correction_constant*self.outflow(time)*self.volume(time)
     
-    def cost(self,time): return 0
-    def status(self,time=None,scenario=None): return True
-    def cost_startup(self,time): return 0
-    def cost_shutdown(self,time): return 0
-    def getstatus(self,t,times): return {}
+    def cost(self,*args): return 0
+    def operating_cost(self,*args): return 0
+    def cost_first_stage(self,*args): return 0
+    def cost_second_stage(self,*args): return 0
+    def status(self,*args): return True
+    def cost_startup(self,*args): return 0
+    def cost_shutdown(self,*args): return 0
+    def getstatus(self,*args): return {}
     
     def create_variables(self,times):
         self.add_variable('power',   index=times.set,low=self.power_min,high=self.power_max)
@@ -464,7 +467,7 @@ class Hydro_Generator(Generator):
         for t,time in enumerate(times):
             #network balance
             upstream_inflow=sum(generators[r].outflow_total(times[t-generators[r].delay_downstream]) for r in self.upstream_reservoirs)
-            natural_inflow=self.inflow_schedule(time)
+            natural_inflow=self.inflow_schedule.get_amount(time)
             self.add_constraint('water balance',time, self.volume_change(t,times)==upstream_inflow + natural_inflow - self.outflow_total(time))
             #production
             self.add_constraint('production', time, self.power(time)==self.production(time))
@@ -497,8 +500,8 @@ class Load(OptimizationObject):
             if evaluate: power=value(power)
             return power
         else: 
-            return self.schedule.get_energy(time)
-    def shed(self,time,evaluate=False): return self.schedule.get_energy(time) - self.power(time,evaluate)
+            return self.schedule.get_amount(time)
+    def shed(self,time,evaluate=False): return self.schedule.get_amount(time) - self.power(time,evaluate)
     def cost(self,time): return self.cost_shedding*self.shed(time)
     def cost_first_stage(self,times): return 0
     def cost_second_stage(self,times): return sum(self.cost(time) for time in times)
@@ -508,7 +511,7 @@ class Load(OptimizationObject):
     def create_constraints(self,times):
         if self.shedding_allowed:
             for time in times:
-                self.add_constraint('max_load_power',time,self.power(time)<=self.schedule.get_energy(time))
+                self.add_constraint('max_load_power',time,self.power(time)<=self.schedule.get_amount(time))
     def create_objective(self,times):
         return sum([ self.cost(time) for time in times])
 

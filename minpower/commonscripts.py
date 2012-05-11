@@ -218,9 +218,14 @@ def subset(D, subsetL):
     '''subset of dictionary'''
     subsetLcopy=subsetL
     for k,key in enumerate(subsetL): #ensure that subset doesn't contain any keys not in D already
-         if key not in D: subsetLcopy.pop(k)
+        if key not in D: subsetLcopy.pop(k)
     return dict(zip(subsetL, map(D.get, subsetLcopy)))
 def subsetexcept(D,exceptL):
     '''dictionary without exceptions list'''
     for e in exceptL: D.pop(e)
     return D
+def get_leading_number(string):
+    digit=''
+    for s in string:
+        if s.isdigit() or s in ['.','-']: digit+=s
+    return float(digit)

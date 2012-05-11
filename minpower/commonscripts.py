@@ -189,7 +189,7 @@ def getattrL(L,attribute='name'):
     '''get the attribute of each class instance in a list'''
     return [getattr(item,attribute) for item in L]
 def getclass_inlist(L,values,attribute='name'):
-    if isinstance(values,str): values=[values]
+    if isinstance(values,str) or isinstance(values,int): values=[values]
     attrL=getattrL(L,attribute)
     try: indL=[attrL.index(value) for value in values]
     except ValueError:

@@ -88,6 +88,11 @@ class Solution(object):
     def _get_outputs(self):
         self.generators_power =[self.get_values('generators','power',time) for time in self.times]
         self.generators_status=[[s==1 for s in self.get_values('generators','status',time)] for time in self.times]
+        if self.power_system.has_hydro:
+            volumes=[getattr(gen, 'volume',None) for gen in self.generators()]
+            outflows=[getattr(gen, 'outflow',None) for gen in self.generators()]
+            self.generators_volumes=[[(value(v(t)) if v is not None else None) for v in volumes] for t in self.times]
+            self.generators_outflows=[[(value(o(t)) if o is not None else None) for o in outflows] for t in self.times]
 
     def _get_costs(self):
         generators=self.generators()
@@ -139,20 +144,32 @@ class Solution(object):
         out.extend(self.info_cost())
         print '\n'.join(out)
     def info_status(self): return ['solved in {time:0.4f} sec'.format(time=self.solve_time)]
-    def info_price(self,t): return ['price={}'.format(self.lmps[str(t)])]    
+    def info_price(self,t): 
+        prices=self.lmps[str(t)]
+        return ['price={}'.format(prices[0] if len(prices)==1 else prices)]    
     def info_generators(self,t):
         out=['generator info:']
         if len(self.buses())>1: out.append('bus={}'.format(self.get_values('generators','bus')))
-        out.extend(['name={}'.format(self.get_values('generators','name')),
-                    'u={}'.format(self.get_values('generators','status',t)),
-                    'P={}'.format(self.get_values('generators','power',t)),
-                    'IC={}'.format(self.get_values('generators','incrementalcost',t))])
+        out.append('name={}'.format(self.get_values('generators','name')))
+        status=self.get_values('generators','status',t)
+        if not all(status): out.append('u={}'.format(status))
+        out.append('P={}'.format(self.get_values('generators','power',t)))
+        out.append('IC={}'.format(self.get_values('generators','incrementalcost',t)))
+        if self.power_system.has_hdyro:
+            out.append('volume={}'.format(self.generators_volumes[t]))
+            out.append('outflow={}'.format(self.generators_outflow[t]))
         return out
     def info_loads(self,t):
-        return ['load info:',
-                'bus={}'.format(self.get_values('loads','bus')) if len(self.buses())>1 else '',
-                'name={}'.format(self.get_values('loads','name')),
-                'Pd={}'.format(self.get_values('loads','power',t))]
+        if len(self.loads())>1:
+            out=['load info:']        
+            if len(self.buses())>1:
+                out.append('bus={}'.format(self.get_values('loads','bus')))
+            out.append('name={}'.format(self.get_values('loads','name')))
+            out.append('Pd={}'.format(self.get_values('loads','power',t)))
+        else:
+            out=['load={}'.format(self.get_values('loads','power',t)[0])]
+        return out
+                
     def info_buses(self,t):
         buses=self.buses()
         out=['bus info:',
@@ -345,11 +362,17 @@ class Solution_UC(Solution):
         fields.append('prices'); data.append([self.lmps[str(t)][0] for t in times]) 
 
         for g,gen in enumerate(self.generators()): 
-            if gen.is_controllable:
+            if gen.is_controllable and not gen.is_hydro: 
                 fields.append('status: '+str(gen.name))
                 data.append([self.generators_status[t][g] for t,time in enumerate(times)])
             fields.append('power: '+str(gen.name))
             data.append([self.generators_power[t][g] for t,time in enumerate(times)])
+            if gen.is_hydro:
+                fields.append('outflow: '+str(gen.name))
+                data.append([self.generators_outflows[t][g] for t,time in enumerate(times)])
+                fields.append('volume: '+str(gen.name))
+                data.append([self.generators_volumes[t][g] for t,time in enumerate(times)])
+
         for load in self.loads():
             fields.append('load power: '+str(load.name))
             data.append([value(load.power(t)) for t in times])

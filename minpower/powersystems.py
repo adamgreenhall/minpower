@@ -379,7 +379,7 @@ class Hydro_Generator(Generator):
     """
     def __init__(self,
                  name,bus=None,index=None,
-                 downstream_reservior=None,
+                 downstream_reservoir=None,
                  delay_downstream=0,
                  volume_min=0, volume_max=None,
                  volume_initial=0,
@@ -474,7 +474,7 @@ class Hydro_Generator(Generator):
             self.production_curve(time).create_constraints()
             self.production_correction(time).create_constraints()
     
-        
+    def __str__(self): return 'h{ind}'.format(ind=self.index)
 class Load(OptimizationObject):
     """
     Describes a power system load (demand).

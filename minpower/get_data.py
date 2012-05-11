@@ -41,7 +41,7 @@ fields_initial={
 
 fields_hydro={
     'name':'name','bus':'bus',
-    'downstreamreservoir':'downstream_reservior',
+    'downstreamreservoir':'downstream_reservoir',
     'delaydownstream':'delay_downstream',
     'minvolume':'volume_min',
     'maxvolume':'volume_max',
@@ -105,7 +105,7 @@ def parsedir(datadir='.',
     setup_initialcond(init_data,generators,times)
     
     #setup hydro if applicable
-    hydro_generators=setup_hydro(hydro_data,datadir,times,len(generators))
+    hydro_generators=setup_hydro(hydro_data,datadir,times)
     generators.extend(hydro_generators)
     #setup scenario tree (if applicable)
     scenario_tree=setup_scenarios(generators,times)
@@ -252,20 +252,21 @@ def setup_scenarios(generators,times):
         gen.scenario_values.append(dict( (times[t],row[time]) for t,time in enumerate(sorted(row.iterkeys())) ))
     return construct_simple_scenario_tree(probabilities)
 
-def setup_hydro(data,datadir,times,num_conventional_gen):
+def setup_hydro(data,datadir,times):
     if not data: return []
     hydro_generators=[]
     for i,row in enumerate(data):
         inflow_schedule_filename=row.pop('inflow_schedule_filename',None)
-        row['index']=i+num_conventional_gen
-        if row.get('downstream_reservior',None) is not None: 
-            row['downstream_reservior']+=(num_conventional_gen-1)
+        row['index']=i
         if inflow_schedule_filename is not None: row['inflow_schedule']=schedule.make_schedule(joindir(datadir,inflow_schedule_filename),times)
         hydro_generators.append(powersystems.Hydro_Generator(**row))
     
     #label upstream reservoir generator indexes
+    names=[gen.name for gen in hydro_generators]
     for gen in hydro_generators: 
-        d=gen.downstream_reservior
-        if d is not None:
-            hydro_generators[d-num_conventional_gen].upstream_reservoirs.append(gen.index)
+        down_name=gen.downstream_reservoir
+        if down_name is not None:
+            down_gen=hydro_generators[names.index(down_name)]
+            down_gen.upstream_reservoirs.append(gen.index)
+            gen.downstream_reservoir=down_gen.index
     return hydro_generators

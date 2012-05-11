@@ -1,3 +1,2 @@
-name,type,Pmin,Pmax,startupcost,cost,minuptime
-cheap,coal,10,2500,0,10P,2
-expensive,nggt,10,1000,0,40P,0
+name,type,Pmax,startupcost,cost,minuptime
+thermal,nggt,2500,0,10P,0

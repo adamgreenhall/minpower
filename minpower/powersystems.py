@@ -203,7 +203,7 @@ class Generator(OptimizationObject):
     def power(self,time=None): 
         '''real power output at time'''
         return self.get_variable('power',time,indexed=True)
-    def status(self,time): 
+    def status(self,time=None): 
         '''on/off status at time'''
         if self.commitment_problem: return self.get_variable('status',time,indexed=True)
         else: return 1
@@ -247,8 +247,9 @@ class Generator(OptimizationObject):
         else: 
             c=self.get_variable('shutdowncost',time,indexed=True)
             return c if not evaluate else value(c) 
-    def operatingcost(self,time,evaluate=False): 
+    def operatingcost(self,time=None,evaluate=False): 
         '''cost of real power production at time (based on bid model approximation).'''
+<<<<<<< HEAD
         return self.bid(time).output(evaluate)
 >>>>>>> add evaluate option to costs (coopr sums). add storage of generation power and status for UC results
     def truecost(self,time):
@@ -266,14 +267,18 @@ class Generator(OptimizationObject):
 =======
         return value(self.status(time))*self.cost_model.output_true(self.power(time))
 >>>>>>> refactored powersystems. moving on to bidding
+=======
+        c=self.get_variable('cost',time,indexed=True)
+        return value(c) if evaluate else c 
+    def truecost(self,time):
+        '''exact cost of real power production at time (based on exact bid polynomial).'''
+        return value(self.status(time))*self.bids.output_true(self.power(time))
+>>>>>>> use native pyomo.Piecewise to do bidding linearization models
     def incrementalcost(self,time): 
         '''change in cost with change in power at time (based on exact bid polynomial).'''
-        return self.bid(time).output_incremental(self.power(time)) if value(self.status(time)) else None
-    def bid(self,time):
-        ''':class:`~bidding.Bid` object for time'''
-        return self.get_child('bids', time) 
+        return self.bids.output_incremental(self.power(time)) if value(self.status(time)) else None
     def getstatus(self,t,times): return dict(u=value(self.status(t)),P=value(self.power(t)),hoursinstatus=self.gethrsinstatus(t,times))
-    def plot_cost_curve(self,P=None,filename=None): self.cost_model.plot(P,filename)
+#    def plot_cost_curve(self,P=None,filename=None): self.cost_model.plot(P,filename)
     def gethrsinstatus(self,tm,times):
         if not self.is_controllable: return None
         status=value(self.status(tm))
@@ -293,15 +298,12 @@ class Generator(OptimizationObject):
         self.initial_power =P*u #note: this eliminates ambiguity of off status with power non-zero output
         self.initial_status_hours = hoursinstatus
     def build_cost_model(self):
-        ''' create a cost model for bidding with :meth:`~bidding.makeModel` '''
+        '''parse the coefficients for the polynomial bid curve'''
+        self.cost_breakpoints=config.default_num_breakpoints
         if getattr(self,'heatratestring',None) is not None: 
-            costinputs=dict(polyText=self.heatratestring,multiplier=self.fuelcost)
-            self.costcurvestring=None
-        else: 
-            costinputs=dict(polyText=self.costcurvestring)
-            self.fuelcost=1
-        
-        self.cost_model=bidding.makeModel(min_input=self.Pmin, max_input=self.Pmax,input_name='Pg',output_name='C',**costinputs)
+            self.cost_coeffs=[self.fuelcost*mult for mult in bidding.parse_polynomial(self.heatratestring)]
+        else:
+            self.cost_coeffs=bidding.parse_polynomial(self.costcurvestring)
 
     def create_variables(self,times):
         '''
@@ -422,13 +424,14 @@ class Generator(OptimizationObject):
         self.commitment_problem= len(times)>1 or self.dispatch_decommit_allowed
 >>>>>>> clean up variables in bids
         self.add_variable('power', index=times.set, low=0, high=self.Pmax)
-        
+        self.add_variable('cost',  index=times.set, low=0)
         if self.commitment_problem:
             self.add_variable('status', index=times.set, kind='Binary',fixed_value=1 if self.mustrun else None)
             #only use capacity if reserve req. 
             #self.add_variable('capacity',index=times.set, low=0,high=self.Pmax)
             if self.startupcost>0:  self.add_variable('startupcost',index=times.set, low=0,high=self.startupcost)                                                                                                                            
             if self.shutdowncost>0: self.add_variable('shutdowncost',index=times.set, low=0,high=self.shutdowncost)
+<<<<<<< HEAD
         # else: #ED or OPF problem, no commitments
             # self.add_variable('status',       index=times.set,fixed_value=1)
             # self.add_variable('startupcost',  index=times.set,fixed_value=0)
@@ -470,6 +473,21 @@ class Generator(OptimizationObject):
 =======
 =======
 =======
+=======
+        
+        
+        self.bids=bidding.Bid(
+            polynomial=self.cost_coeffs,
+            owner=self,
+            times=times,
+            input_variable=self.power(),
+            min_input=self.Pmin,
+            max_input=self.Pmax,
+            output_variable=self.operatingcost(),
+            status_variable=self.status(),
+            num_breakpoints=self.cost_breakpoints
+            )
+>>>>>>> use native pyomo.Piecewise to do bidding linearization models
         return
 >>>>>>> major overahual on setting up variables/constraints directly to the parent problem. this allows the use of sets, variable lists. still need to cleanup (including dual values).
     def create_objective(self,times):
@@ -525,8 +543,6 @@ class Generator(OptimizationObject):
             min_down_intervals = roundoff(self.mindowntime/times.intervalhrs)
         
         for t,time in enumerate(times):
-            #bid curve constraints
-            self.bid(time).create_constraints()
             #min/max power
             if self.Pmin>0: self.add_constraint('min gen power', time, self.power(time)>=self.status(time)*self.Pmin)
             self.add_constraint('max gen power', time, self.power(time)<=self.status(time)*self.Pmax)
@@ -588,6 +604,7 @@ class Generator_nonControllable(Generator):
         self.shutdowncost=0
         self.build_cost_model()
         self.init_optimization()
+<<<<<<< HEAD
     def power(self,time): return self.schedule.get_energy(time)
     def status(self,time): return True
 <<<<<<< HEAD
@@ -628,6 +645,10 @@ class Generator_nonControllable(Generator):
     def set_initial_condition(self,time=None, P=None, u=None, hoursinstatus=None): pass
 >>>>>>> fix for Generator_nonControllable power argument. fix to warning message about generator defaults in makeGenerator
 =======
+=======
+    def power(self,time=None): return self.schedule.get_energy(time)
+    def status(self,time=None): return True
+>>>>>>> use native pyomo.Piecewise to do bidding linearization models
     def set_initial_condition(self,time=None, P=None, u=None, hoursinstatus=None):
         try: 
             if P is None: P=sorted(self.schedule.energy.items())[0][1] #set initial value to first value
@@ -636,8 +657,18 @@ class Generator_nonControllable(Generator):
 >>>>>>> fix for Generator_nonControllable.set_initial_condition
     def getstatus(self,t,times): return {}
 <<<<<<< HEAD
+<<<<<<< HEAD
     def create_variables(self,times): return {}
 >>>>>>> set all system level parameters as attributes of relevant objects within powersystem init
+=======
+    def create_variables(self,times):
+        self.bids=bidding.Bid(
+            polynomial=self.cost_coeffs,
+            owner=self,
+            times=times,
+            fixed_input=True
+            )
+>>>>>>> use native pyomo.Piecewise to do bidding linearization models
     def create_constraints(self,times): return {}
 <<<<<<< HEAD
 >>>>>>> first working pass through solver (results still needs major rework
@@ -661,10 +692,14 @@ class Generator_nonControllable(Generator):
     def create_constraints(self,times): return
 >>>>>>> clean up stochastic.py for power_system._model system
     def cost(self,time,evaluate=False): return self.operatingcost(time)
+<<<<<<< HEAD
     def operatingcost(self,time,evaluate=False): return self.cost_model.output_true( self.power(time) )
 >>>>>>> add evaluate option to costs (coopr sums). add storage of generation power and status for UC results
+=======
+    def operatingcost(self,time=None,evaluate=False): return self.bids.output_true( self.power(time) )
+>>>>>>> use native pyomo.Piecewise to do bidding linearization models
     def truecost(self,time): return self.cost(time)
-    def incrementalcost(self,time): return self.fuelcost*self.cost_model.output_incremental(self.power(time))
+    def incrementalcost(self,time): return self.bids.output_incremental(self.power(time))
 
 class Generator_Stochastic(Generator_nonControllable):
     """
@@ -1057,15 +1092,11 @@ class PowerSystem(OptimizationProblem):
         #add system mode parameters to relevant components
         self.set_load_shedding(load_shedding_allowed) #set load shedding
         for load in loads:
-                try: 
-                    load.cost_model.num_breakpoints=num_breakpoints
-                    load.cost_model.do_segmentation()
+                try: load.cost_breakpoints=num_breakpoints
                 except AttributeError: pass #load has no cost model   
         for gen in generators:
             gen.dispatch_decommit_allowed=dispatch_decommit_allowed
-            try: 
-                gen.cost_model.num_breakpoints=num_breakpoints
-                gen.cost_model.do_segmentation()
+            try: gen.cost_breakpoints=num_breakpoints
             except AttributeError: pass #gen has no cost model
             
     def set_load_shedding(self,is_allowed):

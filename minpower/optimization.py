@@ -679,21 +679,25 @@ class OptimizationObject(object):
         name=self._t_id(name,time)
         self._parent_problem().add_component_to_problem(new_constraint(name,expression))
         
-    def get_variable(self,name,time=None,indexed=False):
+    def get_variable(self,name,time=None,indexed=False,scenario=None):
         if indexed: 
             var_name=self._id(name)
             if time is None: 
                 return self._parent_problem().get_component(var_name)
             else: 
                 index=str(time)
+<<<<<<< HEAD
                 try: return self._parent_problem().get_component(var_name)[index]
                 except KeyError:
                     self._parent_problem().show_model()
                     raise
+=======
+                return self._parent_problem().get_component(var_name)[index]
+>>>>>>> use native pyomo.Piecewise to do bidding linearization models
         else: 
             var_name=self._t_id(name,time)
             return self._parent_problem().get_component(var_name)
-
+    
     def get_constraint(self,name,time): return self._parent_problem().get_component(self._t_id(name,time))
     
     def add_children(self,objects,name):
@@ -784,6 +788,18 @@ class OptimizationProblem(OptimizationObject):
     def add_objective(self,expression,sense=pyomo.minimize):
         '''add an objective to the problem'''            
         self._model.objective=pyomo.Objective(name='objective',rule=expression,sense=sense)
+<<<<<<< HEAD
+=======
+    def add_component_to_problem(self,component):
+        '''add a optimization component to the model'''
+        self._model._add_component(component.name,component)
+    def add_variable(self,variable):
+        '''add a single variable to the problem'''
+        self._model._add_component(variable.name,variable)
+    def add_constraint(self,constraint):
+        '''add a single constraint to the problem'''
+        self._model._add_component(constraint.name,constraint)
+>>>>>>> use native pyomo.Piecewise to do bidding linearization models
     def add_set(self,name,items):         
         '''add a :class:`pyomo.Set` to the problem'''
         self._model._add_component(name,pyomo.Set(initialize=items,name=name))
@@ -853,6 +869,7 @@ class OptimizationProblem(OptimizationObject):
         
         
         logging.info('Solving with {s} ... {t}'.format(s=solver,t=show_clock()))
+<<<<<<< HEAD
 
         if self.stochastic_formulation:
             instance=self._stochastic_instance
@@ -860,6 +877,10 @@ class OptimizationProblem(OptimizationObject):
             instance=self._model.create()
             logging.debug('... model created ... {t}'.format(t=show_clock()))     
         
+=======
+        instance=self._model.create()
+        logging.debug('... model created ... {t}'.format(t=show_clock()))
+>>>>>>> use native pyomo.Piecewise to do bidding linearization models
         results,elapsed=cooprsolve(instance,suffixes=[])
         
         status_text = str(results.solver[0]['Termination condition'])

@@ -122,8 +122,9 @@ class Generator(OptimizationObject):
         return self.get_variable('power',time,indexed=True)
     def status(self,time=None): 
         '''on/off status at time'''
-        if self.commitment_problem: return self.get_variable('status',time,indexed=True)
-        else: return 1
+        return self.get_variable('status',time,indexed=True) if self.commitment_problem else 1
+    def startup(self,time):  return self.get_variable('startup',time,indexed=True)  if self.commitment_problem else 1
+    def shutdown(self,time): return self.get_variable('shutdown',time,indexed=True) if self.commitment_problem else 1
     def status_change(self,t,times): 
         '''is the unit changing status between t and t-1'''
         if t>0: previous_status=self.status(times[t-1])
@@ -140,14 +141,14 @@ class Generator(OptimizationObject):
     def cost_startup(self,time,evaluate=False): 
         if self.startupcost==0 or not self.commitment_problem: return 0
         else:
-            c=self.get_variable('startupcost',time,indexed=True)
-            return c if not evaluate else value(c) 
+            up=self.startup(time) if not evaluate else value(self.startup(time))
+            return up*self.startupcost 
     def cost_shutdown(self,time,evaluate=False): 
         if self.shutdowncost==0 or not self.commitment_problem: return 0
         else: 
-            c=self.get_variable('shutdowncost',time,indexed=True)
-            return c if not evaluate else value(c) 
-    def operatingcost(self,time=None,evaluate=False): 
+            down=self.shutdown(time) if not evaluate else value(self.shutdown(time))
+            return down*self.shutdowncost 
+    def operatingcost(self,time,evaluate=False): 
         '''cost of real power production at time (based on bid model approximation).'''
         return self.bids.output(time,evaluate)
     def truecost(self,time):
@@ -194,13 +195,13 @@ class Generator(OptimizationObject):
         self.commitment_problem= len(times)>1 or self.dispatch_decommit_allowed
         self.add_variable('power', index=times.set, low=0, high=self.Pmax)
         if self.commitment_problem:
-            self.add_variable('status', index=times.set, kind='Binary',fixed_value=1 if self.mustrun else None)
+            self.add_variable('status',   index=times.set, kind='Binary',fixed_value=1 if self.mustrun else None)
+            self.add_variable('startup',  index=times.set, kind='Binary',fixed_value=0 if self.mustrun else None)
+            self.add_variable('shutdown', index=times.set, kind='Binary',fixed_value=0 if self.mustrun else None)
+            
             #only use capacity if reserve req. 
             #self.add_variable('capacity',index=times.set, low=0,high=self.Pmax)
-            if self.startupcost>0:  self.add_variable('startupcost',index=times.set, low=0,high=self.startupcost)                                                                                                                            
-            if self.shutdowncost>0: self.add_variable('shutdowncost',index=times.set, low=0,high=self.shutdowncost)
-        
-        
+               
         self.bids=bidding.Bid(
             polynomial=self.cost_coeffs,
             owner=self,
@@ -263,18 +264,19 @@ class Generator(OptimizationObject):
             self.add_constraint('max gen power', time, self.power(time)<=self.status(time)*self.Pmax)
             
             if len(times)==1: continue #if ED or OPF problem
-        
+            
             #min up time 
             if t >= min_up_intervals_remaining_init and self.minuptime>0:
                 no_shut_down=range(t,min(tEnd,t+min_up_intervals))
                 min_up_intervals_remaining=min(tEnd-t,min_up_intervals)
-                E = sum([self.status(times[s]) for s in no_shut_down]) >= min_up_intervals_remaining*self.status_change(t,times)
+                #E = sum([self.status(times[s]) for s in no_shut_down]) >= min_up_intervals_remaining*self.status_change(t,times)
+                E = sum([self.status(times[s]) for s in no_shut_down]) >= min_up_intervals_remaining*self.startup(time)
                 self.add_constraint('min up time', time, E)
             #min down time        
             if t >= min_down_intervals_remaining_init and self.mindowntime>0:
                 no_start_up=range(t,min(tEnd,t+min_down_intervals))
                 min_down_intervals_remaining=min(tEnd-t,min_down_intervals)
-                E=sum([1-self.status(times[s]) for s in no_start_up]) >= min_down_intervals_remaining * -1 * self.status_change(t,times)
+                E=sum([1-self.status(times[s]) for s in no_start_up]) >= min_down_intervals_remaining * self.shutdown(time)
                 self.add_constraint('min down time', time, E)
                                         
             #ramping power
@@ -321,6 +323,8 @@ class Generator_nonControllable(Generator):
         self.init_optimization()
     def power(self,time=None): return self.schedule.get_energy(time)
     def status(self,time=None): return True
+    def startup(self,time=None): return False
+    def shutdown(self,time=None): return False    
     def set_initial_condition(self,time=None, P=None, u=None, hoursinstatus=None):
         try: 
             if P is None: P=sorted(self.schedule.energy.items())[0][1] #set initial value to first value

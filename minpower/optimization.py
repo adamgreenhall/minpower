@@ -679,7 +679,7 @@ class OptimizationObject(object):
         name=self._t_id(name,time)
         self._parent_problem().add_component_to_problem(new_constraint(name,expression))
         
-    def get_variable(self,name,time=None,indexed=False,scenario=None):
+    def get_variable(self,name,time=None,indexed=False):
         if indexed: 
             var_name=self._id(name)
             if time is None: 

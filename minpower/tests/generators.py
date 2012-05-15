@@ -156,8 +156,8 @@ def min_down_time():
         dict(P=40, u=True,hoursinstatus=0),
         dict(u=False)]
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[150,10,140,140]))
-    limgen_status=Assert([generators[1].status(t) for t in times])
-    expensive_status_t2 = generators[2].status(times[2])
+    limgen_status=Assert([value(generators[1].status(t)) for t in times])
+    expensive_status_t2 = value(generators[2].status(times[2]))
     assert limgen_status==[1,0,0,1] and expensive_status_t2==1
 
 
@@ -178,7 +178,7 @@ def start_up_cost():
         dict(P= 80, u=True),
         dict(u=False)]
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[80,120]))
-    assert generators[1].cost_startup(times[1])==startupcost
+    assert generators[1].cost_startup(times[1],evaluate=True)==startupcost
 
 @generation.test
 def shut_down_cost():
@@ -197,7 +197,7 @@ def shut_down_cost():
         dict(P= 80, u=True),
         dict(P=20,u=True)]
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[150,10]))
-    assert generators[1].cost_shutdown(times[1])==shutdowncost
+    assert generators[1].cost_shutdown(times[1],evaluate=True)==shutdowncost
 
 @generation.test
 def min_up_time_longer():

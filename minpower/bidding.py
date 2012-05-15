@@ -14,8 +14,8 @@ class Bid(OptimizationObject):
     :param model: model for the bid, either :class:`~bidding.PWLmodel`,
         :class:`~bidding.convexPWLmodel`, or :class:`~bidding.LinearModel`  
     :param times: the times the bids take place over 
-    :param input_variable: input variable for owner at time periods of bid
-    :param status_variable: status of owner at time periods of bid
+    :param input_variable: input variable method for owner
+    :param status_variable: status variable method for owner
     """
     def __init__(self,polynomial,owner,times,
                  input_variable=0,
@@ -34,7 +34,7 @@ class Bid(OptimizationObject):
         def pw_rule(model,time,input_var): return polynomial_value(self.polynomial,input_var)
         self.discrete_input_points=discretize_range(self.num_breakpoints,self.min_input,self.max_input)
         in_pts=dict((t,self.discrete_input_points) for t in self.times.set)
-        pw_representation=Piecewise(self.times.set,self.output(),self.input_variable,
+        pw_representation=Piecewise(self.times.set,self.output(),self.input_variable(),
                                                f_rule=pw_rule,
                                                pw_pts=in_pts,
                                                pw_constr_type='LB')
@@ -46,9 +46,9 @@ class Bid(OptimizationObject):
     def output(self,time=None,evaluate=False):
         if self.is_linear: 
             if evaluate: 
-                out = value(self.status_variable[str(time)])*self.polynomial[0]+self.polynomial[1]*value(self.input_variable[str(time)])
+                out = value(self.status_variable(time))*self.polynomial[0]+self.polynomial[1]*value(self.input_variable(time))
             else:
-                out = self.status_variable[str(time)]*self.polynomial[0]+self.polynomial[1]*self.input_variable[str(time)]
+                out = self.status_variable(time)*self.polynomial[0]+self.polynomial[1]*self.input_variable(time)
         else: out=self.get_variable('cost',time=time,indexed=True)
         return out if not evaluate else value(out)                        
     def output_true(self,input_var): 

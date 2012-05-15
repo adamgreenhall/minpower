@@ -203,10 +203,10 @@ class Generator(OptimizationObject):
             polynomial=self.cost_coeffs,
             owner=self,
             times=times,
-            input_variable=self.power(),
+            input_variable=self.power,
             min_input=self.Pmin,
             max_input=self.Pmax,
-            status_variable=self.status(),
+            status_variable=self.status,
             num_breakpoints=self.cost_breakpoints
             )
         return

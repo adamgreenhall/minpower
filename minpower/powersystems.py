@@ -149,8 +149,7 @@ class Generator(OptimizationObject):
             return c if not evaluate else value(c) 
     def operatingcost(self,time=None,evaluate=False): 
         '''cost of real power production at time (based on bid model approximation).'''
-        c=self.get_variable('cost',time,indexed=True)
-        return value(c) if evaluate else c 
+        return self.bids.output(time,evaluate)
     def truecost(self,time):
         '''exact cost of real power production at time (based on exact bid polynomial).'''
         return value(self.status(time))*self.bids.output_true(self.power(time))
@@ -192,7 +191,6 @@ class Generator(OptimizationObject):
         '''
         self.commitment_problem= len(times)>1 or self.dispatch_decommit_allowed
         self.add_variable('power', index=times.set, low=0, high=self.Pmax)
-        self.add_variable('cost',  index=times.set, low=0)
         if self.commitment_problem:
             self.add_variable('status', index=times.set, kind='Binary',fixed_value=1 if self.mustrun else None)
             #only use capacity if reserve req. 
@@ -208,7 +206,6 @@ class Generator(OptimizationObject):
             input_variable=self.power(),
             min_input=self.Pmin,
             max_input=self.Pmax,
-            output_variable=self.operatingcost(),
             status_variable=self.status(),
             num_breakpoints=self.cost_breakpoints
             )

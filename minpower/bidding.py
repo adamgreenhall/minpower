@@ -21,25 +21,20 @@ class Bid(OptimizationObject):
                  input_variable=0,
                  min_input=0,
                  max_input=1000,
-                 output_variable=None,
                  num_breakpoints=default_num_breakpoints,
                  status_variable=True,
                  fixed_input=False):
         update_attributes(self,locals(),exclude=['owner'])
         self._parent_problem=owner._parent_problem
         self.owner_id=str(owner)
-        if not fixed_input: self.build_model(owner)
-    def build_model(self,owner):
-        if is_linear(self.polynomial):
-            print self.output_variable
-            for time in self.times: 
-                self.add_constraint('cost linear', time, self.output_variable[str(time)]==polynomial_value(self.polynomial,self.input_variable[str(time)]))
-            return 
-        
+        self.is_linear=is_linear(self.polynomial)
+        if not (fixed_input or self.is_linear): self.build_model()
+    def build_model(self): 
+        self.add_variable('cost',index=self.times.set,low=0)
         def pw_rule(model,time,input_var): return polynomial_value(self.polynomial,input_var)
         self.discrete_input_points=discretize_range(self.num_breakpoints,self.min_input,self.max_input)
         in_pts=dict((t,self.discrete_input_points) for t in self.times.set)
-        pw_representation=Piecewise(self.times.set,self.output_variable,self.input_variable,
+        pw_representation=Piecewise(self.times.set,self.output(),self.input_variable,
                                                f_rule=pw_rule,
                                                pw_pts=in_pts,
                                                pw_constr_type='LB')
@@ -47,11 +42,15 @@ class Bid(OptimizationObject):
         if is_linear(self.polynomial): 
             pw_representation.function_character='convex'
             pw_representation._force_pw=False
-        owner._parent_problem().add_component_to_problem(pw_representation)
-        print self.polynomial,is_linear(self.polynomial)
-        print str(self),pw_representation.PW_REP
-        print pw_representation.function_character
-                                                       
+        self._parent_problem().add_component_to_problem(pw_representation)
+    def output(self,time=None,evaluate=False):
+        if self.is_linear: 
+            if evaluate: 
+                out = value(self.status_variable[str(time)])*self.polynomial[0]+self.polynomial[1]*value(self.input_variable[str(time)])
+            else:
+                out = self.status_variable[str(time)]*self.polynomial[0]+self.polynomial[1]*self.input_variable[str(time)]
+        else: out=self.get_variable('cost',time=time,indexed=True)
+        return out if not evaluate else value(out)                        
     def output_true(self,input_var): 
         '''true output value of bid'''
         return polynomial_value(self.polynomial,value(input_var))

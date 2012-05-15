@@ -26,9 +26,16 @@ class Bid(OptimizationObject):
                  status_variable=True,
                  fixed_input=False):
         update_attributes(self,locals(),exclude=['owner'])
+        self._parent_problem=owner._parent_problem
         self.owner_id=str(owner)
         if not fixed_input: self.build_model(owner)
     def build_model(self,owner):
+        if is_linear(self.polynomial):
+            print self.output_variable
+            for time in self.times: 
+                self.add_constraint('cost linear', time, self.output_variable[str(time)]==polynomial_value(self.polynomial,self.input_variable[str(time)]))
+            return 
+        
         def pw_rule(model,time,input_var): return polynomial_value(self.polynomial,input_var)
         self.discrete_input_points=discretize_range(self.num_breakpoints,self.min_input,self.max_input)
         in_pts=dict((t,self.discrete_input_points) for t in self.times.set)
@@ -37,15 +44,26 @@ class Bid(OptimizationObject):
                                                pw_pts=in_pts,
                                                pw_constr_type='LB')
         pw_representation.name=self.iden()
+        if is_linear(self.polynomial): 
+            pw_representation.function_character='convex'
+            pw_representation._force_pw=False
         owner._parent_problem().add_component_to_problem(pw_representation)
-                                               
+        print self.polynomial,is_linear(self.polynomial)
+        print str(self),pw_representation.PW_REP
+        print pw_representation.function_character
+                                                       
     def output_true(self,input_var): 
         '''true output value of bid'''
         return polynomial_value(self.polynomial,value(input_var))
     def output_incremental(self,input_var):
         return polynomial_incremental_value(self.polynomial,value(input_var))
     def __str__(self): return 'bid_{}'.format(self.owner_id)
-    def iden(self): return 'bid_{}'.format(self.owner_id)
+    def iden(self,*a,**k): return 'bid_{}'.format(self.owner_id)
+
+def is_linear(multipliers):
+    if len(multipliers)<2: return True
+    elif all(m==0 for m in multipliers[2:]): return True
+    else: return False
 
 def discretize_range(num_breakpoints,minimum,maximum):
     step = (maximum-minimum)/float(num_breakpoints)
@@ -53,7 +71,11 @@ def discretize_range(num_breakpoints,minimum,maximum):
 
 def polynomial_value(multipliers,variable):
     """get the value of a polynomial"""
-    return sum([mult*variable**order for order,mult in enumerate(multipliers)])
+    def term(mult,var,order):
+        if order>1: return mult*variable**order
+        elif order==1: return mult*variable
+        elif order==0: return mult
+    return sum([term(mult,variable,order) for order,mult in enumerate(multipliers)])
 
 def polynomial_incremental_value(multipliers,variable):
     """get the incremental value of a polynomial"""

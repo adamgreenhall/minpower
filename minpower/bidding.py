@@ -39,9 +39,6 @@ class Bid(OptimizationObject):
                                                pw_pts=in_pts,
                                                pw_constr_type='LB')
         pw_representation.name=self.iden()
-        if is_linear(self.polynomial): 
-            pw_representation.function_character='convex'
-            pw_representation._force_pw=False
         self._parent_problem().add_component_to_problem(pw_representation)
     def output(self,time=None,evaluate=False):
         if self.is_linear: 
@@ -128,7 +125,7 @@ def parse_polynomial(s):
         n,p = parse_n(n),parse_p(p,powerPattern)
         if order_multipliers.has_key(p): order_multipliers[p] += n
         else: order_multipliers[p] = n
-    highest_order = max(order_multipliers.keys())
+    highest_order = max(max(order_multipliers.keys()),1) #order must be at least linear
     multipliers = [0]*(highest_order+1)
     for key,value in order_multipliers.items(): multipliers[key] = value
     

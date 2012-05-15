@@ -125,11 +125,11 @@ class Generator(OptimizationObject):
         return self.get_variable('status',time,indexed=True) if self.commitment_problem else 1
     def startup(self,time):  return self.get_variable('startup',time,indexed=True)  if self.commitment_problem else 1
     def shutdown(self,time): return self.get_variable('shutdown',time,indexed=True) if self.commitment_problem else 1
-    def status_change(self,t,times): 
-        '''is the unit changing status between t and t-1'''
-        if t>0: previous_status=self.status(times[t-1])
-        else:   previous_status=self.initial_status
-        return self.status(times[t]) - previous_status
+#    def status_change(self,t,times): 
+#        '''is the unit changing status between t and t-1'''
+#        if t>0: previous_status=self.status(times[t-1])
+#        else:   previous_status=self.initial_status
+#        return self.status(times[t]) - previous_status
     def power_change(self,t,times):
         '''change in output between power between t and t-1'''
         if t>0: previous_power=self.power(times[t-1])
@@ -263,6 +263,10 @@ class Generator(OptimizationObject):
             min_up_intervals =  roundoff(self.minuptime/times.intervalhrs)
             min_down_intervals = roundoff(self.mindowntime/times.intervalhrs)
         
+        last_time=len(times)-1
+        print [str(t) for t in times]
+        print 'min up',min_up_intervals
+        print 'min down',min_down_intervals
         for t,time in enumerate(times):
             #bid curve constraints
             self.bid(time).create_constraints()
@@ -272,32 +276,40 @@ class Generator(OptimizationObject):
             
             if len(times)==1: continue #if ED or OPF problem
             
-            #min up time 
-            if t >= min_up_intervals_remaining_init and self.minuptime>0:
+            #min up time
+            if t >= min_up_intervals_remaining_init and self.minuptime>0 and t<=last_time-min_up_intervals:
                 no_shut_down=range(t,min(tEnd,t+min_up_intervals))
-                min_up_intervals_remaining=min(tEnd-t,min_up_intervals)
+                #min_up_intervals_remaining=min(tEnd-t,min_up_intervals)
                 #E = sum([self.status(times[s]) for s in no_shut_down]) >= min_up_intervals_remaining*self.status_change(t,times)
-                E = sum([self.status(times[s]) for s in no_shut_down]) >= min_up_intervals_remaining*self.startup(time)
+                E = sum(self.status(times[s]) for s in no_shut_down) >= min_up_intervals*self.startup(time)
                 self.add_constraint('min up time', time, E)
+                print str(self),str(times[t]),'min up time'
+            elif t>=min_up_intervals_remaining_init and self.minuptime>0:
+                #end of commitment horizon
+                no_shut_down=range(t,last_time)
+                E=sum([(self.status(times[s])-self.startup(times[s])) for s in no_shut_down])>=0
+                if E: pass
+                else: self.add_constraint('min up time eoh', time, E)
+                print str(self),str(times[t]),'min up time eoh'
             #min down time        
-            if t >= min_down_intervals_remaining_init and self.mindowntime>0:
+            if t >= min_down_intervals_remaining_init and self.mindowntime>0 and t<=last_time-min_down_intervals+1:
                 no_start_up=range(t,min(tEnd,t+min_down_intervals))
-                min_down_intervals_remaining=min(tEnd-t,min_down_intervals)
-                E=sum([1-self.status(times[s]) for s in no_start_up]) >= min_down_intervals_remaining * self.shutdown(time)
+                #min_down_intervals_remaining=min(tEnd-t,min_down_intervals)
+                E=sum(1-self.status(times[s]) for s in no_start_up) >= min_down_intervals * self.shutdown(time)
                 self.add_constraint('min down time', time, E)
-                                        
+                print str(self),str(times[t]),'min down time'
+            elif t >= min_down_intervals_remaining_init and self.mindowntime>0:
+                #end of commitment horizon
+                no_start_up=range(t,last_time)
+                #print str(times[t]),[str(times[s]) for s in no_start_up]
+                E=sum([(1-self.status(times[s])-self.shutdown(times[s])) for s in no_start_up])>=0
+                self.add_constraint('min down time eoh', time, E)
+                print str(self),str(times[t]),'min down time eoh'
             #ramping power
             if self.rampratemax is not None:
                 self.add_constraint('ramp lim high', time, self.power_change(t,times) <= self.rampratemax)
             if self.rampratemin is not None:
-                self.add_constraint('ramp lim low', time,  self.rampratemin <= self.power_change(t,times) )
-
-            #start up and shut down costs
-            if self.startupcost>0:
-                self.add_constraint('startup cost', time, self.cost_startup(time)>=self.startupcost*self.status_change(t, times))
-            if self.shutdowncost>0:
-                self.add_constraint('shutdown cost', time, self.cost_shutdown(time)>=self.shutdowncost*-1*self.status_change(t, times))
-                
+                self.add_constraint('ramp lim low', time,  self.rampratemin <= self.power_change(t,times) )                
         
         return
         

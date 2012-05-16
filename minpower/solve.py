@@ -13,6 +13,9 @@ import config, get_data, powersystems, stochastic, results
 from commonscripts import joindir,show_clock
 
 
+#import objgraph,inspect,gc
+#objgraph.show_growth()
+
 def solve_problem(datadir='.',
         shell=True,
         problemfile=False,
@@ -223,7 +226,6 @@ def create_solve_problem(power_system,times,datadir,solver,
     #     power_system.scenario_instances=scenario_instances
 
     solution=results.make_solution(power_system,times,datadir=datadir)
-    
         
     return solution
 def create_problem(power_system,times):
@@ -480,7 +482,12 @@ def solve_multistage(power_system,times,datadir,
         get_finalconditions(power_system,t_stage)
         stage_solutions.append(stage_solution)
         
-        if stg<len(stage_times)-1: power_system.reset_model()
+        if stg<len(stage_times)-1: 
+            power_system.reset_model()
+            #gc.collect()
+            #objgraph.show_growth()
+            #print objgraph.by_type('set')
+            #objgraph.show_chain(objgraph.find_backref_chain( objgraph.by_type('_VarElement')[5] , inspect.ismodule),filename='chain.png')
     return stage_solutions,stage_times
 
   
@@ -547,7 +554,7 @@ def main():
         print 'run profile'
         import cProfile
         prof = cProfile.Profile()
-        prof.runcall(solve.problem, directory, **inputs)
+        prof.runcall(solve_problem, directory, **inputs)
         prof.dump_stats('minpower.profile')
 
     else:

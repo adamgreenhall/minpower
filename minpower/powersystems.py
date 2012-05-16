@@ -878,6 +878,7 @@ class Bus(OptimizationObject):
         
     def constraints(self,times,Bmatrix,buses): return self.create_constraints(times,Bmatrix,buses)
     
+<<<<<<< HEAD
     def create_constraints(self,times,Bmatrix,buses):
         '''create the constraints for a bus over all times'''
         def powerBalance(self,t,Bmatrix,allBuses):
@@ -890,6 +891,9 @@ class Bus(OptimizationObject):
 =======
     def angle(self,time): return self.get_variable('angle',time,indexed=True)
 >>>>>>> switch bus angle to indexed variable
+=======
+    def angle(self,time): return self.get_variable('angle',time,indexed=True)
+>>>>>>> memory debug. convert angle to indexed variable
     def price(self,time): return dual(self.get_constraint('power balance',time))
     def Pgen(self,t,evaluate=False):
         if evaluate: return sum(value(gen.power(t)) for gen in self.generators)

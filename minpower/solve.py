@@ -12,12 +12,9 @@ import get_data
 import powersystems
 import results
 import config
+import commonscripts
 from commonscripts import joindir,show_clock
 import time as timer
-
-import objgraph,inspect
-#import gc
-objgraph.show_growth()
 
 def solve_problem(datadir='.',
         shell=True,
@@ -188,16 +185,11 @@ def solve_multistage(power_system,times,datadir,
         
         if stg<len(stage_times)-1: 
             power_system.reset_model()
-            #gc.collect()
-            objgraph.show_growth()
-            #print objgraph.by_type('set')
-            if stg==1: 
-                cell=objgraph.by_type('cell')[0]
-                objgraph.show_chain(objgraph.find_backref_chain( objgraph.by_type('cell')[4] , inspect.ismodule),filename='chain-cell.png')
-                objgraph.show_chain(objgraph.find_backref_chain( objgraph.by_type('_SumExpression')[0] , inspect.ismodule),filename='chain-sum-expression.png')
-                objgraph.show_chain(objgraph.find_backref_chain( objgraph.by_type('_ConstraintData')[0] , inspect.ismodule),filename='chain-constraint-data.png')
-                objgraph.show_chain(objgraph.find_backref_chain( objgraph.by_type('_VarArray')[0] , inspect.ismodule),filename='chain-var-array.png')
-                objgraph.show_backrefs(objgraph.by_type('_VarArray'),filename='backrefs-_VarArray.png')
+            #commonscripts.show_memory_growth()
+#            if stg==1: 
+#                commonscripts.show_memory_refs('_VarArray')
+#                commonscripts.show_memory_backrefs('_VarArray')
+#                commonscripts.show_memory_backrefs('Piecewise')
     return stage_solutions,stage_times
 
   

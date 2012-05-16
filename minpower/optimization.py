@@ -229,7 +229,12 @@ class OptimizationProblem(OptimizationObject):
             raise 
 
     def write_model(self,filename): self._model.write(filename)
-    def reset_model(self): 
+    def reset_model(self):
+        for pw in self._model.active_components(pyomo.Piecewise).values():
+            pw._constraints_dict=None
+            pw._vars_dict=None
+            pw._sets_dict=None
+        
         self._model=None
         self.solved=False
         self._model=pyomo.ConcreteModel() 

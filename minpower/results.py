@@ -211,12 +211,13 @@ class Solution_ED(Solution):
         ax=plot.axes()
         for gen in generators:
             if gen.status(t):
-                plotted_gens.append( gen.cost_model.plot_derivative(P=value(gen.power(t)),linestyle='-') )
+                in_range,out_range=gen.bids.output_incremental_range()
+                line,=plot.plot(in_range,out_range,linestyle='-')
+                plotted_gens.append(line)
+                P=value(gen.power(t))
+                IC=gen.incrementalcost(t)
+                plot.plot(P,IC,'.',c=line.get_color(), markersize=8, linewidth=2, alpha=0.7)
                 names_gens.append(gen.name)
-        for load in loads: 
-            if load.kind=='bidding': 
-                plotted_loads.append( load.bid(t).plot_derivative(P=value(load.power(t)),linestyle=':') )
-                names_loads.append(load.name)
         if price is not None: 
             grayColor='.75'
             plot.plot([minGen,maxGen],[price,price],'--k',color=grayColor)

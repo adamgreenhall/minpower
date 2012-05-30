@@ -4,7 +4,7 @@ Many of them are one liners.
 """
 
 import os
-import csv, zipfile
+import csv
 import itertools,operator
 import datetime
 from dateutil import parser
@@ -218,9 +218,24 @@ def subset(D, subsetL):
     '''subset of dictionary'''
     subsetLcopy=subsetL
     for k,key in enumerate(subsetL): #ensure that subset doesn't contain any keys not in D already
-         if key not in D: subsetLcopy.pop(k)
+        if key not in D: subsetLcopy.pop(k)
     return dict(zip(subsetL, map(D.get, subsetLcopy)))
 def subsetexcept(D,exceptL):
     '''dictionary without exceptions list'''
     for e in exceptL: D.pop(e)
     return D
+
+
+def show_memory_backrefs(name):
+    import objgraph
+    objgraph.show_backrefs(objgraph.by_type(name),filename='backrefs-{}.png'.format(name))
+def show_memory_refs(name):
+    import objgraph,inspect
+    try: obj=objgraph.by_type(name)[0]
+    except IndexError:
+        print 'no object of type',name  
+        return
+    objgraph.show_chain(objgraph.find_backref_chain( obj , inspect.ismodule),filename='chain-{}.png'.format(name))
+def show_memory_growth():
+    import objgraph
+    objgraph.show_growth()

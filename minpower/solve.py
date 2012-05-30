@@ -105,7 +105,6 @@ def create_solve_problem(power_system,times,datadir,solver,
     #     power_system.scenario_instances=scenario_instances
 
     solution=results.make_solution(power_system,times,datadir=datadir)
-    
         
     return solution
 def create_problem(power_system,times):
@@ -202,7 +201,13 @@ def solve_multistage(power_system,times,datadir,
         get_finalconditions(power_system,t_stage)
         stage_solutions.append(stage_solution)
         
-        if stg<len(stage_times)-1: power_system.reset_model()
+        if stg<len(stage_times)-1: 
+            power_system.reset_model()
+            #commonscripts.show_memory_growth()
+#            if stg==1: 
+#                commonscripts.show_memory_refs('_VarArray')
+#                commonscripts.show_memory_backrefs('_VarArray')
+#                commonscripts.show_memory_backrefs('Piecewise')
     return stage_solutions,stage_times
 
   
@@ -269,7 +274,7 @@ def main():
         print 'run profile'
         import cProfile
         prof = cProfile.Profile()
-        prof.runcall(solve.problem, directory, **inputs)
+        prof.runcall(solve_problem, directory, **inputs)
         prof.dump_stats('minpower.profile')
 
     else:

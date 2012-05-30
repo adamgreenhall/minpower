@@ -4,6 +4,7 @@ results.txt
 *.png
 *.gif
 *.jpg
+*.profile
 .*
 MANIFEST
 doc/publish.py

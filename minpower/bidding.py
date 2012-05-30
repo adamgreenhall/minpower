@@ -1,4 +1,4 @@
-from commonscripts import update_attributes
+from commonscripts import update_attributes,frange
 from optimization import value,OptimizationObject
 from config import default_num_breakpoints
 import re,weakref
@@ -176,6 +176,10 @@ class Bid(OptimizationObject):
         return polynomial_value(self.polynomial,value(input_var))
     def output_incremental(self,input_var):
         return polynomial_incremental_value(self.polynomial,value(input_var))
+    def output_incremental_range(self):
+        input_range=[x for x in frange(self.min_input,self.max_input+1)]
+        output_range=[polynomial_incremental_value(self.polynomial,x) for x in input_range]
+        return input_range,output_range
     def __str__(self): return 'bid_{}'.format(self.owner_id)
 <<<<<<< HEAD
     def iden(self): return 'bid_{}'.format(self.owner_id)

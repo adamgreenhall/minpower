@@ -130,8 +130,10 @@ def min_up_time():
     initial = [
         dict(P= 80, u=True),
         dict(u=False)]
-    _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[85,120,80,80]))
-    limgen_status=[generators[1].status(t) for t in times]
+    power_system,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[85,120,80,80]))
+    limgen_status=[value(generators[1].status(t)) for t in times]
+    power_system.write_model('min_up_time.lp')
+    print limgen_status
     assert limgen_status == [0,1,1,0] or limgen_status == [1,1,0,0]
 
 

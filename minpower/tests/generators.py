@@ -155,7 +155,7 @@ def min_down_time():
         dict(P= 100, u=True),
         dict(P=40, u=True,hoursinstatus=0),
         dict(u=False)]
-    _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[150,10,140,140]))
+    power_system,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[180,10,140,140]))
     limgen_status=Assert([value(generators[1].status(t)) for t in times])
     expensive_status_t2 = value(generators[2].status(times[2]))
     assert limgen_status==[1,0,0,1] and expensive_status_t2==1

@@ -125,11 +125,10 @@ class Generator(OptimizationObject):
         return self.get_variable('status',time,indexed=True) if self.commitment_problem else 1
     def startup(self,time):  return self.get_variable('startup',time,indexed=True)  if self.commitment_problem else 1
     def shutdown(self,time): return self.get_variable('shutdown',time,indexed=True) if self.commitment_problem else 1
-#    def status_change(self,t,times): 
-#        '''is the unit changing status between t and t-1'''
-#        if t>0: previous_status=self.status(times[t-1])
-#        else:   previous_status=self.initial_status
-#        return self.status(times[t]) - previous_status
+    def status_change(self,t,times): 
+       '''is the unit changing status between t and t-1'''
+       previous_status=(self.status(times[t-1]) if t>0 else self.initial_status)
+       return self.status(times[t]) - previous_status
     def power_change(self,t,times):
         '''change in output between power between t and t-1'''
         if t>0: previous_power=self.power(times[t-1])
@@ -232,21 +231,25 @@ class Generator(OptimizationObject):
             #calculate up down intervals
             min_up_intervals   = roundoff(self.minuptime/times.intervalhrs)
             min_down_intervals = roundoff(self.mindowntime/times.intervalhrs)
-            min_up_intervals_init   = min([min_up_intervals,  T])
-            min_down_intervals_init = min([min_down_intervals,T])        
+
+            if self.initial_status:
+                min_up_intervals_init= min_up_intervals - roundoff(self.initial_status_hours/times.intervalhrs)
+                min_down_intervals_init=0
+            else:
+                min_up_intervals_init= 0
+                min_down_intervals_init= min_down_intervals-roundoff(self.initial_status_hours/times.intervalhrs)
+
+            min_up_intervals_init  =max([0,min([min_up_intervals_init,  T])])
+            min_down_intervals_init=max([0,min([min_down_intervals_init,T])])            
             
             if min_up_intervals_init:
                 self.add_constraint('up time',   times.initialTime, sum(self.status(t) for t in times[:min_up_intervals_init])  ==min_up_intervals_init)
+            
             if min_down_intervals_init:
                 self.add_constraint('down time', times.initialTime, sum(self.status(t) for t in times[:min_down_intervals_init])==0 )
-            
-            
         
         
         last_time=len(times)-1
-        print [str(t) for t in times]
-        print 'min up',min_up_intervals
-        print 'min down',min_down_intervals
         for t,time in enumerate(times):
             #min/max power
             if self.Pmin>0: 
@@ -254,6 +257,8 @@ class Generator(OptimizationObject):
             self.add_constraint('max gen power', time, self.power(time)<=self.status(time)*self.Pmax)
 
             if commitment_problem:
+                #startup shutdown 
+                self.add_constraint('status_change',time, self.status_change(t,times)==self.startup(time)-self.shutdown(time))
                 #min up time
                 if t >= min_up_intervals_init and self.minuptime>0:
                     if t<=last_time-min_up_intervals:

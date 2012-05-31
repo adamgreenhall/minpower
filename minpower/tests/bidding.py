@@ -24,7 +24,7 @@ def linear():
     Pd=221
     generators=[ Generator(costcurvestring='{}+{}P'.format(a,b)) ]
     _,times=solve_problem(generators,**make_loads_times(Pd))
-    cost = Assert(generators[0].bid(times[0]).output())
+    cost = Assert(generators[0].bids.output(times[0]))
     assert cost == a+b*Pd
 
 @bidding.test
@@ -40,7 +40,7 @@ def cubic_convex():
     d=.1
     generators=[ Generator(costcurvestring='{}+{}P+{}P^2+{}P^3'.format(a,b,c,d)) ]
     _,times=solve_problem(generators,**make_loads_times(Pd))#,problem_filename='bidproblem.lp')
-    cost = Assert(value(generators[0].bid(times[0]).output()))
+    cost = Assert(value(generators[0].bids.output(times[0])))
     actual_cost = a+ b*Pd+ c*Pd**2 + d*Pd**3
     assert actual_cost <= cost and cost <= 1.05*actual_cost
 
@@ -58,7 +58,7 @@ def cubic_non_convex():
     generators=[ Generator(costcurvestring='{}+{}P+{}P^2 - {}P^3'.format(a,b,c,d)) ]
     power_system,times=solve_problem(generators,**make_loads_times(Pd))
 
-    cost = Assert(generators[0].bid(times[0]).output(evaluate=True))
+    cost = Assert(generators[0].bids.output(times[0],evaluate=True))
     actual_cost = a+ b*Pd+ c*Pd**2 + -1*d*Pd**3
     assert actual_cost <= cost <= 1.05*actual_cost
 

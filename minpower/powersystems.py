@@ -120,7 +120,7 @@ class Generator(OptimizationObject):
     def power(self,time=None): 
         '''real power output at time'''
         return self.get_variable('power',time,indexed=True)
-    def status(self,time): 
+    def status(self,time=None): 
         '''on/off status at time'''
         return self.get_variable('status',time,indexed=True) if self.commitment_problem else 1
     def startup(self,time):  return self.get_variable('startup',time,indexed=True)  if self.commitment_problem else 1
@@ -150,18 +150,17 @@ class Generator(OptimizationObject):
             return down*self.shutdowncost 
     def operatingcost(self,time,evaluate=False): 
         '''cost of real power production at time (based on bid model approximation).'''
-        return self.bid(time).output(evaluate)
+        return self.bids.output(time,evaluate)
     def truecost(self,time):
         '''exact cost of real power production at time (based on exact bid polynomial).'''
-        return value(self.status(time))*self.cost_model.output_true(self.power(time))
+        return value(self.status(time))*self.bids.output_true(self.power(time))
     def incrementalcost(self,time): 
         '''change in cost with change in power at time (based on exact bid polynomial).'''
-        return self.bid(time).output_incremental(self.power(time)) if value(self.status(time)) else None
-    def bid(self,time):
-        ''':class:`~bidding.Bid` object for time'''
-        return self.get_child('bids', time) 
+        return self.bids.output_incremental(self.power(time)) if value(self.status(time)) else None
+    def cost_first_stage(self,times):  return sum(self.cost_startup(time)+self.cost_shutdown(time) for time in times)
+    def cost_second_stage(self,times): return sum(self.operatingcost(time) for time in times)
     def getstatus(self,t,times): return dict(u=value(self.status(t)),P=value(self.power(t)),hoursinstatus=self.gethrsinstatus(t,times))
-    def plot_cost_curve(self,P=None,filename=None): self.cost_model.plot(P,filename)
+#    def plot_cost_curve(self,P=None,filename=None): self.cost_model.plot(P,filename)
     def gethrsinstatus(self,tm,times):
         if not self.is_controllable: return None
         status=value(self.status(tm))
@@ -181,15 +180,12 @@ class Generator(OptimizationObject):
         self.initial_power =P*u #note: this eliminates ambiguity of off status with power non-zero output
         self.initial_status_hours = hoursinstatus
     def build_cost_model(self):
-        ''' create a cost model for bidding with :meth:`~bidding.makeModel` '''
+        '''parse the coefficients for the polynomial bid curve'''
+        self.cost_breakpoints=config.default_num_breakpoints
         if getattr(self,'heatratestring',None) is not None: 
-            costinputs=dict(polyText=self.heatratestring,multiplier=self.fuelcost)
-            self.costcurvestring=None
-        else: 
-            costinputs=dict(polyText=self.costcurvestring)
-            self.fuelcost=1
-        
-        self.cost_model=bidding.makeModel(min_input=self.Pmin, max_input=self.Pmax,input_name='Pg',output_name='C',**costinputs)
+            self.cost_coeffs=[self.fuelcost*mult for mult in bidding.parse_polynomial(self.heatratestring)]
+        else:
+            self.cost_coeffs=bidding.parse_polynomial(self.costcurvestring)
 
     def create_variables(self,times):
         '''
@@ -198,7 +194,6 @@ class Generator(OptimizationObject):
         '''
         self.commitment_problem= len(times)>1 or self.dispatch_decommit_allowed
         self.add_variable('power', index=times.set, low=0, high=self.Pmax)
-        
         if self.commitment_problem:
             self.add_variable('status',   index=times.set, kind='Binary',fixed_value=1 if self.mustrun else None)
             self.add_variable('startup',  index=times.set, kind='Binary',fixed_value=0 if self.mustrun else None)
@@ -206,17 +201,17 @@ class Generator(OptimizationObject):
             
             #only use capacity if reserve req. 
             #self.add_variable('capacity',index=times.set, low=0,high=self.Pmax)
-
-        bids=dict(zip(times,[bidding.Bid(
-                    model=self.cost_model,
-                    time=time,
-                    input_var=self.power(time),
-                    status_var=self.status(time),
-                    owner_iden=str(self),
-                    time_iden=str(time)) for time in times]))
-        self.add_children(bids,'bids')
-        for time in times: self.bid(time).create_variables()
-        #logging.debug('created {} variables {}'.format(str(self),show_clock()))
+               
+        self.bids=bidding.Bid(
+            polynomial=self.cost_coeffs,
+            owner=self,
+            times=times,
+            input_variable=self.power,
+            min_input=self.Pmin,
+            max_input=self.Pmax,
+            status_variable=self.status,
+            num_breakpoints=self.cost_breakpoints
+            )
         return
     def create_objective(self,times):
         return sum(self.cost(time) for time in times)
@@ -228,88 +223,70 @@ class Generator(OptimizationObject):
             if n!=m: raise ValueError('min up/down times must be integer number of intervals, not {}'.format(n))
             return m
 
-        commitment_problem= len(times)>1        
+        T=len(times)
+        last_time=len(times)-1
+        commitment_problem= T>1        
+            
+        
         if commitment_problem:
-            #set initial and final time constraints
-            tInitial = times.initialTime
-            tEnd = len(times)
-            if self.minuptime>0:
-                up_intervals_remaining=roundoff((self.minuptime - self.initial_status_hours)/times.intervalhrs)
-                min_up_intervals_remaining_init =   int(min(tEnd, up_intervals_remaining*self.initial_status ))
-            else: min_up_intervals_remaining_init=0
-            if self.mindowntime>0:
-                down_intervals_remaining=roundoff((self.mindowntime - self.initial_status_hours)/times.intervalhrs)
-                min_down_intervals_remaining_init = int(min(tEnd,down_intervals_remaining*(self.initial_status==0)))
-            else: min_down_intervals_remaining_init=0
-            #initial up down time
-            if min_up_intervals_remaining_init>0: 
-                self.add_constraint('minuptime', tInitial, 0>=sum([(1-self.status(times[t])) for t in range(min_up_intervals_remaining_init)]))
-            if min_down_intervals_remaining_init>0: 
-                self.add_constraint('mindowntime', tInitial, 0==sum([self.status(times[t]) for t in range(min_down_intervals_remaining_init)]))
-
-
-            #initial ramp rate
-            if self.rampratemax is not None:
-                if self.initial_power + self.rampratemax < self.Pmax:
-                    E=self.power(times[0]) - self.initial_power <= self.rampratemax
-                    self.add_constraint('ramp lim high', tInitial, E)
-            
-            if self.rampratemin is not None:
-                if self.initial_power + self.rampratemin > self.Pmin:
-                    E=self.rampratemin <= self.power(times[0]) - self.initial_power
-                    self.add_constraint('ramp lim low', tInitial, E) 
-            
             #calculate up down intervals
-            min_up_intervals =  roundoff(self.minuptime/times.intervalhrs)
+            min_up_intervals   = roundoff(self.minuptime/times.intervalhrs)
             min_down_intervals = roundoff(self.mindowntime/times.intervalhrs)
+            min_up_intervals_init   = min([min_up_intervals,  T])
+            min_down_intervals_init = min([min_down_intervals,T])        
+            
+            if min_up_intervals_init:
+                self.add_constraint('up time',   times.initialTime, sum(self.status(t) for t in times[:min_up_intervals_init])  ==min_up_intervals_init)
+            if min_down_intervals_init:
+                self.add_constraint('down time', times.initialTime, sum(self.status(t) for t in times[:min_down_intervals_init])==0 )
+            
+            
+        
         
         last_time=len(times)-1
         print [str(t) for t in times]
         print 'min up',min_up_intervals
         print 'min down',min_down_intervals
         for t,time in enumerate(times):
-            #bid curve constraints
-            self.bid(time).create_constraints()
             #min/max power
-            if self.Pmin>0: self.add_constraint('min gen power', time, self.power(time)>=self.status(time)*self.Pmin)
+            if self.Pmin>0: 
+                self.add_constraint('min gen power', time, self.power(time)>=self.status(time)*self.Pmin)
             self.add_constraint('max gen power', time, self.power(time)<=self.status(time)*self.Pmax)
-            
-            if len(times)==1: continue #if ED or OPF problem
-            
-            #min up time
-            if t >= min_up_intervals_remaining_init and self.minuptime>0 and t<=last_time-min_up_intervals:
-                no_shut_down=range(t,min(tEnd,t+min_up_intervals))
-                #min_up_intervals_remaining=min(tEnd-t,min_up_intervals)
-                #E = sum([self.status(times[s]) for s in no_shut_down]) >= min_up_intervals_remaining*self.status_change(t,times)
-                E = sum(self.status(times[s]) for s in no_shut_down) >= min_up_intervals*self.startup(time)
-                self.add_constraint('min up time', time, E)
-                print str(self),str(times[t]),'min up time'
-            elif t>=min_up_intervals_remaining_init and self.minuptime>0:
-                #end of commitment horizon
-                no_shut_down=range(t,last_time)
-                E=sum([(self.status(times[s])-self.startup(times[s])) for s in no_shut_down])>=0
-                if E: pass
-                else: self.add_constraint('min up time eoh', time, E)
-                print str(self),str(times[t]),'min up time eoh'
-            #min down time        
-            if t >= min_down_intervals_remaining_init and self.mindowntime>0 and t<=last_time-min_down_intervals+1:
-                no_start_up=range(t,min(tEnd,t+min_down_intervals))
-                #min_down_intervals_remaining=min(tEnd-t,min_down_intervals)
-                E=sum(1-self.status(times[s]) for s in no_start_up) >= min_down_intervals * self.shutdown(time)
-                self.add_constraint('min down time', time, E)
-                print str(self),str(times[t]),'min down time'
-            elif t >= min_down_intervals_remaining_init and self.mindowntime>0:
-                #end of commitment horizon
-                no_start_up=range(t,last_time)
-                #print str(times[t]),[str(times[s]) for s in no_start_up]
-                E=sum([(1-self.status(times[s])-self.shutdown(times[s])) for s in no_start_up])>=0
-                self.add_constraint('min down time eoh', time, E)
-                print str(self),str(times[t]),'min down time eoh'
-            #ramping power
-            if self.rampratemax is not None:
-                self.add_constraint('ramp lim high', time, self.power_change(t,times) <= self.rampratemax)
-            if self.rampratemin is not None:
-                self.add_constraint('ramp lim low', time,  self.rampratemin <= self.power_change(t,times) )                
+
+            if commitment_problem:
+                #min up time
+                if t >= min_up_intervals_init and self.minuptime>0:
+                    if t<=last_time-min_up_intervals:
+                        no_shut_down=range(t,t+min_up_intervals)
+                        #min_up_intervals_remaining=min(tEnd-t,min_up_intervals)
+                        #E = sum([self.status(times[s]) for s in no_shut_down]) >= min_up_intervals_remaining*self.status_change(t,times)
+                        E = sum(self.status(times[s]) for s in no_shut_down) >= min_up_intervals*self.startup(time)
+                        self.add_constraint('min up time', time, E)
+                    else:
+                        #end of commitment horizon
+                        no_shut_down=range(t,T)
+                        E=sum([(self.status(times[s])-self.startup(times[t])) for s in no_shut_down])>=0
+                        self.add_constraint('min up time eoh', time, E)
+                        #print str(self),str(times[t]),'min up time eoh'
+                
+                #min down time        
+                if t >= min_down_intervals_init and self.mindowntime>0:
+                    if t<=last_time-min_down_intervals+1:
+                        no_start_up=range(t,t+min_down_intervals)
+                        E=sum(1-self.status(times[s]) for s in no_start_up) >= min_down_intervals * self.shutdown(time)
+                        self.add_constraint('min down time', time, E)
+                    
+                    else:
+                        #end of commitment horizon
+                        no_start_up=range(t,T)
+                        E=sum([(1-self.status(times[s])-self.shutdown(times[t])) for s in no_start_up])>=0
+                        self.add_constraint('min down time eoh', time, E)
+                    
+                #ramping power
+                if self.rampratemax is not None:
+                    self.add_constraint('ramp lim high', time, self.power_change(t,times) <= self.rampratemax)
+                if self.rampratemin is not None:
+                    self.add_constraint('ramp lim low', time,  self.rampratemin <= self.power_change(t,times) )
         
         return
         
@@ -336,26 +313,56 @@ class Generator_nonControllable(Generator):
 
         if Pmax is None: self.Pmax = self.schedule.maxvalue
         self.is_controllable=False
+        self.startupcost=0
+        self.shutdowncost=0
         self.build_cost_model()
         self.init_optimization()
-    def power(self,time): return self.schedule.get_energy(time)
-    def status(self,time): return True
-    def startup(self,time): return False
-    def shutdown(self,time): return False    
+    def power(self,time=None): return self.schedule.get_energy(time)
+    def status(self,time=None): return True
+    def startup(self,time=None): return False
+    def shutdown(self,time=None): return False    
     def set_initial_condition(self,time=None, P=None, u=None, hoursinstatus=None):
         try: 
             if P is None: P=sorted(self.schedule.energy.items())[0][1] #set initial value to first value
             self.schedule.energy[time]=P 
         except AttributeError: pass #fixed schedule
     def getstatus(self,t,times): return {}
-    def create_variables(self,times): return {}
+    def create_variables(self,times):
+        self.bids=bidding.Bid(
+            polynomial=self.cost_coeffs,
+            owner=self,
+            times=times,
+            fixed_input=True
+            )
     def create_constraints(self,times): return {}
     def cost(self,time,evaluate=False): return self.operatingcost(time)
-    def operatingcost(self,time,evaluate=False): return self.cost_model.output_true( self.power(time) )
+    def operatingcost(self,time=None,evaluate=False): return self.bids.output_true( self.power(time) )
     def truecost(self,time): return self.cost(time)
-    def incrementalcost(self,time): return self.fuelcost*self.cost_model.output_incremental(self.power(time))
+    def incrementalcost(self,time): return self.bids.output_incremental(self.power(time))
 
-        
+class Generator_Stochastic(Generator_nonControllable):
+    """
+    Describes a generator with a stochastic power output.
+    """
+    def __init__(self,
+                 scenario_values=None,
+                 fuelcost=1,costcurvestring='0',
+                 mustrun=False,
+                 Pmin=0,Pmax=None,
+                 name='',index=None,bus=None,kind='wind',**kwargs):
+        update_attributes(self,locals()) #load in inputs
+        self.is_controllable=False
+        self.is_stochastic=True
+        self.build_cost_model()
+        self.init_optimization()
+    def power(self,time): return self.get_variable('power',time=time,indexed=True)
+    def create_variables(self,times):
+        self.add_parameter('power',index=times.set)
+        power=self.power(time=None)
+        for time in times: power[str(time)]=self.scenario_values[0][time] #initialize to first scenario value
+        return
+    def cost_startup(self,time): return 0
+    def cost_shutdown(self,time): return 0
 
 
 class Load(OptimizationObject):
@@ -385,7 +392,9 @@ class Load(OptimizationObject):
         else: 
             return self.schedule.get_energy(time)
     def shed(self,time,evaluate=False): return self.schedule.get_energy(time) - self.power(time,evaluate)
-    def cost(self,time): return self.cost_shedding*self.shed(time) 
+    def cost(self,time): return self.cost_shedding*self.shed(time)
+    def cost_first_stage(self,times): return 0
+    def cost_second_stage(self,times): return sum(self.cost(time) for time in times)
     def create_variables(self,times):
         if self.shedding_allowed:
             self.add_variable('power',index=times.set,low=0)
@@ -475,7 +484,7 @@ class Bus(OptimizationObject):
         self.generators,self.loads=[],[]
         self.init_optimization()
     
-    def angle(self,time): return self.get_variable('angle',time)
+    def angle(self,time): return self.get_variable('angle',time,indexed=True)
     def price(self,time): return dual(self.get_constraint('power balance',time))
     def Pgen(self,t,evaluate=False):
         if evaluate: return sum(value(gen.power(t)) for gen in self.generators)
@@ -504,12 +513,16 @@ class Bus(OptimizationObject):
         logging.debug('created generator variables {}'.format(show_clock()))
         for load in self.loads: load.create_variables(times)
         logging.debug('created load variables {}'.format(show_clock()))
-        for time in times: self.add_variable('angle',time=time)
+        self.add_variable('angle',index=times.set)
         logging.debug('created bus variables ... returning {}'.format(show_clock()))
         return
-    def create_objective(self,times):
-        return sum(gen.create_objective(times) for gen in self.generators) + \
-            sum(load.create_objective(times) for load in self.loads)
+    def create_objective(self,times): return self.cost_first_stage(times) + self.cost_second_stage(times)
+    def cost_first_stage(self,times):
+        return sum(gen.cost_first_stage(times) for gen in self.generators) + \
+            sum(load.cost_first_stage(times) for load in self.loads)
+    def cost_second_stage(self,times):
+        return sum(gen.cost_second_stage(times) for gen in self.generators) + \
+            sum(load.cost_second_stage(times) for load in self.loads)            
     def create_constraints(self,times,Bmatrix,buses):
         for gen in self.generators: gen.create_constraints(times)
         for load in self.loads: load.create_constraints(times)
@@ -561,15 +574,11 @@ class PowerSystem(OptimizationProblem):
         #add system mode parameters to relevant components
         self.set_load_shedding(load_shedding_allowed) #set load shedding
         for load in loads:
-                try: 
-                    load.cost_model.num_breakpoints=num_breakpoints
-                    load.cost_model.do_segmentation()
+                try: load.cost_breakpoints=num_breakpoints
                 except AttributeError: pass #load has no cost model   
         for gen in generators:
             gen.dispatch_decommit_allowed=dispatch_decommit_allowed
-            try: 
-                gen.cost_model.num_breakpoints=num_breakpoints
-                gen.cost_model.do_segmentation()
+            try: gen.cost_breakpoints=num_breakpoints
             except AttributeError: pass #gen has no cost model
             
     def set_load_shedding(self,is_allowed):
@@ -626,24 +635,22 @@ class PowerSystem(OptimizationProblem):
     def loads(self): return flatten(bus.loads for bus in self.buses)
     def generators(self): return flatten(bus.generators for bus in self.buses)
     def create_variables(self,times):
+        self.add_variable('cost_first_stage')
+        self.add_variable('cost_second_stage')        
         self.add_set('times',[str(t) for t in times])
         times.set=self._model.times
-        
         for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
         logging.debug('... created power system vars... returning... {}'.format(show_clock()))
         #for var in self.all_variables(times).values(): self.add_variable(var)
-        
-    def create_objective(self,times):
-        obj=sum(bus.create_objective(times) for bus in self.buses) + sum(line.create_objective(times) for line in self.lines)
-        self.add_objective(obj)
+    def cost_first_stage(self): return self.get_component('cost_first_stage')    
+    def cost_second_stage(self): return self.get_component('cost_second_stage')
+    def create_objective(self,times): 
+        self.add_objective(self.cost_first_stage()+self.cost_second_stage())
     def create_constraints(self,times):
         for bus in self.buses: bus.create_constraints(times,self.Bmatrix,self.buses)
         for line in self.lines: line.create_constraints(times,self.buses)
         #a system reserve constraint would go here
-        #for constraint in self.all_constraints(times).values(): self.add_constraint(constraint)
-    
-    
-#def power_to_energy(P,time):
-#    return P*time.intervalhrs
-
+        self.add_constraint('system_cost_first_stage',self.cost_first_stage()==sum(bus.cost_first_stage(times) for bus in self.buses))
+        self.add_constraint('system_cost_second_stage',self.cost_second_stage()==sum(bus.cost_second_stage(times) for bus in self.buses))
+    def iden(self,time): return 'system'

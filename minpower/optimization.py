@@ -4,6 +4,8 @@ An optimization command library for Minpower.
 import coopr.pyomo as pyomo
 from coopr.opt.base import solvers as cooprsolver
 
+pyomo.base.numvalue.KnownConstants[True]=pyomo.base.numvalue.NumericConstant(None, None, 1.0)
+
 variable_kinds = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyomo.Boolean)
 
 import logging,time,weakref
@@ -77,18 +79,17 @@ class OptimizationObject(object):
         :param time: a single time for a variable
         :param index: a :class:`pyomo.Set` over which a variable is created
         '''
-        def map_args(kind='Continuous',low=None,high=None):
-            return dict(bounds=(low,high),domain=variable_kinds[kind]) 
+        def map_args(kind='Continuous',low=None,high=None): return dict(bounds=(low,high),domain=variable_kinds[kind]) 
         orig_name=name
         if index is None:
             name=self._t_id(name,time)
             if fixed_value is None:
                 var=pyomo.Var(name=name, **map_args(**kwargs)) #new_variable(name=short_name,**kwargs)
-                self._parent_problem().add_variable(var)
+                self._parent_problem().add_component_to_problem(var)
             else:
                 var=pyomo.Param(name=name,default=fixed_value)
                 #add var
-                self._parent_problem().add_variable(var)
+                self._parent_problem().add_component_to_problem(var)
                 #and set value
                 var=self.get_variable(orig_name,time)
                 var[None]=fixed_value
@@ -97,30 +98,40 @@ class OptimizationObject(object):
 
             if fixed_value is None: 
                 var=pyomo.Var(index,name=name,**map_args(**kwargs))
+                self._parent_problem().add_component_to_problem(var)
             else: 
-                var=pyomo.Param(index,name=name)
+                var=pyomo.Param(index,name=name,default=fixed_value)
+                self._parent_problem().add_component_to_problem(var)
+                var=self._parent_problem().get_component(name)
                 for i in index: var[i]=fixed_value
         
-            self._parent_problem().add_variable(var)
+            
 
+
+    def add_parameter(self,name,index=None,default=None):
+        name=self._id(name)
+        self._parent_problem().add_component_to_problem(pyomo.Param(index,name=name,default=default))
+        
     def add_constraint(self,name,time,expression): 
         '''Create a new constraint and add it to the object's constraints and the model's constraints.'''
         name=self._t_id(name,time)
-        #self.constraints[name]=new_constraint(name,expression)
-        self._parent_problem().add_constraint(new_constraint(name,expression))
+        self._parent_problem().add_component_to_problem(new_constraint(name,expression))
         
     def get_variable(self,name,time=None,indexed=False):
         if indexed: 
             var_name=self._id(name)
-            index=str(time)
-            try: return self._parent_problem().get_component(var_name)[index]
-            except KeyError:
-                self._parent_problem().show_model()
-                raise
+            if time is None: 
+                return self._parent_problem().get_component(var_name)
+            else: 
+                index=str(time)
+                try: return self._parent_problem().get_component(var_name)[index]
+                except KeyError:
+                    self._parent_problem().show_model()
+                    raise
         else: 
             var_name=self._t_id(name,time)
             return self._parent_problem().get_component(var_name)
-
+    
     def get_constraint(self,name,time): return self._parent_problem().get_component(self._t_id(name,time))
     
     def add_children(self,objects,name):
@@ -193,6 +204,7 @@ class OptimizationProblem(OptimizationObject):
         self.init_optimization()
     def init_optimization(self):
         self._model=pyomo.ConcreteModel('power system problem')
+        self.stochastic_formulation=False
         self.solved=False
         self.children=dict()
         self.variables=dict()
@@ -204,19 +216,22 @@ class OptimizationProblem(OptimizationObject):
         for child in self.children[name]:
             child._parent_problem=weakref.ref(self)
 
+    def add_component_to_problem(self,component):
+        '''add a optimization component to the model'''
+        self._model._add_component(component.name,component)
     def add_objective(self,expression,sense=pyomo.minimize):
         '''add an objective to the problem'''            
         self._model.objective=pyomo.Objective(name='objective',rule=expression,sense=sense)
-    def add_variable(self,variable):
-        '''add a single variable to the problem'''
-        self._model._add_component(variable.name,variable)
-    def add_constraint(self,constraint):
-        '''add a single constraint to the problem'''
-        self._model._add_component(constraint.name,constraint)
     def add_set(self,name,items):         
         '''add a :class:`pyomo.Set` to the problem'''
         self._model._add_component(name,pyomo.Set(initialize=items,name=name))
-
+    def add_variable(self,name,**kwargs):
+        '''create a new variable and add it to the root problem'''
+        def map_args(kind='Continuous',low=None,high=None): return dict(bounds=(low,high),domain=variable_kinds[kind]) 
+        var=pyomo.Var(name=name, **map_args(**kwargs))
+        self._model._add_component(name,var)
+    def add_constraint(self,name,expression):
+        self._model._add_component(name,new_constraint(name,expression))
     def get_component(self,name): 
         '''Get an optimization component'''
         try: return getattr(self._model,name)
@@ -226,7 +241,14 @@ class OptimizationProblem(OptimizationObject):
             raise 
 
     def write_model(self,filename): self._model.write(filename)
-    def reset_model(self): 
+    def reset_model(self):
+        #piecewise models leak memory
+        #keep until Coopr release integrates: https://software.sandia.gov/trac/coopr/changeset/5781 
+        for pw in self._model.active_components(pyomo.Piecewise).values():
+            pw._constraints_dict=None
+            pw._vars_dict=None
+            pw._sets_dict=None
+        
         self._model=None
         self.solved=False
         self._model=pyomo.ConcreteModel() 
@@ -276,8 +298,11 @@ class OptimizationProblem(OptimizationObject):
         
         
         logging.info('Solving with {s} ... {t}'.format(s=solver,t=show_clock()))
-        instance=self._model.create()
-        logging.debug('... model created ... {t}'.format(t=show_clock()))     
+        if self.stochastic_formulation:
+            instance=self._stochastic_instance
+        else: 
+            instance=self._model.create()
+            logging.debug('... model created ... {t}'.format(t=show_clock()))     
         
         results,elapsed=cooprsolve(instance,suffixes=[])
         
@@ -330,11 +355,16 @@ class OptimizationProblem(OptimizationObject):
             except RuntimeError:
                 logging.error('in re-solving for the duals. the duals will be set to default value.')
             logging.debug('... LP problem solved ... {t}'.format(t=show_clock()))    
-                
-        try: self.objective = results.Solution.objective['objective'].value #instance.active_components(pyomo.Objective)['objective']
-        except AttributeError:
-            self.objective = results.Solution.objective['__default_objective__'].value
-            
+        
+        def get_objective(name):
+            try: return results.Solution.objective[name].value
+            except AttributeError: return results.Solution.objective['objective'].value
+        obj_name='__default_objective__'
+        #if self.stochastic_formulation and not get_duals: obj_name='MASTER'
+        #print results.Solution.objective
+        #print get_duals,self.stochastic_formulation,obj_name
+        self.objective = get_objective(obj_name)
+        
         #self.constraints = instance.active_components(pyomo.Constraint)
         #self.variables =   instance.active_components(pyomo.Var)
 

@@ -6,14 +6,12 @@ problems and solving them.
 """
 
 import logging
+import time as timer
 
 from optimization import OptimizationError
-import get_data
-import powersystems
-import results
-import config
+import config, get_data, powersystems, stochastic, results
 from commonscripts import joindir,show_clock
-import time as timer
+
 
 def solve_problem(datadir='.',
         shell=True,
@@ -52,7 +50,7 @@ def solve_problem(datadir='.',
     _setup_logging(logging_level,logging_file)
     start_time = timer.time()
     logging.debug('Minpower reading {} {}'.format(datadir, show_clock()))
-    generators,loads,lines,times=get_data.parsedir(datadir)
+    generators,loads,lines,times,scenario_tree=get_data.parsedir(datadir)
     logging.debug('data read {}'.format(show_clock()))
     power_system=powersystems.PowerSystem(generators,loads,lines,                 
                 num_breakpoints=num_breakpoints,
@@ -61,10 +59,17 @@ def solve_problem(datadir='.',
                 dispatch_decommit_allowed=dispatch_decommit_allowed,)
     
     logging.debug('power system set up {}'.format(show_clock()))    
-    if times.spanhrs<=hours_commitment:
-        solution=create_solve_problem(power_system,times,datadir,solver,problemfile,get_duals)
+    if times.spanhrs<=hours_commitment+hours_commitment_overlap:
+        solution=create_solve_problem(power_system,times,datadir,
+                                      solver=solver,
+                                      scenario_tree=scenario_tree,
+                                      problemfile=problemfile,
+                                      get_duals=get_duals,
+                                      stage_hours=hours_commitment,
+                                      overlap_hours=hours_commitment_overlap)
     else: #split into multiple stages and solve
         stage_solutions,stage_times=solve_multistage(power_system,times,datadir,
+                                                       scenario_tree=scenario_tree,
                                                        solver=solver,
                                                        get_duals=get_duals,
                                                        stage_hours=hours_commitment,
@@ -80,13 +85,26 @@ def solve_problem(datadir='.',
     logging.info('total time: {}s'.format(timer.time()-start_time))
     return solution
 
-def create_solve_problem(power_system,times,datadir,solver,problemfile=False,get_duals=True):
-    create_problem(power_system,times)
+def create_solve_problem(power_system,times,datadir,solver,
+    scenario_tree=None,problemfile=False,get_duals=True,
+    stage_hours=24,overlap_hours=0):
     if problemfile: problemfile=joindir(datadir,'problem-formulation.lp')
     
-    power_system.solve(solver,problem_filename=problemfile,get_duals=get_duals)
-    solution=results.make_solution(power_system,times,datadir=datadir)
+    create_problem(power_system,times)
     
+    stochastic_formulation=False
+    if scenario_tree is not None: 
+        stochastic_formulation=True
+        stochastic.define_stage_variables(scenario_tree,power_system,times)
+        power_system= stochastic.create_problem_with_scenarios(power_system,times,scenario_tree, stage_hours,overlap_hours)
+    
+    power_system.solve(solver,problem_filename=problemfile,get_duals=get_duals)
+    
+    # if stochastic_formulation:
+    #     power_system.scenario_tree=scenario_tree
+    #     power_system.scenario_instances=scenario_instances
+
+    solution=results.make_solution(power_system,times,datadir=datadir)
         
     return solution
 def create_problem(power_system,times):
@@ -98,8 +116,6 @@ def create_problem(power_system,times):
     
     :returns: :class:`~optimization.Problem` object
     """
-    
-    
     
     logging.debug('initialized problem {}'.format(show_clock()))
     power_system.create_variables(times)
@@ -116,6 +132,7 @@ def solve_multistage(power_system,times,datadir,
                               interval_hours=None,
                               stage_hours=config.default_hours_commitment,
                               overlap_hours=config.default_hours_commitment_overlap,
+                              scenario_tree=None,                              
                               problemfile=False,
                               get_duals=True,
                               showclock=True):
@@ -145,6 +162,7 @@ def solve_multistage(power_system,times,datadir,
     buses=power_system.buses
     stage_solutions=[]
 
+    if scenario_tree is not None: raise NotImplementedError()
     
     def set_initialconditions(buses,initTime):
         for bus in buses:
@@ -166,14 +184,14 @@ def solve_multistage(power_system,times,datadir,
         logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
         set_initialconditions(buses,t_stage.initialTime)
         
-        try: stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile,get_duals)
+        try: stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,scenario_tree,problemfile,get_duals)
         except OptimizationError:
             #re-do stage, with load shedding allowed
             logging.critical('stage infeasible, re-running with load shedding.')
             power_system.reset_model()
             power_system.set_load_shedding(True)
             try: 
-                stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,problemfile=True,get_duals=get_duals)
+                stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,scenario_tree,problemfile=True,get_duals=get_duals)
             except OptimizationError:
                 stage_solutions[-1].saveCSV(joindir(datadir,'last-stage-solved-commitment.csv'),save_final_status=True) 
                 raise OptimizationError('failed to solve, even with load shedding.')
@@ -183,7 +201,13 @@ def solve_multistage(power_system,times,datadir,
         get_finalconditions(power_system,t_stage)
         stage_solutions.append(stage_solution)
         
-        if stg<len(stage_times)-1: power_system.reset_model()
+        if stg<len(stage_times)-1: 
+            power_system.reset_model()
+            #commonscripts.show_memory_growth()
+#            if stg==1: 
+#                commonscripts.show_memory_refs('_VarArray')
+#                commonscripts.show_memory_backrefs('_VarArray')
+#                commonscripts.show_memory_backrefs('Piecewise')
     return stage_solutions,stage_times
 
   
@@ -250,7 +274,7 @@ def main():
         print 'run profile'
         import cProfile
         prof = cProfile.Profile()
-        prof.runcall(solve.problem, directory, **inputs)
+        prof.runcall(solve_problem, directory, **inputs)
         prof.dump_stats('minpower.profile')
 
     else:

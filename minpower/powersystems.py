@@ -275,7 +275,7 @@ class Generator(OptimizationObject):
                     
                     else:
                         #end of commitment horizon
-                        no_start_up=range(t,last_time)
+                        no_start_up=range(t,T)
                         E=sum([(1-self.status(times[s])-self.shutdown(times[t])) for s in no_start_up])>=0
                         self.add_constraint('min down time eoh', time, E)
                     

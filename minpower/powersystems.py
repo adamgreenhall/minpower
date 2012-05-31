@@ -262,7 +262,7 @@ class Generator(OptimizationObject):
                 #min up time
                 if t >= min_up_intervals_init and self.minuptime>0:
                     #extra speedup constraint via Rajan and Takriti, see: http://ibm.co/N1g2of, http://bit.ly/K034kD
-                    S=range(min([1,t-min_up_intervals+1]),t)
+                    S=range(max([1,t-min_up_intervals+1]),t)
                     self.add_constraint('min up time speedup',time,sum(self.startup(times[s]) for s in S)<=self.status(time))
                     if t<=last_time-min_up_intervals:
                         no_shut_down=range(t,t+min_up_intervals)
@@ -279,7 +279,7 @@ class Generator(OptimizationObject):
                 
                 #min down time        
                 if t >= min_down_intervals_init and self.mindowntime>0:
-                    S=range(min([1,t-min_down_intervals+1]),t)
+                    S=range(max([1,t-min_down_intervals+1]),t)
                     self.add_constraint('min down time speedup',time,sum(self.shutdown(times[s]) for s in S)<=1)
                     if t<=last_time-min_down_intervals+1:
                         no_start_up=range(t,t+min_down_intervals)

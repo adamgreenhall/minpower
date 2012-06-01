@@ -391,6 +391,13 @@ class Generator_Stochastic(Generator_nonControllable):
         self.add_parameter('power',index=times.set)
         power=self.power(time=None)
         for time in times: power[str(time)]=self.scenario_values[0][time] #initialize to first scenario value
+        
+        self.bids=bidding.Bid(
+            polynomial=self.cost_coeffs,
+            owner=self,
+            times=times,
+            fixed_input=True
+            )        
         return
     def cost_startup(self,time): return 0
     def cost_shutdown(self,time): return 0

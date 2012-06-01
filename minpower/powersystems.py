@@ -9,7 +9,7 @@ an optimization framework from :class:`~optimization.OptimizationObject`.
 from optimization import value,dual,OptimizationObject,OptimizationProblem,skip_constraint
 from commonscripts import hours,drop_case_spaces,flatten,getattrL,unique,update_attributes,show_clock
 import config, bidding
-from schedule import FixedSchedule,get_ix
+from schedule import FixedSchedule
 import logging
 #import threading
 import numpy 
@@ -126,9 +126,8 @@ class Generator(OptimizationObject):
     def startup(self,time):  return self.get_variable('startup',time,indexed=True)  if self.commitment_problem else 1
     def shutdown(self,time): return self.get_variable('shutdown',time,indexed=True) if self.commitment_problem else 1
     def status_change(self,t,times): 
-       '''is the unit changing status between t and t-1'''
-       previous_status=(self.status(times[t-1]) if t>0 else self.initial_status)
-       return self.status(times[t]) - previous_status
+        '''is the unit changing status between t and t-1'''
+        return self.status(times[t]) - (self.status(times[t-1]) if t>0 else self.initial_status)
     def power_change(self,t,times):
         '''change in output between power between t and t-1'''
         if t>0: previous_power=self.power(times[t-1])
@@ -259,20 +258,20 @@ class Generator(OptimizationObject):
         
         if commitment_problem:
             #startup shutdown
-            def _startup_shutdown_constr(model,t): return self.status_change(get_ix(t),times)==self.startup(times.ix(t))-self.shutdown(times.ix(t))
+            def _startup_shutdown_constr(model,t): return self.status_change(times.get_ix(t),times)==self.startup(times.ix(t))-self.shutdown(times.ix(t))
             self.add_constraint('status change',times.set,_startup_shutdown_constr,over_set=True)
             #ramping power
             if self.rampratemax is not None:
-                def _ramp_high_constr(model,t): return self.power_change(get_ix(t),times) <= self.rampratemax
+                def _ramp_high_constr(model,t): return self.power_change(times.get_ix(t),times) <= self.rampratemax
                 self.add_constraint('ramp lim high', times.set, _ramp_high_constr, over_set=True)
             if self.rampratemin is not None:
-                def _ramp_low_constr(model,t): return self.rampratemin <= self.power_change(get_ix(t),times) 
+                def _ramp_low_constr(model,t): return self.rampratemin <= self.power_change(times.get_ix(t),times) 
                 self.add_constraint('ramp lim low', times.set, _ramp_low_constr, over_set=True)
             
             #min up time:
             if self.minuptime>0:
                 def _minuptime_constr(model,t):
-                    t=get_ix(t)
+                    t=times.get_ix(t)
                     if t>=min_up_intervals_init:
                         if t<=last_time-min_up_intervals:
                             no_shut_down=range(t,t+min_up_intervals)

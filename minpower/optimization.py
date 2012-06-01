@@ -6,6 +6,8 @@ from coopr.opt.base import solvers as cooprsolver
 
 pyomo.base.numvalue.KnownConstants[True]=pyomo.base.numvalue.NumericConstant(None, None, 1.0)
 
+skip_constraint = pyomo.Constraint.Skip
+
 variable_kinds = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyomo.Boolean)
 
 import logging,time,weakref
@@ -112,10 +114,14 @@ class OptimizationObject(object):
         name=self._id(name)
         self._parent_problem().add_component_to_problem(pyomo.Param(index,name=name,default=default))
         
-    def add_constraint(self,name,time,expression): 
+    def add_constraint(self,name,time,expression,over_set=False): 
         '''Create a new constraint and add it to the object's constraints and the model's constraints.'''
-        name=self._t_id(name,time)
-        self._parent_problem().add_component_to_problem(new_constraint(name,expression))
+        if over_set:
+            name=self._id(name)
+            self._parent_problem().add_component_to_problem(pyomo.Constraint(time,name=name,rule=expression))
+        else:
+            name=self._t_id(name,time)
+            self._parent_problem().add_component_to_problem(new_constraint(name,expression))
         
     def get_variable(self,name,time=None,indexed=False):
         if indexed: 

@@ -112,6 +112,7 @@ class Timelist(object):
     def __contains__(self, item): return item in self.times
     def __len__(self): return len(self.times)
     def __getitem__(self, i): return self.times[i]
+    def ix(self,timestr): return self.times[get_ix(timestr)]
     def __getslice__(self, i, j): return self.times[i:j]
     def index(self,val): return self.times.index(val)
     def setInitial(self,initialTime=None): 
@@ -283,7 +284,7 @@ def parse_timestrings(timestringsL):
     """
     fmt=getTimeFormat(timestringsL[0])
     return [dateutil.parser.parse(string,**fmt) for string in timestringsL]
-
+def get_ix(timestr): return int(timestr[1:])
 
 if __name__ == "__main__":
     import doctest

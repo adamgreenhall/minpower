@@ -6,10 +6,10 @@ and  :class:`~powersystems.Line`. Each of these objects inherits
 an optimization framework from :class:`~optimization.OptimizationObject`.
 """
 
-from optimization import value,dual,OptimizationObject,OptimizationProblem
+from optimization import value,dual,OptimizationObject,OptimizationProblem,skip_constraint
 from commonscripts import hours,drop_case_spaces,flatten,getattrL,unique,update_attributes,show_clock
 import config, bidding
-from schedule import FixedSchedule
+from schedule import FixedSchedule,get_ix
 import logging
 #import threading
 import numpy 
@@ -223,8 +223,8 @@ class Generator(OptimizationObject):
             return m
 
         T=len(times)
-        last_time=len(times)-1
-        commitment_problem= T>1        
+        commitment_problem= T>1
+        last_time=len(times)-1       
             
         
         if commitment_problem:
@@ -247,35 +247,61 @@ class Generator(OptimizationObject):
             
             if min_down_intervals_init:
                 self.add_constraint('down time', times.initialTime, sum(self.status(t) for t in times[:min_down_intervals_init])==0 )
-        
-        
-        last_time=len(times)-1
-        for t,time in enumerate(times):
-            #min/max power
-            if self.Pmin>0: 
-                self.add_constraint('min gen power', time, self.power(time)>=self.status(time)*self.Pmin)
-            self.add_constraint('max gen power', time, self.power(time)<=self.status(time)*self.Pmax)
 
+        #min/max power
+        def _max_power_constr(model,t):
+            return self.power(times.ix(t))<=self.status(times.ix(t))*self.Pmax
+        self.add_constraint('max gen power',times.set,_max_power_constr,over_set=True)
+
+        if self.Pmin>0:
+            def _min_power_constr(model,t): return self.power(times.ix(t))>=self.status(times.ix(t))*self.Pmin
+            self.add_constraint('min gen power', times.set,_min_power_constr,over_set=True)
+        
+        if commitment_problem:
+            #startup shutdown
+            def _startup_shutdown_constr(model,t): return self.status_change(get_ix(t),times)==self.startup(times.ix(t))-self.shutdown(times.ix(t))
+            self.add_constraint('status change',times.set,_startup_shutdown_constr,over_set=True)
+            #ramping power
+            if self.rampratemax is not None:
+                def _ramp_high_constr(model,t): return self.power_change(get_ix(t),times) <= self.rampratemax
+                self.add_constraint('ramp lim high', times.set, _ramp_high_constr, over_set=True)
+            if self.rampratemin is not None:
+                def _ramp_low_constr(model,t): return self.rampratemin <= self.power_change(get_ix(t),times) 
+                self.add_constraint('ramp lim low', times.set, _ramp_low_constr, over_set=True)
+            
+            #min up time:
+            if self.minuptime>0:
+                def _minuptime_constr(model,t):
+                    t=get_ix(t)
+                    if t>=min_up_intervals_init:
+                        if t<=last_time-min_up_intervals:
+                            no_shut_down=range(t,t+min_up_intervals)
+                            return sum(self.status(times[s]) for s in no_shut_down) >= min_up_intervals*self.startup(times[t])
+                        else: #end of commitment horizon
+                            no_shut_down=range(t,T)
+                            return sum([(self.status(times[s])-self.startup(times[t])) for s in no_shut_down])>=0
+                    else:
+                        return skip_constraint
+                self.add_constraint('min up time', times.set, _minuptime_constr, over_set=True)
+        
+        
+        for t,time in enumerate(times):
             if commitment_problem:
-                #startup shutdown 
-                self.add_constraint('status_change',time, self.status_change(t,times)==self.startup(time)-self.shutdown(time))
-                #min up time
+#                #min up time
                 if t >= min_up_intervals_init and self.minuptime>0:
                     #extra speedup constraint via Rajan and Takriti, see: http://ibm.co/N1g2of, http://bit.ly/K034kD
                     S=range(max([0,t-min_up_intervals+1]),t)
                     if S: self.add_constraint('min up time speedup',time,sum(self.startup(times[s]) for s in S)<=self.status(time))
-                    if t<=last_time-min_up_intervals:
-                        no_shut_down=range(t,t+min_up_intervals)
-                        #min_up_intervals_remaining=min(tEnd-t,min_up_intervals)
-                        #E = sum([self.status(times[s]) for s in no_shut_down]) >= min_up_intervals_remaining*self.status_change(t,times)
-                        E = sum(self.status(times[s]) for s in no_shut_down) >= min_up_intervals*self.startup(time)
-                        self.add_constraint('min up time', time, E)
-                    else:
-                        #end of commitment horizon
-                        no_shut_down=range(t,T)
-                        E=sum([(self.status(times[s])-self.startup(times[t])) for s in no_shut_down])>=0
-                        self.add_constraint('min up time eoh', time, E)
-                        #print str(self),str(times[t]),'min up time eoh'
+#                    if t<=last_time-min_up_intervals:
+#                        no_shut_down=range(t,t+min_up_intervals)
+#                        E = sum(self.status(times[s]) for s in no_shut_down) >= min_up_intervals*self.startup(time)
+#                        self.add_constraint('min up time', time, E)
+#                    else:
+#                        #end of commitment horizon
+#                        no_shut_down=range(t,T)
+#                        E=sum([(self.status(times[s])-self.startup(times[t])) for s in no_shut_down])>=0
+#                        self.add_constraint('min up time eoh', time, E)
+#                        #print str(self),str(times[t]),'min up time eoh'
                 
                 #min down time        
                 if t >= min_down_intervals_init and self.mindowntime>0:
@@ -292,11 +318,6 @@ class Generator(OptimizationObject):
                         E=sum([(1-self.status(times[s])-self.shutdown(times[t])) for s in no_start_up])>=0
                         self.add_constraint('min down time eoh', time, E)
                     
-                #ramping power
-                if self.rampratemax is not None:
-                    self.add_constraint('ramp lim high', time, self.power_change(t,times) <= self.rampratemax)
-                if self.rampratemin is not None:
-                    self.add_constraint('ramp lim low', time,  self.rampratemin <= self.power_change(t,times) )
         
         return
         

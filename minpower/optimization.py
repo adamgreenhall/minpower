@@ -431,4 +431,3 @@ class NotInModelError(Exception):
         Exception.__init__( self, self.value)
 
     def __str__(self): return self.value
-    

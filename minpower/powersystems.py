@@ -124,11 +124,11 @@ class Generator(OptimizationObject):
         
     def power(self,time=None): 
         '''real power output at time'''
-        if time is not None and time.index=='Init': return self.initial_power
+        if time is not None and time.is_init: return self.initial_power
         return self.get_variable('power',time,indexed=True)
     def status(self,time=None): 
         '''on/off status at time'''
-        if time.index=='Init': return self.initial_status
+        if time is not None and time.is_init: return self.initial_status
         return self.get_variable('status',time,indexed=True) if self.commitment_problem else 1
     def startup(self,time): 
         if not self.commitment_problem: return 0
@@ -145,6 +145,7 @@ class Generator(OptimizationObject):
     def status_change(self,time): 
        '''is the unit changing status between t and t-1'''
        return self.status(time) - self.status(time.prev())
+       
        
     def power_change(self,time):
         '''change in output between power between t and t-1'''

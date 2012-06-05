@@ -2,7 +2,7 @@
 Time and schedule related models.
 """
 
-import dateutil,weakref
+import dateutil,weakref,copy
 from commonscripts import hours,parseTime, readCSV,getclass_inlist, drop_case_spaces,transpose,frange,getattrL,getTimeFormat,writeCSV
 from operator import attrgetter
 
@@ -34,7 +34,7 @@ class Time(object):
                 {e}!={s}+{i}
                 {e}!={si}'''.format(e=self.End,s=self.Start,i=self.interval,si=self.Start + self.interval))
         self.intervalhrs=hours(self.interval)
-    
+        self.is_init=False
     def Range(self,interval):
         intervalStepHrs=hours(interval)
         rangeLenHrs = hours(self.End-self.Start)
@@ -120,6 +120,7 @@ class Timelist(object):
         if initialTime: self.initialTime= initialTime
         else: self.initialTime = Time(Start=self.Start-self.interval, interval=self.interval,index='Init')
         self.wInitial = tuple([self.initialTime] + list(self.times))
+        self.initialTime.is_init=True
         self.times[0].prev=weakref.ref(self.initialTime)
     def subdivide(self,division_hrs=24,interval_hrs=None,overlap_hrs=0,offset_hrs=0):
         """
@@ -173,8 +174,10 @@ class Timelist(object):
             newtimesL = divide_into_stages(longertimeL,**intervals)
 
         for t,stage in enumerate(newtimesL): 
-            if t>0:        stage.setInitial( newtimesL[t-1][-1-intervals['overlap']] )
+            init=copy.copy(newtimesL[t-1][-1-intervals['overlap']])
+            if t>0:        stage.setInitial( init )
             elif t==0: stage.setInitial( self.initialTime )
+            stage.initialTime.is_init=True
             stage.non_overlap_times = stage[:-1-int(intervals['overlap'])+1] if intervals['overlap']>0 else stage
         else:
             #the last stage has no overlap and may not cover the whole division

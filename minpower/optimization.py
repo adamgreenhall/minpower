@@ -240,7 +240,13 @@ class OptimizationProblem(OptimizationObject):
             self.show_model()
             raise 
 
-    def write_model(self,filename): self._model.write(filename)
+    def write_model(self,filename): 
+        try: self._model.write(filename)
+        except RuntimeError:
+            #create the model and try again first
+            self._model.create()
+            self._model.write(filename)
+            
     def reset_model(self):
         #piecewise models leak memory
         #keep until Coopr release integrates: https://software.sandia.gov/trac/coopr/changeset/5781 
@@ -376,8 +382,11 @@ def value(variable):
     Value of an optimization variable after the problem is solved.
     If passed a numeric value, will return the number.
     '''
-    try: return variable.value
-    except AttributeError: return variable #just a number
+    try: return variable() #an expression
+    except TypeError:
+        try: return variable.value #a variable       
+        except AttributeError: 
+            return variable #just a number
 
 def dual(constraint,index=None):
     '''Dual of optimization constraint, after the problem is solved.'''

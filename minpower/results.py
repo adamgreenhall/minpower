@@ -92,12 +92,12 @@ class Solution(object):
     def _get_costs(self):
         generators=self.generators()
         times=getattr(self.times,'non_overlap_times',self.times)
-        gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t,evaluate=True)) for t in times] for gen in generators]
+        gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t)) for t in times] for gen in generators]
         gen_fuel_costs_polynomial = [[gen.truecost(t) for t in times] for gen in generators]
-        self.totalcost_generation = sum(flatten([[float(gen.cost(t,evaluate=True)) for t in times] for gen in generators]))
+        self.totalcost_generation = sum(flatten([[float(value(gen.cost(t))) for t in times] for gen in generators]))
         self.fuelcost_generation=float(sum( c for c in flatten(gen_fuel_costs_pwlmodel) ))
         self.fuelcost_true_generation=float(sum( c for c in flatten(gen_fuel_costs_polynomial) ))
-        self.load_shed = sum( sum(load.shed(t,evaluate=True) for load in self.loads()) for t in times )
+        self.load_shed = sum( sum(value(load.shed(t)) for load in self.loads()) for t in times )
         self._get_cost_error()
     def _get_cost_error(self):
         try: self.costerror=abs(self.fuelcost_generation-self.fuelcost_true_generation)/self.fuelcost_true_generation
@@ -157,7 +157,7 @@ class Solution(object):
         buses=self.buses()
         out=['bus info:',
              'name={}'.format(getattrL(buses,'name')),
-             'Pinj={}'.format([ bus.Pgen(t,evaluate=True) - bus.Pload(t,evaluate=True) for bus in buses]),
+             'Pinj={}'.format([ value(bus.Pgen(t)-bus.Pload(t)) for bus in buses]),
              'angle={}'.format(self.get_values('buses','angle',t) if len(buses)>1 else []),
              'LMP={}'.format(self.lmps[str(t)])]    
         return out    

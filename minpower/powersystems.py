@@ -351,7 +351,7 @@ class Generator_nonControllable(Generator):
             if P is None: P=sorted(self.schedule.energy.items())[0][1] #set initial value to first value
             self.schedule.energy[time]=P 
         except AttributeError: pass #fixed schedule
-    def getstatus(self,time): return {}
+    def getstatus(self,tm,times): return {}
     def create_variables(self,times):
         self.bids=bidding.Bid(
             polynomial=self.cost_coeffs,

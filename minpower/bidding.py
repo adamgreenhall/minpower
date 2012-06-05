@@ -40,14 +40,10 @@ class Bid(OptimizationObject):
                                                pw_constr_type='LB')
         pw_representation.name=self.iden()
         self._parent_problem().add_component_to_problem(pw_representation)
-    def output(self,time=None,evaluate=False):
+    def output(self,time=None):
         if self.is_linear: 
-            if evaluate: 
-                out = value(self.status_variable(time))*self.polynomial[0]+self.polynomial[1]*value(self.input_variable(time))
-            else:
-                out = self.status_variable(time)*self.polynomial[0]+self.polynomial[1]*self.input_variable(time)
-        else: out=self.get_variable('cost',time=time,indexed=True)
-        return out if not evaluate else value(out)                        
+            return self.status_variable(time)*self.polynomial[0]+self.polynomial[1]*self.input_variable(time)
+        else: return self.get_variable('cost',time=time,indexed=True)
     def output_true(self,input_var): 
         '''true output value of bid'''
         return polynomial_value(self.polynomial,value(input_var))

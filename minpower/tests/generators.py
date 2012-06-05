@@ -179,7 +179,7 @@ def start_up_cost():
         dict(P= 80, u=True),
         dict(u=False)]
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[80,120]))
-    assert generators[1].cost_startup(times[1],evaluate=True)==startupcost
+    assert value(generators[1].cost_startup(times[1]))==startupcost
 
 @generation.test
 def shut_down_cost():
@@ -198,7 +198,7 @@ def shut_down_cost():
         dict(P= 80, u=True),
         dict(P=20,u=True)]
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[150,10]))
-    assert generators[1].cost_shutdown(times[1],evaluate=True)==shutdowncost
+    assert value(generators[1].cost_shutdown(times[1]))==shutdowncost
 
 @generation.test
 def min_up_time_longer():

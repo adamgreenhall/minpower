@@ -47,11 +47,7 @@ def solve_problem(generators,loads=None,times=None, gen_init=None, lines=None,
     
     power_system=powersystems.PowerSystem(generators,loads,lines,load_shedding_allowed=load_shedding_allowed)
     solve.create_problem(power_system,times)
+    if problem_filename:
+        power_system.write_model(problem_filename)
     power_system.solve(solver=solver,problem_filename=problem_filename,get_duals=get_duals)
-    if power_system.solved:
-        power_system.update_variables()
-    else:
-        #logging.critical( [g.power[times.initialTime] for g in generators] )
-        power_system.write_model('problem.lp')
-        raise optimization.OptimizationError('infeasible problem, wrote to problem.lp')
     return power_system,times

@@ -2,7 +2,7 @@
 Time and schedule related models.
 """
 
-import dateutil
+import dateutil,weakref
 from commonscripts import hours,parseTime, readCSV,getclass_inlist, drop_case_spaces,transpose,frange,getattrL,getTimeFormat,writeCSV
 from operator import attrgetter
 
@@ -96,8 +96,10 @@ class Timelist(object):
         
         interval=self.times[0].interval
         
-        for t in self.times: 
-            if t.interval != interval: raise ValueError('time intervals within list varies at {t}. This time has interval {i}. List (1st element) has interval of {li}.:'.format(t=t.Start,i=t.interval,li=interval))
+        for t,time in enumerate(self.times): 
+            if time.interval != interval: 
+                raise ValueError('time intervals within list varies at {t}. This time has interval {i}. List (1st element) has interval of {li}.:'.format(t=time.Start,i=time.interval,li=interval))
+            if t>0: time.prev=weakref.ref(self.times[t-1])
         else: 
             self.interval = interval
             self.intervalhrs = hours(self.interval)
@@ -118,6 +120,7 @@ class Timelist(object):
         if initialTime: self.initialTime= initialTime
         else: self.initialTime = Time(Start=self.Start-self.interval, interval=self.interval,index='Init')
         self.wInitial = tuple([self.initialTime] + list(self.times))
+        self.times[0].prev=weakref.ref(self.initialTime)
     def subdivide(self,division_hrs=24,interval_hrs=None,overlap_hrs=0,offset_hrs=0):
         """
         Subdivide a list of times into serval stages,  each stage

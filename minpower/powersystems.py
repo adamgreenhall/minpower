@@ -14,10 +14,6 @@ import logging
 #import threading
 import numpy 
 
-updown_formulation='three variable sum of status'
-# or ...
-# 'one variable sum of status'
-#'three variable sum of startups'
 
 def makeGenerator(kind='generic',**kwargs):
     """
@@ -132,13 +128,13 @@ class Generator(OptimizationObject):
         return self.get_variable('status',time,indexed=True) if self.commitment_problem else 1
     def startup(self,time): 
         if not self.commitment_problem: return 0
-        if 'three variable' in updown_formulation:
+        if 'three variable' in config.updown_formulation:
             return self.get_variable('startup',time,indexed=True)
         else:
             return self.status_change(time)
     def shutdown(self,time): 
         if not self.commitment_problem: return 0
-        if 'three variable' in updown_formulation:
+        if 'three variable' in config.updown_formulation:
             return self.get_variable('shutdown',time,indexed=True)
         else:
             return -1*self.status_change(time)
@@ -207,7 +203,7 @@ class Generator(OptimizationObject):
         self.add_variable('power', index=times.set, low=0, high=self.Pmax)
         if self.commitment_problem:
             self.add_variable('status',   index=times.set, kind='Binary',fixed_value=1 if self.mustrun else None)
-            if 'three variable' in updown_formulation:
+            if 'three variable' in config.updown_formulation:
                 self.add_variable('startup',  index=times.set, kind='Binary',fixed_value=0 if self.mustrun else None)
                 self.add_variable('shutdown', index=times.set, kind='Binary',fixed_value=0 if self.mustrun else None)
             
@@ -272,11 +268,11 @@ class Generator(OptimizationObject):
 
             if commitment_problem:
                 #startup shutdown 
-                if 'three variable' in updown_formulation:
+                if 'three variable' in config.updown_formulation:
                     self.add_constraint('status_change',time, self.status_change(time)==self.startup(time)-self.shutdown(time))
                 #min up time
                 if t >= min_up_intervals_init and self.minuptime>0:
-                    if 'sum of startups' in updown_formulation:
+                    if 'sum of startups' in config.updown_formulation:
                         #alt constraint via Rajan and Takriti, see: http://ibm.co/N1g2of, http://bit.ly/K034kD
                         S=range(max([0,t-min_up_intervals+1]),t)
                         if S: self.add_constraint('min up time',time,sum(self.startup(times[s]) for s in S)<=self.status(time))
@@ -293,7 +289,7 @@ class Generator(OptimizationObject):
                 
                 #min down time        
                 if t >= min_down_intervals_init and self.mindowntime>0:
-                    if 'sum of startups' in updown_formulation:
+                    if 'sum of startups' in config.updown_formulation:
                         S=range(max([0,t-min_down_intervals+1]),t)
                         if S: self.add_constraint('min down time',time,sum(self.shutdown(times[s]) for s in S)<=1-self.status(time))
                     else: #sum of status formulation

@@ -98,3 +98,8 @@ default_hours_commitment_overlap=0
 optimization_solver='glpk'
 available_solvers = ['glpk','gurobi']#['glpk','gurobi','cplex']
 logging_level= logging.INFO
+
+updown_formulation='three variable sum of status'
+# or ...
+# 'one variable sum of status'
+#'three variable sum of startups'

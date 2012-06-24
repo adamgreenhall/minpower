@@ -174,16 +174,16 @@ class Solution(object):
         ' non-linearized cost of generation={}'.format(self.fuelcost_true_generation),
         'percentage difference\t\t={diff:.2%}'.format(diff=self.costerror),
         ]
-    def save(self,filename=None):
-        if filename is None: filename=joindir(self.datadir,'solution.yaml')
-        def get_time_listing(component,attr):
-            try: return dict(zip(self.times.non_overlap_times,[self.get_values(component,attr,t) for t in self.times.non_overlap_times]))
-            except AttributeError:
-                return dict(zip(self.times,[self.get_values(component,attr,t) for t in self.times]))
-        self.generators_status=get_time_listing('generators','status')
-        self.generators_power=get_time_listing('generators','power')
-        self.power_system=[]
-        with open(filename,'w+') as f: yaml.dump(self,f)
+    # def save(self,filename=None):
+    #     if filename is None: filename=joindir(self.datadir,'solution.yaml')
+    #     def get_time_listing(component,attr):
+    #         try: return dict(zip(self.times.non_overlap_times,[self.get_values(component,attr,t) for t in self.times.non_overlap_times]))
+    #         except AttributeError:
+    #             return dict(zip(self.times,[self.get_values(component,attr,t) for t in self.times]))
+    #     self.generators_status=get_time_listing('generators','status')
+    #     self.generators_power=get_time_listing('generators','power')
+    #     self.power_system=[]
+    #     with open(filename,'w+') as f: yaml.dump(self,f)
 
 
 class Solution_ED(Solution):

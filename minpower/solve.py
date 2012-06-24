@@ -34,7 +34,6 @@ def solve_problem(datadir='.',
         dispatch_decommit_allowed=False,
         logging_level=config.logging_level,
         logging_file=False,
-        solution_file=False,
         ):
     """ 
     Solve a optimization problem specified by spreadsheets in a directory.
@@ -188,6 +187,7 @@ def solve_problem(datadir='.',
 =======
     if visualization: solution.visualization()
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> changed problem file to false by default. renamed visualization.
 =======
     if solution_file: solution.save(solution_file)
@@ -207,6 +207,9 @@ def solve_problem(datadir='.',
 =======
 >>>>>>> added yaml to setup.py reqs. cleanup
 =======
+=======
+    # if solution_file: solution.save(solution_file)
+>>>>>>> remove solution_file option -- don't need, doesn't work
     logging.info('total time: {}s'.format(timer.time()-start_time))
 >>>>>>> clean up problem time reporting
     return solution
@@ -532,8 +535,8 @@ def main():
                         help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
     parser.add_argument('--logfile','-l',type=str,default=False,
                        help='log file, default is to log to terminal')
-    parser.add_argument('--solution_file',type=str,default=False,
-                       help='save solution file to disk')
+    # parser.add_argument('--solution_file',type=str,default=False,
+    #                    help='save solution file to disk')
     parser.add_argument('--profile',action="store_true",default=False,help='run cProfile and output to minpower.profile')
     parser.add_argument('--error','-e',action="store_true",default=False,help='redirect error messages to the standard output (useful for debugging on remote machines)')
                     
@@ -555,7 +558,8 @@ def main():
               get_duals=not args.duals_off,
               problemfile=args.problemfile,
               logging_file=args.logfile,
-              solution_file=args.solution_file)
+              )
+              # solution_file=args.solution_file)
     if args.profile:
         print 'run profile'
         import cProfile

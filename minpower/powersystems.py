@@ -188,6 +188,7 @@ class Generator(OptimizationObject):
         rampratemax=None,rampratemin=None,
         costcurvestring='20P',
         heatratestring=None,fuelcost=1,
+        bid_points=None,
         startupcost=0,shutdowncost=0,
         mustrun=False,
         name='',index=None,bus=None,
@@ -303,11 +304,25 @@ class Generator(OptimizationObject):
         self.initial_status_hours = hoursinstatus
     def build_cost_model(self):
         '''parse the coefficients for the polynomial bid curve'''
-        self.cost_breakpoints=config.default_num_breakpoints
-        if getattr(self,'heatratestring',None) is not None: 
-            self.cost_coeffs=[self.fuelcost*mult for mult in bidding.parse_polynomial(self.heatratestring)]
+        if self.bid_points is None:
+            # polynomial specification
+            self.cost_breakpoints=config.default_num_breakpoints
+            if getattr(self,'heatratestring',None) is not None: 
+                self.cost_coeffs=[self.fuelcost*mult for mult in bidding.parse_polynomial(self.heatratestring)]
+            else:
+                self.cost_coeffs=bidding.parse_polynomial(self.costcurvestring)
         else:
-            self.cost_coeffs=bidding.parse_polynomial(self.costcurvestring)
+            # do some simple validation and delay construction to bidding object 
+            min_power_bid = self.bid_points[0][0]
+            max_power_bid = self.bid_points[-1][0]
+            if min_power_bid>self.Pmin: 
+                self.Pmin = min_power_bid
+                logging.warning('{g} should have a min. power bid ({mpb}) <= to its min. power limit ({mpl})'.format(g=str(self), mpb=min_power_bid, mpl=self.Pmin))
+                
+            if max_power_bid<self.Pmax: 
+                self.Pmax = max_power_bid
+                logging.warning('{g} should have a max. power bid ({mpb}) >= to its max. power limit ({mpl})'.format(g=str(self), mpb=max_power_bid, mpl=self.Pmax))
+            
 
     def create_variables(self,times):
         '''
@@ -435,6 +450,7 @@ class Generator(OptimizationObject):
             if self.startupcost>0:  self.add_variable('startupcost',index=times.set, low=0,high=self.startupcost)                                                                                                                            
             if self.shutdowncost>0: self.add_variable('shutdowncost',index=times.set, low=0,high=self.shutdowncost)
 <<<<<<< HEAD
+<<<<<<< HEAD
         # else: #ED or OPF problem, no commitments
             # self.add_variable('status',       index=times.set,fixed_value=1)
             # self.add_variable('startupcost',  index=times.set,fixed_value=0)
@@ -481,17 +497,34 @@ class Generator(OptimizationObject):
         
         self.bids=bidding.Bid(
             polynomial=self.cost_coeffs,
+=======
+
+        bid_params = dict(
+>>>>>>> custom specification of pwl bid points
             owner=self,
             times=times,
             input_variable=self.power,
             min_input=self.Pmin,
             max_input=self.Pmax,
             status_variable=self.status,
-            num_breakpoints=self.cost_breakpoints
             )
+<<<<<<< HEAD
 >>>>>>> use native pyomo.Piecewise to do bidding linearization models
         return
 >>>>>>> major overahual on setting up variables/constraints directly to the parent problem. this allows the use of sets, variable lists. still need to cleanup (including dual values).
+=======
+        
+        if self.bid_points is None:
+            bid_params['polynomial'] = self.cost_coeffs
+            bid_params['num_breakpoints'] = self.cost_breakpoints
+        else:
+            bid_params['polynomial'] = None
+            bid_params['bid_points'] = self.bid_points
+
+        self.bids=bidding.Bid(**bid_params)
+        return
+
+>>>>>>> custom specification of pwl bid points
     def create_objective(self,times):
 <<<<<<< HEAD
         self.objective=sum_vars(self.cost(time) for time in times)
@@ -592,7 +625,7 @@ class Generator_nonControllable(Generator):
     def __init__(self,
                  schedule=None,
                  power=None,
-                 fuelcost=1,costcurvestring='0',
+                 fuelcost=1,costcurvestring='0',bid_points=None,
                  mustrun=False,
                  Pmin=0,Pmax=None,
                  name='',index=None,bus=None,kind='wind',**kwargs):
@@ -709,7 +742,7 @@ class Generator_Stochastic(Generator_nonControllable):
     """
     def __init__(self,
                  scenario_values=None,
-                 fuelcost=1,costcurvestring='0',
+                 fuelcost=1,costcurvestring='0',bid_points=None,
                  mustrun=False,
                  Pmin=0,Pmax=None,
                  name='',index=None,bus=None,kind='wind',**kwargs):

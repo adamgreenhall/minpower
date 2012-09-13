@@ -22,6 +22,7 @@ fields_gens={
     'rampratemin':'rampratemin','rampratemax':'rampratemax',
     'minuptime':'minuptime','uptimemin':'minuptime',
     'mindowntime':'mindowntime','downtimemin':'mindowntime',
+    'costcurvepointsfilename':'costcurvepointsfilename',
     'costcurveequation':'costcurvestring','cost':'costcurvestring',
     'heatrateequation':'heatratestring','fuelcost':'fuelcost',
     'startupcost':'startupcost','shutdowncost':'shutdowncost',
@@ -146,9 +147,18 @@ def build_class_list(data,model,datadir,times=None,model_schedule=schedule.make_
         model_row,model_schedule_row=get_model(row)
         schedulefilename=row.pop('schedulefilename',None)
         scenariosfilename=row.pop('scenariosfilename',None)
+        bid_points_filename = row.pop('costcurvepointsfilename', None)
+        
         if schedulefilename is not None: row['schedule']=model_schedule_row(joindir(datadir,schedulefilename),times)
         elif scenariosfilename is not None: model_row=powersystems.Generator_Stochastic
-
+        
+        # load a custom bid points filename with {power, cost} columns 
+        if bid_points_filename is not None: 
+            bid_points = csv2dicts( joindir(datadir, bid_points_filename) ) 
+            row['bid_points'] = [ (bp['power'], bp['cost']) for bp in bid_points]
+            row['costcurvestring'] = None
+            
+        
         try: obj=model_row(index=index, **row)
         except TypeError:
             msg='{} model got unexpected parameter'.format(model_row)

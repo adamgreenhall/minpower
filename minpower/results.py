@@ -206,7 +206,10 @@ class Solution_ED(Solution):
         for gen in generators:
             if gen.status(t):
                 in_range,out_range=gen.bids.output_incremental_range()
-                line,=plot.plot(in_range,out_range,linestyle='-')
+                if gen.bids.is_pwl:
+                    line,=plot.step(in_range,out_range,where='pre',linestyle='-')
+                else:
+                    line,=plot.plot(in_range,out_range,linestyle='-', )
                 plotted_gens.append(line)
                 P=value(gen.power(t))
                 IC=gen.incrementalcost(t)
@@ -270,10 +273,10 @@ class Solution_ED(Solution):
         data.append(getattrL(components,'name'))
         
         fields.append('u');   
-        data.append([niceTF(g.status(t)) for g in components])
+        data.append([niceTF(value(g.status(t))) for g in components])
         
         fields.append('P')
-        data.append([nice_zeros(g.power(t)) for g in components])
+        data.append([nice_zeros(value(g.power(t))) for g in components])
         
         fields.append('IC')
         data.append([nice_zeros(g.incrementalcost(t)) for g in components])

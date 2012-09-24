@@ -1,0 +1,269 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>minpower.stochastic &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="top" title="minpower" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for minpower.stochastic</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Stochastic scenario models for schedules. </span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">coopr.pysp.scenariotree</span> <span class="kn">import</span> <span class="n">ScenarioTree</span>
+<span class="kn">from</span> <span class="nn">coopr.pysp.ef</span> <span class="kn">import</span> <span class="n">create_ef_instance</span>
+<span class="kn">from</span> <span class="nn">coopr.pysp.phutils</span> <span class="kn">import</span> <span class="n">construct_scenario_instance</span>
+<span class="kn">from</span> <span class="nn">coopr.pyomo</span> <span class="kn">import</span> <span class="n">Set</span><span class="p">,</span><span class="n">Var</span><span class="p">,</span><span class="n">AbstractModel</span><span class="p">,</span><span class="n">Param</span><span class="p">,</span><span class="n">Constraint</span>
+<span class="kn">from</span> <span class="nn">coopr.pysp.util.scenariomodels</span> <span class="kn">import</span> <span class="n">scenario_tree_model</span>
+<span class="kn">from</span> <span class="nn">coopr</span> <span class="kn">import</span> <span class="n">pyomo</span>
+
+<span class="kn">from</span> <span class="nn">coopr.pyomo</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">coopr.pysp.phutils</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">fabs</span><span class="p">,</span> <span class="n">ceil</span>
+
+<span class="kn">from</span> <span class="nn">optimization</span> <span class="kn">import</span> <span class="n">OptimizationProblem</span>
+<span class="kn">import</span> <span class="nn">gc</span><span class="o">,</span><span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span><span class="n">datetime</span>
+<span class="c"># import ipdb; ipdb.set_trace()</span>
+
+<div class="viewcode-block" id="construct_simple_scenario_tree"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.stochastic.construct_simple_scenario_tree">[docs]</a><span class="k">def</span> <span class="nf">construct_simple_scenario_tree</span><span class="p">(</span><span class="n">probabilities</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Construct a simple scenario tree instance&#39;&#39;&#39;</span>
+    <span class="n">tree</span><span class="o">=</span><span class="n">scenario_tree_model</span>
+    <span class="n">scenario_names</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;s{n}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">probabilities</span><span class="p">))]</span>
+    <span class="n">node_names</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;n{n}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">probabilities</span><span class="p">))]</span>
+
+    <span class="n">tree</span><span class="o">.</span><span class="n">Stages</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;first stage&#39;</span><span class="p">,</span><span class="s">&#39;second stage&#39;</span><span class="p">)</span>
+    <span class="n">tree</span><span class="o">.</span><span class="n">Nodes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;root&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">nm</span> <span class="ow">in</span> <span class="n">node_names</span><span class="p">:</span> <span class="n">tree</span><span class="o">.</span><span class="n">Nodes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">nm</span><span class="p">)</span>
+    <span class="n">tree</span><span class="o">.</span><span class="n">NodeStage</span><span class="p">[</span><span class="s">&#39;root&#39;</span><span class="p">]</span><span class="o">=</span><span class="s">&#39;first stage&#39;</span>
+    <span class="k">for</span> <span class="n">nm</span> <span class="ow">in</span> <span class="n">node_names</span><span class="p">:</span> <span class="n">tree</span><span class="o">.</span><span class="n">NodeStage</span><span class="p">[</span><span class="n">nm</span><span class="p">]</span><span class="o">=</span><span class="s">&#39;second stage&#39;</span>
+    <span class="n">tree</span><span class="o">.</span><span class="n">Children</span><span class="p">[</span><span class="s">&#39;root&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">node_names</span>
+    
+    <span class="n">tree</span><span class="o">.</span><span class="n">ConditionalProbability</span><span class="p">[</span><span class="s">&#39;root&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">1.0</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">pr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">probabilities</span><span class="p">):</span> <span class="n">tree</span><span class="o">.</span><span class="n">ConditionalProbability</span><span class="p">[</span><span class="n">node_names</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">=</span><span class="n">pr</span>
+
+    <span class="k">for</span> <span class="n">nm</span> <span class="ow">in</span> <span class="n">scenario_names</span><span class="p">:</span> <span class="n">tree</span><span class="o">.</span><span class="n">Scenarios</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">nm</span><span class="p">)</span>        
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">nm</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">scenario_names</span><span class="p">):</span> <span class="n">tree</span><span class="o">.</span><span class="n">ScenarioLeafNode</span><span class="p">[</span><span class="n">nm</span><span class="p">]</span><span class="o">=</span><span class="n">node_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="c"># tree.Scenarios.pprint()</span>
+
+    <span class="c"># note that stage variables still need definition</span>
+    <span class="c"># as do the values of the per scenario variables </span>
+    <span class="k">return</span> <span class="n">tree</span>
+</div>
+<div class="viewcode-block" id="define_stage_variables"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.stochastic.define_stage_variables">[docs]</a><span class="k">def</span> <span class="nf">define_stage_variables</span><span class="p">(</span><span class="n">scenario_tree</span><span class="p">,</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">):</span>
+    <span class="c"># scenario_tree.Stages.pprint()</span>
+    <span class="c"># scenario_tree.StageVariables.pprint()</span>
+
+    <span class="c">#create sets of variable names (not actual variables) for each stage</span>
+    <span class="n">variables_first_stage</span><span class="o">=</span><span class="n">Set</span><span class="p">()</span>
+    <span class="n">variables_second_stage</span><span class="o">=</span><span class="n">Set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">power_system</span><span class="o">.</span><span class="n">generators</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">gen</span><span class="p">,</span><span class="s">&#39;has_scenarios&#39;</span><span class="p">,</span><span class="bp">False</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">gen</span><span class="o">.</span><span class="n">is_controllable</span><span class="p">:</span> <span class="n">variables_first_stage</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s">&#39;status&#39;</span><span class="p">,</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">time</span><span class="o">=</span><span class="bp">None</span><span class="p">))</span><span class="o">+</span><span class="s">&#39;[*]&#39;</span><span class="p">)</span>  
+            <span class="n">variables_second_stage</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">gen</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s">&#39;power&#39;</span><span class="p">,</span><span class="n">indexed</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">time</span><span class="o">=</span><span class="bp">None</span><span class="p">))</span><span class="o">+</span><span class="s">&#39;[*]&#39;</span><span class="p">)</span>
+            <span class="c">#note - appending &#39;[*]&#39; to the indicies is required to get pysp to assign all the variables in the array to a stage </span>
+        
+    <span class="c"># variables_first_stage.pprint()</span>
+    <span class="n">scenario_tree</span><span class="o">.</span><span class="n">StageVariables</span><span class="p">[</span><span class="s">&#39;first stage&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">variables_first_stage</span>
+    <span class="n">scenario_tree</span><span class="o">.</span><span class="n">StageVariables</span><span class="p">[</span><span class="s">&#39;second stage&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">variables_second_stage</span>
+    
+    <span class="c">#power_system._model=power_system._model.create()</span>
+    <span class="c">#power_system._model.pprint()</span>
+    <span class="n">scenario_tree</span><span class="o">.</span><span class="n">StageCostVariable</span><span class="p">[</span><span class="s">&#39;first stage&#39;</span><span class="p">]</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">power_system</span><span class="o">.</span><span class="n">cost_first_stage</span><span class="p">())</span>
+    <span class="n">scenario_tree</span><span class="o">.</span><span class="n">StageCostVariable</span><span class="p">[</span><span class="s">&#39;second stage&#39;</span><span class="p">]</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">power_system</span><span class="o">.</span><span class="n">cost_second_stage</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="create_problem_with_scenarios"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.stochastic.create_problem_with_scenarios">[docs]</a><span class="k">def</span> <span class="nf">create_problem_with_scenarios</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">,</span><span class="n">scenariotreeinstance</span><span class="p">,</span><span class="n">stage_hours</span><span class="p">,</span><span class="n">overlap_hours</span><span class="p">):</span>
+    <span class="n">scenario_tree</span><span class="o">=</span><span class="n">ScenarioTree</span><span class="p">(</span><span class="n">scenarioinstance</span><span class="o">=</span><span class="n">power_system</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="n">scenariotreeinstance</span><span class="o">=</span><span class="n">scenariotreeinstance</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">scenario_tree</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span><span class="o">==</span><span class="bp">False</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;not a valid scenario tree&#39;</span><span class="p">)</span>
+    
+    <span class="c">#construct scenario instances</span>
+    <span class="c"># gc.disable()</span>
+    <span class="n">gen_w_scenarios</span><span class="o">=</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">gen</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">gen</span><span class="p">,</span><span class="s">&#39;has_scenarios&#39;</span><span class="p">,</span><span class="bp">False</span><span class="p">),</span><span class="n">power_system</span><span class="o">.</span><span class="n">generators</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="n">scenario_instances</span><span class="o">=</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="n">s</span><span class="p">,</span><span class="n">scenario</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">scenario_tree</span><span class="o">.</span><span class="n">_scenarios</span><span class="p">):</span>
+        <span class="c">#print &#39;scenario: {s}&#39;.format(s=s)</span>
+        <span class="n">scenario_instance</span><span class="o">=</span><span class="n">power_system</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        
+        <span class="n">power</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">scenario_instance</span><span class="p">,</span><span class="s">&#39;power_{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">gen_w_scenarios</span><span class="p">)))</span>
+        <span class="c">#set the values of the parameter for this scenario</span>
+        <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">times</span><span class="p">:</span> <span class="n">power</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">time</span><span class="p">)]</span><span class="o">=</span><span class="n">gen_w_scenarios</span><span class="o">.</span><span class="n">scenario_values</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">time</span><span class="p">]</span>
+        
+        <span class="c">#power.pprint()</span>
+        <span class="n">scenario_instance</span><span class="o">.</span><span class="n">preprocess</span><span class="p">()</span>
+        <span class="n">scenario_instances</span><span class="p">[</span><span class="n">scenario</span><span class="o">.</span><span class="n">_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">scenario_instance</span>    
+
+    <span class="n">scenario_tree</span><span class="o">.</span><span class="n">defineVariableIndexSets</span><span class="p">(</span><span class="n">scenario_instances</span><span class="p">)</span>
+    <span class="n">full_problem_instance</span><span class="o">=</span><span class="n">create_ef_instance</span><span class="p">(</span><span class="n">scenario_tree</span><span class="p">,</span> <span class="n">scenario_instances</span><span class="p">)</span>
+    <span class="c">#full_problem_instance.pprint()</span>
+    
+    <span class="c">#relax the non-anticipatory constraints on the generator status variables beyond the UC time horizon</span>
+    <span class="n">start</span><span class="o">=</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">Start</span><span class="o">+</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">stage_hours</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span> 
+        <span class="n">tStart</span><span class="o">=</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">Start</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">times</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+        <span class="n">remove_na</span><span class="o">=</span><span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span> 
+        <span class="n">remove_na</span><span class="o">=</span><span class="bp">False</span>
+    <span class="k">if</span> <span class="n">remove_na</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">times</span><span class="p">[</span><span class="n">tStart</span><span class="p">:]:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;get rid of NA constraint at &#39;</span><span class="p">,</span><span class="n">time</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">scenario</span> <span class="ow">in</span> <span class="n">scenario_instances</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">power_system</span><span class="o">.</span><span class="n">generators</span><span class="p">():</span>
+                    <span class="k">try</span><span class="p">:</span> <span class="n">u</span><span class="o">=</span><span class="n">gen</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="n">time</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> 
+                    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="k">continue</span>
+                    <span class="c">#print scenario,u</span>
+                    <span class="n">full_problem_instance</span><span class="o">.</span><span class="n">_clear_attribute</span><span class="p">(</span><span class="s">&#39;{s}_{u}_None&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">scenario</span><span class="p">,</span><span class="n">u</span><span class="o">=</span><span class="n">u</span><span class="p">))</span>
+                    <span class="n">full_problem_instance</span><span class="o">.</span><span class="n">_clear_attribute</span><span class="p">(</span><span class="s">&#39;root_{u}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">u</span><span class="o">=</span><span class="n">u</span><span class="p">))</span>
+    
+    <span class="c">#full_problem_instance.pprint()</span>
+    <span class="c">#full_problem_instance.write(&#39;problem.lp&#39;)</span>
+    <span class="c"># full_problem=OptimizationProblem(instance=full_problem_instance)</span>
+    <span class="c"># return full_problem,scenario_tree,scenario_instances</span>
+    <span class="n">power_system</span><span class="o">.</span><span class="n">stochastic_formulation</span><span class="o">=</span><span class="bp">True</span>
+    <span class="n">power_system</span><span class="o">.</span><span class="n">_stochastic_instance</span><span class="o">=</span><span class="n">full_problem_instance</span>
+    <span class="n">power_system</span><span class="o">.</span><span class="n">_scenario_tree</span><span class="o">=</span><span class="n">scenario_tree</span>
+    <span class="n">power_system</span><span class="o">.</span><span class="n">_scenario_instances</span><span class="o">=</span><span class="n">scenario_instances</span>
+    <span class="k">return</span> <span class="n">power_system</span>
+</div>
+<div class="viewcode-block" id="get_scenario_based_costs"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.stochastic.get_scenario_based_costs">[docs]</a><span class="k">def</span> <span class="nf">get_scenario_based_costs</span><span class="p">(</span><span class="n">scenario_tree</span><span class="p">,</span><span class="n">scenario_instances</span><span class="p">):</span>
+    <span class="c">#scenario_tree.pprintCosts(scenario_instances)</span>
+    <span class="n">costs</span><span class="o">=</span><span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">scenario_tree</span><span class="o">.</span><span class="n">_tree_node_map</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">scenarios</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">_scenarios</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">scenarios</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="n">costs</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">_scenarios</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_name</span><span class="p">]</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">computeExpectedNodeCost</span><span class="p">(</span><span class="n">scenario_instances</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="k">continue</span>
+    <span class="k">return</span> <span class="n">costs</span>
+</div>
+<div class="viewcode-block" id="update_variables"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.stochastic.update_variables">[docs]</a><span class="k">def</span> <span class="nf">update_variables</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Convert all variables into dictionaries of their solved values, keyed by scenario&#39;&#39;&#39;</span>
+    <span class="n">first_scenario</span><span class="o">=</span><span class="bp">True</span>
+    <span class="k">for</span> <span class="n">scenario_name</span><span class="p">,</span><span class="n">scenario</span> <span class="ow">in</span> <span class="n">power_system</span><span class="o">.</span><span class="n">_scenario_instances</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">var_name</span><span class="p">,</span><span class="n">var</span> <span class="ow">in</span> <span class="n">scenario</span><span class="o">.</span><span class="n">active_components</span><span class="p">(</span><span class="n">Var</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">first_scenario</span><span class="p">:</span> 
+                <span class="n">power_system</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span><span class="o">=</span><span class="p">{</span><span class="n">scenario_name</span><span class="p">:</span> <span class="n">var</span><span class="o">.</span><span class="n">value</span><span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span> 
+                <span class="n">power_system</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">var_name</span><span class="p">][</span><span class="n">scenario_name</span><span class="p">]</span><span class="o">=</span><span class="n">var</span><span class="o">.</span><span class="n">value</span>
+        
+        <span class="k">for</span> <span class="n">param_name</span><span class="p">,</span><span class="n">param</span> <span class="ow">in</span> <span class="n">scenario</span><span class="o">.</span><span class="n">active_components</span><span class="p">(</span><span class="n">Param</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">times</span><span class="p">:</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">param_name</span><span class="o">+</span><span class="s">&quot;[{t}]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">time</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">first_scenario</span><span class="p">:</span>
+                    <span class="n">power_system</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">=</span><span class="p">{</span><span class="n">scenario_name</span><span class="p">:</span> <span class="n">param</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">time</span><span class="p">)]</span><span class="o">.</span><span class="n">value</span><span class="p">}</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">power_system</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">scenario_name</span><span class="p">]</span><span class="o">=</span> <span class="n">param</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">time</span><span class="p">)]</span><span class="o">.</span><span class="n">value</span>
+                    
+        <span class="k">else</span><span class="p">:</span> <span class="n">first_scenario</span><span class="o">=</span><span class="bp">False</span>                
+        
+        <span class="c">#values=[params[0][&#39;P_g2&#39;][str(self.times[0])].value ]</span>
+<span class="c">#    for tree_node_name,tree_node in sorted(problem.scenario_tree._tree_node_map.items()):</span>
+<span class="c">#        for variable_name, (variable, match_template) in tree_node._stage._variables.iteritems():</span>
+<span class="c">#            indices = sorted(tree_node._variable_indices[variable.name])</span>
+<span class="c">#            solution_variable = tree_node._solutions[variable.name]</span>
+<span class="c">#            if (len(indices) == 1) and (indices[0] == None):</span>
+<span class="c">#                # if this is a singleton variable, then it should necessarily be active -</span>
+<span class="c">#                # otherwise, it wouldn&#39;t be referenced in the stage!!!</span>
+<span class="c">#                value = solution_variable[None].value</span>
+<span class="c">#                print tree_node_name+&quot; &quot;+variable.name+&quot;=&quot;+str(value)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../creating-problems.html">Creating a Problem</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<!--<div class="social">-->
+<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
+<!--</div>-->
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

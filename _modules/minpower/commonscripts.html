@@ -1,0 +1,359 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>minpower.commonscripts &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="top" title="minpower" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for minpower.commonscripts</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Short, commonly used scripts. </span>
+<span class="sd">Many of them are one liners.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">itertools</span><span class="o">,</span><span class="nn">operator</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">dateutil</span> <span class="kn">import</span> <span class="n">parser</span>
+
+<span class="c">###### matrix stuff #######</span>
+<div class="viewcode-block" id="getColumn"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.getColumn">[docs]</a><span class="k">def</span> <span class="nf">getColumn</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span><span class="n">colNum</span><span class="p">):</span> <span class="k">return</span> <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="n">colNum</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">matrix</span><span class="p">]</span><span class="c">#equiv to matrix(:,j)</span></div>
+<div class="viewcode-block" id="elementwiseMultiply"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.elementwiseMultiply">[docs]</a><span class="k">def</span> <span class="nf">elementwiseMultiply</span><span class="p">(</span><span class="n">La</span><span class="p">,</span><span class="n">Lb</span><span class="p">):</span> <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="n">La</span><span class="p">,</span><span class="n">Lb</span><span class="p">)</span></div>
+<div class="viewcode-block" id="elementwiseAdd"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.elementwiseAdd">[docs]</a><span class="k">def</span> <span class="nf">elementwiseAdd</span><span class="p">(</span><span class="n">La</span><span class="p">,</span><span class="n">Lb</span><span class="p">):</span> <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">add</span><span class="p">,</span> <span class="n">La</span><span class="p">,</span><span class="n">Lb</span><span class="p">)</span></div>
+<div class="viewcode-block" id="transpose"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.transpose">[docs]</a><span class="k">def</span> <span class="nf">transpose</span><span class="p">(</span><span class="n">listoflists</span><span class="p">):</span> <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span><span class="o">*</span><span class="n">listoflists</span><span class="p">)</span></div>
+<div class="viewcode-block" id="flatten"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.flatten">[docs]</a><span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">listoflists</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Flatten one level of nesting&#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">listoflists</span><span class="p">))</span></div>
+<div class="viewcode-block" id="unflatten"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.unflatten">[docs]</a><span class="k">def</span> <span class="nf">unflatten</span><span class="p">(</span><span class="n">flatlist</span><span class="p">,</span><span class="n">levels</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Turn a flat list into a nested list, with a specified number of lists per nesting level.</span>
+<span class="sd">    Excess elements are silently ignored.</span>
+<span class="sd">        </span>
+<span class="sd">    &gt;&gt;&gt; unflatten(range(12),[2,2,3])</span>
+<span class="sd">    [[[0, 1, 2], [3, 4, 5]], [[6, 7, 8], [9, 10, 11]]]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">nestgenerator</span><span class="p">(</span><span class="n">flatlist</span><span class="p">,</span><span class="n">levels</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">levels</span><span class="p">:</span>
+            <span class="n">it</span> <span class="o">=</span> <span class="n">nestgenerator</span><span class="p">(</span><span class="n">flatlist</span><span class="p">,</span><span class="n">levels</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="k">while</span> <span class="mi">1</span><span class="p">:</span> <span class="k">yield</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">it</span><span class="p">,</span><span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">flatlist</span><span class="p">:</span> <span class="k">yield</span> <span class="n">d</span>        
+    <span class="k">return</span> <span class="n">nestgenerator</span><span class="p">(</span><span class="n">flatlist</span><span class="p">,</span><span class="n">levels</span><span class="p">)</span><span class="o">.</span><span class="n">next</span><span class="p">()</span></div>
+<div class="viewcode-block" id="unique"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.unique">[docs]</a><span class="k">def</span> <span class="nf">unique</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span> 
+    <span class="c"># order preserving, &lt;http://bit.ly/pyUnique&gt;</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="p">[</span><span class="n">U</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">seq</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">U</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">U</span></div>
+<div class="viewcode-block" id="within"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.within">[docs]</a><span class="k">def</span> <span class="nf">within</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">):</span> <span class="k">return</span> <span class="p">(</span><span class="n">val</span><span class="o">-</span><span class="n">eps</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="n">val</span><span class="o">+</span><span class="n">eps</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="frange"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.frange">[docs]</a><span class="k">def</span> <span class="nf">frange</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Like range(), but returns list of floats instead</span>
+<span class="sd">    All numbers are generated on-demand using generators</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">cur</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">cur</span> <span class="o">&lt;</span> <span class="n">stop</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">cur</span>
+        <span class="n">cur</span> <span class="o">+=</span> <span class="n">step</span>
+</div>
+<div class="viewcode-block" id="replace_all"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.replace_all">[docs]</a><span class="k">def</span> <span class="nf">replace_all</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">replacement</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">with_index</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">)):</span> <span class="k">yield</span> <span class="n">i</span><span class="p">,</span> <span class="n">seq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">with_index</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">elem</span> <span class="o">==</span> <span class="n">obj</span><span class="p">:</span> <span class="n">seq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">replacement</span>
+    <span class="k">return</span> <span class="n">seq</span>
+    </div>
+<div class="viewcode-block" id="pairwise"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.pairwise">[docs]</a><span class="k">def</span> <span class="nf">pairwise</span><span class="p">(</span><span class="n">iterable</span><span class="p">):</span>
+    <span class="s">&quot;s -&gt; (s0,s1), (s1,s2), (s2, s3), ...&quot;</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">tee</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+    <span class="nb">next</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">itertools</span><span class="o">.</span><span class="n">izip</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+<span class="c">##### csv stuff #####</span></div>
+<div class="viewcode-block" id="csvColumn"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.csvColumn">[docs]</a><span class="k">def</span> <span class="nf">csvColumn</span><span class="p">(</span><span class="n">filenm</span><span class="p">,</span><span class="n">fieldNm</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;get a single column of csv data&#39;&#39;&#39;</span>
+    <span class="n">data</span><span class="p">,</span><span class="n">fields</span><span class="o">=</span><span class="n">readCSV</span><span class="p">(</span><span class="n">filenm</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span> <span class="n">num</span><span class="o">=</span><span class="n">fields</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">fieldNm</span><span class="p">)</span> <span class="c">#column number to return</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="ow">or</span> <span class="ne">IndexError</span><span class="p">:</span> <span class="n">num</span><span class="o">=</span><span class="n">indexCaseSpaceInsensitive</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span><span class="n">fieldNm</span><span class="p">)</span> <span class="c">#try again with case and space insensitive        </span>
+    <span class="k">return</span> <span class="n">getColumn</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">num</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="readCSV"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.readCSV">[docs]</a><span class="k">def</span> <span class="nf">readCSV</span><span class="p">(</span><span class="n">filenm</span><span class="p">,</span><span class="n">validFields</span><span class="o">=</span><span class="s">&#39;all&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read data from a csv into a list of lists. </span>
+<span class="sd">    Does parsing of each cell with :func:`csvDataConvert`.</span>
+<span class="sd">    Field order doesn&#39;t matter. If validFields is not &#39;all&#39; and</span>
+<span class="sd">    a field is not in validFields, its data will be excluded from </span>
+<span class="sd">    the output data.</span>
+<span class="sd">        </span>
+<span class="sd">    :param filenm: name of the csv file to read</span>
+<span class="sd">    :param validFields: list of valid field names (case and space insensitive)</span>
+<span class="sd">    </span>
+<span class="sd">    :returns: data, a list of lists</span>
+<span class="sd">    :returns: fieldsChecked, a list of fields </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">csvfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filenm</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span> <span class="n">dialect</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">Sniffer</span><span class="p">()</span><span class="o">.</span><span class="n">sniff</span><span class="p">(</span><span class="n">csvfile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4048</span><span class="p">))</span>
+    <span class="k">except</span><span class="p">:</span> 
+        <span class="c">#this generally happens when the file is very short</span>
+        <span class="c">#assume dialect is excel</span>
+        <span class="n">dialect</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">excel</span>
+    <span class="n">csvfile</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">csvfile</span><span class="p">,</span> <span class="n">dialect</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">csvDataConvert</span><span class="p">(</span><span class="n">inData</span><span class="p">,</span> <span class="n">repForBlankStrings</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">checkForNumbers</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="n">outData</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">inData</span><span class="p">:</span>
+            <span class="n">newRow</span><span class="o">=</span><span class="p">[]</span>
+            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
+                <span class="n">entry</span><span class="o">=</span><span class="n">entry</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">==</span><span class="s">&#39;&#39;</span><span class="p">:</span> <span class="n">newRow</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">repForBlankStrings</span> <span class="p">)</span>
+                <span class="k">elif</span> <span class="n">checkForNumbers</span><span class="p">:</span> <span class="n">newRow</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">convert_str2num</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span> <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span> <span class="n">newRow</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+            <span class="c">#if not all(e==&#39;&#39; for e in newRow): </span>
+            <span class="n">outData</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newRow</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">outData</span>
+    
+    <span class="n">data</span><span class="o">=</span><span class="n">csvDataConvert</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">reader</span><span class="p">))</span>
+    <span class="n">csvfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="k">try</span><span class="p">:</span> <span class="n">data</span><span class="o">=</span><span class="n">transpose</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="c">#return data in r,c index order </span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&#39;data for {file} is length: {n}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">file</span><span class="o">=</span><span class="n">filenm</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+        <span class="k">print</span> <span class="s">&#39;file is {n}B&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">filenm</span><span class="p">))</span>
+        <span class="k">raise</span>
+    <span class="n">fields</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c">#fields are the first row of csv</span>
+    
+    <span class="k">if</span> <span class="n">validFields</span><span class="o">==</span><span class="s">&#39;all&#39;</span><span class="p">:</span> <span class="k">return</span> <span class="n">data</span><span class="p">,</span><span class="n">fields</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c">#ensure that each field is in validFields</span>
+        
+        <span class="n">fieldsChecked</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">fields</span><span class="p">[:])</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">field</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fields</span><span class="p">):</span> 
+            <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">validFields</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span> 
+                <span class="n">fieldSimple</span><span class="o">=</span><span class="n">drop_case_spaces</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">fieldSimple</span> <span class="ow">in</span> <span class="n">validFields</span><span class="p">:</span> <span class="n">fieldsChecked</span><span class="p">[</span><span class="n">fieldsChecked</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">field</span><span class="p">)]</span><span class="o">=</span><span class="n">fieldSimple</span> <span class="c">#compare without considering case or spaces</span>
+                <span class="k">elif</span> <span class="n">fieldSimple</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="k">print</span> <span class="s">&#39;Ignored &quot;{f}&quot; as not a valid input field for {nm}. &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">field</span><span class="p">,</span><span class="n">nm</span><span class="o">=</span><span class="n">filenm</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">data</span><span class="p">,</span><span class="n">fieldsChecked</span>    
+</div>
+<div class="viewcode-block" id="csv2dicts"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.csv2dicts">[docs]</a><span class="k">def</span> <span class="nf">csv2dicts</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="n">field_map</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">valid_cell</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">val</span><span class="p">):</span> <span class="k">return</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">val</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">!=</span><span class="s">&#39;&#39;</span> 
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">csvfile</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span> <span class="n">dialect</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">Sniffer</span><span class="p">()</span><span class="o">.</span><span class="n">sniff</span><span class="p">(</span><span class="n">csvfile</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4048</span><span class="p">))</span>
+        <span class="k">except</span><span class="p">:</span> <span class="n">dialect</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">excel</span>
+        <span class="n">csvfile</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">raw_data</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">csvfile</span><span class="p">,</span> <span class="n">dialect</span><span class="o">=</span><span class="n">dialect</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">field_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> 
+        <span class="k">try</span><span class="p">:</span> <span class="n">data</span><span class="o">=</span><span class="p">[{</span><span class="n">field_map</span><span class="p">[</span><span class="n">drop_case_spaces</span><span class="p">(</span><span class="n">name</span><span class="p">)]:</span><span class="n">convert_str2num</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span><span class="n">val</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">valid_cell</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">val</span><span class="p">)}</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span> 
+            <span class="k">print</span> <span class="n">raw_data</span>
+            <span class="k">raise</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data</span><span class="o">=</span><span class="p">[{</span><span class="n">name</span><span class="p">:</span><span class="n">convert_str2num</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span><span class="n">val</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">valid_cell</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">val</span><span class="p">)}</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">data</span> 
+</div>
+<div class="viewcode-block" id="writeCSV"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.writeCSV">[docs]</a><span class="k">def</span> <span class="nf">writeCSV</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span><span class="n">data</span><span class="p">,</span><span class="n">filename</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;w+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">writerows</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        
+<span class="c">#################### string stuff ##################</span></div>
+<div class="viewcode-block" id="convert_str2num"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.convert_str2num">[docs]</a><span class="k">def</span> <span class="nf">convert_str2num</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="n">s</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span> <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span> 
+        <span class="k">try</span><span class="p">:</span> <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span> <span class="k">return</span> <span class="n">s</span></div>
+<div class="viewcode-block" id="indexCaseSpaceInsensitive"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.indexCaseSpaceInsensitive">[docs]</a><span class="k">def</span> <span class="nf">indexCaseSpaceInsensitive</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="n">s</span><span class="p">):</span> <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">drop_case_spaces</span><span class="p">,</span><span class="n">L</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span> <span class="n">drop_case_spaces</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="p">)</span></div>
+<div class="viewcode-block" id="drop_case_spaces"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.drop_case_spaces">[docs]</a><span class="k">def</span> <span class="nf">drop_case_spaces</span><span class="p">(</span><span class="n">s</span><span class="p">):</span> 
+    <span class="sd">&#39;&#39;&#39;get rid of spaces in a string and make lower case. will also work with list of strings&#39;&#39;&#39;</span>
+    <span class="k">try</span><span class="p">:</span> <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> 
+        <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span> <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">drop_case_spaces</span><span class="p">,</span><span class="n">s</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="toPercent"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.toPercent">[docs]</a><span class="k">def</span> <span class="nf">toPercent</span><span class="p">(</span><span class="n">val</span><span class="p">,</span><span class="n">digits</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span> <span class="k">return</span> <span class="s">&#39;{p:.{d}%}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">val</span><span class="p">,</span><span class="n">d</span><span class="o">=</span><span class="n">digits</span><span class="p">)</span>            
+<span class="c">##################### file stuff ###########################</span></div>
+<div class="viewcode-block" id="splitFilename"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.splitFilename">[docs]</a><span class="k">def</span> <span class="nf">splitFilename</span><span class="p">(</span><span class="n">fullPathFilenm</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;split a filename into its directory, filename, and extension&#39;&#39;&#39;</span>
+    <span class="p">(</span><span class="n">dirNm</span><span class="p">,</span><span class="n">fullFilenm</span><span class="p">)</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">fullPathFilenm</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">fileNm</span><span class="p">,</span><span class="n">extNm</span><span class="p">)</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">fullFilenm</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dirNm</span><span class="p">,</span> <span class="n">fileNm</span><span class="p">,</span> <span class="n">extNm</span></div>
+<div class="viewcode-block" id="joindir"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.joindir">[docs]</a><span class="k">def</span> <span class="nf">joindir</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="nb">file</span><span class="p">):</span> <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="nb">file</span><span class="p">)</span>
+            
+<span class="c">################### time stuff ###########################</span></div>
+<div class="viewcode-block" id="parseTime"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.parseTime">[docs]</a><span class="k">def</span> <span class="nf">parseTime</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="n">formatter</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span> 
+    <span class="k">if</span> <span class="n">formatter</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="o">**</span><span class="n">formatter</span><span class="p">)</span></div>
+<div class="viewcode-block" id="getTimeFormat"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.getTimeFormat">[docs]</a><span class="k">def</span> <span class="nf">getTimeFormat</span><span class="p">(</span><span class="nb">str</span><span class="p">):</span>
+    <span class="n">formatter</span><span class="o">=</span><span class="nb">dict</span><span class="p">()</span>
+    <span class="n">t</span><span class="o">=</span><span class="n">parseTime</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="n">parseTime</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="nb">dict</span><span class="p">(</span><span class="n">dayfirst</span><span class="o">=</span><span class="bp">True</span><span class="p">)):</span> <span class="n">formatter</span><span class="p">[</span><span class="s">&#39;dayfirst&#39;</span><span class="p">]</span><span class="o">=</span><span class="bp">True</span>
+    <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="n">parseTime</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span><span class="nb">dict</span><span class="p">(</span><span class="n">yearfirst</span><span class="o">=</span><span class="bp">True</span><span class="p">)):</span> <span class="n">formatter</span><span class="p">[</span><span class="s">&#39;yearfirst&#39;</span><span class="p">]</span><span class="o">=</span><span class="bp">True</span>
+    <span class="k">return</span> <span class="n">formatter</span></div>
+<div class="viewcode-block" id="hours"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.hours">[docs]</a><span class="k">def</span> <span class="nf">hours</span><span class="p">(</span><span class="n">t</span><span class="p">):</span> 
+    <span class="k">try</span><span class="p">:</span>  <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="n">days</span><span class="o">*</span><span class="mf">24.0</span> <span class="o">+</span> <span class="n">t</span><span class="o">.</span><span class="n">seconds</span><span class="o">/</span><span class="mf">3600.0</span> <span class="c">#t is a datetime object</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span> <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">t</span><span class="p">)</span> <span class="c">#t is a number</span></div>
+<div class="viewcode-block" id="show_clock"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.show_clock">[docs]</a><span class="k">def</span> <span class="nf">show_clock</span><span class="p">(</span><span class="n">show</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s">&#39;clock time={}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%H:%M:%S&#39;</span><span class="p">))</span> <span class="k">if</span> <span class="n">show</span> <span class="k">else</span> <span class="s">&#39;&#39;</span>
+
+<span class="c">####################### class stuff #######################</span></div>
+<div class="viewcode-block" id="getattrL"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.getattrL">[docs]</a><span class="k">def</span> <span class="nf">getattrL</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="n">attribute</span><span class="o">=</span><span class="s">&#39;name&#39;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;get the attribute of each class instance in a list&#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span><span class="n">attribute</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">L</span><span class="p">]</span></div>
+<div class="viewcode-block" id="getclass_inlist"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.getclass_inlist">[docs]</a><span class="k">def</span> <span class="nf">getclass_inlist</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="n">values</span><span class="p">,</span><span class="n">attribute</span><span class="o">=</span><span class="s">&#39;name&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">values</span><span class="p">]</span>
+    <span class="n">attrL</span><span class="o">=</span><span class="n">getattrL</span><span class="p">(</span><span class="n">L</span><span class="p">,</span><span class="n">attribute</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span> <span class="n">indL</span><span class="o">=</span><span class="p">[</span><span class="n">attrL</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">attrL</span>
+        <span class="k">raise</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indL</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="k">return</span> <span class="n">L</span><span class="p">[</span><span class="n">indL</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="p">[</span><span class="n">L</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">indL</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="update_attributes"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.update_attributes">[docs]</a><span class="k">def</span> <span class="nf">update_attributes</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">variables</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;self&#39;</span><span class="p">],</span><span class="n">include</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Update instance attributes</span>
+<span class="sd"> </span>
+<span class="sd">    For example, update(self, locals())</span>
+<span class="sd">    </span>
+<span class="sd">    instance: Instance to update via setattr()</span>
+<span class="sd">    variables: Dictionary of variables</span>
+<span class="sd">    exclude: Variables to explicitly exclude, defaults to [&#39;self&#39;].</span>
+<span class="sd">    include: Variables to explicitly include. If set, include overides exclude.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">include</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="p">[</span><span class="nb">setattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">include</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s">&#39;self&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">:</span> <span class="n">exclude</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;self&#39;</span><span class="p">)</span>
+        <span class="p">[</span><span class="nb">setattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">]</span>
+ 
+<span class="c">####################### dict stuff ########################</span></div>
+<div class="viewcode-block" id="subset"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.subset">[docs]</a><span class="k">def</span> <span class="nf">subset</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">subsetL</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;subset of dictionary&#39;&#39;&#39;</span>
+    <span class="n">subsetLcopy</span><span class="o">=</span><span class="n">subsetL</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">subsetL</span><span class="p">):</span> <span class="c">#ensure that subset doesn&#39;t contain any keys not in D already</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">D</span><span class="p">:</span> <span class="n">subsetLcopy</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">subsetL</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="n">subsetLcopy</span><span class="p">)))</span></div>
+<div class="viewcode-block" id="subsetexcept"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.subsetexcept">[docs]</a><span class="k">def</span> <span class="nf">subsetexcept</span><span class="p">(</span><span class="n">D</span><span class="p">,</span><span class="n">exceptL</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;dictionary without exceptions list&#39;&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">exceptL</span><span class="p">:</span> <span class="n">D</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">D</span>
+
+</div>
+<div class="viewcode-block" id="show_memory_backrefs"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.show_memory_backrefs">[docs]</a><span class="k">def</span> <span class="nf">show_memory_backrefs</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">objgraph</span>
+    <span class="n">objgraph</span><span class="o">.</span><span class="n">show_backrefs</span><span class="p">(</span><span class="n">objgraph</span><span class="o">.</span><span class="n">by_type</span><span class="p">(</span><span class="n">name</span><span class="p">),</span><span class="n">filename</span><span class="o">=</span><span class="s">&#39;backrefs-{}.png&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span></div>
+<div class="viewcode-block" id="show_memory_refs"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.show_memory_refs">[docs]</a><span class="k">def</span> <span class="nf">show_memory_refs</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">objgraph</span><span class="o">,</span><span class="nn">inspect</span>
+    <span class="k">try</span><span class="p">:</span> <span class="n">obj</span><span class="o">=</span><span class="n">objgraph</span><span class="o">.</span><span class="n">by_type</span><span class="p">(</span><span class="n">name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&#39;no object of type&#39;</span><span class="p">,</span><span class="n">name</span>  
+        <span class="k">return</span>
+    <span class="n">objgraph</span><span class="o">.</span><span class="n">show_chain</span><span class="p">(</span><span class="n">objgraph</span><span class="o">.</span><span class="n">find_backref_chain</span><span class="p">(</span> <span class="n">obj</span> <span class="p">,</span> <span class="n">inspect</span><span class="o">.</span><span class="n">ismodule</span><span class="p">),</span><span class="n">filename</span><span class="o">=</span><span class="s">&#39;chain-{}.png&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span></div>
+<div class="viewcode-block" id="show_memory_growth"><a class="viewcode-back" href="../../auto-api/minpower.html#minpower.commonscripts.show_memory_growth">[docs]</a><span class="k">def</span> <span class="nf">show_memory_growth</span><span class="p">():</span>
+    <span class="kn">import</span> <span class="nn">objgraph</span>
+    <span class="n">objgraph</span><span class="o">.</span><span class="n">show_growth</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../creating-problems.html">Creating a Problem</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<!--<div class="social">-->
+<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
+<!--</div>-->
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

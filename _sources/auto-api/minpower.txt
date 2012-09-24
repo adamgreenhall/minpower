@@ -1,0 +1,99 @@
+minpower Package
+================
+
+:mod:`minpower` Package
+-----------------------
+
+.. automodule:: minpower.__init__
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`bidding` Module
+---------------------
+
+.. automodule:: minpower.bidding
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`commonscripts` Module
+---------------------------
+
+.. automodule:: minpower.commonscripts
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`config` Module
+--------------------
+
+.. automodule:: minpower.config
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`get_data` Module
+----------------------
+
+.. automodule:: minpower.get_data
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`optimization` Module
+--------------------------
+
+.. automodule:: minpower.optimization
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`powersystems` Module
+--------------------------
+
+.. automodule:: minpower.powersystems
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`results` Module
+---------------------
+
+.. automodule:: minpower.results
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`schedule` Module
+----------------------
+
+.. automodule:: minpower.schedule
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`solve` Module
+-------------------
+
+.. automodule:: minpower.solve
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`stochastic` Module
+------------------------
+
+.. automodule:: minpower.stochastic
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+
+    minpower.addons
+    minpower.tests
+

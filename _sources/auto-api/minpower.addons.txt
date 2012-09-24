@@ -1,0 +1,11 @@
+addons Package
+==============
+
+:mod:`addons` Package
+---------------------
+
+.. automodule:: minpower.addons
+    :members:
+    :undoc-members:
+    :show-inheritance:
+

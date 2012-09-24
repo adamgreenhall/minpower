@@ -15,7 +15,11 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
+<<<<<<< HEAD
         VERSION:     '0.1 alpha',
+=======
+        VERSION:     '',
+>>>>>>> redo doc in seperate local repo
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -64,11 +68,19 @@
 <div class="section" id="example-problem">
 <h2>Example Problem<a class="headerlink" href="#example-problem" title="Permalink to this headline">¶</a></h2>
 <p>To define a simple <abbr title="Economic Dispatch">ED</abbr> problem, <strong>Minpower</strong> requires two spreadsheets. The first describes the generator parameters (<a class="reference external" href="https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/ed-WW-3-7/generators.csv">generators.csv</a>):</p>
+<<<<<<< HEAD
 <div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;heat rate equation&quot;</span><span class="p">,</span><span class="s">&quot;P min&quot;</span><span class="p">,</span><span class="s">&quot;P max&quot;</span><span class="p">,</span><span class="s">&quot;fuel cost&quot;</span>
 <span class="s">&quot;225+8.4P+0.0025P^2&quot;</span><span class="p">,</span><span class="mi">45</span><span class="p">,</span><span class="mi">450</span><span class="p">,</span><span class="mf">0.8</span>
 <span class="s">&quot;729+6.3P+0.0081P^2&quot;</span><span class="p">,</span><span class="mi">45</span><span class="p">,</span><span class="mi">350</span><span class="p">,</span><span class="mf">1.02</span>
 <span class="s">&quot;400+7.5P+0.0025P^2&quot;</span><span class="p">,</span><span class="mf">47.5</span><span class="p">,</span><span class="mi">450</span><span class="p">,</span><span class="mf">0.9</span>
 </pre></div>
+=======
+<div class="highlight-python"><pre>heat rate equation,P min,P max,fuel cost
+225+8.4P+0.0025P^2,45,450,0.8
+729+6.3P+0.0081P^2,45,350,1.02
+400+7.5P+0.0025P^2,47.5,450,0.9
+</pre>
+>>>>>>> redo doc in seperate local repo
 </div>
 <p>The second simply describes the load (<a class="reference external" href="https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/ed-WW-3-7/loads.csv">loads.csv</a>):</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">name</span><span class="p">,</span><span class="n">power</span>
@@ -98,9 +110,15 @@
 <p>and a spreadsheet (<tt class="docutils literal"><span class="pre">dispatch.csv</span></tt>):</p>
 <blockquote>
 <div><div class="highlight-python"><div class="highlight"><pre><span class="n">name</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">P</span><span class="p">,</span><span class="n">IC</span>
+<<<<<<< HEAD
 <span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">power_g0</span><span class="p">[</span><span class="n">t00</span><span class="p">],</span><span class="mf">7.584</span>
 <span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">power_g1</span><span class="p">[</span><span class="n">t00</span><span class="p">],</span><span class="mf">7.673562</span>
 <span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">power_g2</span><span class="p">[</span><span class="n">t00</span><span class="p">],</span><span class="mf">7.68825</span>
+=======
+<span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">229.090484849229</span><span class="p">,</span><span class="mf">7.636361939396917</span>
+<span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">72.7273448801198</span><span class="p">,</span><span class="mf">7.6277466467991</span>
+<span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">198.182170270651</span><span class="p">,</span><span class="mf">7.64181976621793</span>
+>>>>>>> redo doc in seperate local repo
 </pre></div>
 </div>
 </div></blockquote>
@@ -164,9 +182,15 @@ Because this is a dispatch each generator is on (<tt class="docutils literal"><s
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+<<<<<<< HEAD
 <div class="social">
 <div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
 </div>
+=======
+<!--<div class="social">-->
+<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
+<!--</div>-->
+>>>>>>> redo doc in seperate local repo
         </div>
       </div>
       <div class="clearer"></div>
@@ -176,6 +200,10 @@ Because this is a dispatch each generator is on (<tt class="docutils literal"><s
     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+<<<<<<< HEAD
+=======
+    
+>>>>>>> redo doc in seperate local repo
   })();
 </script>
 

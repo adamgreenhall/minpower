@@ -15,7 +15,11 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
+<<<<<<< HEAD
         VERSION:     '0.1 alpha',
+=======
+        VERSION:     '',
+>>>>>>> redo doc in seperate local repo
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -46,16 +50,26 @@
         <div class="bodywrapper">
           <div class="body">
             
+<<<<<<< HEAD
   <div class="section" id="module-optimization">
 <span id="optimization"></span><h1>Optimization<a class="headerlink" href="#module-optimization" title="Permalink to this headline">¶</a></h1>
 <p>An optimization command library for Minpower.</p>
 <dl class="exception">
 <dt id="optimization.OptimizationError">
 <em class="property">exception </em><tt class="descclassname">optimization.</tt><tt class="descname">OptimizationError</tt><big>(</big><em>ivalue</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationError" title="Permalink to this definition">¶</a></dt>
+=======
+  <div class="section" id="module-minpower.optimization">
+<span id="optimization"></span><h1>Optimization<a class="headerlink" href="#module-minpower.optimization" title="Permalink to this headline">¶</a></h1>
+<p>An optimization command library for Minpower.</p>
+<dl class="exception">
+<dt id="minpower.optimization.OptimizationError">
+<em class="property">exception </em><tt class="descclassname">minpower.optimization.</tt><tt class="descname">OptimizationError</tt><big>(</big><em>ivalue</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationError" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Error that occurs within solving an optimization problem.</p>
 </dd></dl>
 
 <dl class="class">
+<<<<<<< HEAD
 <dt id="optimization.OptimizationObject">
 <em class="property">class </em><tt class="descclassname">optimization.</tt><tt class="descname">OptimizationObject</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject" title="Permalink to this definition">¶</a></dt>
 <dd><p>A base class for an optimization object. 
@@ -69,12 +83,37 @@ This also serves as a template for how :class:<a href="#id1"><span class="proble
 <dl class="method">
 <dt id="optimization.OptimizationObject.add_constraint">
 <tt class="descname">add_constraint</tt><big>(</big><em>name</em>, <em>time</em>, <em>expression</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.add_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.add_constraint" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.optimization.OptimizationObject">
+<em class="property">class </em><tt class="descclassname">minpower.optimization.</tt><tt class="descname">OptimizationObject</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class for an optimization object. 
+This also serves as a template for how :class:<a href="#id1"><span class="problematic" id="id2">`</span></a>~OptimizationObject`s are structured.</p>
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.add_children">
+<tt class="descname">add_children</tt><big>(</big><em>objects</em>, <em>name</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.add_children"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.add_children" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a child <tt class="xref py py-class docutils literal"><span class="pre">OptimizationObject</span></tt> to this object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.add_constraint">
+<tt class="descname">add_constraint</tt><big>(</big><em>name</em>, <em>time</em>, <em>expression</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.add_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.add_constraint" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Create a new constraint and add it to the object&#8217;s constraints and the model&#8217;s constraints.</p>
 </dd></dl>
 
 <dl class="method">
+<<<<<<< HEAD
 <dt id="optimization.OptimizationObject.add_variable">
 <tt class="descname">add_variable</tt><big>(</big><em>name</em>, <em>time=None</em>, <em>fixed_value=None</em>, <em>index=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.add_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.add_variable" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.optimization.OptimizationObject.add_parameter">
+<tt class="descname">add_parameter</tt><big>(</big><em>name</em>, <em>index=None</em>, <em>default=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.add_parameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.add_parameter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.add_variable">
+<tt class="descname">add_variable</tt><big>(</big><em>name</em>, <em>time=None</em>, <em>fixed_value=None</em>, <em>index=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.add_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.add_variable" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Create a new variable and add it to the object&#8217;s variables and the model&#8217;s variables.
 :param name: name of optimization variable.
 :param kind: type of variable, specified by string. {Continuous or Binary/Boolean}
@@ -86,32 +125,52 @@ This also serves as a template for how :class:<a href="#id1"><span class="proble
 </dd></dl>
 
 <dl class="method">
+<<<<<<< HEAD
 <dt id="optimization.OptimizationObject.create_constraints">
 <tt class="descname">create_constraints</tt><big>(</big><em>times</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.create_constraints" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.optimization.OptimizationObject.create_constraints">
+<tt class="descname">create_constraints</tt><big>(</big><em>times</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.create_constraints" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Individual class defined.
 Create the constraints in this method by using calls to
 <tt class="xref py py-meth docutils literal"><span class="pre">add_constraint()</span></tt>.
 Constraints will be accessible by using
 <tt class="xref py py-meth docutils literal"><span class="pre">get_constraint()</span></tt> (or by adding
+<<<<<<< HEAD
 a shortcut methods, like <a class="reference internal" href="power-systems.html#powersystems.Bus.price" title="powersystems.Bus.price"><tt class="xref py py-meth docutils literal"><span class="pre">price()</span></tt></a>.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="optimization.OptimizationObject.create_objective">
 <tt class="descname">create_objective</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.create_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.create_objective" title="Permalink to this definition">¶</a></dt>
+=======
+a shortcut methods, like <tt class="xref py py-meth docutils literal"><span class="pre">price()</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.create_objective">
+<tt class="descname">create_objective</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.create_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.create_objective" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Individual class defined.
 Return the contribution to the objective (cost) expression.
 :returns: an expression, the default is 0</p>
 </dd></dl>
 
 <dl class="method">
+<<<<<<< HEAD
 <dt id="optimization.OptimizationObject.create_variables">
 <tt class="descname">create_variables</tt><big>(</big><em>times</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.create_variables" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.optimization.OptimizationObject.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.create_variables" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Individual class defined.
 Create the variables in this method by using calls to
 <tt class="xref py py-meth docutils literal"><span class="pre">add_variable()</span></tt>.
 Variables will be accessible by using
 <tt class="xref py py-meth docutils literal"><span class="pre">get_variable()</span></tt> (or by adding
+<<<<<<< HEAD
 a shortcut methods, like <a class="reference internal" href="power-systems.html#powersystems.Generator.power" title="powersystems.Generator.power"><tt class="xref py py-meth docutils literal"><span class="pre">power()</span></tt></a>).</p>
 </dd></dl>
 
@@ -134,13 +193,42 @@ a shortcut methods, like <a class="reference internal" href="power-systems.html#
 <dl class="method">
 <dt id="optimization.OptimizationObject.iden">
 <tt class="descname">iden</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.iden"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.iden" title="Permalink to this definition">¶</a></dt>
+=======
+a shortcut methods, like <tt class="xref py py-meth docutils literal"><span class="pre">power()</span></tt>).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.get_child">
+<tt class="descname">get_child</tt><big>(</big><em>name</em>, <em>time=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.get_child"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.get_child" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a child <tt class="xref py py-class docutils literal"><span class="pre">OptimizationObject</span></tt> dependent on time from this object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.get_constraint">
+<tt class="descname">get_constraint</tt><big>(</big><em>name</em>, <em>time</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.get_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.get_constraint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.get_variable">
+<tt class="descname">get_variable</tt><big>(</big><em>name</em>, <em>time=None</em>, <em>indexed=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.get_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.get_variable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.iden">
+<tt class="descname">iden</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.iden"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.iden" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Individual class defined.
 Identifing string for the object, depending on time. Used to name variables and constraints for the object.</p>
 </dd></dl>
 
 <dl class="method">
+<<<<<<< HEAD
 <dt id="optimization.OptimizationObject.init_optimization">
 <tt class="descname">init_optimization</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationObject.init_optimization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationObject.init_optimization" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.optimization.OptimizationObject.init_optimization">
+<tt class="descname">init_optimization</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.init_optimization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.init_optimization" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Initialize optimization components: add a container for children.
 If the index is not defined, make it a hash of the object to ensure the index is unique.</p>
 </dd></dl>
@@ -148,6 +236,7 @@ If the index is not defined, make it a hash of the object to ensure the index is
 </dd></dl>
 
 <dl class="class">
+<<<<<<< HEAD
 <dt id="optimization.OptimizationProblem">
 <em class="property">class </em><tt class="descclassname">optimization.</tt><tt class="descname">OptimizationProblem</tt><a class="reference internal" href="../_modules/optimization.html#OptimizationProblem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationProblem" title="Permalink to this definition">¶</a></dt>
 <dd><p>an optimization problem/model based on pyomo</p>
@@ -166,16 +255,47 @@ If the index is not defined, make it a hash of the object to ensure the index is
 <dl class="method">
 <dt id="optimization.OptimizationProblem.add_objective">
 <tt class="descname">add_objective</tt><big>(</big><em>expression</em>, <em>sense=1</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationProblem.add_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationProblem.add_objective" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.optimization.OptimizationProblem">
+<em class="property">class </em><tt class="descclassname">minpower.optimization.</tt><tt class="descname">OptimizationProblem</tt><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem" title="Permalink to this definition">¶</a></dt>
+<dd><p>an optimization problem/model based on pyomo</p>
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.add_children">
+<tt class="descname">add_children</tt><big>(</big><em>objL</em>, <em>name</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.add_children"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.add_children" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a child <tt class="xref py py-class docutils literal"><span class="pre">OptimizationObject</span></tt> to this object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.add_component_to_problem">
+<tt class="descname">add_component_to_problem</tt><big>(</big><em>component</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.add_component_to_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.add_component_to_problem" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a optimization component to the model</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.add_constraint">
+<tt class="descname">add_constraint</tt><big>(</big><em>name</em>, <em>expression</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.add_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.add_constraint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.add_objective">
+<tt class="descname">add_objective</tt><big>(</big><em>expression</em>, <em>sense=1</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.add_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.add_objective" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>add an objective to the problem</p>
 </dd></dl>
 
 <dl class="method">
+<<<<<<< HEAD
 <dt id="optimization.OptimizationProblem.add_set">
 <tt class="descname">add_set</tt><big>(</big><em>name</em>, <em>items</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationProblem.add_set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationProblem.add_set" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.optimization.OptimizationProblem.add_set">
+<tt class="descname">add_set</tt><big>(</big><em>name</em>, <em>items</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.add_set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.add_set" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>add a <tt class="xref py py-class docutils literal"><span class="pre">pyomo.Set</span></tt> to the problem</p>
 </dd></dl>
 
 <dl class="method">
+<<<<<<< HEAD
 <dt id="optimization.OptimizationProblem.add_variable">
 <tt class="descname">add_variable</tt><big>(</big><em>variable</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationProblem.add_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationProblem.add_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>add a single variable to the problem</p>
@@ -184,10 +304,21 @@ If the index is not defined, make it a hash of the object to ensure the index is
 <dl class="method">
 <dt id="optimization.OptimizationProblem.get_component">
 <tt class="descname">get_component</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationProblem.get_component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationProblem.get_component" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.optimization.OptimizationProblem.add_variable">
+<tt class="descname">add_variable</tt><big>(</big><em>name</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.add_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.add_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a new variable and add it to the root problem</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.get_component">
+<tt class="descname">get_component</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.get_component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.get_component" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Get an optimization component</p>
 </dd></dl>
 
 <dl class="method">
+<<<<<<< HEAD
 <dt id="optimization.OptimizationProblem.init_optimization">
 <tt class="descname">init_optimization</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationProblem.init_optimization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationProblem.init_optimization" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -205,6 +336,25 @@ If the index is not defined, make it a hash of the object to ensure the index is
 <dl class="method">
 <dt id="optimization.OptimizationProblem.solve">
 <tt class="descname">solve</tt><big>(</big><em>solver='glpk'</em>, <em>problem_filename=False</em>, <em>get_duals=True</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationProblem.solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationProblem.solve" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.optimization.OptimizationProblem.init_optimization">
+<tt class="descname">init_optimization</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.init_optimization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.init_optimization" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.reset_model">
+<tt class="descname">reset_model</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.reset_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.reset_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.show_model">
+<tt class="descname">show_model</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.show_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.show_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.solve">
+<tt class="descname">solve</tt><big>(</big><em>solver='glpk'</em>, <em>problem_filename=False</em>, <em>get_duals=True</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.solve" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Solve the optimization problem.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -222,33 +372,58 @@ If the index is not defined, make it a hash of the object to ensure the index is
 </dd></dl>
 
 <dl class="method">
+<<<<<<< HEAD
 <dt id="optimization.OptimizationProblem.update_variables">
 <tt class="descname">update_variables</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationProblem.update_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationProblem.update_variables" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.optimization.OptimizationProblem.update_variables">
+<tt class="descname">update_variables</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.update_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.update_variables" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Replace the variables with their numeric value.</p>
 </dd></dl>
 
 <dl class="method">
+<<<<<<< HEAD
 <dt id="optimization.OptimizationProblem.write_model">
 <tt class="descname">write_model</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#OptimizationProblem.write_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.OptimizationProblem.write_model" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.optimization.OptimizationProblem.write_model">
+<tt class="descname">write_model</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.write_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.write_model" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="function">
+<<<<<<< HEAD
 <dt id="optimization.dual">
 <tt class="descclassname">optimization.</tt><tt class="descname">dual</tt><big>(</big><em>constraint</em>, <em>index=None</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#dual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.dual" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.optimization.dual">
+<tt class="descclassname">minpower.optimization.</tt><tt class="descname">dual</tt><big>(</big><em>constraint</em>, <em>index=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#dual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.dual" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Dual of optimization constraint, after the problem is solved.</p>
 </dd></dl>
 
 <dl class="function">
+<<<<<<< HEAD
 <dt id="optimization.new_constraint">
 <tt class="descclassname">optimization.</tt><tt class="descname">new_constraint</tt><big>(</big><em>name</em>, <em>expression</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#new_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.new_constraint" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.optimization.new_constraint">
+<tt class="descclassname">minpower.optimization.</tt><tt class="descname">new_constraint</tt><big>(</big><em>name</em>, <em>expression</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#new_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.new_constraint" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Create an optimization constraint.</p>
 </dd></dl>
 
 <dl class="function">
+<<<<<<< HEAD
 <dt id="optimization.new_variable">
 <tt class="descclassname">optimization.</tt><tt class="descname">new_variable</tt><big>(</big><em>name=''</em>, <em>kind='Continuous'</em>, <em>low=None</em>, <em>high=None</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#new_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.new_variable" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.optimization.new_variable">
+<tt class="descclassname">minpower.optimization.</tt><tt class="descname">new_variable</tt><big>(</big><em>name=''</em>, <em>kind='Continuous'</em>, <em>low=None</em>, <em>high=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#new_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.new_variable" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Create an optimization variable.
 :param name: name of optimization variable.
 :param kind: type of variable, specified by string. {Continuous or Binary/Boolean}
@@ -257,8 +432,13 @@ If the index is not defined, make it a hash of the object to ensure the index is
 </dd></dl>
 
 <dl class="function">
+<<<<<<< HEAD
 <dt id="optimization.value">
 <tt class="descclassname">optimization.</tt><tt class="descname">value</tt><big>(</big><em>variable</em><big>)</big><a class="reference internal" href="../_modules/optimization.html#value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#optimization.value" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.optimization.value">
+<tt class="descclassname">minpower.optimization.</tt><tt class="descname">value</tt><big>(</big><em>variable</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.value" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Value of an optimization variable after the problem is solved.
 If passed a numeric value, will return the number.</p>
 </dd></dl>
@@ -312,9 +492,15 @@ If passed a numeric value, will return the number.</p>
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+<<<<<<< HEAD
 <div class="social">
 <div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
 </div>
+=======
+<!--<div class="social">-->
+<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
+<!--</div>-->
+>>>>>>> redo doc in seperate local repo
         </div>
       </div>
       <div class="clearer"></div>
@@ -324,6 +510,10 @@ If passed a numeric value, will return the number.</p>
     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+<<<<<<< HEAD
+=======
+    
+>>>>>>> redo doc in seperate local repo
   })();
 </script>
 

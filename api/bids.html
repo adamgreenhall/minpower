@@ -15,7 +15,11 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
+<<<<<<< HEAD
         VERSION:     '0.1 alpha',
+=======
+        VERSION:     '',
+>>>>>>> redo doc in seperate local repo
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -46,6 +50,7 @@
         <div class="bodywrapper">
           <div class="body">
             
+<<<<<<< HEAD
   <div class="section" id="module-bidding">
 <span id="bidding"></span><h1>Bidding<a class="headerlink" href="#module-bidding" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
@@ -54,12 +59,23 @@
 <dd><p>Bases: <a class="reference internal" href="optimization.html#optimization.OptimizationObject" title="optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">optimization.OptimizationObject</span></tt></a></p>
 <p>Descibes a bid as modeled by :attr:model. Bids contain variables
 which are dependent on time while <a class="reference internal" href="#bidding.PWLmodel" title="bidding.PWLmodel"><tt class="xref py py-class docutils literal"><span class="pre">PWLmodel</span></tt></a> objects
+=======
+  <div class="section" id="module-minpower.bidding">
+<span id="bidding"></span><h1>Bidding<a class="headerlink" href="#module-minpower.bidding" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="minpower.bidding.Bid">
+<em class="property">class </em><tt class="descclassname">minpower.bidding.</tt><tt class="descname">Bid</tt><big>(</big><em>polynomial='10P'</em>, <em>bid_points=None</em>, <em>constant_term=0</em>, <em>owner=None</em>, <em>times=None</em>, <em>input_variable=0</em>, <em>min_input=0</em>, <em>max_input=1000</em>, <em>num_breakpoints=11</em>, <em>status_variable=True</em>, <em>fixed_input=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#Bid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.Bid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="optimization.html#minpower.optimization.OptimizationObject" title="minpower.optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">minpower.optimization.OptimizationObject</span></tt></a></p>
+<p>Descibes a bid as modeled by :attr:model. Bids contain variables
+which are dependent on time while <tt class="xref py py-class docutils literal"><span class="pre">PWLmodel</span></tt> objects
+>>>>>>> redo doc in seperate local repo
 do not store time dependent information.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<<<<<<< HEAD
 <li><strong>model</strong> &#8211; model for the bid, either <a class="reference internal" href="#bidding.PWLmodel" title="bidding.PWLmodel"><tt class="xref py py-class docutils literal"><span class="pre">PWLmodel</span></tt></a>,
 <a class="reference internal" href="#bidding.convexPWLmodel" title="bidding.convexPWLmodel"><tt class="xref py py-class docutils literal"><span class="pre">convexPWLmodel</span></tt></a>, or <a class="reference internal" href="#bidding.LinearModel" title="bidding.LinearModel"><tt class="xref py py-class docutils literal"><span class="pre">LinearModel</span></tt></a></li>
 <li><strong>time</strong> &#8211; <a class="reference internal" href="time.html#schedule.Time" title="schedule.Time"><tt class="xref py py-class docutils literal"><span class="pre">Time</span></tt></a> object bid takes place over</li>
@@ -67,12 +83,20 @@ do not store time dependent information.</p>
 <li><strong>time_iden</strong> &#8211; identifying string for the time</li>
 <li><strong>input_var</strong> &#8211; input variable for owner at time period of bid</li>
 <li><strong>status_var</strong> &#8211; status of owner at time period of bid</li>
+=======
+<li><strong>model</strong> &#8211; model for the bid, either <tt class="xref py py-class docutils literal"><span class="pre">PWLmodel</span></tt>,
+<tt class="xref py py-class docutils literal"><span class="pre">convexPWLmodel</span></tt>, or <tt class="xref py py-class docutils literal"><span class="pre">LinearModel</span></tt></li>
+<li><strong>times</strong> &#8211; the times the bids take place over</li>
+<li><strong>input_variable</strong> &#8211; input variable method for owner</li>
+<li><strong>status_variable</strong> &#8211; status variable method for owner</li>
+>>>>>>> redo doc in seperate local repo
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
 <dl class="method">
+<<<<<<< HEAD
 <dt id="bidding.Bid.create_constraints">
 <tt class="descname">create_constraints</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/bidding.html#Bid.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bidding.Bid.create_constraints" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create the constraints for a bid by calling its model&#8217;s <tt class="xref py py-meth docutils literal"><span class="pre">get_time_constraints()</span></tt> method.
@@ -340,10 +364,97 @@ Heavily adapted from <a class="reference external" href="http://bit.ly/polynomia
 <p>or even with the terms in some random order:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">parsePolynomial</span><span class="p">(</span><span class="s">&#39;6*P - 5 + 7*P^2&#39;</span><span class="p">)</span>
 <span class="go">poly1d([ 7,  6, -5])</span>
+=======
+<dt id="minpower.bidding.Bid.build_model">
+<tt class="descname">build_model</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#Bid.build_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.Bid.build_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.bidding.Bid.iden">
+<tt class="descname">iden</tt><big>(</big><em>*a</em>, <em>**k</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#Bid.iden"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.Bid.iden" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.bidding.Bid.output">
+<tt class="descname">output</tt><big>(</big><em>time=None</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#Bid.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.Bid.output" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.bidding.Bid.output_incremental">
+<tt class="descname">output_incremental</tt><big>(</big><em>input_var</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#Bid.output_incremental"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.Bid.output_incremental" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.bidding.Bid.output_incremental_range">
+<tt class="descname">output_incremental_range</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#Bid.output_incremental_range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.Bid.output_incremental_range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.bidding.Bid.output_true">
+<tt class="descname">output_true</tt><big>(</big><em>input_var</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#Bid.output_true"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.Bid.output_true" title="Permalink to this definition">¶</a></dt>
+<dd><p>true output value of bid</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.bidding.discretize_range">
+<tt class="descclassname">minpower.bidding.</tt><tt class="descname">discretize_range</tt><big>(</big><em>num_breakpoints</em>, <em>minimum</em>, <em>maximum</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#discretize_range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.discretize_range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.bidding.get_line_slope">
+<tt class="descclassname">minpower.bidding.</tt><tt class="descname">get_line_slope</tt><big>(</big><em>A</em>, <em>B</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#get_line_slope"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.get_line_slope" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.bidding.get_line_value">
+<tt class="descclassname">minpower.bidding.</tt><tt class="descname">get_line_value</tt><big>(</big><em>A</em>, <em>B</em>, <em>x</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#get_line_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.get_line_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.bidding.is_linear">
+<tt class="descclassname">minpower.bidding.</tt><tt class="descname">is_linear</tt><big>(</big><em>multipliers</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#is_linear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.is_linear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.bidding.parse_polynomial">
+<tt class="descclassname">minpower.bidding.</tt><tt class="descname">parse_polynomial</tt><big>(</big><em>s</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#parse_polynomial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.parse_polynomial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a string into a set of multipliers.
+Heavily adapted from <a class="reference external" href="http://bit.ly/polynomialParse">http://bit.ly/polynomialParse</a>.</p>
+<p>Can handle simple polynomials (addition and subtraction):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_polynomial</span><span class="p">(</span><span class="s">&#39;7x^2 + 6x - 5&#39;</span><span class="p">)</span>
+<span class="go">[-5, 6, 7]</span>
+</pre></div>
+</div>
+<p>or with the explicit * multiplier:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_polynomial</span><span class="p">(</span><span class="s">&#39;7*P^2 + 6*P - 5&#39;</span><span class="p">)</span>
+<span class="go">[-5, 6, 7]</span>
+</pre></div>
+</div>
+<p>or even with the terms in some random order:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_polynomial</span><span class="p">(</span><span class="s">&#39;6*P - 5 + 7*P^2&#39;</span><span class="p">)</span>
+<span class="go">[-5, 6, 7]</span>
+>>>>>>> redo doc in seperate local repo
 </pre></div>
 </div>
 </dd></dl>
 
+<<<<<<< HEAD
+=======
+<dl class="function">
+<dt id="minpower.bidding.polynomial_incremental_value">
+<tt class="descclassname">minpower.bidding.</tt><tt class="descname">polynomial_incremental_value</tt><big>(</big><em>multipliers</em>, <em>variable</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#polynomial_incremental_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.polynomial_incremental_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the incremental value of a polynomial</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.bidding.polynomial_value">
+<tt class="descclassname">minpower.bidding.</tt><tt class="descname">polynomial_value</tt><big>(</big><em>multipliers</em>, <em>variable</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#polynomial_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.polynomial_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the value of a polynomial</p>
+</dd></dl>
+
+>>>>>>> redo doc in seperate local repo
 </div>
 
 
@@ -393,9 +504,15 @@ Heavily adapted from <a class="reference external" href="http://bit.ly/polynomia
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+<<<<<<< HEAD
 <div class="social">
 <div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
 </div>
+=======
+<!--<div class="social">-->
+<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
+<!--</div>-->
+>>>>>>> redo doc in seperate local repo
         </div>
       </div>
       <div class="clearer"></div>
@@ -405,6 +522,10 @@ Heavily adapted from <a class="reference external" href="http://bit.ly/polynomia
     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+<<<<<<< HEAD
+=======
+    
+>>>>>>> redo doc in seperate local repo
   })();
 </script>
 

@@ -1,0 +1,7 @@
+minpower
+========
+
+.. toctree::
+   :maxdepth: 4
+
+   minpower

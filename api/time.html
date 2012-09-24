@@ -15,7 +15,11 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
+<<<<<<< HEAD
         VERSION:     '0.1 alpha',
+=======
+        VERSION:     '',
+>>>>>>> redo doc in seperate local repo
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -46,6 +50,7 @@
         <div class="bodywrapper">
           <div class="body">
             
+<<<<<<< HEAD
   <div class="section" id="module-schedule">
 <span id="times-and-schedules"></span><h1>Times and Schedules<a class="headerlink" href="#module-schedule" title="Permalink to this headline">¶</a></h1>
 <p>Time and schedule related models.</p>
@@ -57,11 +62,25 @@
 <dl class="method">
 <dt id="schedule.FixedSchedule.get_energy">
 <tt class="descname">get_energy</tt><big>(</big><em>timeperiod=None</em><big>)</big><a class="reference internal" href="../_modules/schedule.html#FixedSchedule.get_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.FixedSchedule.get_energy" title="Permalink to this definition">¶</a></dt>
+=======
+  <div class="section" id="module-minpower.schedule">
+<span id="times-and-schedules"></span><h1>Times and Schedules<a class="headerlink" href="#module-minpower.schedule" title="Permalink to this headline">¶</a></h1>
+<p>Time and schedule related models.</p>
+<dl class="class">
+<dt id="minpower.schedule.FixedSchedule">
+<em class="property">class </em><tt class="descclassname">minpower.schedule.</tt><tt class="descname">FixedSchedule</tt><big>(</big><em>times=None</em>, <em>P=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#FixedSchedule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.FixedSchedule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.schedule.Schedule" title="minpower.schedule.Schedule"><tt class="xref py py-class docutils literal"><span class="pre">minpower.schedule.Schedule</span></tt></a></p>
+<p>A simple &#8220;schedule&#8221; which has only one power output</p>
+<dl class="method">
+<dt id="minpower.schedule.FixedSchedule.get_energy">
+<tt class="descname">get_energy</tt><big>(</big><em>timeperiod=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#FixedSchedule.get_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.FixedSchedule.get_energy" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
+<<<<<<< HEAD
 <dt id="schedule.Schedule">
 <em class="property">class </em><tt class="descclassname">schedule.</tt><tt class="descname">Schedule</tt><big>(</big><em>times=None</em>, <em>P=None</em><big>)</big><a class="reference internal" href="../_modules/schedule.html#Schedule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.Schedule" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
@@ -71,6 +90,17 @@ A container for a dictionary keyed by
 <dl class="method">
 <dt id="schedule.Schedule.get_energy">
 <tt class="descname">get_energy</tt><big>(</big><em>timeperiod</em><big>)</big><a class="reference internal" href="../_modules/schedule.html#Schedule.get_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.Schedule.get_energy" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.schedule.Schedule">
+<em class="property">class </em><tt class="descclassname">minpower.schedule.</tt><tt class="descname">Schedule</tt><big>(</big><em>times=None</em>, <em>P=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#Schedule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.Schedule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Describes a schedule of times and corresponding power values.
+A container for a dictionary keyed by
+<tt class="xref py py-class docutils literal"><span class="pre">Time</span></tt> objects.</p>
+<dl class="method">
+<dt id="minpower.schedule.Schedule.get_energy">
+<tt class="descname">get_energy</tt><big>(</big><em>timeperiod</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#Schedule.get_energy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.Schedule.get_energy" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>get the amount of energy in a time period</p>
 <p>if the timeperiod is in the schedule things are simple:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">times</span><span class="o">=</span><span class="n">Timelist</span><span class="p">([</span><span class="n">Time</span><span class="p">(</span><span class="n">Start</span><span class="o">=</span><span class="s">&#39;1:00&#39;</span><span class="p">),</span><span class="n">Time</span><span class="p">(</span><span class="n">Start</span><span class="o">=</span><span class="s">&#39;2:00&#39;</span><span class="p">),</span><span class="n">Time</span><span class="p">(</span><span class="n">Start</span><span class="o">=</span><span class="s">&#39;3:00&#39;</span><span class="p">)])</span>
@@ -90,6 +120,7 @@ be summed over each schedule time which the timeperiod contains:</p>
 </dd></dl>
 
 <dl class="method">
+<<<<<<< HEAD
 <dt id="schedule.Schedule.saveCSV">
 <tt class="descname">saveCSV</tt><big>(</big><em>filename='schedule.csv'</em><big>)</big><a class="reference internal" href="../_modules/schedule.html#Schedule.saveCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.Schedule.saveCSV" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -97,13 +128,27 @@ be summed over each schedule time which the timeperiod contains:</p>
 <dl class="method">
 <dt id="schedule.Schedule.times">
 <tt class="descname">times</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/schedule.html#Schedule.times"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.Schedule.times" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.schedule.Schedule.saveCSV">
+<tt class="descname">saveCSV</tt><big>(</big><em>filename='schedule.csv'</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#Schedule.saveCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.Schedule.saveCSV" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.schedule.Schedule.times">
+<tt class="descname">times</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#Schedule.times"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.Schedule.times" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
+<<<<<<< HEAD
 <dt id="schedule.Time">
 <em class="property">class </em><tt class="descclassname">schedule.</tt><tt class="descname">Time</tt><big>(</big><em>Start</em>, <em>End=None</em>, <em>interval=None</em>, <em>index=None</em>, <em>formatter=None</em><big>)</big><a class="reference internal" href="../_modules/schedule.html#Time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.Time" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.schedule.Time">
+<em class="property">class </em><tt class="descclassname">minpower.schedule.</tt><tt class="descname">Time</tt><big>(</big><em>Start</em>, <em>End=None</em>, <em>interval=None</em>, <em>index=None</em>, <em>formatter=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#Time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.Time" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Describes a time interval.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -125,6 +170,7 @@ and stored as a <a class="reference external" href="http://docs.python.org/relea
 </tbody>
 </table>
 <dl class="method">
+<<<<<<< HEAD
 <dt id="schedule.Time.Range">
 <tt class="descname">Range</tt><big>(</big><em>interval</em><big>)</big><a class="reference internal" href="../_modules/schedule.html#Time.Range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.Time.Range" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -132,21 +178,41 @@ and stored as a <a class="reference external" href="http://docs.python.org/relea
 <dl class="method">
 <dt id="schedule.Time.time_passed_since">
 <tt class="descname">time_passed_since</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../_modules/schedule.html#Time.time_passed_since"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.Time.time_passed_since" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.schedule.Time.Range">
+<tt class="descname">Range</tt><big>(</big><em>interval</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#Time.Range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.Time.Range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.schedule.Time.time_passed_since">
+<tt class="descname">time_passed_since</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#Time.time_passed_since"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.Time.time_passed_since" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
+<<<<<<< HEAD
 <dt id="schedule.Timelist">
 <em class="property">class </em><tt class="descclassname">schedule.</tt><tt class="descname">Timelist</tt><big>(</big><em>list_of_times=None</em>, <em>initialTime=None</em>, <em>Start=None</em>, <em>End=None</em>, <em>interval=None</em><big>)</big><a class="reference internal" href="../_modules/schedule.html#Timelist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.Timelist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>A container for <a class="reference internal" href="#schedule.Time" title="schedule.Time"><tt class="xref py py-class docutils literal"><span class="pre">schedule.Time</span></tt></a> objects.</p>
+=======
+<dt id="minpower.schedule.Timelist">
+<em class="property">class </em><tt class="descclassname">minpower.schedule.</tt><tt class="descname">Timelist</tt><big>(</big><em>list_of_times=None</em>, <em>initialTime=None</em>, <em>Start=None</em>, <em>End=None</em>, <em>interval=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#Timelist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.Timelist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>A container for <tt class="xref py py-class docutils literal"><span class="pre">schedule.Time</span></tt> objects.</p>
+>>>>>>> redo doc in seperate local repo
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<<<<<<< HEAD
 <li><strong>list_of_times</strong> &#8211; a tuple, list, or existing <a class="reference internal" href="#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a> object</li>
+=======
+<li><strong>list_of_times</strong> &#8211; a tuple, list, or existing <tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt> object</li>
+>>>>>>> redo doc in seperate local repo
 <li><strong>Start</strong> &#8211; a <a class="reference external" href="http://docs.python.org/release/2.7.1/library/datetime.html#datetime.datetime" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">datetime.datetime</span></tt></a> object</li>
 <li><strong>End</strong> &#8211; a <a class="reference external" href="http://docs.python.org/release/2.7.1/library/datetime.html#datetime.datetime" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">datetime.datetime</span></tt></a> object</li>
 <li><strong>interval</strong> &#8211; a <a class="reference external" href="http://docs.python.org/release/2.7.1/library/datetime.html#datetime.timedelta" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">datetime.timedelta</span></tt></a> object</li>
@@ -159,6 +225,7 @@ and stored as a <a class="reference external" href="http://docs.python.org/relea
 then a uniformly spaced list of times is generated. 
 Otherwise the list is created from <tt class="docutils literal"><span class="pre">list_of_times</span></tt>.</p>
 <dl class="method">
+<<<<<<< HEAD
 <dt id="schedule.Timelist.index">
 <tt class="descname">index</tt><big>(</big><em>val</em><big>)</big><a class="reference internal" href="../_modules/schedule.html#Timelist.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.Timelist.index" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -171,6 +238,20 @@ Otherwise the list is created from <tt class="docutils literal"><span class="pre
 <dl class="method">
 <dt id="schedule.Timelist.subdivide">
 <tt class="descname">subdivide</tt><big>(</big><em>division_hrs=24</em>, <em>interval_hrs=None</em>, <em>overlap_hrs=0</em>, <em>offset_hrs=0</em><big>)</big><a class="reference internal" href="../_modules/schedule.html#Timelist.subdivide"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.Timelist.subdivide" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.schedule.Timelist.index">
+<tt class="descname">index</tt><big>(</big><em>val</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#Timelist.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.Timelist.index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.schedule.Timelist.setInitial">
+<tt class="descname">setInitial</tt><big>(</big><em>initialTime=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#Timelist.setInitial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.Timelist.setInitial" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.schedule.Timelist.subdivide">
+<tt class="descname">subdivide</tt><big>(</big><em>division_hrs=24</em>, <em>interval_hrs=None</em>, <em>overlap_hrs=0</em>, <em>offset_hrs=0</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#Timelist.subdivide"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.Timelist.subdivide" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Subdivide a list of times into serval stages,  each stage
 spanning <cite>division_hrs</cite> with intervals of <cite>interval_hrs</cite>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -208,24 +289,40 @@ for each stage. If not specified, <cite>intervalhrs</cite> is used.</li>
 </dd></dl>
 
 <dl class="function">
+<<<<<<< HEAD
 <dt id="schedule.divide_into_stages">
 <tt class="descclassname">schedule.</tt><tt class="descname">divide_into_stages</tt><big>(</big><em>L</em>, <em>span=0</em>, <em>overlap=0</em>, <em>offset=0</em><big>)</big><a class="reference internal" href="../_modules/schedule.html#divide_into_stages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.divide_into_stages" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.schedule.divide_into_stages">
+<tt class="descclassname">minpower.schedule.</tt><tt class="descname">divide_into_stages</tt><big>(</big><em>L</em>, <em>span=0</em>, <em>overlap=0</em>, <em>offset=0</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#divide_into_stages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.divide_into_stages" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>divide list into stage_size-sized chunks, with optional overlap.</p>
 </dd></dl>
 
 <dl class="function">
+<<<<<<< HEAD
 <dt id="schedule.just_one_time">
 <tt class="descclassname">schedule.</tt><tt class="descname">just_one_time</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/schedule.html#just_one_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.just_one_time" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.schedule.just_one_time">
+<tt class="descclassname">minpower.schedule.</tt><tt class="descname">just_one_time</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#just_one_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.just_one_time" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>For a single-time problem, generate a Timelist with just one time in it.</p>
 </dd></dl>
 
 <dl class="function">
+<<<<<<< HEAD
 <dt id="schedule.make_schedule">
 <tt class="descclassname">schedule.</tt><tt class="descname">make_schedule</tt><big>(</big><em>filename</em>, <em>times=None</em><big>)</big><a class="reference internal" href="../_modules/schedule.html#make_schedule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.make_schedule" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.schedule.make_schedule">
+<tt class="descclassname">minpower.schedule.</tt><tt class="descname">make_schedule</tt><big>(</big><em>filename</em>, <em>times=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#make_schedule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.make_schedule" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Read time and power information from spreadsheet file.</p>
 </dd></dl>
 
 <dl class="function">
+<<<<<<< HEAD
 <dt id="schedule.make_times">
 <tt class="descclassname">schedule.</tt><tt class="descname">make_times</tt><big>(</big><em>datetimeL</em><big>)</big><a class="reference internal" href="../_modules/schedule.html#make_times"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.make_times" title="Permalink to this definition">¶</a></dt>
 <dd><p>convert list of <a class="reference external" href="http://docs.python.org/release/2.7.1/library/datetime.html#datetime.datetime" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">datetime.datetime</span></tt></a> objects to <a class="reference internal" href="#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a> object</p>
@@ -240,6 +337,22 @@ for each stage. If not specified, <cite>intervalhrs</cite> is used.</li>
 <dl class="function">
 <dt id="schedule.parse_timestrings">
 <tt class="descclassname">schedule.</tt><tt class="descname">parse_timestrings</tt><big>(</big><em>timestringsL</em><big>)</big><a class="reference internal" href="../_modules/schedule.html#parse_timestrings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#schedule.parse_timestrings" title="Permalink to this definition">¶</a></dt>
+=======
+<dt id="minpower.schedule.make_times">
+<tt class="descclassname">minpower.schedule.</tt><tt class="descname">make_times</tt><big>(</big><em>datetimeL</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#make_times"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.make_times" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert list of <a class="reference external" href="http://docs.python.org/release/2.7.1/library/datetime.html#datetime.datetime" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">datetime.datetime</span></tt></a> objects to <tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt> object</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.schedule.make_times_basic">
+<tt class="descclassname">minpower.schedule.</tt><tt class="descname">make_times_basic</tt><big>(</big><em>N</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#make_times_basic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.make_times_basic" title="Permalink to this definition">¶</a></dt>
+<dd><p>make a <tt class="xref py py-class docutils literal"><span class="pre">schedule.Timelist</span></tt> of N times, assume hourly interval.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.schedule.parse_timestrings">
+<tt class="descclassname">minpower.schedule.</tt><tt class="descname">parse_timestrings</tt><big>(</big><em>timestringsL</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#parse_timestrings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.parse_timestrings" title="Permalink to this definition">¶</a></dt>
+>>>>>>> redo doc in seperate local repo
 <dd><p>Convert list of strings to list of <a class="reference external" href="http://docs.python.org/release/2.7.1/library/datetime.html#datetime.datetime" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">datetime.datetime</span></tt></a>
 objects using <tt class="xref py py-meth docutils literal"><span class="pre">dateutil.parser.parse()</span></tt>.</p>
 </dd></dl>
@@ -293,9 +406,15 @@ objects using <tt class="xref py py-meth docutils literal"><span class="pre">dat
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+<<<<<<< HEAD
 <div class="social">
 <div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
 </div>
+=======
+<!--<div class="social">-->
+<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
+<!--</div>-->
+>>>>>>> redo doc in seperate local repo
         </div>
       </div>
       <div class="clearer"></div>
@@ -305,6 +424,10 @@ objects using <tt class="xref py py-meth docutils literal"><span class="pre">dat
     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+<<<<<<< HEAD
+=======
+    
+>>>>>>> redo doc in seperate local repo
   })();
 </script>
 

@@ -2,7 +2,11 @@
  * doctools.js
  * ~~~~~~~~~~~
  *
+<<<<<<< HEAD
  * Sphinx JavaScript utilties for all documentation.
+=======
+ * Sphinx JavaScript utilities for all documentation.
+>>>>>>> redo doc in seperate local repo
  *
  * :copyright: Copyright 2007-2011 by the Sphinx team, see AUTHORS.
  * :license: BSD, see LICENSE for details.

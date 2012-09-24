@@ -15,7 +15,11 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
+<<<<<<< HEAD
         VERSION:     '0.1 alpha',
+=======
+        VERSION:     '',
+>>>>>>> redo doc in seperate local repo
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -51,6 +55,7 @@
 <p>For basic use of the Minpower script, see <a class="reference internal" href="../basic-use.html"><em>Basic Use</em></a>. For a guide to creating problems using spreadsheets see <a class="reference internal" href="../creating-problems.html"><em>Creating a Problem</em></a>.</p>
 <div class="section" id="solving">
 <h2><a class="reference internal" href="solving.html"><em>Solving Problems</em></a><a class="headerlink" href="#solving" title="Permalink to this headline">¶</a></h2>
+<<<<<<< HEAD
 <p>The <a class="reference internal" href="solving.html#module-solve" title="solve"><tt class="xref py py-mod docutils literal"><span class="pre">solve</span></tt></a> module contains the top-level commands for reading data, creating problems, solving them, and saving results. Included is a function for solving rolling (or multi-stage) unit commitments, <a class="reference internal" href="solving.html#solve.solve_multistage" title="solve.solve_multistage"><tt class="xref py py-func docutils literal"><span class="pre">solve_multistage()</span></tt></a>.</p>
 </div>
 <div class="section" id="getting-data">
@@ -76,6 +81,33 @@
 <div class="section" id="results">
 <h2><a class="reference internal" href="results.html"><em>Results</em></a><a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="results.html#module-results" title="results"><tt class="xref py py-mod docutils literal"><span class="pre">results</span></tt></a> module has models for power systems problem solutions. These contain the code for visualization and output to spreadsheets.</p>
+=======
+<p>The <tt class="xref py py-mod docutils literal"><span class="pre">solve</span></tt> module contains the top-level commands for reading data, creating problems, solving them, and saving results. Included is a function for solving rolling (or multi-stage) unit commitments, <tt class="xref py py-func docutils literal"><span class="pre">solve_multistage()</span></tt>.</p>
+</div>
+<div class="section" id="getting-data">
+<h2><a class="reference internal" href="getting-data.html"><em>Getting Data</em></a><a class="headerlink" href="#getting-data" title="Permalink to this headline">¶</a></h2>
+<p>The module <tt class="xref py py-mod docutils literal"><span class="pre">get_data</span></tt> reads in data from spreadsheet files and parse it into <tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt>, <tt class="xref py py-class docutils literal"><span class="pre">Load</span></tt>, <tt class="xref py py-class docutils literal"><span class="pre">Bus</span></tt>, and <tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt> objects. The module also extracts the time information and create a <tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt> object.</p>
+</div>
+<div class="section" id="power-systems">
+<h2><a class="reference internal" href="power-systems.html"><em>Power Systems Components</em></a><a class="headerlink" href="#power-systems" title="Permalink to this headline">¶</a></h2>
+<p>The module <tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt> models for power systems components, including <tt class="xref py py-class docutils literal"><span class="pre">PowerSystem</span></tt>, <tt class="xref py py-class docutils literal"><span class="pre">Bus</span></tt>, <tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt>, <tt class="xref py py-class docutils literal"><span class="pre">Load</span></tt>, and  <tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt>. Each of these objects inherits an optimization framework from <tt class="xref py py-class docutils literal"><span class="pre">OptimizationObject</span></tt>.</p>
+</div>
+<div class="section" id="time">
+<h2><a class="reference internal" href="time.html"><em>Times and Schedules</em></a><a class="headerlink" href="#time" title="Permalink to this headline">¶</a></h2>
+<p>The <tt class="xref py py-mod docutils literal"><span class="pre">schedule</span></tt> module has models for times (<tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt>) and schedules (<tt class="xref py py-class docutils literal"><span class="pre">Schedule</span></tt>).</p>
+</div>
+<div class="section" id="optimization">
+<h2><a class="reference internal" href="optimization.html"><em>Optimization</em></a><a class="headerlink" href="#optimization" title="Permalink to this headline">¶</a></h2>
+<p>The <tt class="xref py py-mod docutils literal"><span class="pre">optimization</span></tt> module has an optimization problem model (<tt class="xref py py-class docutils literal"><span class="pre">Problem</span></tt>) and a template for optimization objects (<tt class="xref py py-class docutils literal"><span class="pre">OptimizationObject</span></tt>).</p>
+</div>
+<div class="section" id="bids">
+<h2><a class="reference internal" href="bids.html"><em>Bidding</em></a><a class="headerlink" href="#bids" title="Permalink to this headline">¶</a></h2>
+<p>The <tt class="xref py py-mod docutils literal"><span class="pre">bidding</span></tt> module has models for the piece-wise linearization of polynomials and a container for these models (<tt class="xref py py-class docutils literal"><span class="pre">Bid</span></tt>).</p>
+</div>
+<div class="section" id="results">
+<h2><a class="reference internal" href="results.html"><em>Results</em></a><a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h2>
+<p>The <tt class="xref py py-mod docutils literal"><span class="pre">results</span></tt> module has models for power systems problem solutions. These contain the code for visualization and output to spreadsheets.</p>
+>>>>>>> redo doc in seperate local repo
 </div>
 <div class="section" id="testing">
 <h2><a class="reference internal" href="testing.html"><em>Testing</em></a><a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
@@ -158,9 +190,15 @@
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+<<<<<<< HEAD
 <div class="social">
 <div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
 </div>
+=======
+<!--<div class="social">-->
+<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
+<!--</div>-->
+>>>>>>> redo doc in seperate local repo
         </div>
       </div>
       <div class="clearer"></div>
@@ -170,6 +208,10 @@
     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+<<<<<<< HEAD
+=======
+    
+>>>>>>> redo doc in seperate local repo
   })();
 </script>
 

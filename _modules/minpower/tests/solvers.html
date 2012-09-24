@@ -1,0 +1,179 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>minpower.tests.solvers &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="top" title="minpower" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for minpower.tests.solvers</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;Test the all of the solver links&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">attest</span> <span class="kn">import</span> <span class="n">Tests</span><span class="p">,</span><span class="n">assert_hook</span>
+<span class="kn">from</span> <span class="nn">minpower</span> <span class="kn">import</span> <span class="n">optimization</span><span class="p">,</span> <span class="n">config</span>
+<span class="kn">from</span> <span class="nn">coopr</span> <span class="kn">import</span> <span class="n">pyomo</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">mem_tracking</span><span class="o">=</span><span class="bp">False</span>
+<span class="k">if</span> <span class="n">mem_tracking</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">pympler.classtracker</span> <span class="kn">import</span> <span class="n">ClassTracker</span>
+    <span class="kn">from</span> <span class="nn">pympler.classtracker_stats</span> <span class="kn">import</span> <span class="n">HtmlStats</span>
+    <span class="kn">import</span> <span class="nn">objgraph</span>
+    <span class="n">tracker</span><span class="o">=</span><span class="n">ClassTracker</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">cls</span> <span class="ow">in</span> <span class="p">[</span><span class="n">pyomo</span><span class="o">.</span><span class="n">ConcreteModel</span><span class="p">,</span><span class="n">pyomo</span><span class="o">.</span><span class="n">Var</span><span class="p">,</span><span class="n">pyomo</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">_VarElement</span><span class="p">,</span><span class="n">pyomo</span><span class="o">.</span><span class="n">Constraint</span><span class="p">,</span><span class="n">optimization</span><span class="o">.</span><span class="n">OptimizationProblem</span><span class="p">]:</span>
+        <span class="n">tracker</span><span class="o">.</span><span class="n">track_class</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+
+<span class="n">solvers</span> <span class="o">=</span> <span class="n">Tests</span><span class="p">()</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(levelname)s</span><span class="s">: </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="simple_problem"><a class="viewcode-back" href="../../../auto-api/minpower.tests.html#minpower.tests.solvers.simple_problem">[docs]</a><span class="k">def</span> <span class="nf">simple_problem</span><span class="p">():</span>
+    <span class="n">prob</span><span class="o">=</span><span class="n">optimization</span><span class="o">.</span><span class="n">OptimizationProblem</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">mem_tracking</span><span class="p">:</span> <span class="n">tracker</span><span class="o">.</span><span class="n">create_snapshot</span><span class="p">(</span><span class="s">&#39;prob. init&#39;</span><span class="p">)</span>
+    <span class="n">prob</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span><span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">high</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">prob</span><span class="o">.</span><span class="n">add_variable</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">,</span><span class="n">low</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">high</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">prob</span><span class="o">.</span><span class="n">get_component</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">prob</span><span class="o">.</span><span class="n">get_component</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">)</span>
+    <span class="n">prob</span><span class="o">.</span><span class="n">add_objective</span><span class="p">(</span><span class="n">y</span><span class="o">-</span><span class="mi">4</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">prob</span><span class="o">.</span><span class="n">add_constraint</span><span class="p">(</span><span class="s">&#39;ineq&#39;</span><span class="p">,</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">&lt;=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mem_tracking</span><span class="p">:</span> <span class="n">tracker</span><span class="o">.</span><span class="n">create_snapshot</span><span class="p">(</span><span class="s">&#39;prob. created&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">prob</span> 
+
+
+</div>
+<div class="viewcode-block" id="test_one_solver"><a class="viewcode-back" href="../../../auto-api/minpower.tests.html#minpower.tests.solvers.test_one_solver">[docs]</a><span class="k">def</span> <span class="nf">test_one_solver</span><span class="p">(</span><span class="n">solver_name</span><span class="p">):</span>
+    <span class="n">prob</span><span class="o">=</span><span class="n">simple_problem</span><span class="p">()</span>
+    <span class="n">prob</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">solver_name</span><span class="p">,</span><span class="n">get_duals</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mem_tracking</span><span class="p">:</span> <span class="n">tracker</span><span class="o">.</span><span class="n">create_snapshot</span><span class="p">(</span><span class="s">&#39;prob. solved&#39;</span><span class="p">)</span>
+    <span class="n">status</span><span class="o">=</span><span class="n">prob</span><span class="o">.</span><span class="n">solved</span>
+    <span class="k">del</span> <span class="n">prob</span>
+    <span class="k">if</span> <span class="n">mem_tracking</span><span class="p">:</span> <span class="n">tracker</span><span class="o">.</span><span class="n">create_snapshot</span><span class="p">(</span><span class="s">&#39;prob. deleted&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">solver_name</span><span class="o">==</span><span class="s">&#39;glpk&#39;</span> <span class="ow">and</span> <span class="n">mem_tracking</span><span class="p">:</span>
+        <span class="n">tracker</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">print_summary</span><span class="p">()</span>
+        <span class="c">#HtmlStats(tracker=tracker).create_html(&#39;profile-simple-problem.html&#39;)</span>
+        <span class="n">models_left</span><span class="o">=</span><span class="n">objgraph</span><span class="o">.</span><span class="n">by_type</span><span class="p">(</span><span class="s">&#39;ConcreteModel&#39;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span> <span class="n">models_left</span> <span class="p">)</span>
+        <span class="n">objgraph</span><span class="o">.</span><span class="n">show_backrefs</span><span class="p">(</span><span class="n">models_left</span><span class="p">,</span><span class="n">filename</span><span class="o">=</span><span class="s">&#39;backrefs-simple-problem.png&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">status</span>
+</div>
+<span class="nd">@solvers.test</span>
+<div class="viewcode-block" id="cplex"><a class="viewcode-back" href="../../../auto-api/minpower.tests.html#minpower.tests.solvers.cplex">[docs]</a><span class="k">def</span> <span class="nf">cplex</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;Test each available solver on a simple problem&#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="s">&#39;cplex&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">available_solvers</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">test_one_solver</span><span class="p">(</span><span class="s">&#39;cplex&#39;</span><span class="p">)</span>
+</div>
+<span class="nd">@solvers.test</span>
+<div class="viewcode-block" id="glpk"><a class="viewcode-back" href="../../../auto-api/minpower.tests.html#minpower.tests.solvers.glpk">[docs]</a><span class="k">def</span> <span class="nf">glpk</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;Test the glpk solver on a simple problem&#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="s">&#39;glpk&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">available_solvers</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">test_one_solver</span><span class="p">(</span><span class="s">&#39;glpk&#39;</span><span class="p">)</span>
+</div>
+<span class="nd">@solvers.test</span>
+<div class="viewcode-block" id="gurobi"><a class="viewcode-back" href="../../../auto-api/minpower.tests.html#minpower.tests.solvers.gurobi">[docs]</a><span class="k">def</span> <span class="nf">gurobi</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;Test the gurobi solver on a simple problem&#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="s">&#39;gurobi&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">available_solvers</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">test_one_solver</span><span class="p">(</span><span class="s">&#39;gurobi&#39;</span><span class="p">)</span>
+        </div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span> <span class="n">solvers</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../creating-problems.html">Creating a Problem</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">Documentation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<!--<div class="social">-->
+<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
+<!--</div>-->
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+  </body>
+</html>

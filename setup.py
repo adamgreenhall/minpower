@@ -13,8 +13,8 @@
 from setuptools import setup, find_packages
 setup(
     name = "minpower",
-    version = "3.2",
-    download_url = "https://github.com/adamgreenhall/minpower/zipball/v3.2",
+    version = "3.2.1",
+    download_url = "https://github.com/adamgreenhall/minpower/zipball/v3.2.1",
 
     entry_points="""
     [console_scripts]

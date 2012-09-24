@@ -1,8 +1,7 @@
 # Require any additional compass plugins here.
 
 # Set this to the root of your project when deployed:
-http_path = "build/html/"
-css_dir = "build/html/_static/"
+css_dir = "source/_static/"
 sass_dir = "source/_static/"
 images_dir = "source/_static/"
 

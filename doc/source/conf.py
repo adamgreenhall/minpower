@@ -1,6 +1,6 @@
 import sys, os
 
-sys.path.insert(0, os.path.abspath('../minpower')) #code location
+sys.path.insert(0, os.path.abspath('../../minpower')) #code location
 #sys.path.append(os.path.abspath('_build/sphinxext'))
 #sys.path.append(os.path.abspath('sphinxext'))
 

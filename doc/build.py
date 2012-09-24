@@ -1,33 +1,32 @@
 import os, sys, shutil, glob
 
+build_dir = os.path.expanduser('~/research/minpower-doc/')
+
+print 'building to',build_dir
+
 def check_build():
-    build_dirs = [
-        'build', 'build/doctrees', 'build/html',
-        'build/html/_static']
+    build_dirs = ['doctrees', '_static']
     for d in build_dirs:
         try:
-            os.mkdir(d)
+            os.mkdir(build_dir+d)
         except OSError:
             pass
-
-def clean():
-    if os.path.exists('build'):
-        shutil.rmtree('build')
 
 def css():
     check_build()
     if os.system('compass compile'):
         raise SystemExit('building css failed')
-    # os.system('cp source/_static/default.css build/html/_static/default.css')
+    os.system('cp source/_static/default.css {bd}_static/default.css'.format(bd=build_dir))
 
 def html():    
     css()
-    check_build()    
-    if os.system('sphinx-build -P -b html -d build/doctrees  source build/html'):
+    check_build()
+    
+    if os.system('sphinx-build -P -b html -d {build_dir}doctrees  source {build_dir}'.format(build_dir=build_dir)):
         raise SystemExit("Building HTML failed.")
 
 def publish():
-    os.system('git checkout gh-pages')
+    os.system('git checkout gh-pages; git rebase master')
     html()
     os.system('git commit -a')
     os.system('git push origin gh-pages')

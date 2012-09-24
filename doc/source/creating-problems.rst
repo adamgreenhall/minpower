@@ -39,7 +39,7 @@ Generators
 +-----------------------+----------------------------------------------------+--------------+-------------+
 
 
-.. literalinclude:: ../minpower/tests/uc-WW-5-2/generators.csv
+.. literalinclude:: ../../minpower/tests/uc-WW-5-2/generators.csv
 
 Initial Conditions
 -------------------
@@ -56,7 +56,7 @@ Initial Conditions
 | hours in status   |                                   | 100             | hrs     |
 +-------------------+-----------------------------------+-----------------+---------+
 
-.. literalinclude:: ../minpower/tests/uc-WW-5-2/initial.csv
+.. literalinclude:: ../../minpower/tests/uc-WW-5-2/initial.csv
 
 .. note:
     
@@ -77,7 +77,7 @@ Loads
 | Bus                 | name of bus where load is connected                                  | single bus   |         |
 +---------------------+----------------------------------------------------------------------+--------------+---------+
 
-.. literalinclude:: ../minpower/tests/uc-rolling/loads.csv
+.. literalinclude:: ../../minpower/tests/uc-rolling/loads.csv
 
 
 Lines
@@ -97,7 +97,7 @@ Lines
 | P max         | maximum power limit of line          |           | MW      |
 +---------------+--------------------------------------+-----------+---------+
 
-.. literalinclude:: ../minpower/tests/opf/lines.csv
+.. literalinclude:: ../../minpower/tests/opf/lines.csv
 
 
 Schedules
@@ -111,4 +111,4 @@ Schedules
 | power         | energy scheduled (or predicted) for the period              |           | MWh     |
 +---------------+-------------------------------------------------------------+-----------+---------+
 
-.. literalinclude:: ../minpower/tests/uc-WW-5-2/load-pattern.csv
+.. literalinclude:: ../../minpower/tests/uc-WW-5-2/load-pattern.csv

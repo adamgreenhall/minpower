@@ -24,11 +24,11 @@ Example Problem
 
 To define a simple :abbr:`ED (Economic Dispatch)` problem, **Minpower** requires two spreadsheets. The first describes the generator parameters (`generators.csv <https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/ed-WW-3-7/generators.csv>`_):
 
-.. literalinclude:: ../minpower/tests/ed-WW-3-7/generators.csv
+.. literalinclude:: ../../minpower/tests/ed-WW-3-7/generators.csv
 
 The second simply describes the load (`loads.csv <https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/ed-WW-3-7/loads.csv>`_):
 
-.. literalinclude:: ../minpower/tests/ed-WW-3-7/loads.csv
+.. literalinclude:: ../../minpower/tests/ed-WW-3-7/loads.csv
 
 .. note:: For more information about what options you can specify in each spreadsheet see: :doc:`creating-problems`.
 
@@ -53,7 +53,7 @@ The result is a plot (``dispatch.png``):
 
 and a spreadsheet (``dispatch.csv``):
 
-    .. literalinclude:: ../minpower/tests/ed-WW-3-7/dispatch.csv
+    .. literalinclude:: ../../minpower/tests/ed-WW-3-7/dispatch.csv
 
 These outputs show that the problem's two generators (named ``cheap`` and ``expensive``) are being
 dispatched so that their incremental costs (the vertical axis in the plot and ``IC`` in the spreadsheet) are near equal. 

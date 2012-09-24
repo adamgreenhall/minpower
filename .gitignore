@@ -6,6 +6,7 @@ results.txt
 *.jpg
 *.profile
 .*
+*.css
 MANIFEST
 doc/publish.py
 doc/Makefile
@@ -15,6 +16,8 @@ addons/*.py
 *commitment.csv
 *dispatch.csv
 *powerflow-*.csv
+*stage*.csv
+*solution*.csv
 
 # Compiled source #
 ###################

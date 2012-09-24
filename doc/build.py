@@ -2,7 +2,7 @@ import os, sys, shutil, glob
 
 build_dir = os.path.expanduser('~/research/minpower-doc/')
 
-print 'building to',build_dir
+
 
 def check_build():
     build_dirs = ['doctrees', '_static']
@@ -18,7 +18,8 @@ def css():
         raise SystemExit('building css failed')
     os.system('cp source/_static/default.css {bd}_static/default.css'.format(bd=build_dir))
 
-def html():    
+def html():
+    print 'building to',build_dir
     css()
     check_build()
     
@@ -26,11 +27,12 @@ def html():
         raise SystemExit("Building HTML failed.")
 
 def publish():
-    os.system('git checkout gh-pages; git rebase master')
-    html()
+    print 'publishing docs from ',build_dir
+    current_dir = os.getcwd()
+    os.chdir(build_dir)
     os.system('git commit -a')
     os.system('git push origin gh-pages')
-    os.system('git checkout master')
+    os.chdir(current_dir)
 
 def main(publish=False,just_css=False):
     if not os.getcwd().endswith('doc'): os.chdir('./doc')
@@ -42,9 +44,11 @@ if __name__ == "__main__":
     ''' command line input'''
     if len(sys.argv)==1: main()
     elif len(sys.argv)==2: 
-        publish= str(sys.argv[1]).strip() == 'publish'
-        just_css= str(sys.argv[1]).strip() == 'css'
-        main(publish=publish,just_css=just_css)
+        command = str(sys.argv[1]).strip() 
+        if command == 'publish':
+            publish()
+        elif command == 'css':
+            css()
         
         
     else: 

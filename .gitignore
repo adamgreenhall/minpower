@@ -1,20 +1,7 @@
-error.txt
-results.txt
-*.lp
-*.png
-*.gif
-*.jpg
-*.profile
+*.sass
+*.pickle
 .*
 MANIFEST
-doc/publish.py
-doc/Makefile
-minpower.egg-info/
-doc/_build/*
-addons/*.py
-*commitment.csv
-*dispatch.csv
-*powerflow-*.csv
 
 # Compiled source #
 ###################
@@ -25,19 +12,6 @@ addons/*.py
 *.o
 *.so
 *.pyc
-
-# Packages #
-############
-# it's better to unpack these files and commit the raw source
-# git has its own built in compression methods
-*.7z
-*.dmg
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
 
 # Logs and databases #
 ######################

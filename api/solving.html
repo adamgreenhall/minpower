@@ -15,11 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-<<<<<<< HEAD
-        VERSION:     '0.1 alpha',
-=======
         VERSION:     '',
->>>>>>> redo doc in seperate local repo
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -50,17 +46,6 @@
         <div class="bodywrapper">
           <div class="body">
             
-<<<<<<< HEAD
-  <div class="section" id="module-solve">
-<span id="solving-problems"></span><h1>Solving Problems<a class="headerlink" href="#module-solve" title="Permalink to this headline">¶</a></h1>
-<p>Power systems optimization problem solver
-for ED, OPF, UC, and SCUC problems. The <a class="reference internal" href="#module-solve" title="solve"><tt class="xref py py-mod docutils literal"><span class="pre">solve</span></tt></a>
-module contains the top-level commands for creating
-problems and solving them.</p>
-<dl class="function">
-<dt id="solve.create_problem">
-<tt class="descclassname">solve.</tt><tt class="descname">create_problem</tt><big>(</big><em>power_system</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/solve.html#create_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.create_problem" title="Permalink to this definition">¶</a></dt>
-=======
   <div class="section" id="module-minpower.solve">
 <span id="solving-problems"></span><h1>Solving Problems<a class="headerlink" href="#module-minpower.solve" title="Permalink to this headline">¶</a></h1>
 <p>Power systems optimization problem solver
@@ -70,20 +55,14 @@ problems and solving them.</p>
 <dl class="function">
 <dt id="minpower.solve.create_problem">
 <tt class="descclassname">minpower.solve.</tt><tt class="descname">create_problem</tt><big>(</big><em>power_system</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/solve.html#create_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.solve.create_problem" title="Permalink to this definition">¶</a></dt>
->>>>>>> redo doc in seperate local repo
 <dd><p>Create an optimization problem.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<<<<<<< HEAD
-<li><strong>power_system</strong> &#8211; a <a class="reference internal" href="power-systems.html#powersystems.PowerSystem" title="powersystems.PowerSystem"><tt class="xref py py-class docutils literal"><span class="pre">PowerSystem</span></tt></a> object</li>
-<li><strong>times</strong> &#8211; <a class="reference internal" href="time.html#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a> object</li>
-=======
 <li><strong>power_system</strong> &#8211; a <tt class="xref py py-class docutils literal"><span class="pre">PowerSystem</span></tt> object</li>
 <li><strong>times</strong> &#8211; <tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt> object</li>
->>>>>>> redo doc in seperate local repo
 </ul>
 </td>
 </tr>
@@ -95,15 +74,6 @@ problems and solving them.</p>
 </dd></dl>
 
 <dl class="function">
-<<<<<<< HEAD
-<dt id="solve.create_solve_problem">
-<tt class="descclassname">solve.</tt><tt class="descname">create_solve_problem</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>datadir</em>, <em>solver</em>, <em>problemfile=False</em>, <em>get_duals=True</em><big>)</big><a class="reference internal" href="../_modules/solve.html#create_solve_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.create_solve_problem" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="solve.main">
-<tt class="descclassname">solve.</tt><tt class="descname">main</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/solve.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.main" title="Permalink to this definition">¶</a></dt>
-=======
 <dt id="minpower.solve.create_solve_problem">
 <tt class="descclassname">minpower.solve.</tt><tt class="descname">create_solve_problem</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>datadir</em>, <em>solver</em>, <em>scenario_tree=None</em>, <em>problemfile=False</em>, <em>get_duals=True</em>, <em>stage_hours=24</em>, <em>overlap_hours=0</em><big>)</big><a class="reference internal" href="../_modules/minpower/solve.html#create_solve_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.solve.create_solve_problem" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -111,19 +81,13 @@ problems and solving them.</p>
 <dl class="function">
 <dt id="minpower.solve.main">
 <tt class="descclassname">minpower.solve.</tt><tt class="descname">main</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/solve.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.solve.main" title="Permalink to this definition">¶</a></dt>
->>>>>>> redo doc in seperate local repo
 <dd><p>The command line interface for minpower. Described by:
 minpower &#8211;help</p>
 </dd></dl>
 
 <dl class="function">
-<<<<<<< HEAD
-<dt id="solve.solve_multistage">
-<tt class="descclassname">solve.</tt><tt class="descname">solve_multistage</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>datadir</em>, <em>solver='glpk'</em>, <em>interval_hours=None</em>, <em>stage_hours=24</em>, <em>overlap_hours=0</em>, <em>problemfile=False</em>, <em>get_duals=True</em>, <em>showclock=True</em><big>)</big><a class="reference internal" href="../_modules/solve.html#solve_multistage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.solve_multistage" title="Permalink to this definition">¶</a></dt>
-=======
 <dt id="minpower.solve.solve_multistage">
 <tt class="descclassname">minpower.solve.</tt><tt class="descname">solve_multistage</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>datadir</em>, <em>solver='glpk'</em>, <em>interval_hours=None</em>, <em>stage_hours=24</em>, <em>overlap_hours=0</em>, <em>scenario_tree=None</em>, <em>problemfile=False</em>, <em>get_duals=True</em>, <em>showclock=True</em><big>)</big><a class="reference internal" href="../_modules/minpower/solve.html#solve_multistage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.solve.solve_multistage" title="Permalink to this definition">¶</a></dt>
->>>>>>> redo doc in seperate local repo
 <dd><p>Solve a rolling or multi-stage power systems optimization problem.
 Each stage will be one optimization run. A stage&#8217;s final
 conditions will be the next stage&#8217;s initial condition.</p>
@@ -132,15 +96,9 @@ conditions will be the next stage&#8217;s initial condition.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<<<<<<< HEAD
-<li><strong>power_system</strong> &#8211; <a class="reference internal" href="power-systems.html#powersystems.PowerSystem" title="powersystems.PowerSystem"><tt class="xref py py-class docutils literal"><span class="pre">PowerSystem</span></tt></a> object</li>
-<li><strong>datadir</strong> &#8211; directory of spreadsheets</li>
-<li><strong>times</strong> &#8211; <a class="reference internal" href="time.html#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a> object. Will be split up into stages</li>
-=======
 <li><strong>power_system</strong> &#8211; <tt class="xref py py-class docutils literal"><span class="pre">PowerSystem</span></tt> object</li>
 <li><strong>datadir</strong> &#8211; directory of spreadsheets</li>
 <li><strong>times</strong> &#8211; <tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt> object. Will be split up into stages</li>
->>>>>>> redo doc in seperate local repo
 <li><strong>interval_hours</strong> &#8211; number of hours per interval</li>
 <li><strong>stage_hours</strong> &#8211; number of hours per stage (e.g. run one commitment every stage_hours)</li>
 <li><strong>overlap_hours</strong> &#8211; number of hours that stages overlap (e.g. run a 36hr commitment every 24hrs)</li>
@@ -150,17 +108,10 @@ conditions will be the next stage&#8217;s initial condition.</p>
 </ul>
 </td>
 </tr>
-<<<<<<< HEAD
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a list of <a class="reference internal" href="results.html#results.Solution_UC" title="results.Solution_UC"><tt class="xref py py-class docutils literal"><span class="pre">Solution_UC</span></tt></a> objects (one per stage)</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a list of <a class="reference internal" href="time.html#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a> objects (one per stage)</p>
-=======
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a list of <tt class="xref py py-class docutils literal"><span class="pre">Solution_UC</span></tt> objects (one per stage)</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a list of <tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt> objects (one per stage)</p>
->>>>>>> redo doc in seperate local repo
 </td>
 </tr>
 </tbody>
@@ -168,13 +119,8 @@ conditions will be the next stage&#8217;s initial condition.</p>
 </dd></dl>
 
 <dl class="function">
-<<<<<<< HEAD
-<dt id="solve.solve_problem">
-<tt class="descclassname">solve.</tt><tt class="descname">solve_problem</tt><big>(</big><em>datadir='.'</em>, <em>shell=True</em>, <em>problemfile=False</em>, <em>visualization=False</em>, <em>csv=True</em>, <em>solver='glpk'</em>, <em>num_breakpoints=11</em>, <em>hours_commitment=24</em>, <em>hours_commitment_overlap=0</em>, <em>get_duals=True</em>, <em>dispatch_decommit_allowed=False</em>, <em>logging_level=20</em>, <em>logging_file=False</em>, <em>solution_file=False</em><big>)</big><a class="reference internal" href="../_modules/solve.html#solve_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#solve.solve_problem" title="Permalink to this definition">¶</a></dt>
-=======
 <dt id="minpower.solve.solve_problem">
 <tt class="descclassname">minpower.solve.</tt><tt class="descname">solve_problem</tt><big>(</big><em>datadir='.'</em>, <em>shell=True</em>, <em>problemfile=False</em>, <em>visualization=False</em>, <em>csv=True</em>, <em>solver='glpk'</em>, <em>num_breakpoints=11</em>, <em>hours_commitment=24</em>, <em>hours_commitment_overlap=0</em>, <em>get_duals=True</em>, <em>dispatch_decommit_allowed=False</em>, <em>logging_level=20</em>, <em>logging_file=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/solve.html#solve_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.solve.solve_problem" title="Permalink to this definition">¶</a></dt>
->>>>>>> redo doc in seperate local repo
 <dd><p>Solve a optimization problem specified by spreadsheets in a directory.
 Read in data, create and solve the problem, and return solution.
 The problem type is determined by the data.</p>
@@ -183,11 +129,7 @@ The problem type is determined by the data.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<<<<<<< HEAD
-<li><strong>datadir</strong> &#8211; directory of data files, see <a class="reference internal" href="getting-data.html#module-get_data" title="get_data"><tt class="xref py py-mod docutils literal"><span class="pre">get_data</span></tt></a></li>
-=======
 <li><strong>datadir</strong> &#8211; directory of data files, see <tt class="xref py py-mod docutils literal"><span class="pre">get_data</span></tt></li>
->>>>>>> redo doc in seperate local repo
 <li><strong>shell</strong> &#8211; output solution information to the command line</li>
 <li><strong>problemfile</strong> &#8211; write the problem formulation to a problem-formulation.lp file</li>
 <li><strong>visualization</strong> &#8211; create a visualization of the solution and save it to a file</li>
@@ -201,11 +143,7 @@ The problem type is determined by the data.</p>
 </ul>
 </td>
 </tr>
-<<<<<<< HEAD
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><a class="reference internal" href="results.html#results.Solution" title="results.Solution"><tt class="xref py py-class docutils literal"><span class="pre">Solution</span></tt></a> object</p>
-=======
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">Solution</span></tt> object</p>
->>>>>>> redo doc in seperate local repo
 </td>
 </tr>
 </tbody>
@@ -261,15 +199,9 @@ The problem type is determined by the data.</p>
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-<<<<<<< HEAD
-<div class="social">
-<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
-</div>
-=======
 <!--<div class="social">-->
 <!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
 <!--</div>-->
->>>>>>> redo doc in seperate local repo
         </div>
       </div>
       <div class="clearer"></div>
@@ -279,10 +211,7 @@ The problem type is determined by the data.</p>
     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-<<<<<<< HEAD
-=======
     
->>>>>>> redo doc in seperate local repo
   })();
 </script>
 

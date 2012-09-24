@@ -15,11 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-<<<<<<< HEAD
-        VERSION:     '0.1 alpha',
-=======
         VERSION:     '',
->>>>>>> redo doc in seperate local repo
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -50,18 +46,6 @@
         <div class="bodywrapper">
           <div class="body">
             
-<<<<<<< HEAD
-  <div class="section" id="module-get_data">
-<span id="getting-data"></span><h1>Getting Data<a class="headerlink" href="#module-get_data" title="Permalink to this headline">¶</a></h1>
-<p>Get data from spreadsheet files and parse it into 
-<a class="reference internal" href="power-systems.html#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt></a>, <a class="reference internal" href="power-systems.html#powersystems.Load" title="powersystems.Load"><tt class="xref py py-class docutils literal"><span class="pre">Load</span></tt></a>,
-<a class="reference internal" href="power-systems.html#powersystems.Bus" title="powersystems.Bus"><tt class="xref py py-class docutils literal"><span class="pre">Bus</span></tt></a>, and <a class="reference internal" href="power-systems.html#powersystems.Line" title="powersystems.Line"><tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt></a> objects.
-Also extract the time information and create a <a class="reference internal" href="time.html#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a>
-object.</p>
-<dl class="function">
-<dt id="get_data.build_class_list">
-<tt class="descclassname">get_data.</tt><tt class="descname">build_class_list</tt><big>(</big><em>data</em>, <em>model</em>, <em>datadir</em>, <em>times=None</em>, <em>model_schedule=&lt;function make_schedule at 0x106c39aa0&gt;</em><big>)</big><a class="reference internal" href="../_modules/get_data.html#build_class_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.build_class_list" title="Permalink to this definition">¶</a></dt>
-=======
   <div class="section" id="module-minpower.get_data">
 <span id="getting-data"></span><h1>Getting Data<a class="headerlink" href="#module-minpower.get_data" title="Permalink to this headline">¶</a></h1>
 <p>Get data from spreadsheet files and parse it into 
@@ -71,8 +55,7 @@ Also extract the time information and create a <tt class="xref py py-class docut
 object.</p>
 <dl class="function">
 <dt id="minpower.get_data.build_class_list">
-<tt class="descclassname">minpower.get_data.</tt><tt class="descname">build_class_list</tt><big>(</big><em>data</em>, <em>model</em>, <em>datadir</em>, <em>times=None</em>, <em>model_schedule=&lt;function make_schedule at 0x5306938&gt;</em><big>)</big><a class="reference internal" href="../_modules/minpower/get_data.html#build_class_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.get_data.build_class_list" title="Permalink to this definition">¶</a></dt>
->>>>>>> redo doc in seperate local repo
+<tt class="descclassname">minpower.get_data.</tt><tt class="descname">build_class_list</tt><big>(</big><em>data</em>, <em>model</em>, <em>datadir</em>, <em>times=None</em>, <em>model_schedule=&lt;function make_schedule at 0x63d0938&gt;</em><big>)</big><a class="reference internal" href="../_modules/minpower/get_data.html#build_class_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.get_data.build_class_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create list of class instances from data in a spreadsheet.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -80,17 +63,10 @@ object.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>data</strong> &#8211; a list of dictionaries describing the parameters</li>
-<<<<<<< HEAD
-<li><strong>model</strong> &#8211; the <a class="reference internal" href="power-systems.html#module-powersystems" title="powersystems"><tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt></a> class to map the data to</li>
-<li><strong>datadir</strong> &#8211; the directory where the data (and schedule files are)</li>
-<li><strong>times</strong> &#8211; for <a class="reference internal" href="power-systems.html#module-powersystems" title="powersystems"><tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt></a> classes which have schedule file information,
-a master:class:<cite>~schedule.Timelist</cite> list to pass to <a class="reference internal" href="time.html#schedule.Schedule" title="schedule.Schedule"><tt class="xref py py-class docutils literal"><span class="pre">Schedule</span></tt></a></li>
-=======
 <li><strong>model</strong> &#8211; the <tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt> class to map the data to</li>
 <li><strong>datadir</strong> &#8211; the directory where the data (and schedule files are)</li>
 <li><strong>times</strong> &#8211; for <tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt> classes which have schedule file information,
 a master:class:<cite>~schedule.Timelist</cite> list to pass to <tt class="xref py py-class docutils literal"><span class="pre">Schedule</span></tt></li>
->>>>>>> redo doc in seperate local repo
 </ul>
 </td>
 </tr>
@@ -102,17 +78,10 @@ a master:class:<cite>~schedule.Timelist</cite> list to pass to <tt class="xref p
 </dd></dl>
 
 <dl class="function">
-<<<<<<< HEAD
-<dt id="get_data.parsedir">
-<tt class="descclassname">get_data.</tt><tt class="descname">parsedir</tt><big>(</big><em>datadir='.'</em>, <em>file_gens='generators.csv'</em>, <em>file_loads='loads.csv'</em>, <em>file_lines='lines.csv'</em>, <em>file_init='initial.csv'</em><big>)</big><a class="reference internal" href="../_modules/get_data.html#parsedir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.parsedir" title="Permalink to this definition">¶</a></dt>
-<dd><p>Import data from spreadsheets and build lists of
-<a class="reference internal" href="power-systems.html#module-powersystems" title="powersystems"><tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt></a> classes.</p>
-=======
 <dt id="minpower.get_data.parsedir">
 <tt class="descclassname">minpower.get_data.</tt><tt class="descname">parsedir</tt><big>(</big><em>datadir='.'</em>, <em>file_gens='generators.csv'</em>, <em>file_loads='loads.csv'</em>, <em>file_lines='lines.csv'</em>, <em>file_init='initial.csv'</em><big>)</big><a class="reference internal" href="../_modules/minpower/get_data.html#parsedir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.get_data.parsedir" title="Permalink to this definition">¶</a></dt>
 <dd><p>Import data from spreadsheets and build lists of
 <tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt> classes.</p>
->>>>>>> redo doc in seperate local repo
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -130,19 +99,6 @@ for UC problems if not specified.)</li>
 </tr>
 </tbody>
 </table>
-<<<<<<< HEAD
-<p>:return generators:, list of <a class="reference internal" href="power-systems.html#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt></a> objects 
-:return loads:, list of <tt class="xref py py-class docutils literal"><span class="pre">Load</span></tt> objects
-:return lines:, list of <a class="reference internal" href="power-systems.html#powersystems.Line" title="powersystems.Line"><tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt></a> objects
-:return times:, list of <a class="reference internal" href="time.html#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a> object</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="get_data.setup_initialcond">
-<tt class="descclassname">get_data.</tt><tt class="descname">setup_initialcond</tt><big>(</big><em>data</em>, <em>generators</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/get_data.html#setup_initialcond"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.setup_initialcond" title="Permalink to this definition">¶</a></dt>
-<dd><p>Take a list of initial conditions parameters and
-add information to each <a class="reference internal" href="power-systems.html#powersystems.Generator" title="powersystems.Generator"><tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt></a> 
-=======
 <p>:return generators:, list of <tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt> objects 
 :return loads:, list of <tt class="xref py py-class docutils literal"><span class="pre">Load</span></tt> objects
 :return lines:, list of <tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt> objects
@@ -154,19 +110,10 @@ add information to each <a class="reference internal" href="power-systems.html#p
 <tt class="descclassname">minpower.get_data.</tt><tt class="descname">setup_initialcond</tt><big>(</big><em>data</em>, <em>generators</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/get_data.html#setup_initialcond"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.get_data.setup_initialcond" title="Permalink to this definition">¶</a></dt>
 <dd><p>Take a list of initial conditions parameters and
 add information to each <tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt> 
->>>>>>> redo doc in seperate local repo
 object.</p>
 </dd></dl>
 
 <dl class="function">
-<<<<<<< HEAD
-<dt id="get_data.setup_times">
-<tt class="descclassname">get_data.</tt><tt class="descname">setup_times</tt><big>(</big><em>generators_data</em>, <em>loads_data</em>, <em>datadir</em><big>)</big><a class="reference internal" href="../_modules/get_data.html#setup_times"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#get_data.setup_times" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create list of <a class="reference internal" href="time.html#schedule.Time" title="schedule.Time"><tt class="xref py py-class docutils literal"><span class="pre">Time</span></tt></a> objects 
-from the schedule files. If there are no schedule
-files (as in ED,OPF), create just a single
-<a class="reference internal" href="time.html#schedule.Time" title="schedule.Time"><tt class="xref py py-class docutils literal"><span class="pre">Time</span></tt></a> instance.</p>
-=======
 <dt id="minpower.get_data.setup_scenarios">
 <tt class="descclassname">minpower.get_data.</tt><tt class="descname">setup_scenarios</tt><big>(</big><em>generators</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/get_data.html#setup_scenarios"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.get_data.setup_scenarios" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -178,7 +125,6 @@ files (as in ED,OPF), create just a single
 from the schedule files. If there are no schedule
 files (as in ED,OPF), create just a single
 <tt class="xref py py-class docutils literal"><span class="pre">Time</span></tt> instance.</p>
->>>>>>> redo doc in seperate local repo
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -190,11 +136,7 @@ files (as in ED,OPF), create just a single
 </ul>
 </td>
 </tr>
-<<<<<<< HEAD
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a <a class="reference internal" href="time.html#schedule.Timelist" title="schedule.Timelist"><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt></a> object</p>
-=======
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a <tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt> object</p>
->>>>>>> redo doc in seperate local repo
 </td>
 </tr>
 </tbody>
@@ -250,15 +192,9 @@ files (as in ED,OPF), create just a single
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-<<<<<<< HEAD
-<div class="social">
-<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
-</div>
-=======
 <!--<div class="social">-->
 <!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
 <!--</div>-->
->>>>>>> redo doc in seperate local repo
         </div>
       </div>
       <div class="clearer"></div>
@@ -268,10 +204,7 @@ files (as in ED,OPF), create just a single
     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-<<<<<<< HEAD
-=======
     
->>>>>>> redo doc in seperate local repo
   })();
 </script>
 

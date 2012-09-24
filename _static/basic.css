@@ -79,19 +79,11 @@ div.sphinxsidebar input {
     font-size: 1em;
 }
 
-<<<<<<< HEAD
-div.sphinxsidebar input[type="text"] {
-    width: 170px;
-}
-
-div.sphinxsidebar input[type="submit"] {
-=======
 div.sphinxsidebar #searchbox input[type="text"] {
     width: 170px;
 }
 
 div.sphinxsidebar #searchbox input[type="submit"] {
->>>>>>> redo doc in seperate local repo
     width: 30px;
 }
 

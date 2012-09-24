@@ -15,11 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-<<<<<<< HEAD
-        VERSION:     '0.1 alpha',
-=======
         VERSION:     '',
->>>>>>> redo doc in seperate local repo
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -81,11 +77,7 @@
 </div>
 <div class="section" id="adding-a-constraint">
 <span id="add-constraint"></span><h2>Adding a constraint<a class="headerlink" href="#adding-a-constraint" title="Permalink to this headline">¶</a></h2>
-<<<<<<< HEAD
-<p>Constraints can be added to existing power system components with a very simple syntax. Within the <a class="reference internal" href="api/optimization.html#optimization.OptimizationObject.create_constraints" title="optimization.OptimizationObject.create_constraints"><tt class="xref py py-meth docutils literal"><span class="pre">create_constraints()</span></tt></a> method (e.g. <a class="reference internal" href="api/power-systems.html#powersystems.Generator.create_constraints" title="powersystems.Generator.create_constraints"><tt class="xref py py-meth docutils literal"><span class="pre">create_constraints()</span></tt></a>), simply call <a class="reference internal" href="api/optimization.html#optimization.OptimizationObject.add_constraint" title="optimization.OptimizationObject.add_constraint"><tt class="xref py py-meth docutils literal"><span class="pre">add_constraint()</span></tt></a>. This method takes a name for the constraint, a time the constraint is in reference to (if applicable), and an expression. As an example, the maximum power limit is set for a generator by</p>
-=======
 <p>Constraints can be added to existing power system components with a very simple syntax. Within the <tt class="xref py py-meth docutils literal"><span class="pre">create_constraints()</span></tt> method (e.g. <tt class="xref py py-meth docutils literal"><span class="pre">create_constraints()</span></tt>), simply call <tt class="xref py py-meth docutils literal"><span class="pre">add_constraint()</span></tt>. This method takes a name for the constraint, a time the constraint is in reference to (if applicable), and an expression. As an example, the maximum power limit is set for a generator by</p>
->>>>>>> redo doc in seperate local repo
 <div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Generator</span><span class="p">(</span><span class="n">OptimizationObject</span><span class="p">):</span>
     <span class="c">#other methods here</span>
     <span class="k">def</span> <span class="nf">create_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">times</span><span class="p">):</span>
@@ -99,16 +91,6 @@
 </div>
 <div class="section" id="adding-a-component">
 <span id="add-model"></span><h2>Adding a component<a class="headerlink" href="#adding-a-component" title="Permalink to this headline">¶</a></h2>
-<<<<<<< HEAD
-<p>The power system components in <strong>Minpower</strong> are <a class="reference internal" href="python-intro.html#object-oriented"><em>object oriented</em></a> models and are also all <tt class="xref py py-class docutils literal"> <span class="pre">Check</span> <span class="pre">out</span> <span class="pre">:mod:`powersystems</span></tt> for examples of existing models. To define your own, simply inherit the <a class="reference internal" href="api/optimization.html#optimization.OptimizationObject" title="optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">OptimizationObject</span></tt></a> class and follow its template:</p>
-<blockquote>
-<div><ul class="simple">
-<li><tt class="xref py py-meth docutils literal"><span class="pre">__init__()</span></tt> creates a new object of that class and sets its parameters</li>
-<li><a class="reference internal" href="api/optimization.html#optimization.OptimizationObject.init_optimization" title="optimization.OptimizationObject.init_optimization"><tt class="xref py py-meth docutils literal"><span class="pre">init_optimization()</span></tt></a> is called within <tt class="xref py py-meth docutils literal"><span class="pre">__init__()</span></tt> and sets up an empty structure for optimization variables, constraints, and objective components</li>
-<li><a class="reference internal" href="api/optimization.html#optimization.OptimizationObject.create_variables" title="optimization.OptimizationObject.create_variables"><tt class="xref py py-meth docutils literal"><span class="pre">create_variables()</span></tt></a> sets up the optimization variables</li>
-<li><a class="reference internal" href="api/optimization.html#optimization.OptimizationObject.create_constraints" title="optimization.OptimizationObject.create_constraints"><tt class="xref py py-meth docutils literal"><span class="pre">create_constraints()</span></tt></a> sets up the optimization constraints</li>
-<li><a class="reference internal" href="api/optimization.html#optimization.OptimizationObject.create_objective" title="optimization.OptimizationObject.create_objective"><tt class="xref py py-meth docutils literal"><span class="pre">create_objective()</span></tt></a> defines a objective cost component (if any)</li>
-=======
 <p>The power system components in <strong>Minpower</strong> are <a class="reference internal" href="python-intro.html#object-oriented"><em>object oriented</em></a> models and are also all <tt class="xref py py-class docutils literal"> <span class="pre">Check</span> <span class="pre">out</span> <span class="pre">:mod:`powersystems</span></tt> for examples of existing models. To define your own, simply inherit the <tt class="xref py py-class docutils literal"><span class="pre">OptimizationObject</span></tt> class and follow its template:</p>
 <blockquote>
 <div><ul class="simple">
@@ -117,7 +99,6 @@
 <li><tt class="xref py py-meth docutils literal"><span class="pre">create_variables()</span></tt> sets up the optimization variables</li>
 <li><tt class="xref py py-meth docutils literal"><span class="pre">create_constraints()</span></tt> sets up the optimization constraints</li>
 <li><tt class="xref py py-meth docutils literal"><span class="pre">create_objective()</span></tt> defines a objective cost component (if any)</li>
->>>>>>> redo doc in seperate local repo
 <li><tt class="xref py py-meth docutils literal"><span class="pre">__str__()</span></tt> defines a <abbr title="for use in creating variables and constraints, which must have unique names">unique string</abbr> representing the object</li>
 </ul>
 </div></blockquote>
@@ -227,15 +208,9 @@
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-<<<<<<< HEAD
-<div class="social">
-<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>
-</div>
-=======
 <!--<div class="social">-->
 <!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
 <!--</div>-->
->>>>>>> redo doc in seperate local repo
         </div>
       </div>
       <div class="clearer"></div>
@@ -245,10 +220,7 @@
     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-<<<<<<< HEAD
-=======
     
->>>>>>> redo doc in seperate local repo
   })();
 </script>
 

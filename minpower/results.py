@@ -234,7 +234,7 @@ class Solution_ED(Solution):
             plot.legend(plotted_loads, names_loads, fancybox=True,title='Loads:',loc='best')
             plot.gca().add_artist(legendGens) #add first legend to the axes manually bcs multiple legends get overwritten
         
-        self.savevisualization(filename='dispatch.png')
+        self.savevisualization(filename=joindir(self.datadir,'dispatch.png'))
         
         if show_cost_also:
             #show a plot of the cost space, illustrating the linearization

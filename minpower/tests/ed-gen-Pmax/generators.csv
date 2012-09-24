@@ -1,3 +1,0 @@
-"name","type","cost curve equation","P max" 
-"cheap","coal","200 + 5 P + .1 P^2","50"
-"expensive","natural gas","300 + 10 P + .1 P^2","500"

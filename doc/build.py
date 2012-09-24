@@ -1,36 +1,43 @@
-import os, subprocess, sys
-import glob
+import os, sys, shutil, glob
+
+def check_build():
+    build_dirs = [
+        'build', 'build/doctrees', 'build/html',
+        'build/html/_static']
+    for d in build_dirs:
+        try:
+            os.mkdir(d)
+        except OSError:
+            pass
+
+def clean():
+    if os.path.exists('build'):
+        shutil.rmtree('build')
+
+def css():
+    check_build()
+    if os.system('compass compile'):
+        raise SystemExit('building css failed')
+    # os.system('cp source/_static/default.css build/html/_static/default.css')
+
+def html():    
+    css()
+    check_build()    
+    if os.system('sphinx-build -P -b html -d build/doctrees  source build/html'):
+        raise SystemExit("Building HTML failed.")
+
+def publish():
+    os.system('git checkout gh-pages')
+    html()
+    os.system('git commit -a')
+    os.system('git push origin gh-pages')
+    os.system('git checkout master')
 
 def main(publish=False,just_css=False):
     if not os.getcwd().endswith('doc'): os.chdir('./doc')
-    if just_css:
-        os.system('compass compile')
-        os.system('cp _static/default.css _build/html/_static/default.css')
-        return
-    if publish:
-        os.system('make gh-pages')
-        # # os.chdir('~/minpower/')
-        # commands=[
-        #     # 'cd ~/minpower/',
-        #     'git checkout gh-pages',
-        #     'cp -r doc/_build/html/ .',
-        #     # 'git add *.html api/*.html',
-        #     'git commit -am "publishing"',
-        #     # 'git push origin gh-pages',
-        #     'git checkout master'
-        #     'rm objects.inv',
-        #     'rm -r _sources/',
-        #     'rm -r _static/',
-        #     ]
-        # for cmd in commands: 
-        #     result=os.system(cmd)
-        #     if result!=0: break
-    else:
-        os.system('compass compile')
-        os.system('make html')
-        #os.system('make latexpdf')
-        for f in glob.glob('*.log'): os.remove(f)
-        for f in glob.glob('../*.pyc'): os.remove(f)
+    if just_css: css()
+    if publish: publish()
+    else: html()
     
 if __name__ == "__main__": 
     ''' command line input'''

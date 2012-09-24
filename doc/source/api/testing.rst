@@ -6,12 +6,12 @@ The :mod:`test` subpackage has both unit tests (of individual constraints) and a
 :mod:`tests.testall`
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: tests.testall
+.. automodule:: minpower.tests.testall
     :members:
     :undoc-members:    
 
 :mod:`tests.testall_integration`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: tests.testall_integration
+.. automodule:: minpower.tests.testall_integration
     :members:

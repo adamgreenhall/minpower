@@ -1,6 +1,6 @@
-Results
+Times and Schedules
 ====================
-.. automodule:: results
+.. automodule:: minpower.schedule
     :members:
     :undoc-members:
     :show-inheritance:

@@ -32,15 +32,15 @@ Example Problem
 
 To define a simple :abbr:`UC (Unit Commitment)` problem, **Minpower** requires at least three spreadsheets. The first describes the generator parameters (`generators.csv <https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/uc-WW-5-2/generators.csv>`_):
 
-.. literalinclude:: ../minpower/tests/uc-WW-5-2/generators.csv
+.. literalinclude:: ../../minpower/tests/uc-WW-5-2/generators.csv
 
 The second simply describes which loads exist on the system and where there schedule files are (`loads.csv <https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/uc-WW-5-2/loads.csv>`_):
 
-.. literalinclude:: ../minpower/tests/uc-WW-5-2/loads.csv
+.. literalinclude:: ../../minpower/tests/uc-WW-5-2/loads.csv
 
 The other spreadsheets describe the load (or non-controllable generation) energy schedules. In this case (`load-pattern.csv <https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/uc-WW-5-2/load-pattern.csv>`_): 
 
-.. literalinclude:: ../minpower/tests/uc-WW-5-2/load-pattern.csv
+.. literalinclude:: ../../minpower/tests/uc-WW-5-2/load-pattern.csv
 
 .. note:: For more information about what options you can specify in each spreadsheet see: :doc:`creating-problems`.
 
@@ -60,7 +60,7 @@ Example Solution
 
 The result is a plot (``commitment.png``):
 
-    .. image:: ../minpower/tests/uc-WW-5-2/commitment.png
+    .. image:: ./_static/demos/commitment/commitment.png
        :width: 500 px
 
 This figure has two axes that share the same time axis. The top axes shows the :abbr:`price of energy (The system price is generally determined by the dual of the energy constraint in the optimization problem and is in $/MWh.)` for the system. The bottom axes shows the energy that each generator produces. 
@@ -74,7 +74,7 @@ But why doesn't the expensive generator turn back off at 6:00, when the load goe
 
 The data from the graph is also output in spreadsheet form (``commitment.csv``):
 
-    .. literalinclude:: ../minpower/tests/uc-WW-5-2/commitment.csv
+    .. literalinclude:: ../../minpower/tests/uc-WW-5-2/commitment.csv
 
 Unlike :doc:`ED <economic-dispatch>` and :doc:`OPF <optimal-power-flow>` results, this spreadsheet is not particularly easy to read. It is meant more for machines than for humans. The spreadsheet gives status and energy output for each generator, along with the system energy price, for each time.
 

@@ -1,5 +1,5 @@
 Solving Problems
 ==================
-.. automodule:: solve
+.. automodule:: minpower.solve
     :members:
     :undoc-members:

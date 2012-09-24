@@ -33,15 +33,15 @@ Example Problem
 
 To define a simple :abbr:`OPF (Optimal Power Flow)` problem, **Minpower** requires three spreadsheets. The first describes the generator parameters and location (`generators.csv <https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/opf/generators.csv>`_):
 
-.. literalinclude:: ../minpower/tests/opf/generators.csv
+.. literalinclude:: ../../minpower/tests/opf/generators.csv
 
 The second describes the load at each bus (`loads.csv <https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/opf/loads.csv>`_):
 
-.. literalinclude:: ../minpower/tests/opf/loads.csv
+.. literalinclude:: ../../minpower/tests/opf/loads.csv
 
 The third describes the lines between buses (`lines.csv <https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/opf/lines.csv>`_):
 
-.. literalinclude:: ../minpower/tests/opf/lines.csv
+.. literalinclude:: ../../minpower/tests/opf/lines.csv
 
 .. note:: For more information about what options you can specify in each spreadsheet see: :doc:`creating-problems`.
 
@@ -61,7 +61,7 @@ Example Solution
 
 The result is a plot (``powerflow.png``):
 
-    .. image:: ../minpower/tests/opf/powerflow.png
+    .. image:: ./_static/demos/powerflow/powerflow.png
        :width: 500 px
 
 
@@ -74,11 +74,11 @@ The result is a plot (``powerflow.png``):
 
 There are also spreadsheet outputs of generator information (``powerflow-generators.csv``):
 
-.. literalinclude:: ../minpower/tests/opf/powerflow-generators.csv
+.. literalinclude:: ../../minpower/tests/opf/powerflow-generators.csv
 
 and line information (``powerflow-lines.csv``):
 
-.. literalinclude:: ../minpower/tests/opf/powerflow-lines.csv
+.. literalinclude:: ../../minpower/tests/opf/powerflow-lines.csv
 
 Each line's real power flow is output. Lines that have congestion will show a positive shadow price. 
 *Because the flow is Tacoma* :math:`\rightarrow` *Seattle and the from/to fields of the

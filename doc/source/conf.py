@@ -7,8 +7,6 @@ sys.path.insert(0, os.path.abspath('../minpower')) #code location
 # General information about the project.
 project = 'minpower'
 copyright = 'Adam Greenhall'
-version = '0.1'
-release = '0.1 alpha'
 
 # -- General configuration -----------------------------------------------------
 extensions = [

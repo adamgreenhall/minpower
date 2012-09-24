@@ -1,6 +1,5 @@
-Bidding
+Optimization
 ====================
-.. automodule:: bidding
+.. automodule:: minpower.optimization
     :members:
     :undoc-members:
-    :show-inheritance:

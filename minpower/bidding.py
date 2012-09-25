@@ -90,9 +90,9 @@ class Bid(OptimizationObject):
             if evaluate: out = value(out)
         
         if self.is_pwl and self.constant_term!=0:
-            const = self.status_variable(time)*self.constant_term
-            if evaluate: const = value(const)
-            out += const
+            status = self.status_variable(time)
+            if evaluate: status=value(status) 
+            out += status*self.constant_term
             
         return out
     def output_true(self,input_var): 

@@ -7,7 +7,7 @@ an optimization framework from :class:`~optimization.OptimizationObject`.
 """
 
 from optimization import value,dual,OptimizationObject,OptimizationProblem
-from commonscripts import hours,drop_case_spaces,flatten,getattrL,unique,update_attributes,show_clock, bool_to_int
+from commonscripts import * # hours,drop_case_spaces,flatten,getattrL,unique,update_attributes,show_clock
 import config, bidding
 from schedule import FixedSchedule
 import logging
@@ -387,10 +387,23 @@ class Generator_Stochastic(Generator_nonControllable):
         self.build_cost_model()
         self.init_optimization()
     def power(self,time,scenario=None): return self.get_variable('power',time=time,scenario=scenario,indexed=True)
+    
+    def _get_scenario_values(self,times,s=0):
+        if self.has_scenarios_multistage:
+            values = self.scenario_values[times[0].Start]
+            scenario = values.ix[s].values.tolist()
+            scenario.pop(0) # dont include the probability
+            return [ scenario[t] for t in range(len(times)) ]
+        else:
+            return [ self.scenario_values[s][time] for time in times ]
+    
     def create_variables(self,times):
         self.add_parameter('power',index=times.set)
         power=self.power(time=None)
-        for time in times: power[str(time)]=self.scenario_values[0][time] #initialize to first scenario value
+
+        #initialize to first scenario value
+        scenario_one = self._get_scenario_values(times, s=0)        
+        for t,time in enumerate(times): power[str(time)] = scenario_one[t]
         
         self.bids=bidding.Bid(
             polynomial=self.cost_coeffs,

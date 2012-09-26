@@ -10,7 +10,7 @@ import time as timer
 
 from optimization import OptimizationError
 import config, get_data, powersystems, stochastic, results
-from commonscripts import joindir,show_clock
+from commonscripts import * # joindir,show_clock
 
 
 def solve_problem(datadir='.',
@@ -86,16 +86,18 @@ def solve_problem(datadir='.',
 
 def create_solve_problem(power_system,times,datadir,solver,
     scenario_tree=None,problemfile=False,get_duals=True,
-    stage_hours=24,overlap_hours=0):
+    stage_hours=24,overlap_hours=0,
+    multistage=False):
     if problemfile: problemfile=joindir(datadir,'problem-formulation.lp')
     
     create_problem(power_system,times)
     
     stochastic_formulation=False
     if scenario_tree is not None: 
+        tree = scenario_tree[times[0].Start] if multistage else scenario_tree
         stochastic_formulation=True
-        stochastic.define_stage_variables(scenario_tree,power_system,times)
-        power_system= stochastic.create_problem_with_scenarios(power_system,times,scenario_tree, stage_hours,overlap_hours)
+        stochastic.define_stage_variables(tree,power_system,times)
+        power_system = stochastic.create_problem_with_scenarios(power_system,times, tree, stage_hours,overlap_hours)
     
     power_system.solve(solver,problem_filename=problemfile,get_duals=get_duals)
     
@@ -160,8 +162,6 @@ def solve_multistage(power_system,times,datadir,
     stage_times=times.subdivide(stage_hours,interval_hrs=interval_hours,overlap_hrs=overlap_hours)
     buses=power_system.buses
     stage_solutions=[]
-
-    if scenario_tree is not None: raise NotImplementedError()
     
     def set_initialconditions(buses,initTime):
         for bus in buses:
@@ -183,14 +183,14 @@ def solve_multistage(power_system,times,datadir,
         logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
         set_initialconditions(buses,t_stage.initialTime)
         
-        try: stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,scenario_tree,problemfile,get_duals)
+        try: stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,scenario_tree,problemfile,get_duals, multistage=True)
         except OptimizationError:
             #re-do stage, with load shedding allowed
             logging.critical('stage infeasible, re-running with load shedding.')
             power_system.reset_model()
             power_system.set_load_shedding(True)
             try: 
-                stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,scenario_tree,problemfile=True,get_duals=get_duals)
+                stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,scenario_tree,problemfile=True,get_duals=get_duals, multistage=True)
             except OptimizationError:
                 stage_solutions[-1].saveCSV(joindir(datadir,'last-stage-solved-commitment.csv'),save_final_status=True) 
                 raise OptimizationError('failed to solve, even with load shedding.')

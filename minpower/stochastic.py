@@ -15,13 +15,20 @@ from math import fabs, ceil
 from optimization import OptimizationProblem
 import gc,logging
 from datetime import timedelta,datetime
-# import ipdb; ipdb.set_trace()
+from commonscripts import *
 
-def construct_simple_scenario_tree(probabilities):
+def construct_simple_scenario_tree(probabilities, time_stage=None):
     '''Construct a simple scenario tree instance'''
     tree=scenario_tree_model
-    scenario_names=['s{n}'.format(n=n) for n in range(len(probabilities))]
-    node_names=['n{n}'.format(n=n) for n in range(len(probabilities))]
+
+    prob_set = range(len(probabilities))
+    if time_stage is None:
+        scenario_names=['s{n}'.format(n=n) for n in prob_set]
+        node_names=['n{n}'.format(n=n) for n in prob_set]
+    else:
+        scenario_names=['s{n}t{t}'.format(n=n, t=time_stage) for n in prob_set]
+        node_names=['n{n}t{t}'.format(n=n, t=time_stage) for n in prob_set]
+        
 
     tree.Stages.add('first stage','second stage')
     tree.Nodes.add('root')
@@ -64,6 +71,7 @@ def define_stage_variables(scenario_tree,power_system,times):
     scenario_tree.StageCostVariable['second stage']=str(power_system.cost_second_stage())
 
 def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_hours,overlap_hours):
+    #debug()
     scenario_tree=ScenarioTree(scenarioinstance=power_system._model, scenariotreeinstance=scenariotreeinstance)
     if scenario_tree.validate()==False: raise ValueError('not a valid scenario tree')
     
@@ -78,7 +86,8 @@ def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_
         
         power=getattr(scenario_instance,'power_{}'.format(str(gen_w_scenarios)))
         #set the values of the parameter for this scenario
-        for time in times: power[str(time)]=gen_w_scenarios.scenario_values[s][time]
+        scenario_vals = gen_w_scenarios._get_scenario_values(times, s=s)        
+        for t,time in enumerate(times): power[str(time)] = scenario_vals[t]
         
         #power.pprint()
         scenario_instance.preprocess()

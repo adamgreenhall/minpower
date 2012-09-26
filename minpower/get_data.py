@@ -9,7 +9,7 @@ object.
 import powersystems
 import schedule
 from addons import *
-from commonscripts import csv2dicts,csvColumn,flatten,unique,drop_case_spaces,joindir
+from commonscripts import *
 from stochastic import construct_simple_scenario_tree
 
 import os,sys,logging
@@ -28,7 +28,8 @@ fields_gens={
     'heatrateequation':'heatratestring','fuelcost':'fuelcost',
     'startupcost':'startupcost','shutdowncost':'shutdowncost',
     'schedulefilename':'schedulefilename','mustrun':'mustrun',
-    'scenariosfilename':'scenariosfilename'}
+    'scenariosfilename':'scenariosfilename',
+    'scenariosdirectory':'scenariosdirectory'}
 fields_loads={'name':'name','bus':'bus','type':'kind','kind':'kind',
             'p':'P','pd':'P', 'power':'P',
             'pmin':'Pmin','pmax':'Pmax',
@@ -148,10 +149,11 @@ def build_class_list(data,model,datadir,times=None,model_schedule=schedule.make_
         model_row,model_schedule_row=get_model(row)
         schedulefilename=row.pop('schedulefilename',None)
         scenariosfilename=row.pop('scenariosfilename',None)
+        scenariosdirectory=row.pop('scenariosdirectory',None)
         bid_points_filename = row.pop('costcurvepointsfilename', None)
         
         if schedulefilename is not None: row['schedule']=model_schedule_row(joindir(datadir,schedulefilename),times)
-        elif scenariosfilename is not None: model_row=powersystems.Generator_Stochastic
+        elif (scenariosfilename is not None) or (scenariosdirectory is not None): model_row = powersystems.Generator_Stochastic
         
         # load a custom bid points filename with {power, cost} columns 
         if bid_points_filename is not None: 
@@ -165,7 +167,8 @@ def build_class_list(data,model,datadir,times=None,model_schedule=schedule.make_
             msg='{} model got unexpected parameter'.format(model_row)
             print msg
             raise
-        if scenariosfilename is not None: obj.scenarios_filename=joindir(datadir,scenariosfilename)
+        if scenariosfilename is not None:    obj.scenarios_filename  = joindir(datadir,scenariosfilename)
+        elif scenariosdirectory is not None: obj.scenarios_directory = joindir(datadir, scenariosdirectory)
         all_models.append( obj )
         index+=1
     return all_models
@@ -219,9 +222,12 @@ def setup_times(generators_data,loads_data,datadir):
 
 def setup_scenarios(generators,times):
     # no_scenario_indexes=[]
+    # FIXME - need to think about how rolling will work here
+    
     has_scenarios=[]
     for gen in generators:
-        if getattr(gen,'scenarios_filename',None) is not None: has_scenarios.append(gen.index)
+        if (getattr(gen,'scenarios_filename',None) is not None) or (getattr(gen, 'scenarios_directory', None) is not None): 
+            has_scenarios.append(gen.index)
     
     if len(has_scenarios)>1:
         raise NotImplementedError('more than one generator with scenarios. have not coded this case yet.')
@@ -232,9 +238,29 @@ def setup_scenarios(generators,times):
     gen=generators[has_scenarios[0]]
     gen.has_scenarios=True
     gen.scenario_values=[]
-    data=csv2dicts(gen.scenarios_filename)
-    probabilities=[row['probability'] for row in data]
-    for row in data:
-        row.pop('probability')
-        gen.scenario_values.append(dict( (times[t],row[time]) for t,time in enumerate(sorted(row.iterkeys())) ))
-    return construct_simple_scenario_tree(probabilities)
+    if getattr(gen,'scenarios_filename',None) is not None:
+        gen.has_scenarios_multistage = False
+        data=csv2dicts(gen.scenarios_filename)
+        probabilities=[row['probability'] for row in data]
+        for row in data:
+            row.pop('probability')
+            gen.scenario_values.append(dict( (times[t],row[time]) for t,time in enumerate(sorted(row.iterkeys())) ))
+        return construct_simple_scenario_tree( probabilities )
+    elif getattr(gen, 'scenarios_directory', None) is not None: # directory of scenarios grouped by days
+        # key scenarios by day (initialization)
+        from collections import OrderedDict
+        scenario_trees = OrderedDict()
+        gen.scenario_values = OrderedDict()
+        gen.has_scenarios_multistage = True
+        
+        import pandas
+        from pandas.io.parsers import read_csv as dataframe_from_csv
+        for root, dirs, files in os.walk(gen.scenarios_directory):
+            for i,f in enumerate(sorted(files)):
+                data = dataframe_from_csv(joindir(root,f), parse_dates=True, index_col=0)
+                # data_times = pandas.date_range(data.columns[1], data.columns[-1],freq='5min')
+                day = parse_time(data.columns[1]) #first col is probability
+                
+                gen.scenario_values[day] = data
+                scenario_trees[day] = construct_simple_scenario_tree( data['probability'].values.tolist(), time_stage=i )
+        return scenario_trees

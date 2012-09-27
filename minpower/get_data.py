@@ -262,5 +262,6 @@ def setup_scenarios(generators,times):
                 day = parse_time(data.columns[1]) #first col is probability
                 
                 gen.scenario_values[day] = data
-                scenario_trees[day] = construct_simple_scenario_tree( data['probability'].values.tolist(), time_stage=i )
+                # defer construction until actual time stage starts
+                # scenario_trees[day] = construct_simple_scenario_tree( data['probability'].values.tolist(), time_stage=i )
         return scenario_trees

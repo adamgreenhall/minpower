@@ -80,14 +80,20 @@ def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_
     gen_w_scenarios=filter(lambda gen: getattr(gen,'has_scenarios',False),power_system.generators())[0]
     
     scenario_instances={}
+    time_names = [str(time) for time in times]
+    Nt = len(times)
     for s,scenario in enumerate(scenario_tree._scenarios):
         #print 'scenario: {s}'.format(s=s)
         scenario_instance=power_system._model.clone()
         
         power=getattr(scenario_instance,'power_{}'.format(str(gen_w_scenarios)))
         #set the values of the parameter for this scenario
-        scenario_vals = gen_w_scenarios._get_scenario_values(times, s=s)        
-        for t,time in enumerate(times): power[str(time)] = scenario_vals[t]
+        logging.debug('setting scenario values for s%i'%s)
+        try: scenario_vals = gen_w_scenarios._get_scenario_values(times, s=s)        
+        except KeyError:
+            debug()
+            raise
+        for t in range(Nt): power[time_names[t]] = scenario_vals[t]
         
         #power.pprint()
         scenario_instance.preprocess()

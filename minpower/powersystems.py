@@ -398,7 +398,7 @@ class Generator_Stochastic(Generator_nonControllable):
             return [ self.scenario_values[s][time] for time in times ]
     
     def create_variables(self,times):
-        self.add_parameter('power',index=times.set)
+        self.add_parameter('power', index=times.set, nochecking=True)
         power=self.power(time=None)
 
         #initialize to first scenario value

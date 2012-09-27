@@ -108,9 +108,9 @@ class OptimizationObject(object):
             
 
 
-    def add_parameter(self,name,index=None,default=None):
+    def add_parameter(self,name,index=None,default=None, **kwargs):
         name=self._id(name)
-        self._parent_problem().add_component_to_problem(pyomo.Param(index,name=name,default=default))
+        self._parent_problem().add_component_to_problem(pyomo.Param(index,name=name,default=default, **kwargs))
         
     def add_constraint(self,name,time,expression): 
         '''Create a new constraint and add it to the object's constraints and the model's constraints.'''

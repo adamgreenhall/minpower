@@ -27,17 +27,17 @@ generator_defaults=dict(
         ),
     is_controllable=dict(generic=True,wind=False),
     power=dict(generic=None),
-    
+
     Pmax=dict(
         generic=             500,
         coal=                550,
-        nuclear=            1117, 
+        nuclear=            1117,
         nggt=                 90,
         ngcc=                420,
         ngst   =             550,#assume equal to coal fired steam
         wind   =             100,
         ),
-    
+
     minuptime=dict(
         generic=0,
         coal=24,
@@ -47,7 +47,7 @@ generator_defaults=dict(
         ngst=24, #assume equal to coal fired steam
         wind=0,
         ),
-    
+
     mindowntime=dict(
         generic=0,
         coal=2,
@@ -57,7 +57,7 @@ generator_defaults=dict(
         ngst=12,#assume equal to coal fired steam
         wind=0,
         ),
-    
+
     fuelcost=dict(
         generic=    1,
         coal=       2.0,   #from EIA national average coal price: http://www.eia.gov/electricity/monthly/
@@ -67,10 +67,10 @@ generator_defaults=dict(
         nuclear =   0.65,  #from NWPP plan - Table I-34: Forecast nuclear fuel prices (2006$/MMBtu)
         wind=       0,
         ),
-    
-    
+
+
     startupcost=dict(
-        generic=              0, #if kind not specified, no startup cost 
+        generic=              0, #if kind not specified, no startup cost
 ##from Henry Louie thesis
 #        coal=            107800,
 #        nuclear=         283500,

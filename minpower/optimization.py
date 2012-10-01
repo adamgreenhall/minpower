@@ -11,7 +11,7 @@ variable_kinds = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyom
 import logging,time,weakref
 
 import config
-from commonscripts import update_attributes,show_clock
+from commonscripts import * # update_attributes,show_clock
 
 class OptimizationObject(object):
     '''
@@ -243,8 +243,17 @@ class OptimizationProblem(OptimizationObject):
                 self._scenario_instances[scenario].pprint()
                 raise
             
-    def write_model(self,filename): self._model.write(filename)
-    def reset_model(self):        
+    def write_model(self,filename): 
+        try: self._model.write(filename)
+        except: self._model.pprint(filename)
+    def reset_model(self):
+        #piecewise models leak memory
+        #keep until Coopr release integrates: https://software.sandia.gov/trac/coopr/changeset/5781 
+        for pw in self._model.active_components(pyomo.Piecewise).values():
+            pw._constraints_dict=None
+            pw._vars_dict=None
+            pw._sets_dict=None
+        
         self._model=None
         self.solved=False
         self._model=pyomo.ConcreteModel() 
@@ -317,7 +326,9 @@ class OptimizationProblem(OptimizationObject):
             self.write_model(problem_filename)
             logging.getLogger().setLevel(config.logging_level)
                 
-        if not self.solved: 
+        if not self.solved:
+            if self.stochastic_formulation: 
+                self._stochastic_instance.pprint('unsolved-stochastic-instance.txt')
             self.write_model('unsolved-problem-formulation.lp')
             raise OptimizationError('problem not solved')
         

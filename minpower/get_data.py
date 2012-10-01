@@ -243,10 +243,13 @@ def setup_scenarios(generators,times, Nscenarios = None):
         gen.has_scenarios_multistage = False
         data=csv2dicts(gen.scenarios_filename)
         if Nscenarios is not None:
-            # truncate the data to N scenarios
             data = data[:Nscenarios]
         
         probabilities=[row['probability'] for row in data]
+        if Nscenarios is not None:
+            pr = sum(probabilities)
+            probabilities=[ p/pr for p in probabilities ]
+        
         for row in data:
             row.pop('probability')
             gen.scenario_values.append(dict( (times[t],row[time]) for t,time in enumerate(sorted(row.iterkeys())) ))
@@ -267,6 +270,7 @@ def setup_scenarios(generators,times, Nscenarios = None):
                 
                 if Nscenarios is not None:
                     data = data[ data.index<Nscenarios ]
+                    data['probability'] = data['probability']/sum( data['probability'] )
                 
                 # data_times = pandas.date_range(data.columns[1], data.columns[-1],freq='5min')
                 day = parse_time(data.columns[1]) #first col is probability

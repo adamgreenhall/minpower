@@ -88,13 +88,15 @@ def solve_problem(datadir='.',
 def create_solve_problem(power_system,times,datadir,solver,
     scenario_tree=None,problemfile=False,get_duals=True,
     stage_hours=24,overlap_hours=0,
-    multistage=False, stage_number=None):
+    multistage=False, stage_number=None,
+    rerun=False
+    ):
     if problemfile: problemfile=joindir(datadir,'problem-formulation.lp')
     
     create_problem(power_system,times)
     
     stochastic_formulation=False
-    if scenario_tree is not None: 
+    if scenario_tree is not None and not rerun:
         if multistage: # multiple time stages
             gen = filter(lambda gen: getattr(gen, 'has_scenarios',False) , power_system.generators())[0]
             day_start = times[0].Start
@@ -197,9 +199,9 @@ def solve_multistage(power_system,times,datadir,
             power_system.reset_model()
             power_system.set_load_shedding(True)
             try: 
-                stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,scenario_tree,problemfile=True,get_duals=get_duals, multistage=True, stage_number=stg)
+                stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,scenario_tree,problemfile=True,get_duals=get_duals, multistage=True, stage_number=stg, rerun=True)
             except OptimizationError:
-                stage_solutions[-1].saveCSV(joindir(datadir,'last-stage-solved-commitment.csv'),save_final_status=True) 
+                if stage_solutions: stage_solutions[-1].saveCSV(joindir(datadir,'last-stage-solved-commitment.csv'),save_final_status=True) 
                 raise OptimizationError('failed to solve, even with load shedding.')
             power_system.set_load_shedding(False)
 

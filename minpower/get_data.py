@@ -43,6 +43,7 @@ fields_initial={
     'ic':None}
     
 def parsedir(datadir='.',
+        Nscenarios = None,
         file_gens='generators.csv',
         file_loads='loads.csv',
         file_lines='lines.csv',
@@ -87,7 +88,7 @@ def parsedir(datadir='.',
     setup_initialcond(init_data,generators,times)
     
     #setup scenario tree (if applicable)
-    scenario_tree=setup_scenarios(generators,times)
+    scenario_tree=setup_scenarios(generators,times, Nscenarios)
     return generators,loads,lines,times,scenario_tree
 
 def setup_initialcond(data,generators,times):
@@ -220,7 +221,7 @@ def setup_times(generators_data,loads_data,datadir):
         time_dates=sorted(unique(time_dates))
     return schedule.make_times(time_dates)
 
-def setup_scenarios(generators,times):
+def setup_scenarios(generators,times, Nscenarios = None):
     # no_scenario_indexes=[]
     # FIXME - need to think about how rolling will work here
     
@@ -241,6 +242,10 @@ def setup_scenarios(generators,times):
     if getattr(gen,'scenarios_filename',None) is not None:
         gen.has_scenarios_multistage = False
         data=csv2dicts(gen.scenarios_filename)
+        if Nscenarios is not None:
+            # truncate the data to N scenarios
+            data = data[:Nscenarios]
+        
         probabilities=[row['probability'] for row in data]
         for row in data:
             row.pop('probability')
@@ -248,16 +253,21 @@ def setup_scenarios(generators,times):
         return construct_simple_scenario_tree( probabilities )
     elif getattr(gen, 'scenarios_directory', None) is not None: # directory of scenarios grouped by days
         # key scenarios by day (initialization)
+        import pandas
+        from pandas.io.parsers import read_csv as dataframe_from_csv
         from collections import OrderedDict
+        
         scenario_trees = OrderedDict()
         gen.scenario_values = OrderedDict()
         gen.has_scenarios_multistage = True
         
-        import pandas
-        from pandas.io.parsers import read_csv as dataframe_from_csv
         for root, dirs, files in os.walk(gen.scenarios_directory):
             for i,f in enumerate(sorted(files)):
                 data = dataframe_from_csv(joindir(root,f), parse_dates=True, index_col=0)
+                
+                if Nscenarios is not None:
+                    data = data[ data.index<Nscenarios ]
+                
                 # data_times = pandas.date_range(data.columns[1], data.columns[-1],freq='5min')
                 day = parse_time(data.columns[1]) #first col is probability
                 

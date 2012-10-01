@@ -26,6 +26,7 @@ def solve_problem(datadir='.',
         dispatch_decommit_allowed=False,
         logging_level=config.logging_level,
         logging_file=False,
+        Nscenarios = None,
         ):
     """ 
     Solve a optimization problem specified by spreadsheets in a directory.
@@ -49,7 +50,7 @@ def solve_problem(datadir='.',
     _setup_logging(logging_level,logging_file)
     start_time = timer.time()
     logging.debug('Minpower reading {} {}'.format(datadir, show_clock()))
-    generators,loads,lines,times,scenario_tree=get_data.parsedir(datadir)
+    generators,loads,lines,times,scenario_tree=get_data.parsedir(datadir, Nscenarios)
     logging.debug('data read {}'.format(show_clock()))
     power_system=powersystems.PowerSystem(generators,loads,lines,                 
                 num_breakpoints=num_breakpoints,
@@ -251,6 +252,8 @@ def main():
                         help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
     parser.add_argument('--logfile','-l',type=str,default=False,
                        help='log file, default is to log to terminal')
+    parser.add_argument('--scenarios',type=int, default=None,
+                        help='limit the number of scenarios to N')
     # parser.add_argument('--solution_file',type=str,default=False,
     #                    help='save solution file to disk')
     parser.add_argument('--profile',action="store_true",default=False,help='run cProfile and output to minpower.profile')
@@ -274,6 +277,7 @@ def main():
               get_duals=not args.duals_off,
               problemfile=args.problemfile,
               logging_file=args.logfile,
+              Nscenarios=args.scenarios,
               )
               # solution_file=args.solution_file)
     if args.profile:

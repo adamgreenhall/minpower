@@ -29,7 +29,9 @@ fields_gens={
     'startupcost':'startupcost','shutdowncost':'shutdowncost',
     'schedulefilename':'schedulefilename','mustrun':'mustrun',
     'scenariosfilename':'scenariosfilename',
-    'scenariosdirectory':'scenariosdirectory'}
+    'scenariosdirectory':'scenariosdirectory',
+    'observedfilename':'observedfilename'}
+    
 fields_loads={'name':'name','bus':'bus','type':'kind','kind':'kind',
             'p':'P','pd':'P', 'power':'P',
             'pmin':'Pmin','pmax':'Pmax',
@@ -151,6 +153,7 @@ def build_class_list(data,model,datadir,times=None,model_schedule=schedule.make_
         schedulefilename=row.pop('schedulefilename',None)
         scenariosfilename=row.pop('scenariosfilename',None)
         scenariosdirectory=row.pop('scenariosdirectory',None)
+        observedfilename = row.pop('observedfilename', None)
         bid_points_filename = row.pop('costcurvepointsfilename', None)
         
         if schedulefilename is not None: row['schedule']=model_schedule_row(joindir(datadir,schedulefilename),times)
@@ -169,7 +172,9 @@ def build_class_list(data,model,datadir,times=None,model_schedule=schedule.make_
             print msg
             raise
         if scenariosfilename is not None:    obj.scenarios_filename  = joindir(datadir,scenariosfilename)
-        elif scenariosdirectory is not None: obj.scenarios_directory = joindir(datadir, scenariosdirectory)
+        elif scenariosdirectory is not None: 
+            obj.scenarios_directory = joindir(datadir, scenariosdirectory)
+            obj.observed_filename = joindir(datadir, observedfilename)
         all_models.append( obj )
         index+=1
     return all_models
@@ -263,6 +268,9 @@ def setup_scenarios(generators,times, Nscenarios = None):
         scenario_trees = OrderedDict()
         gen.scenario_values = OrderedDict()
         gen.has_scenarios_multistage = True
+        
+        # load in the observations (needed to decide the final states of each stage)
+        gen.observed_values = dataframe_from_csv(gen.observed_filename, parse_dates=True, index_col=0, squeeze=True)
         
         for root, dirs, files in os.walk(gen.scenarios_directory):
             for i,f in enumerate(sorted(files)):

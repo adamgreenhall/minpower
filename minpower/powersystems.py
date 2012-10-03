@@ -705,3 +705,42 @@ class PowerSystem(OptimizationProblem):
         self.add_constraint('system_cost_first_stage',self.cost_first_stage()==sum(bus.cost_first_stage(times) for bus in self.buses))
         self.add_constraint('system_cost_second_stage',self.cost_second_stage()==sum(bus.cost_second_stage(times) for bus in self.buses))
     def iden(self,time): return 'system'
+    
+    def get_generator_with_scenarios(self):
+        gens = filter(lambda gen: getattr(gen,'has_scenarios',False), self.generators())
+        if len(gens)>1: raise NotImplementedError('Dont handle the case of multiple stochastic generators')
+        elif len(gens)==0: return []
+        else: return gens[0]
+    
+    def get_finalconditions(self, stage_solution):
+        times = stage_solution.times
+        tEnd = times.non_overlap_times[-1] 
+        for gen in self.generators():
+            if stage_solution.is_stochastic:
+                finalstatus = dict(
+                    power =  stage_solution.observed_generator_power[gen][tEnd], 
+                    status = stage_solution.stage_generators_status[gen][tEnd], 
+                    hrsinstatus = barf
+                    )
+            else:
+                finalstatus = gen.getstatus(t=tEnd,times=times)
+            gen.finalstatus = finalstatus
+        
+    def set_initialconditions(self, initTime, stage_number, stage_solutions):
+        #first stage of problem already has initial time defined
+        if stage_number == 0: return
+#        stage_solution = stage_solutions[stage_number - 1]
+#        for g,gen in enumerate(self.generators()):
+#            if stage_solution:
+#                debug()
+#                status = stage_solution.gen_final_status
+#                finalstatus= dict(
+#                        power = None, # this is scenario dependent!!
+#                        status = status[g],
+#                        hrsinstatus = None)
+
+#            else:
+        finalstatus = getattr(gen, 'finalstatus', {})
+        if finalstatus: 
+            gen.set_initial_condition(time=initTime, **finalstatus)
+            del gen.finalstatus

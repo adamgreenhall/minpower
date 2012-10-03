@@ -7,7 +7,7 @@ import yaml
 import logging
 from collections import OrderedDict
 
-from commonscripts import flatten,transpose,elementwiseAdd, getattrL,within,writeCSV,joindir,replace_all,update_attributes
+from commonscripts import * # flatten,transpose,elementwiseAdd, getattrL,within,writeCSV,joindir,replace_all,update_attributes
 from schedule import Timelist
 from optimization import value,dual
 import config,stochastic
@@ -68,7 +68,7 @@ def make_solution(power_system,times,**kwargs):
 def make_multistage_solution(power_system,*args,**kwargs):
     '''Create a multi stage solution object.'''
     if power_system.lines: logging.warning('no visualization for multistage SCUC yet')
-    return Solution_UC_multistage(power_system,*args,**kwargs)
+    return Solution_UC_multistage(power_system,*args, is_stochastic = args['stage_solutions'][0].is_stochastic, **kwargs)
 
 class Solution(object):
     '''
@@ -76,7 +76,7 @@ class Solution(object):
     Each problem type has its own class for visualization and
     spreadsheet output, e.g. :class:`~solution.Solution_ED`.
     '''
-    def __init__(self,power_system,times,datadir='.'):
+    def __init__(self,power_system,times,datadir='.', is_stochastic=False):
         update_attributes(self,locals())
         self._get_problem_info()
         self._get_costs()
@@ -402,7 +402,7 @@ class Solution_UC_multistage(Solution_UC):
     Each element of the list :param:stage_solutions is a :class:`~results.Solution_UC` object.
 
     '''
-    def __init__(self,power_system,stage_times,datadir,stage_solutions):
+    def __init__(self,power_system,stage_times,datadir,stage_solutions, is_stochastic=False):
         update_attributes(self,locals(),exclude=['stage_solutions','stage_times'])
         self.times=Timelist(flatten([list(times.non_overlap_times) for times in stage_times]))
         self.times.setInitial(stage_times[0].initialTime)
@@ -449,11 +449,11 @@ class Solution_UC_multistage(Solution_UC):
         return ['total load shed={}MW'.format(self.load_shed) if self.load_shed>0 else '']
 
 
-class Solution_Stochsatic(Solution):
-    def __init__(self,power_system,times,datadir='.'):
+class Solution_Stochastic(Solution):
+    def __init__(self,power_system,times,datadir='.', is_stochastic=True):
         update_attributes(self,locals())
         self.scenarios=sorted(self.power_system._scenario_instances.keys())
-
+        
         self._get_problem_info()
         self._get_costs()
         self._get_prices()
@@ -476,6 +476,13 @@ class Solution_Stochsatic(Solution):
                 self.generators_power[s][time] =[value(gen.power(time,s)) for gen in generators]
                 self.generators_status[s][time] =[value(gen.status(time,s))==1 for gen in generators]
 
+        self.stage_generators_status = gen_time_dataframe(
+            self.generators(), 
+            self.times.non_overlap_times, 
+            values=[self.generators_status[self.scenarios[0]][time] for time in self.times.non_overlap_times]
+            )
+        return
+        
     def info_cost(self):
         return ["expected cost= {}".format(self.expected_cost),
                 "scenario costs: {}".format(self.cost_per_scenario)]
@@ -498,11 +505,33 @@ class Solution_Stochsatic(Solution):
         print '\n'.join(out)
         #P=self.generators()[2].power(self.times[0])
         #print P.name,values
+    def _calc_gen_power(self, sln, scenario_prefix='s0t0'):
+        '''calculate generator power from a resolved solution using the observed stochastic gen's power'''
+        import pandas
+        gen_with_scenarios = self.power_system.get_generator_with_scenarios()
+        times = self.times.non_overlap_times
+        
+        power = gen_time_dataframe(self.generators(), times)  
+        #dict([(time,{}) for time in times])
+        for time in times:
+            for gen in self.generators():
+                try: 
+                    # yuck - parse the power out of the native pyomo solution object 
+                    # trying to avoid loading the instance - because it is different from the mainline stochastic solution
+                    val = sln.variable['{s}_power_{g}({t})'.format(s=scenario_prefix, g=str(gen),t=str(time))]['Value']
+                except KeyError:
+                    if gen == gen_with_scenarios:
+                        val = gen_with_scenarios.observed_values[time.Start]
+                    else: raise
+                power[str(gen)][time.Start] = val
 
-class Solution_Stochastic_UC(Solution_Stochsatic):
-    def gen_final_status(self):
-        tEnd = self.times.non_overlap_times[-1]
-        return self.generator_status[self.scenarios[0]][tEnd]
+        self.observed_generator_power = power 
+        return
+
+class Solution_Stochastic_UC(Solution_Stochastic):
+#    def gen_final_status(self):
+#        tEnd = self.times.non_overlap_times[-1]
+#        return self.generator_status[self.scenarios[0]][tEnd]
     def saveCSV(self,filename=None):
         '''generator power values and statuses for unit commitment'''
         if filename is None: filename=joindir(self.datadir,'commitment.csv')

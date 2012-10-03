@@ -55,11 +55,12 @@ def define_stage_variables(scenario_tree,power_system,times):
     #create sets of variable names (not actual variables) for each stage
     variables_first_stage=Set()
     variables_second_stage=Set()
-    for gen in power_system.generators():
-        if not getattr(gen,'has_scenarios',False):
-            if gen.is_controllable: variables_first_stage.add(str(gen.get_variable('status',indexed=True,time=None))+'[*]')  
-            variables_second_stage.add(str(gen.get_variable('power',indexed=True,time=None))+'[*]')
-            #note - appending '[*]' to the indicies is required to get pysp to assign all the variables in the array to a stage 
+
+    for gen in filter(lambda gen: getattr(gen,'has_scenarios',False)==False, power_system.generators()):
+        # for each non stochastic generator
+        if gen.is_controllable: variables_first_stage.add(str(gen.get_variable('status',indexed=True,time=None))+'[*]')
+        variables_second_stage.add(str(gen.get_variable('power',indexed=True,time=None))+'[*]')
+        #note - appending '[*]' to the indicies is required to get pysp to assign all the variables in the array to a shape
         
     # variables_first_stage.pprint()
     scenario_tree.StageVariables['first stage']=variables_first_stage
@@ -72,12 +73,12 @@ def define_stage_variables(scenario_tree,power_system,times):
 
 def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_hours,overlap_hours):
     #debug()
-    scenario_tree=ScenarioTree(scenarioinstance=power_system._model, scenariotreeinstance=scenariotreeinstance)
+    scenario_tree = ScenarioTree(scenarioinstance=power_system._model, scenariotreeinstance=scenariotreeinstance)
     if scenario_tree.validate()==False: raise ValueError('not a valid scenario tree')
     
     #construct scenario instances
     # gc.disable()
-    gen_w_scenarios=filter(lambda gen: getattr(gen,'has_scenarios',False),power_system.generators())[0]
+    gen_w_scenarios = power_system.get_generator_with_scenarios()
     
     scenario_instances={}
     time_names = [str(time) for time in times]
@@ -89,10 +90,7 @@ def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_
         power=getattr(scenario_instance,'power_{}'.format(str(gen_w_scenarios)))
         #set the values of the parameter for this scenario
         logging.debug('setting scenario values for s%i'%s)
-        try: scenario_vals = gen_w_scenarios._get_scenario_values(times, s=s)        
-        except KeyError:
-            debug()
-            raise
+        scenario_vals = gen_w_scenarios._get_scenario_values(times, s=s)        
         for t in range(Nt): power[time_names[t]] = scenario_vals[t]
         
         #power.pprint()

@@ -481,6 +481,7 @@ class Solution_Stochastic(Solution):
             self.times.non_overlap_times, 
             values=[self.generators_status[self.scenarios[0]][time] for time in self.times.non_overlap_times]
             )
+        self.stage_generators_status = self.stage_generators_status.astype(int)
         return
         
     def info_cost(self):
@@ -523,7 +524,7 @@ class Solution_Stochastic(Solution):
                     if gen == gen_with_scenarios:
                         val = gen_with_scenarios.observed_values[time.Start]
                     else: raise
-                power[str(gen)][time.Start] = val
+                power[gen][time.Start] = val
 
         self.observed_generator_power = power 
         return

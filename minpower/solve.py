@@ -60,7 +60,7 @@ def solve_problem(datadir='.',
 
     logging.debug('power system set up {}'.format(show_clock()))
     if times.spanhrs<=hours_commitment+hours_commitment_overlap:
-        solution=create_solve_problem(power_system,times,datadir,
+        solution, instance = create_solve_problem(power_system,times,datadir,
                                       solver=solver,
                                       scenario_tree=scenario_tree,
                                       problemfile=problemfile,
@@ -101,14 +101,13 @@ def create_solve_problem(power_system,times,datadir,solver,
             gen = filter(lambda gen: getattr(gen, 'has_scenarios',False) , power_system.generators())[0]
             day_start = times[0].Start
             tree = stochastic.construct_simple_scenario_tree( gen.scenario_values[day_start]['probability'].values.tolist(), time_stage=stage_number )
-            # scenario_tree[times[0].Start]
             logging.debug('constructed tree for stage %i'%stage_number)
         else: tree = scenario_tree
         stochastic_formulation=True
         stochastic.define_stage_variables(tree,power_system,times)
         power_system = stochastic.create_problem_with_scenarios(power_system,times, tree, stage_hours,overlap_hours)
 
-    power_system.solve(solver,problem_filename=problemfile,get_duals=get_duals)
+    instance = power_system.solve(solver,problem_filename=problemfile,get_duals=get_duals)
 
     # if stochastic_formulation:
     #     power_system.scenario_tree=scenario_tree
@@ -116,7 +115,7 @@ def create_solve_problem(power_system,times,datadir,solver,
 
     solution=results.make_solution(power_system,times,datadir=datadir)
 
-    return solution
+    return solution, instance
 def create_problem(power_system,times):
     """
     Create an optimization problem.
@@ -171,59 +170,40 @@ def solve_multistage(power_system,times,datadir,
     stage_times=times.subdivide(stage_hours,interval_hrs=interval_hours,overlap_hrs=overlap_hours)
     buses=power_system.buses
     stage_solutions=[]
-
-    def set_initialconditions(power_system,initTime, stage_number):
-        #first stage of problem already has initial time defined
-        if stage_number == 0: return
-        for g,gen in enumerate(power_system.generators()):
-            if stage_solutions:
-                sln = stage_solutions[stage_number]
-                status = sln.gen_final_status
-                finalstatus= dict(
-                        power = None, # this is scenario dependent!!
-                        status = status[g],
-                        hrsinstatus = None)
-                debug()
-# this should all be in getfinalstatus
-
-            else:
-                finalstatus = getattr(gen, 'finalstatus', {})
-            try:
-                gen.set_initial_condition(time=initTime,**finalstatus)
-                if finalstatus: del gen.finalstatus
-            except:
-                debug()
-
-    def get_finalconditions(power_system,times):
-        t_back=overlap_hours/times.intervalhrs
-        next_stage_first_time = times[-1-int(t_back)]
-        for gen in power_system.generators():
-            gen.finalstatus=gen.getstatus(t=next_stage_first_time,times=times)
-
+    
+    Nstages = len(stage_times)
 
     for stg,t_stage in enumerate(stage_times):
-        #print 'Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock))
         logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
-        set_initialconditions(power_system, t_stage.initialTime, stg)
+        
+        power_system.set_initialconditions(t_stage.initialTime, stg, stage_solutions)
 
-        try: stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,scenario_tree,problemfile,get_duals, multistage=True, stage_number=stg)
+        try: 
+            stage_solution, instance = create_solve_problem(power_system,t_stage,datadir,solver,scenario_tree,problemfile,get_duals, multistage=True, stage_number=stg)
         except OptimizationError:
             #re-do stage, with load shedding allowed
             logging.critical('stage infeasible, re-running with load shedding.')
             power_system.reset_model()
             power_system.set_load_shedding(True)
             try:
-                stage_solution=create_solve_problem(power_system,t_stage,datadir,solver,scenario_tree,problemfile=True,get_duals=get_duals, multistage=True, stage_number=stg, rerun=True)
+                stage_solution, instance = create_solve_problem(power_system,t_stage,datadir,solver,scenario_tree,problemfile=True,get_duals=get_duals, multistage=True, stage_number=stg, rerun=True)
             except OptimizationError:
                 if stage_solutions: stage_solutions[-1].saveCSV(joindir(datadir,'last-stage-solved-commitment.csv'),save_final_status=True)
                 raise OptimizationError('failed to solve, even with load shedding.')
             power_system.set_load_shedding(False)
 
         logging.debug('solved... get results... {}'.format(show_clock(showclock)))
-        get_finalconditions(power_system,t_stage)
+        
+        if stage_solution.is_stochastic:
+            # resolve with observed power and fixed status from stochastic solution
+            power_system.resolve_stochastic_with_observed( instance, stage_solution)                        
+            
+            # TODO - evaluate performance against this resolve with perfect information
+            
+        power_system.get_finalconditions(stage_solution)
         stage_solutions.append(stage_solution)
 
-        if stg<len(stage_times)-1:
+        if stg < (Nstages-1): # if not the last stage 
             power_system.reset_model()
             #commonscripts.show_memory_growth()
 #            if stg==1:

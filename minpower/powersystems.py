@@ -162,12 +162,14 @@ class Generator(OptimizationObject):
     def cost_second_stage(self,times): return sum(self.operatingcost(time) for time in times)
     def getstatus(self,t,times): return dict(u=value(self.status(t)),P=value(self.power(t)),hoursinstatus=self.gethrsinstatus(t,times))
 #    def plot_cost_curve(self,P=None,filename=None): self.cost_model.plot(P,filename)
-    def gethrsinstatus(self,tm,times):
+    def gethrsinstatus(self,tm,times, status_var=None):
         if not self.is_controllable: return None
-        status=value(self.status(tm))
+        if status_var is None: status_var = self.status
+        
+        status=value(status_var(tm))
         timesClipped=times[:times.index(tm)]
         try: 
-            t_lastchange=(t for t in reversed(timesClipped) if value(self.status(t))!=status ).next()
+            t_lastchange=(t for t in reversed(timesClipped) if value(status_var(t))!=status ).next()
             return hours(tm.End-t_lastchange.Start)
         except StopIteration: #no changes over whole time period
             h=hours(tm.End-times[0].Start)
@@ -718,29 +720,24 @@ class PowerSystem(OptimizationProblem):
         for gen in self.generators():
             if stage_solution.is_stochastic:
                 finalstatus = dict(
-                    power =  stage_solution.observed_generator_power[gen][tEnd], 
-                    status = stage_solution.stage_generators_status[gen][tEnd], 
-                    hrsinstatus = barf
+                    P =  stage_solution.observed_generator_power[gen][tEnd.Start], 
+                    u =  stage_solution.stage_generators_status[gen][tEnd.Start], 
+                    hoursinstatus = gen.gethrsinstatus(
+                        tEnd, 
+                        times, 
+                        status_var = lambda time: stage_solution.stage_generators_status[gen][time.Start]
+                        )
                     )
-            else:
-                finalstatus = gen.getstatus(t=tEnd,times=times)
+            else: finalstatus = gen.getstatus(t=tEnd,times=times)
             gen.finalstatus = finalstatus
+        return
         
     def set_initialconditions(self, initTime, stage_number, stage_solutions):
         #first stage of problem already has initial time defined
         if stage_number == 0: return
-#        stage_solution = stage_solutions[stage_number - 1]
-#        for g,gen in enumerate(self.generators()):
-#            if stage_solution:
-#                debug()
-#                status = stage_solution.gen_final_status
-#                finalstatus= dict(
-#                        power = None, # this is scenario dependent!!
-#                        status = status[g],
-#                        hrsinstatus = None)
-
-#            else:
-        finalstatus = getattr(gen, 'finalstatus', {})
-        if finalstatus: 
-            gen.set_initial_condition(time=initTime, **finalstatus)
-            del gen.finalstatus
+        for gen in self.generators():
+            finalstatus = getattr(gen, 'finalstatus', {})
+            if finalstatus: 
+                gen.set_initial_condition(time=initTime, **finalstatus)
+                del gen.finalstatus
+        return 

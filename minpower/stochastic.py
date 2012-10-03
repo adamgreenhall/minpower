@@ -72,9 +72,12 @@ def define_stage_variables(scenario_tree,power_system,times):
     scenario_tree.StageCostVariable['second stage']=str(power_system.cost_second_stage())
 
 def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_hours,overlap_hours):
-    #debug()
+    
     scenario_tree = ScenarioTree(scenarioinstance=power_system._model, scenariotreeinstance=scenariotreeinstance)
-    if scenario_tree.validate()==False: raise ValueError('not a valid scenario tree')
+    
+    if scenario_tree.validate()==False: 
+        debug() 
+        raise ValueError('not a valid scenario tree')
     
     #construct scenario instances
     # gc.disable()
@@ -103,12 +106,8 @@ def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_
     
     def relax_non_anticipatory_constraints(): 
         #relax the non-anticipatory constraints on the generator status variables beyond the UC time horizon
-        start=times[0].Start+timedelta(hours=stage_hours)
-        try: horizon_end=[t.Start for t in times].index(start)
-        except ValueError: 
-            return #no times are beyond the UC horizon
 
-        for time in times[horizon_end:]:
+        for time in times[len(times.non_overlap_times):]:
             logging.debug('get rid of NA constraint at '+str(time))
             for scenario in scenario_instances.keys():
                 for gen in power_system.generators():

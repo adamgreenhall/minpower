@@ -14,13 +14,11 @@ from pdb import set_trace as debug
 import pandas
 
 def gen_time_dataframe(generators, times, values=()):
-    kargs = dict(columns = generators, index = [t.Start for t in times])
+    kwargs = dict(columns = generators, index = [t.Start for t in times])
     if values:
         return pandas.DataFrame(values, **kwargs)
     else: 
         return pandas.DataFrame(**kwargs)
-
-
 
 ###### matrix stuff #######
 def getColumn(matrix,colNum): return [row[colNum] for row in matrix]#equiv to matrix(:,j)

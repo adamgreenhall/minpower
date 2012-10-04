@@ -22,7 +22,7 @@ setup(
     """,
 
     install_requires=[
-        'Coopr>=3.1.5409',
+        'Coopr>=3.2.6148', #3.1.5409
         'coopr.core>=1.0',
         'pyutilib>=4.0',
         'scipy>=0.9',

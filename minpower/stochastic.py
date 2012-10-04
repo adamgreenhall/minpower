@@ -22,12 +22,12 @@ def construct_simple_scenario_tree(probabilities, time_stage=None):
     tree=scenario_tree_model
 
     prob_set = range(len(probabilities))
-    if time_stage is None:
-        scenario_names=['s{n}'.format(n=n) for n in prob_set]
-        node_names=['n{n}'.format(n=n) for n in prob_set]
-    else:
-        scenario_names=['s{n}t{t}'.format(n=n, t=time_stage) for n in prob_set]
-        node_names=['n{n}t{t}'.format(n=n, t=time_stage) for n in prob_set]
+    #if time_stage is None:
+    scenario_names=['s{n}'.format(n=n) for n in prob_set]
+    node_names=['n{n}'.format(n=n) for n in prob_set]
+    #else:
+    #    scenario_names=['s{n}t{t}'.format(n=n, t=time_stage) for n in prob_set]
+    #    node_names=['n{n}t{t}'.format(n=n, t=time_stage) for n in prob_set]
         
 
     tree.Stages.add('first stage','second stage')
@@ -73,10 +73,14 @@ def define_stage_variables(scenario_tree,power_system,times):
 
 def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_hours,overlap_hours):
     
-    scenario_tree = ScenarioTree(scenarioinstance=power_system._model, scenariotreeinstance=scenariotreeinstance)
+    # delete old time stage variables 
+    try: 
+        scenario_tree = ScenarioTree(scenarioinstance=power_system._model, scenariotreeinstance=scenariotreeinstance)
+    except: 
+        debug()
+        raise
     
     if scenario_tree.validate()==False: 
-        debug() 
         raise ValueError('not a valid scenario tree')
     
     #construct scenario instances

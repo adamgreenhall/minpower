@@ -96,5 +96,5 @@ default_hours_commitment=24
 default_hours_commitment_overlap=0
 
 optimization_solver='glpk'
-available_solvers = ['glpk','gurobi']#['glpk','gurobi','cplex']
+available_solvers = ['glpk'] #['glpk','gurobi','cplex']
 logging_level= logging.INFO

@@ -13,6 +13,8 @@ try: # for development
     from pdb import set_trace as debug #pudb
 except: pass 
 
+def bool_to_int(x): return 1 if x else 0
+
 ###### matrix stuff #######
 def getColumn(matrix,colNum): return [row[colNum] for row in matrix]#equiv to matrix(:,j)
 def elementwiseMultiply(La,Lb): return map(operator.mul, La,Lb)

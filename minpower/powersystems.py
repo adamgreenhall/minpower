@@ -7,7 +7,7 @@ an optimization framework from :class:`~optimization.OptimizationObject`.
 """
 
 from optimization import value,dual,OptimizationObject,OptimizationProblem
-from commonscripts import hours,drop_case_spaces,flatten,getattrL,unique,update_attributes,show_clock
+from commonscripts import hours,drop_case_spaces,flatten,getattrL,unique,update_attributes,show_clock, bool_to_int
 import config, bidding
 from schedule import FixedSchedule
 import logging
@@ -129,7 +129,7 @@ class Generator(OptimizationObject):
     def status_change(self,t,times): 
         '''is the unit changing status between t and t-1'''
         if t>0: previous_status=self.status(times[t-1])
-        else:   previous_status=self.initial_status
+        else:   previous_status=self.initial_status        
         return self.status(times[t]) - previous_status
     def power_change(self,t,times):
         '''change in output between power between t and t-1'''
@@ -177,8 +177,8 @@ class Generator(OptimizationObject):
     def set_initial_condition(self,time=None, P=None, u=True, hoursinstatus=100):
         '''Set the initial condition at time.'''
         if P is None: P=(self.Pmax-self.Pmin)/2 #set default power as median output
-        self.initial_status=u
-        self.initial_power =P*u #note: this eliminates ambiguity of off status with power non-zero output
+        self.initial_status = bool_to_int(u)
+        self.initial_power =  P * self.initial_status #note: this eliminates ambiguity of off status with power non-zero output
         self.initial_status_hours = hoursinstatus
     def build_cost_model(self):
         '''

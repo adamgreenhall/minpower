@@ -27,7 +27,7 @@ setup(
         'Coopr>=3.2.6148', #3.1.5409
         'coopr.core>=1.0',
         'pyutilib>=4.0',
-        'scipy>=0.9',
+        'numpy>=1.6.2',
         # 'matplotlib>=1.0.1',
         # 'networkx>=1.5',
         'python-dateutil>=1.4.1',

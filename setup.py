@@ -11,10 +11,12 @@
 
 
 from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
+
 setup(
     name = "minpower",
-    version = "3.2.1",
-    download_url = "https://github.com/adamgreenhall/minpower/zipball/v3.2.1",
+    version = "3.2.2",
+    download_url = "https://github.com/adamgreenhall/minpower/zipball/v3.2.2",
 
     entry_points="""
     [console_scripts]
@@ -22,7 +24,7 @@ setup(
     """,
 
     install_requires=[
-        'Coopr>=3.1.5409',
+        'Coopr>=3.2.6148', #3.1.5409
         'coopr.core>=1.0',
         'pyutilib>=4.0',
         'scipy>=0.9',
@@ -32,7 +34,7 @@ setup(
         'ordereddict>=1.1',
         'PyYAML>=3.10',
     ],
-    tests_require=['Attest>=0.5.2'],
+    tests_require=['Attest>=0.5.3'],
 
     description = "power systems optimization made beautiful",
     author = "Adam Greenhall",

@@ -9,6 +9,10 @@ import itertools,operator
 import datetime
 from dateutil import parser
 
+try: # for development
+    from pdb import set_trace as debug #pudb
+except: pass 
+
 ###### matrix stuff #######
 def getColumn(matrix,colNum): return [row[colNum] for row in matrix]#equiv to matrix(:,j)
 def elementwiseMultiply(La,Lb): return map(operator.mul, La,Lb)

@@ -49,7 +49,9 @@ class Bid(OptimizationObject):
             pw_representation=Piecewise(self.times.set,self.output(),self.input_variable(),
                                            f_rule=pw_rule,
                                            pw_pts=in_pts,
-                                           pw_constr_type='LB')
+                                           pw_constr_type='LB',
+                                           warn_domain_coverage=False, # dont complain - power is generally lower bounded by zero, not Pmin
+                                           )
             
         else:
             # custom bid points
@@ -130,7 +132,7 @@ def is_linear(multipliers):
 
 def discretize_range(num_breakpoints,minimum,maximum):
     step = (maximum-minimum)/float(num_breakpoints)
-    return [x * step + minimum for x in range(int(num_breakpoints))]
+    return [x * step + minimum for x in range(int(num_breakpoints)+1)]
 
 def polynomial_value(multipliers,variable):
     """get the value of a polynomial"""

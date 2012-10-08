@@ -62,4 +62,22 @@ def cubic_non_convex():
     actual_cost = a+ b*Pd+ c*Pd**2 + -1*d*Pd**3
     assert actual_cost <= cost <= 1.05*actual_cost
 
+@bidding.test
+def coverage():
+    '''
+    Make sure that the bid range covers the whole Pmin-Pmax range
+    '''
+    Pd=221
+    a=5
+    b=30
+    c=.2
+    d=.1
+    Pmin = 10
+    Pmax = 559
+    generators=[ Generator(costcurvestring='{}+{}P+{}P^2+{}P^3'.format(a,b,c,d), Pmin=Pmin, Pmax=Pmax) ]
+    _,times=solve_problem(generators,**make_loads_times(Pd))
+    bid_points = generators[0].bids.discrete_input_points
+    assert Pmin == bid_points[0] and Pmax == bid_points[-1]
+
+
 if __name__ == "__main__": bidding.run()

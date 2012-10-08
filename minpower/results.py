@@ -476,7 +476,7 @@ class Solution_Stochastic(Solution):
                 self.generators_power[s][time] =[value(gen.power(time,s)) for gen in generators]
                 self.generators_status[s][time] =[value(gen.status(time,s))==1 for gen in generators]
 
-        times_to_store = self.times.non_overlap_tims if self.times._subdivided else self.times
+        times_to_store = self.times.non_overlap_times if self.times._subdivided else self.times
         self.stage_generators_status = gen_time_dataframe(
             self.generators(), 
             times_to_store, 

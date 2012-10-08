@@ -21,12 +21,12 @@ def construct_simple_scenario_tree(probabilities, time_stage=None):
     tree=scenario_tree_model
 
     prob_set = range(len(probabilities))
-    #if time_stage is None:
-    scenario_names=['s{n}'.format(n=n) for n in prob_set]
-    node_names=['n{n}'.format(n=n) for n in prob_set]
-    #else:
-    #    scenario_names=['s{n}t{t}'.format(n=n, t=time_stage) for n in prob_set]
-    #    node_names=['n{n}t{t}'.format(n=n, t=time_stage) for n in prob_set]
+    if time_stage is None:
+        scenario_names=['s{n}'.format(n=n) for n in prob_set]
+        node_names=['n{n}'.format(n=n) for n in prob_set]
+    else:
+        scenario_names=['s{n}t{t}'.format(n=n, t=time_stage) for n in prob_set]
+        node_names=['n{n}t{t}'.format(n=n, t=time_stage) for n in prob_set]
         
 
     tree.Stages.add('first stage','second stage')
@@ -75,8 +75,8 @@ def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_
     # delete old time stage variables 
     scenario_tree = ScenarioTree(scenarioinstance=power_system._model, scenariotreeinstance=scenariotreeinstance)
     
-    if scenario_tree.validate()==False: 
-        raise ValueError('not a valid scenario tree')
+#    if scenario_tree.validate()==False: 
+#        raise ValueError('not a valid scenario tree')
     
     #construct scenario instances
     # gc.disable()

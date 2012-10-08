@@ -251,9 +251,9 @@ class OptimizationProblem(OptimizationObject):
         if self.stochastic_formulation:
             instances.append(self._stochastic_instance)
             
-        #piecewise models leak memory
-        #keep until Coopr release integrates: https://software.sandia.gov/trac/coopr/changeset/5781 
         for instance in instances:
+#        piecewise models leak memory
+#        keep until Coopr release integrates: https://software.sandia.gov/trac/coopr/changeset/5781 
             for pw in instance.active_components(pyomo.Piecewise).values():
                 pw._constraints_dict=None
                 pw._vars_dict=None

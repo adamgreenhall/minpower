@@ -30,7 +30,7 @@ def get_counts(prefix=''):
             if test_counts[name]==0: continue
             else: obj = objects[name][0]
             fname = prefix+'-'+'objgraph-{}-'.format(name)
-            objgraph.show_refs( [obj],too_many=50, filename=fname+'refs.png')
+            objgraph.show_refs( [obj], filename=fname+'refs.png') # too_many=50,
             objgraph.show_backrefs([obj], filename=fname+'backref.png')
             objgraph.show_chain(
                 objgraph.find_backref_chain( obj, inspect.ismodule),

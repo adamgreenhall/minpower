@@ -7,6 +7,19 @@ from coopr import pyomo
 
 import objgraph
 
+def get_counts():
+    test_types = dict(
+        variable  = pyomo.Var, 
+        piecewise = pyomo.Piecewise,
+        )
+    
+    # use objgraph to check if these pyomo objects still exist 
+    test_counts = {}
+    for name, kind in test_types.iteritems():
+        test_counts[name] = len(objgraph.by_type( kind ))
+
+    return test_counts    
+
 mem = Tests()
 
 @mem.test
@@ -22,19 +35,25 @@ def leak_on_reset():
     power_system, times = solve_problem(generators, **loads_times)
     # reset the model - no pyomo components should persist
     power_system.reset_model()
-    
-    test_types = dict(
-        variable  = pyomo.Var, 
-        piecewise = pyomo.Piecewise,
-        )
-    
-    # use objgraph to make sure they don't 
-    test_counts = {}
-    for name, kind in test_types.iteritems():
-        test_counts[name] = len(objgraph.by_type( kind ))
         
+    test_counts = get_counts()    
     assert sum(test_counts.values()) == 0
 
+@mem.test
+def leak_on_stochastic_reset():
+
+    solve.solve_problem(datadir='./uc-stochastic',
+        shell = False,
+        csv = False,
+        hours_commitment = 24,
+        hours_commitment_overlap = 12,
+        get_duals = False,
+        Nscenarios = None,
+    )   
     
+    test_counts = get_counts()    
+    assert sum(test_counts.values()) == 0
+
+
 if __name__ == "__main__": 
     mem.run()

@@ -110,7 +110,7 @@ class OptimizationObject(object):
 
     def add_parameter(self,name,index=None,default=None, **kwargs):
         name=self._id(name)
-        self._parent_problem().add_component_to_problem(pyomo.Param(index,name=name,default=default, **kwargs))
+        self._parent_problem().add_component_to_problem(pyomo.Param(index,name=name,default=default,mutable=True, **kwargs))
         
     def add_constraint(self,name,time,expression): 
         '''Create a new constraint and add it to the object's constraints and the model's constraints.'''
@@ -247,50 +247,6 @@ class OptimizationProblem(OptimizationObject):
         try: self._model.write(filename)
         except: self._model.pprint(filename)
     def reset_model(self):
-        instances = [self._model]
-        if self.stochastic_formulation:
-            instances.append(self._stochastic_instance)
-            
-        
-        #piecewise models leak memory
-        #keep until Coopr release integrates: https://software.sandia.gov/trac/coopr/changeset/5781 
-        for instance in instances:
-            for pw in instance.active_components(pyomo.Piecewise).values():
-                pw._constraints_dict=None
-                pw._vars_dict=None
-                pw._sets_dict=None
-            
-            # another memory leak
-            for key, var in instance.active_components(pyomo.Var).iteritems():
-                #var.reset()
-                var._varval = None 
-                #var = None
-                #if instance==self._stochastic_instance: debug()
-                instance._clear_attribute(key)
-                
-            # TODO - clear out scenario trees
-        else: 
-            import objgraph,inspect,random,gc
-            variables = objgraph.by_type(pyomo.Var)
-            if variables:
-                objgraph.show_refs( [variables[0]], filename='objgraph-variable-refs.png')
-                objgraph.show_backrefs([variables[0]], filename='objgraph-variable-backref.png')
-                objgraph.show_chain(
-                    objgraph.find_backref_chain( variables[0], inspect.ismodule),
-                    filename='objgraph-variable-chain.png'
-                    )
-            else: print 'no vars'
-                
-            stage = objgraph.by_type('Stage')[0]
-            objgraph.show_refs( [stage], filename='objgraph-stage-refs.png')
-            objgraph.show_backrefs([stage], filename='objgraph-stage-backref.png')
-            objgraph.show_chain(
-                objgraph.find_backref_chain( stage, inspect.ismodule),
-                filename='objgraph-stage-backref-chain.png'
-                )
-            objgraph.show_backrefs(stage._cost_variable[0], filename='objgraph-stage-cost-var-backrefs.png')
-
-        debug()    
         self._model = None
         self._stochastic_instance = None
         

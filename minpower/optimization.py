@@ -247,9 +247,76 @@ class OptimizationProblem(OptimizationObject):
         try: self._model.write(filename)
         except: self._model.pprint(filename)
     def reset_model(self):
+        instances = [self._model]
+        if self.stochastic_formulation:
+            instances.append(self._stochastic_instance)
+            
+        #piecewise models leak memory
+        #keep until Coopr release integrates: https://software.sandia.gov/trac/coopr/changeset/5781 
+        for instance in instances:
+            for pw in instance.active_components(pyomo.Piecewise).values():
+                pw._constraints_dict=None
+                pw._vars_dict=None
+                pw._sets_dict=None
+            
+            # another memory leak
+            for key, var in instance.active_components(pyomo.Var).iteritems():
+                var.reset()
+                var._data = None
+                # var._varval = None
+                
+                #var = None
+                #if instance==self._stochastic_instance: debug()
+                instance._clear_attribute(key)
+            
         self._model = None
-        self._stochastic_instance = None
+        if self.stochastic_formulation:
+            self._stochastic_instance = None
+            # destroy scenario tree
+            for stage in self._scenario_tree._stages:
+                stage._cost_variable = None
+            self._scenario_tree._stages = None
+            self._scenario_tree._tree_nodes = None
+            self._scenario_tree._scenarios = None
+            self._scenario_tree = None 
         
+
+
+        if False: 
+            import objgraph,inspect,random,gc
+            variables = objgraph.by_type(pyomo.Var)
+            if variables:
+                objgraph.show_refs( [variables[0]], filename='objgraph-variable-refs.png')
+                objgraph.show_backrefs([variables[0]], filename='objgraph-variable-backref.png')
+                objgraph.show_chain(
+                    objgraph.find_backref_chain( variables[0], inspect.ismodule),
+                    filename='objgraph-variable-chain.png'
+                    )
+            else: print 'no vars'
+
+            try: 
+                tree = objgraph.by_type('Scenario')[0]
+                objgraph.show_refs( [tree], filename='objgraph-Scenario-refs.png')
+                objgraph.show_backrefs([tree], filename='objgraph-Scenario-backref.png')
+            except: print 'no Scenario'
+            
+            try: 
+                tree = objgraph.by_type('ScenarioTree')[0]
+                objgraph.show_refs( [tree], filename='objgraph-tree-refs.png')
+                objgraph.show_backrefs([tree], filename='objgraph-tree-backref.png')
+            except: print 'no tree'
+                
+            stage = objgraph.by_type('Stage')[0]
+            objgraph.show_refs( [stage], filename='objgraph-stage-refs.png')
+            objgraph.show_backrefs([stage], filename='objgraph-stage-backref.png')
+            objgraph.show_chain(
+                objgraph.find_backref_chain( stage, inspect.ismodule),
+                filename='objgraph-stage-backref-chain.png'
+                )
+            if stage._cost_variable is not None: 
+                objgraph.show_backrefs(stage._cost_variable[0], filename='objgraph-stage-cost-var-backrefs.png')
+            debug()
+            
         self.solved=False
         self._model=pyomo.ConcreteModel() 
 

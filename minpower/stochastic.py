@@ -74,9 +74,13 @@ def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_
     
     # delete old time stage variables 
     scenario_tree = ScenarioTree(scenarioinstance=power_system._model, scenariotreeinstance=scenariotreeinstance)
-    
-#    if scenario_tree.validate()==False: 
-#        raise ValueError('not a valid scenario tree')
+
+
+    if scenario_tree.validate()==False: 
+        for s,scenario in enumerate(scenario_tree._scenarios):
+            print s,scenario
+        debug()
+        raise ValueError('not a valid scenario tree')
     
     #construct scenario instances
     # gc.disable()

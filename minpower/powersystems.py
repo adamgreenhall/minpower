@@ -393,7 +393,8 @@ class Generator_Stochastic(Generator_nonControllable):
     def _get_scenario_values(self,times,s=0):
         if self.has_scenarios_multistage:
             values = self.scenario_values[times[0].Start]
-            scenario = values.ix[s].values.tolist()
+            try: scenario = values.ix[s].values.tolist()
+            except: raise KeyError('{} is not an available scenario number'.format(s))
             scenario.pop(0) # dont include the probability
             return [ scenario[t] for t in range(len(times)) ]
         else:

@@ -6,7 +6,7 @@ before_install:
     - sudo apt-get install python-numpy glpk
 install: pip install --use-mirrors .
 script:
-    - pip install --use-mirrors attest
+    - pip install --use-mirrors attest objgraph
     - python minpower/tests/testall.py
     
 branches:

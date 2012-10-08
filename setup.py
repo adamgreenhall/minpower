@@ -34,7 +34,10 @@ setup(
         'ordereddict>=1.1',
         'PyYAML>=3.10',
     ],
-    tests_require=['Attest>=0.5.3'],
+    tests_require=[
+        'Attest>=0.5.3',
+        'objgraph'
+        ],
 
     description = "power systems optimization made beautiful",
     author = "Adam Greenhall",

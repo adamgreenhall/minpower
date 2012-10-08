@@ -19,6 +19,7 @@ if __name__ == "__main__":
     'generators.generation',
     'unit_commitment.uc',
     'opf.opf',
-    'bidding.bidding'
+    'bidding.bidding',
+    'memory_test.mem'
     ])
     all_tests.run()

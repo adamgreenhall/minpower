@@ -19,15 +19,11 @@ def gen_time_dataframe(generators, times, values=()):
         return pandas.DataFrame(values, **kwargs)
     else: 
         return pandas.DataFrame(**kwargs)
-<<<<<<< HEAD
-
 try: # for development
     from pdb import set_trace as debug #pudb
 except: pass 
 
 def bool_to_int(x): return 1 if x else 0
-=======
->>>>>>> 5b03f95fc1248b1b79accc3b7b6f695ff44937bb
 
 ###### matrix stuff #######
 def getColumn(matrix,colNum): return [row[colNum] for row in matrix]#equiv to matrix(:,j)

@@ -14,7 +14,6 @@ from math import fabs, ceil
 
 from optimization import OptimizationProblem
 import gc,logging
-from datetime import timedelta,datetime
 from commonscripts import *
 
 def construct_simple_scenario_tree(probabilities, time_stage=None):
@@ -74,11 +73,7 @@ def define_stage_variables(scenario_tree,power_system,times):
 def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_hours,overlap_hours):
     
     # delete old time stage variables 
-    try: 
-        scenario_tree = ScenarioTree(scenarioinstance=power_system._model, scenariotreeinstance=scenariotreeinstance)
-    except: 
-        debug()
-        raise
+    scenario_tree = ScenarioTree(scenarioinstance=power_system._model, scenariotreeinstance=scenariotreeinstance)
     
     if scenario_tree.validate()==False: 
         raise ValueError('not a valid scenario tree')
@@ -110,8 +105,8 @@ def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_
     
     def relax_non_anticipatory_constraints(): 
         #relax the non-anticipatory constraints on the generator status variables beyond the UC time horizon
-
-        for time in times[len(times.non_overlap_times):]:
+        
+        for time in times.post_horizon(stage_hours):
             logging.debug('get rid of NA constraint at '+str(time))
             for scenario in scenario_instances.keys():
                 for gen in power_system.generators():

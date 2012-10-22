@@ -21,6 +21,7 @@ def gen_time_dataframe(generators, times, values=()):
         return pandas.DataFrame(**kwargs)
 try: # for development
     from pdb import set_trace as debug #pudb
+    from pprint import pprint
 except: pass 
 
 def bool_to_int(x): return 1 if x else 0

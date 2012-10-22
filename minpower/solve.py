@@ -107,7 +107,7 @@ def create_problem(power_system,times):
     return
 
 
-def solve_multistage(power_system, times, scenario_tree, show_clock=True):
+def solve_multistage(power_system, times, scenario_tree):
 #    datadir,
 #  solver=config.optimization_solver,
 #  interval_hours=None,
@@ -139,14 +139,14 @@ def solve_multistage(power_system, times, scenario_tree, show_clock=True):
 
     if not user_config.interval_hours: interval_hours=times.intervalhrs
 
-    stage_times=times.subdivide(stage_hours,interval_hrs=interval_hours,overlap_hrs=overlap_hours)
+    stage_times=times.subdivide(user_config.hours_commitment, interval_hrs=interval_hours, overlap_hrs=user_config.hours_commitment_overlap)
     buses=power_system.buses
     stage_solutions=[]
     
     Nstages = len(stage_times)
 
     for stg,t_stage in enumerate(stage_times):
-        logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(showclock)))
+        logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(user_config.show_clock)))
         
         power_system.set_initialconditions(t_stage.initialTime, stg, stage_solutions)
 
@@ -164,7 +164,7 @@ def solve_multistage(power_system, times, scenario_tree, show_clock=True):
                 raise OptimizationError('failed to solve, even with load shedding.')
             power_system.set_load_shedding(False)
 
-        logging.debug('solved... get results... {}'.format(show_clock(showclock)))
+        logging.debug('solved... get results... {}'.format(show_clock(user_config.show_clock)))
         
         if stage_solution.is_stochastic:
             # resolve with observed power and fixed status from stochastic solution

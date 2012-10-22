@@ -413,7 +413,7 @@ class OptimizationProblem(OptimizationObject):
         return instance
     def __str__(self): return 'power_system_problem'
 
-    def _solve_instance(self, instance, solver, get_duals=False, keepFiles=False):
+    def _solve_instance(self, instance, solver=user_config.solver, get_duals=False, keepFiles=False):
         if not keepFiles: 
             logger = logging.getLogger()
             current_log_level = logger.level

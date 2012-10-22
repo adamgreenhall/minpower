@@ -16,6 +16,10 @@ from optimization import OptimizationProblem
 import gc,logging
 from commonscripts import *
 
+from pprint import pprint
+
+
+
 def construct_simple_scenario_tree(probabilities, time_stage=None):
     '''Construct a simple scenario tree instance'''
     tree=scenario_tree_model
@@ -44,7 +48,8 @@ def construct_simple_scenario_tree(probabilities, time_stage=None):
     # tree.Scenarios.pprint()
 
     # note that stage variables still need definition
-    # as do the values of the per scenario variables 
+    # as do the values of the per scenario variables
+    if time_stage>0: debug()
     return tree
 
 def define_stage_variables(scenario_tree,power_system,times):
@@ -70,9 +75,14 @@ def define_stage_variables(scenario_tree,power_system,times):
     scenario_tree.StageCostVariable['first stage']=str(power_system.cost_first_stage())
     scenario_tree.StageCostVariable['second stage']=str(power_system.cost_second_stage())
 
-def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_hours,overlap_hours):
+def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_hours,overlap_hours, stage_number):
     
-    # delete old time stage variables 
+    # delete old time stage variables
+    debug()
+    
+    #for node in scenariotreeinstance.nodes:
+        
+    
     scenario_tree = ScenarioTree(scenarioinstance=power_system._model, scenariotreeinstance=scenariotreeinstance)
 
 

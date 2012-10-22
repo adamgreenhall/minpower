@@ -60,7 +60,12 @@ def solve_problem(datadir='.',
     return solution
 
 def create_solve_problem(power_system, times, scenario_tree=None,
-    multistage=False, stage_number=None, rerun=False):
+    multistage=False, stage_number=None, rerun=False): 
+    # , standalone = True
+
+    
+    
+    # if multistage and standalone: 
 
     if user_config.problemfile: user_config.problemfile = joindir(directory, 'problem-formulation.lp')
 
@@ -76,7 +81,7 @@ def create_solve_problem(power_system, times, scenario_tree=None,
         else: tree = scenario_tree
         stochastic_formulation = True
         stochastic.define_stage_variables(tree,power_system,times)
-        power_system = stochastic.create_problem_with_scenarios(power_system,times, tree, user_config.hours_commitment, user_config.hours_commitment_overlap)
+        power_system = stochastic.create_problem_with_scenarios(power_system,times, tree, user_config.hours_commitment, user_config.hours_commitment_overlap, stage_number=stage_number)
 
     instance = power_system.solve(user_config)
 

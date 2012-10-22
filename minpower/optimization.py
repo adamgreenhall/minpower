@@ -250,7 +250,8 @@ class OptimizationProblem(OptimizationObject):
         instances = [self._model]
         if self.stochastic_formulation:
             instances.append(self._stochastic_instance)
-            
+
+
         for instance in instances:
 #        piecewise models leak memory
 #        keep until Coopr release integrates: https://software.sandia.gov/trac/coopr/changeset/5781 
@@ -268,31 +269,43 @@ class OptimizationProblem(OptimizationObject):
                 #var = None
                 #if instance==self._stochastic_instance: debug()
                 instance._clear_attribute(key)
-            
-        self._model = None
-        if self.stochastic_formulation:
-            self._stochastic_instance = None
+        
+#        debug()
+        # for stage in self._scenario_tree._stages
+        
+        
+        if True and self.stochastic_formulation:
             # destroy scenario tree
             for stage in self._scenario_tree._stages:
                 stage._cost_variable = None
-            self._scenario_tree._stages = None
+                for node in stage._tree_nodes:
+                    node._children = None
+                    node._parent = None
+                    node.__dict__ = {}
+                else: stage._tree_nodes = None
+            else: self._scenario_tree._stages = None
+            
+            for scenario in self._scenario_tree._scenarios:
+                scenario._leaf_node = None
+                scenario._node_list = None
+            else: self._scenario_tree._scenarios = None
+            
+            self._scenario_tree._tree_node_map = None
             self._scenario_tree._tree_nodes = None
-            self._scenario_tree._scenarios = None
-            self._scenario_tree = None 
-        
-
+            self._scenario_tree = None      
+            
+            self._stochastic_instance.components._component = {}
+            self._stochastic_instance.components._declarations = {}
+            
+            self._stochastic_instance = None
 
         if False: 
             import objgraph,inspect,random,gc
-            variables = objgraph.by_type(pyomo.Var)
-            if variables:
-                objgraph.show_refs( [variables[0]], filename='objgraph-variable-refs.png')
-                objgraph.show_backrefs([variables[0]], filename='objgraph-variable-backref.png')
-                objgraph.show_chain(
-                    objgraph.find_backref_chain( variables[0], inspect.ismodule),
-                    filename='objgraph-variable-chain.png'
-                    )
-            else: print 'no vars'
+            from pprint import pprint
+            objgraph.show_backrefs(objgraph.by_type('Stage'), filename='objgraph-stage-backref-all.png')
+            objgraph.show_backrefs(objgraph.by_type('ScenarioTreeNode'), filename='objgraph-ScenarioTreeNode-backref-all.png')
+            # print gc.collect()
+            # pprint(gc.get_referrers(objgraph.by_type('ScenarioTreeNode')[0]))
 
             try: 
                 tree = objgraph.by_type('Scenario')[0]
@@ -315,8 +328,7 @@ class OptimizationProblem(OptimizationObject):
                 )
             if stage._cost_variable is not None: 
                 objgraph.show_backrefs(stage._cost_variable[0], filename='objgraph-stage-cost-var-backrefs.png')
-            debug()
-            
+            debug()            
         self.solved=False
         self._model=pyomo.ConcreteModel() 
 

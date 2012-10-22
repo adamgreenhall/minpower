@@ -25,6 +25,13 @@ except: pass
 
 def bool_to_int(x): return 1 if x else 0
 
+class DotDict(dict):
+    '''a dict with dot notation access'''
+    def __getattr__(self, attr):
+        return self.get(attr)
+    __setattr__= dict.__setitem__
+    __delattr__= dict.__delitem__
+
 ###### matrix stuff #######
 def getColumn(matrix,colNum): return [row[colNum] for row in matrix]#equiv to matrix(:,j)
 def elementwiseMultiply(La,Lb): return map(operator.mul, La,Lb)

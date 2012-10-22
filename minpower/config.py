@@ -4,6 +4,7 @@ Specifically, the :class:`~powersystems.Generator` defaults
 are provided by :data:`generator_defaults`.
 """
 import logging
+from commonscripts import DotDict
 
 generator_kinds=[
     'generic',
@@ -89,12 +90,25 @@ generator_defaults=dict(
     )
 
 
-cost_load_shedding = 1000 #$/MWh
-
-default_num_breakpoints=11
-default_hours_commitment=24
-default_hours_commitment_overlap=0
-
-optimization_solver='glpk'
 available_solvers = ['glpk'] #['glpk','gurobi','cplex']
-logging_level= logging.INFO
+
+
+user_config = DotDict(dict(
+    get_duals = True,
+    breakpoints = 11,
+    hours_commitment = 24,
+    hours_commitment_overlap = 0,
+    cost_load_shedding = 1000, #$/MWh    
+    load_shedding_allowed = False,
+    dispatch_decommit_allowed = False,
+    solver = 'glpk',
+    
+    
+    
+    visualization = False,
+    logging_level = logging.INFO,
+    logging_filename = False,
+    problem_filename = False,
+    scenarios_limit = None,
+    
+    ))

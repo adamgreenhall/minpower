@@ -11,6 +11,7 @@ import schedule
 from addons import *
 from commonscripts import *
 from stochastic import construct_simple_scenario_tree
+from config import user_config
 
 import os,sys,logging
 
@@ -44,8 +45,7 @@ fields_initial={
     'hoursinstatus':'hoursinstatus',
     'ic':None}
     
-def parsedir(datadir='.',
-        Nscenarios = None,
+def parsedir(
         file_gens='generators.csv',
         file_loads='loads.csv',
         file_lines='lines.csv',
@@ -67,6 +67,9 @@ def parsedir(datadir='.',
     :return lines:, list of :class:`~powersystems.Line` objects
     :return times:, list of :class:`~schedule.Timelist` object
     """
+    
+    datadir = user_config.directory
+    
     if not os.path.isdir(datadir): raise OSError('data directory "{d}" does not exist'.format(d=datadir) )
     [file_gens,file_loads,file_lines,file_init]=[joindir(datadir,filename) for filename in (file_gens,file_loads,file_lines,file_init)]
     
@@ -90,7 +93,7 @@ def parsedir(datadir='.',
     setup_initialcond(init_data,generators,times)
     
     #setup scenario tree (if applicable)
-    scenario_tree=setup_scenarios(generators,times, Nscenarios)
+    scenario_tree=setup_scenarios(generators, times, user_config.scenarios)
     return generators,loads,lines,times,scenario_tree
 
 def setup_initialcond(data,generators,times):
@@ -229,9 +232,6 @@ def setup_times(generators_data,loads_data,datadir):
     return schedule.make_times(time_dates)
 
 def setup_scenarios(generators,times, Nscenarios = None):
-    # no_scenario_indexes=[]
-    # FIXME - need to think about how rolling will work here
-    
     has_scenarios=[]
     for gen in generators:
         if (getattr(gen,'scenarios_filename',None) is not None) or (getattr(gen, 'scenarios_directory', None) is not None): 

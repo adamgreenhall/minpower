@@ -11,22 +11,12 @@ import time as timer
 from optimization import OptimizationError
 import config, get_data, powersystems, stochastic, results
 from commonscripts import * # joindir,show_clock
-
+from config import user_config
 
 def solve_problem(datadir='.',
         shell=True,
         problemfile=False,
-        visualization=False,
         csv=True,
-        solver=config.optimization_solver,
-        num_breakpoints=config.default_num_breakpoints,
-        hours_commitment=config.default_hours_commitment,
-        hours_commitment_overlap=config.default_hours_commitment_overlap,
-        get_duals=True,
-        dispatch_decommit_allowed=False,
-        logging_level=config.logging_level,
-        logging_file=False,
-        Nscenarios = None,
         ):
     """
     Solve a optimization problem specified by spreadsheets in a directory.
@@ -47,55 +37,36 @@ def solve_problem(datadir='.',
     :returns: :class:`~results.Solution` object
     """
 
-    _setup_logging(logging_level,logging_file)
+    _setup_logging()
     start_time = timer.time()
     logging.debug('Minpower reading {} {}'.format(datadir, show_clock()))
-    generators,loads,lines,times,scenario_tree=get_data.parsedir(datadir, Nscenarios)
+    generators,loads,lines,times,scenario_tree=get_data.parsedir()
     logging.debug('data read {}'.format(show_clock()))
-    power_system=powersystems.PowerSystem(generators,loads,lines,
-                num_breakpoints=num_breakpoints,
-                load_shedding_allowed=False,
-                #spinning_reserve_requirement=0,
-                dispatch_decommit_allowed=dispatch_decommit_allowed,)
+    power_system=powersystems.PowerSystem(generators,loads,lines)
+                #spinning_reserve_requirement=0
 
     logging.debug('power system set up {}'.format(show_clock()))
-    if times.spanhrs<=hours_commitment+hours_commitment_overlap:
-        solution, instance = create_solve_problem(power_system,times,datadir,
-                                      solver=solver,
-                                      scenario_tree=scenario_tree,
-                                      problemfile=problemfile,
-                                      get_duals=get_duals,
-                                      stage_hours=hours_commitment,
-                                      overlap_hours=hours_commitment_overlap)
+    if times.spanhrs <= user_config.hours_commitment + user_config.hours_commitment_overlap:
+        solution, instance = create_solve_problem(power_system, times, scenario_tree=scenario_tree)
     else: #split into multiple stages and solve
-        stage_solutions,stage_times=solve_multistage(power_system,times,datadir,
-                                                       scenario_tree=scenario_tree,
-                                                       solver=solver,
-                                                       get_duals=get_duals,
-                                                       stage_hours=hours_commitment,
-                                                       overlap_hours=hours_commitment_overlap,
-                                                       problemfile=problemfile,
-                                                       )
-        solution=results.make_multistage_solution(power_system,stage_times,datadir,stage_solutions)
+        stage_solutions,stage_times=solve_multistage(power_system, times, scenario_tree=scenario_tree)
+        solution=results.make_multistage_solution(power_system, stage_times, stage_solutions)
 
     if shell: solution.show()
     if csv: solution.saveCSV()
-    if visualization: solution.visualization()
+    if user_config.visualization: solution.visualization()
     # if solution_file: solution.save(solution_file)
     logging.info('total time: {}s'.format(timer.time()-start_time))
     return solution
 
-def create_solve_problem(power_system,times,datadir,solver,
-    scenario_tree=None,problemfile=False,get_duals=True,
-    stage_hours=24,overlap_hours=0,
-    multistage=False, stage_number=None,
-    rerun=False
-    ):
-    if problemfile: problemfile=joindir(datadir,'problem-formulation.lp')
+def create_solve_problem(power_system, times, scenario_tree=None,
+    multistage=False, stage_number=None, rerun=False):
+
+    if user_config.problemfile: user_config.problemfile = joindir(directory, 'problem-formulation.lp')
 
     create_problem(power_system,times)
 
-    stochastic_formulation=False
+    stochastic_formulation = False
     if scenario_tree is not None and not rerun:
         if multistage: # multiple time stages
             gen = filter(lambda gen: getattr(gen, 'has_scenarios',False) , power_system.generators())[0]
@@ -103,17 +74,17 @@ def create_solve_problem(power_system,times,datadir,solver,
             tree = stochastic.construct_simple_scenario_tree( gen.scenario_values[day_start]['probability'].values.tolist(), time_stage=stage_number )
             logging.debug('constructed tree for stage %i'%stage_number)
         else: tree = scenario_tree
-        stochastic_formulation=True
+        stochastic_formulation = True
         stochastic.define_stage_variables(tree,power_system,times)
-        power_system = stochastic.create_problem_with_scenarios(power_system,times, tree, stage_hours,overlap_hours)
+        power_system = stochastic.create_problem_with_scenarios(power_system,times, tree, user_config.hours_commitment, user_config.hours_commitment_overlap)
 
-    instance = power_system.solve(solver,problem_filename=problemfile,get_duals=get_duals)
+    instance = power_system.solve(user_config)
 
     # if stochastic_formulation:
     #     power_system.scenario_tree=scenario_tree
     #     power_system.scenario_instances=scenario_instances
 
-    solution=results.make_solution(power_system,times,datadir=datadir)
+    solution=results.make_solution(power_system,times,datadir=user_config.directory)
 
     return solution, instance
 def create_problem(power_system,times):
@@ -136,15 +107,16 @@ def create_problem(power_system,times):
     return
 
 
-def solve_multistage(power_system,times,datadir,
-                              solver=config.optimization_solver,
-                              interval_hours=None,
-                              stage_hours=config.default_hours_commitment,
-                              overlap_hours=config.default_hours_commitment_overlap,
-                              scenario_tree=None,
-                              problemfile=False,
-                              get_duals=True,
-                              showclock=True):
+def solve_multistage(power_system, times, scenario_tree, show_clock=True):
+#    datadir,
+#  solver=config.optimization_solver,
+#  interval_hours=None,
+#  stage_hours=config.default_hours_commitment,
+#  overlap_hours=config.default_hours_commitment_overlap,
+#                              scenario_tree=None,
+#  problemfile=False,
+#  get_duals=True,
+#                              showclock=True):
     """
     Solve a rolling or multi-stage power systems optimization problem.
     Each stage will be one optimization run. A stage's final
@@ -165,7 +137,7 @@ def solve_multistage(power_system,times,datadir,
 
     """
 
-    if not interval_hours: interval_hours=times.intervalhrs
+    if not user_config.interval_hours: interval_hours=times.intervalhrs
 
     stage_times=times.subdivide(stage_hours,interval_hrs=interval_hours,overlap_hrs=overlap_hours)
     buses=power_system.buses
@@ -179,16 +151,16 @@ def solve_multistage(power_system,times,datadir,
         power_system.set_initialconditions(t_stage.initialTime, stg, stage_solutions)
 
         try: 
-            stage_solution, instance = create_solve_problem(power_system,t_stage,datadir,solver,scenario_tree,problemfile,get_duals, multistage=True, stage_number=stg)
+            stage_solution, instance = create_solve_problem(power_system, t_stage, scenario_tree, multistage=True, stage_number=stg) 
         except OptimizationError:
             #re-do stage, with load shedding allowed
             logging.critical('stage infeasible, re-running with load shedding.')
             power_system.reset_model()
             power_system.set_load_shedding(True)
             try:
-                stage_solution, instance = create_solve_problem(power_system,t_stage,datadir,solver,scenario_tree,problemfile=True,get_duals=get_duals, multistage=True, stage_number=stg, rerun=True)
+                stage_solution, instance = create_solve_problem(power_system, t_stage, scenario_tree, multistage=True, stage_number=stg, rerun=True)
             except OptimizationError:
-                if stage_solutions: stage_solutions[-1].saveCSV(joindir(datadir,'last-stage-solved-commitment.csv'),save_final_status=True)
+                if stage_solutions: stage_solutions[-1].saveCSV(joindir(datadir,'last-stage-solved-commitment.csv'), save_final_status=True)
                 raise OptimizationError('failed to solve, even with load shedding.')
             power_system.set_load_shedding(False)
 
@@ -196,7 +168,7 @@ def solve_multistage(power_system,times,datadir,
         
         if stage_solution.is_stochastic:
             # resolve with observed power and fixed status from stochastic solution
-            power_system.resolve_stochastic_with_observed( instance, stage_solution)                        
+            power_system.resolve_stochastic_with_observed(instance, stage_solution)                        
             
             # TODO - evaluate performance against this resolve with perfect information
             
@@ -213,11 +185,11 @@ def solve_multistage(power_system,times,datadir,
     return stage_solutions,stage_times
 
 
-def _setup_logging(level,filename=False):
+def _setup_logging():
     ''' set up the logging to report on the status'''
-    if filename:
-        logging.basicConfig( level=level, format='%(levelname)s: %(message)s',filename=filename)
-    else: logging.basicConfig( level=level, format='%(levelname)s: %(message)s')
+    kwds = dict(level = user_config.logging_level, format='%(levelname)s: %(message)s')
+    if user_config.logging_filename: kwds['filename']=user_config.logging_filename
+    logging.basicConfig(**kwds)
 
 
 def main():
@@ -230,30 +202,44 @@ def main():
     parser = argparse.ArgumentParser(description='Minpower command line interface')
     parser.add_argument('directory', type=str,
                        help='the direcory of the problem you want to solve (or name of minpower demo case)')
-    parser.add_argument('--solver','-s',  type=str, default=config.optimization_solver,
-                       help='the solver name used to solve the problem (e.g. cplex, gurobi, glpk)')
-    parser.add_argument('--visualization','-v',action="store_true", default=False,
-                      help='save a visualization of the solution')
-    parser.add_argument('--breakpoints','-b',  type=int, default=config.default_num_breakpoints,
-                       help='number of breakpoints to use in piece-wise linearization of polynomial costs')
-    parser.add_argument('--commitment_hours','-c', type=int, default=config.default_hours_commitment,
-                       help='number hours per commitment in a rolling UC (exclusive of overlap)')
-    parser.add_argument('--overlap_hours','-o', type=int, default=config.default_hours_commitment_overlap,
-                       help='number hours to overlap commitments in a rolling UC')
-    parser.add_argument('--problemfile','-p',action="store_true", default=False,
-                       help='flag to write the problem formulation to a problem-formulation.lp file -- useful for debugging')
-    parser.add_argument('--duals_off','-u',action="store_true", default=False,
-                      help='flag to skip getting the the duals, or prices, of the optimization problem')
-    parser.add_argument('--dispatch_decommit_allowed','-d', action="store_true", default=False,
-                        help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
-    parser.add_argument('--logfile','-l',type=str,default=False,
-                       help='log file, default is to log to terminal')
-    parser.add_argument('--scenarios',type=int, default=None,
-                        help='limit the number of scenarios to N')
+    parser.add_argument('--solver','-s',  type=str, 
+                    default=user_config.solver,
+                    help='the solver name used to solve the problem (e.g. cplex, gurobi, glpk)')
+    parser.add_argument('--visualization','-v',action="store_true", 
+                    default=user_config.show_visualization,
+                    help='save a visualization of the solution')
+    parser.add_argument('--breakpoints','-b',  type=int, 
+                    default=user_config.num_breakpoints,
+                    help='number of breakpoints to use in piece-wise linearization of polynomial costs')
+    parser.add_argument('--commitment_hours','-c', type=int, 
+                    default=user_config.hours_commitment,
+                    help='number hours per commitment in a rolling UC (exclusive of overlap)')
+    parser.add_argument('--overlap_hours','-o', type=int, 
+                    default=user_config.hours_commitment_overlap,
+                    help='number hours to overlap commitments in a rolling UC')
+    parser.add_argument('--problemfile','-p',action="store_true", 
+                    default=user_config.problem_filename,
+                    help='flag to write the problem formulation to a problem-formulation.lp file -- useful for debugging')
+    parser.add_argument('--duals_off','-u',action="store_true", 
+                    default=not user_config.duals,
+                    help='flag to skip getting the the duals, or prices, of the optimization problem')
+    parser.add_argument('--dispatch_decommit_allowed','-d', action="store_true", 
+                    default=user_config.dispatch_decommit_allowed,
+                    help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
+    parser.add_argument('--logfile','-l',type=str,
+                    default=user_config.logging_filename,
+                    help='log file, default is to log to terminal')
+    parser.add_argument('--scenarios',type=int, 
+                    default=user_config.scenarios_limit,
+                    help='limit the number of scenarios to N')
     # parser.add_argument('--solution_file',type=str,default=False,
     #                    help='save solution file to disk')
-    parser.add_argument('--profile',action="store_true",default=False,help='run cProfile and output to minpower.profile')
-    parser.add_argument('--error','-e',action="store_true",default=False,help='redirect error messages to the standard output (useful for debugging on remote machines)')
+    parser.add_argument('--profile',action="store_true",
+                    default=False,
+                    help='run cProfile and output to minpower.profile')
+    parser.add_argument('--error','-e',action="store_true",
+                    default=False,
+                    help='redirect error messages to the standard output (useful for debugging on remote machines)')
 
     #figure out the command line arguments
     args = parser.parse_args()
@@ -263,29 +249,20 @@ def main():
     if not os.path.isdir(directory):
         msg='There is no folder named "{}".'.format(directory)
         raise OSError(msg)
-
-    inputs=dict(solver=args.solver,
-              num_breakpoints=args.breakpoints,
-              hours_commitment=args.commitment_hours,
-              hours_commitment_overlap=args.overlap_hours,
-              dispatch_decommit_allowed=args.dispatch_decommit_allowed,
-              visualization=args.visualization,
-              get_duals=not args.duals_off,
-              problemfile=args.problemfile,
-              logging_file=args.logfile,
-              Nscenarios=args.scenarios,
-              )
-              # solution_file=args.solution_file)
+    user_config.update(vars(args))
+    user_config.duals = not args.duals_off
+    
+    
     if args.profile:
         print 'run profile'
         import cProfile
         prof = cProfile.Profile()
-        prof.runcall(solve_problem, directory, **inputs)
+        prof.runcall(solve_problem, directory)
         prof.dump_stats('minpower.profile')
 
     else:
         #solve the problem with those arguments
-        try: solve_problem(directory,**inputs)
+        try: solve_problem(directory)
         except:
             if args.error:
                 print 'There was an error:'

@@ -10,7 +10,7 @@ variable_kinds = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyom
 
 import logging,time,weakref
 
-import config
+from config import user_config
 from commonscripts import * # update_attributes,show_clock
 
 class OptimizationObject(object):
@@ -341,7 +341,7 @@ class OptimizationProblem(OptimizationObject):
                 else: raise
                 
             
-    def solve(self,solver=config.optimization_solver,problem_filename=False,get_duals=True):
+    def solve(self, user_config):
         '''
         Solve the optimization problem.
         
@@ -349,6 +349,9 @@ class OptimizationProblem(OptimizationObject):
         :param problem_filename: write MIP problem formulation to a file, if a file name is specified
         :param get_duals: get the duals, or prices, of the optimization problem
         '''        
+        
+        solver = user_config.solver
+        get_duals = user_config.duals
         
         logging.info('Solving with {s} ... {t}'.format(s=solver,t=show_clock()))
         
@@ -366,10 +369,10 @@ class OptimizationProblem(OptimizationObject):
             logging.info('Problem solved in {}s.'.format(self.solution_time))
             logging.debug('... {t}'.format(t=show_clock()))
         
-        if problem_filename:
+        if user_config.problem_filename:
             logging.getLogger().setLevel(logging.CRITICAL) #disable coopr's funny loggings when writing lp files.  
             self.write_model(problem_filename)
-            logging.getLogger().setLevel(config.logging_level)
+            logging.getLogger().setLevel(user_config.logging_level)
                 
         if not self.solved:
             if self.stochastic_formulation: 
@@ -410,8 +413,11 @@ class OptimizationProblem(OptimizationObject):
         return instance
     def __str__(self): return 'power_system_problem'
 
-    def _solve_instance(self, instance, solver=config.optimization_solver, get_duals=False, keepFiles=False):
-        if not keepFiles: logging.getLogger().setLevel(logging.WARNING) 
+    def _solve_instance(self, instance, solver, get_duals=False, keepFiles=False):
+        if not keepFiles: 
+            logger = logging.getLogger()
+            current_log_level = logger.level
+            logger.setLevel(logging.WARNING) 
         suffixes = ['dual'] if get_duals else []
 
         if not hasattr(self,'_opt_solver'):
@@ -425,7 +431,7 @@ class OptimizationProblem(OptimizationObject):
         try: self._opt_solver._symbol_map=None #this should mimic the memory leak bugfix at: software.sandia.gov/trac/coopr/changeset/5449
         except AttributeError: pass      #should remove after this fix becomes part of a release 
         elapsed = (time.time() - start)
-        logging.getLogger().setLevel(config.logging_level)
+        if not keepFiles: logger.setLevel(current_log_level)
         self.solved = detect_status(results, self._opt_solver.name)
         return results, elapsed
         

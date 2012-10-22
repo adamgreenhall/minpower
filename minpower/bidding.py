@@ -1,6 +1,6 @@
 from commonscripts import update_attributes,frange,pairwise
 from optimization import value,OptimizationObject
-from config import default_num_breakpoints
+from config import user_config
 import re,weakref
 from coopr.pyomo import Piecewise
 
@@ -26,7 +26,7 @@ class Bid(OptimizationObject):
             input_variable=0,
             min_input=0,
             max_input=1000,
-            num_breakpoints=default_num_breakpoints,
+            num_breakpoints=user_config.num_breakpoints,
             status_variable=True,
             fixed_input=False):
         update_attributes(self,locals(),exclude=['owner'])

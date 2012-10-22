@@ -8,7 +8,8 @@ an optimization framework from :class:`~optimization.OptimizationObject`.
 
 from optimization import value,dual,OptimizationObject,OptimizationProblem
 from commonscripts import * # hours,drop_case_spaces,flatten,getattrL,unique,update_attributes,show_clock
-import config, bidding
+import config
+import bidding
 from schedule import FixedSchedule
 import logging
 #import threading
@@ -197,7 +198,7 @@ class Generator(OptimizationObject):
         
         if self.bid_points is None:
             # polynomial specification
-            self.cost_breakpoints=config.default_num_breakpoints
+            self.cost_breakpoints=config.user_config.num_breakpoints
             if getattr(self,'heatratestring',None) is not None: 
                 self.cost_coeffs=[self.fuelcost*mult for mult in bidding.parse_polynomial(self.heatratestring)]
             else:
@@ -434,7 +435,7 @@ class Load(OptimizationObject):
     """
     def __init__(self,kind='varying',name='',index=None,bus=None,schedule=None,
                  shedding_allowed=False,
-                 cost_shedding=config.cost_load_shedding
+                 cost_shedding=config.user_config.cost_load_shedding
                  ):
         update_attributes(self,locals()) #load in inputs
         self.init_optimization()
@@ -473,7 +474,7 @@ class Load_Fixed(Load):
     """
     def __init__(self,kind='fixed',name='',index=None,bus=None,P=0,
                  shedding_allowed=False,
-                 cost_load_shedding=config.cost_load_shedding
+                 cost_load_shedding=config.user_config.cost_load_shedding
                  ):
         update_attributes(self,locals(),exclude=['p']) #load in inputs
         self.Pfixed = P
@@ -607,15 +608,16 @@ class PowerSystem(OptimizationProblem):
     :param cost_load_shedding: price of load shedding [$/MWh]
     :param dispatch_decommit_allowed: flag - if generators can be decommitted during dispatch 
     '''
-    def __init__(self,
-                 generators,loads,lines=None,
-                 num_breakpoints=config.default_num_breakpoints,
-                 load_shedding_allowed=False,
-                 cost_load_shedding=config.cost_load_shedding,
-                 #spinning_reserve_requirement=0,
-                 dispatch_decommit_allowed=False,
-                 ):
+    def __init__(self, generators, loads, lines=None):
         update_attributes(self,locals(),exclude=['generators','loads','lines']) #load in inputs
+        self.num_breakpoints = config.user_config.default_num_breakpoints
+        self.load_shedding_allowed = config.user_config.load_shedding_allowed
+        self.cost_load_shedding = config.user_config.cost_load_shedding
+        self.dispatch_decommit_allowed = config.user_config.dispatch_decommit_allowed
+                  #spinning_reserve_requirement=0,
+
+
+        
         if lines is None: lines=[]    
             
         buses=self.make_buses_list(loads,generators)
@@ -626,13 +628,13 @@ class PowerSystem(OptimizationProblem):
         self.add_children(lines,'lines')
         
         #add system mode parameters to relevant components
-        self.set_load_shedding(load_shedding_allowed) #set load shedding
+        self.set_load_shedding(self.load_shedding_allowed) #set load shedding
         for load in loads:
-                try: load.cost_breakpoints=num_breakpoints
+                try: load.cost_breakpoints = self.num_breakpoints
                 except AttributeError: pass #load has no cost model   
         for gen in generators:
-            gen.dispatch_decommit_allowed=dispatch_decommit_allowed
-            try: gen.cost_breakpoints=num_breakpoints
+            gen.dispatch_decommit_allowed = self.dispatch_decommit_allowed
+            try: gen.cost_breakpoints = self.num_breakpoints
             except AttributeError: pass #gen has no cost model
             
     def set_load_shedding(self,is_allowed):

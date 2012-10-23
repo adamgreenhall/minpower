@@ -47,10 +47,10 @@ def solve_problem(datadir='.',
 
     logging.debug('power system set up {}'.format(show_clock()))
     if times.spanhrs <= user_config.hours_commitment + user_config.hours_commitment_overlap:
-        solution, instance = create_solve_problem(power_system, times, scenario_tree=scenario_tree)
+        solution, instance = create_solve_problem(power_system, times, scenario_tree)
     else: #split into multiple stages and solve
-        stage_solutions,stage_times=solve_multistage(power_system, times, scenario_tree=scenario_tree)
-        solution=results.make_multistage_solution(power_system, stage_times, stage_solutions)
+        stage_solutions, stage_times = solve_multistage(power_system, times, scenario_tree)
+        solution = results.make_multistage_solution(power_system, stage_times, stage_solutions)
 
     if shell: solution.show()
     if csv: solution.saveCSV()
@@ -187,7 +187,7 @@ def solve_multistage(power_system, times, scenario_tree):
 #                commonscripts.show_memory_refs('_VarArray')
 #                commonscripts.show_memory_backrefs('_VarArray')
 #                commonscripts.show_memory_backrefs('Piecewise')
-    return stage_solutions,stage_times
+    return stage_solutions, stage_times
 
 
 def _setup_logging():

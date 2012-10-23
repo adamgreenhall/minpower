@@ -16,9 +16,11 @@ import pandas
 def gen_time_dataframe(generators, times, values=()):
     kwargs = dict(columns = generators, index = [t.Start for t in times])
     if values:
-        return pandas.DataFrame(values, **kwargs)
+        df = pandas.DataFrame(values, **kwargs)
     else: 
-        return pandas.DataFrame(**kwargs)
+        df = pandas.DataFrame(**kwargs)
+    df.index.name = 'time'
+    return df
 try: # for development
     from pdb import set_trace as debug #pudb
     from pprint import pprint

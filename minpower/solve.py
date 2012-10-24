@@ -214,7 +214,7 @@ def main():
                     default=user_config.show_visualization,
                     help='save a visualization of the solution')
     parser.add_argument('--breakpoints','-b',  type=int, 
-                    default=user_config.num_breakpoints,
+                    default=user_config.breakpoints,
                     help='number of breakpoints to use in piece-wise linearization of polynomial costs')
     parser.add_argument('--commitment_hours','-c', type=int, 
                     default=user_config.hours_commitment,
@@ -254,6 +254,7 @@ def main():
     if not os.path.isdir(directory):
         msg='There is no folder named "{}".'.format(directory)
         raise OSError(msg)
+    
     user_config.update(vars(args))
     user_config.duals = not args.duals_off
     

@@ -26,7 +26,7 @@ class Bid(OptimizationObject):
             input_variable=0,
             min_input=0,
             max_input=1000,
-            num_breakpoints=user_config.num_breakpoints,
+            num_breakpoints=user_config.breakpoints,
             status_variable=True,
             fixed_input=False):
         update_attributes(self,locals(),exclude=['owner'])

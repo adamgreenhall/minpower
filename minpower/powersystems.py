@@ -198,7 +198,7 @@ class Generator(OptimizationObject):
         
         if self.bid_points is None:
             # polynomial specification
-            self.cost_breakpoints=config.user_config.num_breakpoints
+            self.cost_breakpoints=config.user_config.breakpoints
             if getattr(self,'heatratestring',None) is not None: 
                 self.cost_coeffs=[self.fuelcost*mult for mult in bidding.parse_polynomial(self.heatratestring)]
             else:
@@ -610,7 +610,7 @@ class PowerSystem(OptimizationProblem):
     '''
     def __init__(self, generators, loads, lines=None):
         update_attributes(self,locals(),exclude=['generators','loads','lines']) #load in inputs
-        self.num_breakpoints = config.user_config.default_num_breakpoints
+        self.num_breakpoints = config.user_config.breakpoints
         self.load_shedding_allowed = config.user_config.load_shedding_allowed
         self.cost_load_shedding = config.user_config.cost_load_shedding
         self.dispatch_decommit_allowed = config.user_config.dispatch_decommit_allowed

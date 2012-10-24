@@ -38,6 +38,7 @@ def solve_problem(datadir='.',
     """
 
     _setup_logging()
+    user_config.directory = datadir
     start_time = timer.time()
     logging.debug('Minpower reading {} {}'.format(datadir, show_clock()))
     generators,loads,lines,times,scenario_tree=get_data.parsedir()

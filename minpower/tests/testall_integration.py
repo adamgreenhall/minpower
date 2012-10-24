@@ -20,7 +20,7 @@ def wipeTestSlate(dir):
         for f in glob.glob(joindir(dir,pat)): os.remove(f)
 def hasPyscript(dir): return glob.glob(joindir(dir,'*.py'))
 
-def main(solver=config.optimization_solver):
+def main(solver=config.user_config.solver):
     logging.basicConfig(level=logging.CRITICAL, format='%(levelname)s: %(message)s')
     from minpower import solve
     
@@ -41,7 +41,7 @@ def main(solver=config.optimization_solver):
             os.system('python {s}'.format(s=hasPyscript(testDir)[0]))
         else:
             try: 
-                solve.solve_problem(datadir=testDir,solver=solver)
+                solve.solve_problem(testDir)
                 sys.stdout = sys.__stdout__ #switch back to standard outputting
                 fError.close()
                 os.remove(joindir(testDir,'error.txt'))

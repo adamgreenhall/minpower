@@ -28,7 +28,8 @@ def line_limit_high():
         make_expensive_gen(bus='B')
     ]    
     lines=[powersystems.Line(Pmax=Pmax, From='A',To='B')]
-    power_system,times=solve_problem(generators,lines=lines,get_duals=True,**make_loads_times(Pd=225,bus='B'))
+    config.user_config.duals = True
+    power_system,times=solve_problem(generators, lines=lines, **make_loads_times(Pd=225,bus='B'))
     Pline = lines[0].power(times[0])
     lmps=[b.price(times[0]) for b in power_system.buses]
     congestion_price = lines[0].price(times[0])
@@ -51,7 +52,8 @@ def line_limit_low():
         make_expensive_gen(bus='B')
     ]    
     lines=[powersystems.Line(Pmin=Pmin, From='B',To='A')]
-    power_system,times=solve_problem(generators,lines=lines,get_duals=True,**make_loads_times(Pd=225,bus='B'))
+    config.user_config.duals = True
+    power_system,times=solve_problem(generators,lines=lines, **make_loads_times(Pd=225,bus='B'))
     Pline = lines[0].power(times[0])
     lmps=[b.price(times[0]) for b in power_system.buses]
     congestion_price = lines[0].price(times[0])
@@ -88,7 +90,8 @@ def three_buses():
         powersystems.Line(From='A',To='C', Pmax=Pmax),
         powersystems.Line(From='B',To='C', Pmax=Pmax),
         ]
-    power_system,times=solve_problem(generators,times=singletime,loads=loads,lines=lines,get_duals=True)
+    config.user_config.duals = True
+    power_system,times=solve_problem(generators,times=singletime,loads=loads,lines=lines)
     num_lmps=len(set(b.price(times[0]) for b in power_system.buses))
     total_load = value(sum(b.Pload(times[0]) for b in power_system.buses))
     assert total_load==sum(Pd) and num_lmps>1

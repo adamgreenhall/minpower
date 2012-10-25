@@ -7,7 +7,7 @@ logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s'
 from minpower import optimization,powersystems,schedule,solve,config
 from minpower.optimization import value
 
-from test_utils import solve_problem,make_loads_times,make_cheap_gen,make_mid_gen,make_expensive_gen,gen_costs
+from test_utils import *
 
 uc = Tests()
 
@@ -22,7 +22,9 @@ def prices():
         make_mid_gen(Pmax=20),
         make_expensive_gen()
     ]
-    power_system,times=solve_problem(generators,get_duals=True,**make_loads_times(Pdt=[80,110,130]))
+
+    config.user_config.duals = True
+    power_system,times=solve_problem(generators, **make_loads_times(Pdt=[80,110,130]))
     lmps = [power_system.buses[0].price(t) for t in times]
     
     assert lmps==[gen_costs['cheap'],gen_costs['mid'],gen_costs['expensive']]
@@ -55,14 +57,20 @@ def load_shedding():
     Pdt1=211
     generators=[make_cheap_gen(Pmax=Pmax)]
     Pdt=[110,Pdt1,110]
-    power_system,times=solve_problem(generators,get_duals=True,load_shedding_allowed=True,**make_loads_times(Pdt=Pdt))
+    
+    config.user_config.load_shedding_allowed = True
+    config.user_config.duals = True
+    
+    power_system,times=solve_problem(generators,**make_loads_times(Pdt=Pdt))
     load=power_system.loads()[0]
     load_t1=load.power(times[1],evaluate=True)
     load_t1_shed=load.shed(times[1],evaluate=True)
     price_t1 = power_system.buses[0].price(times[1])
     assert load_t1==Pmax 
     assert load_t1_shed==Pdt1-Pmax
-    assert price_t1==config.cost_load_shedding
-
+    assert price_t1==config.user_config.cost_load_shedding
+    
+    config.user_config.load_shedding_allowed = False
+     
 if __name__ == "__main__": 
     uc.run()

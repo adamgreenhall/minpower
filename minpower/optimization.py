@@ -353,7 +353,7 @@ class OptimizationProblem(OptimizationObject):
                 else: raise
                 
             
-    def solve(self, user_config):
+    def solve(self, user_config=user_config):
         '''
         Solve the optimization problem.
         

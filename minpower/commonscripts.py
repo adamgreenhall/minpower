@@ -32,6 +32,8 @@ class DotDict(dict):
     '''a dict with dot notation access'''
     def __getattr__(self, attr):
         return self.get(attr)
+    def copy(self): return DotDict(dict(self))
+    
     __setattr__= dict.__setitem__
     __delattr__= dict.__delitem__
 

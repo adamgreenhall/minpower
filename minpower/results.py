@@ -430,8 +430,12 @@ class Solution_UC_multistage(Solution_UC):
     
     def _get_outputs(self,stage_solutions):
         '''the outputs under observed wind'''
-        self.generators_power = pandas.concat([stage.observed_generator_power for stage in stage_solutions])
-        self.generators_status = pandas.concat([stage.stage_generators_status for stage in stage_solutions])
+        if self.is_stochastic:
+            self.generators_power = pandas.concat([stage.observed_generator_power for stage in stage_solutions])
+            self.generators_status = pandas.concat([stage.stage_generators_status for stage in stage_solutions])
+        else: 
+            self.generators_power  = flatten([sln.generators_power for sln in stage_solutions])
+            self.generators_status = flatten([sln.generators_status for sln in stage_solutions])
     
     def _get_costs(self,stage_solutions):
         self.fuelcost_generation=self._sum_over('fuelcost_generation',stage_solutions)

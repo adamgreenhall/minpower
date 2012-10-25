@@ -113,7 +113,11 @@ class Timelist(object):
     def __repr__(self): return repr(self.times)
     def __contains__(self, item): return item in self.times
     def __len__(self): return len(self.times)
-    def __getitem__(self, i): return self.times[i]
+    def __getitem__(self, i, circular=False): 
+        if i==-1 and not circular:
+            return self.initialTime
+        else:
+            return self.times[i]
     def __getslice__(self, i, j): return self.times[i:j]
     def index(self,val): return self.times.index(val)
     def setInitial(self,initialTime=None): 

@@ -90,7 +90,7 @@ generator_defaults=dict(
     )
 
 
-available_solvers = ['glpk'] #['glpk','gurobi','cplex']
+available_solvers = ['gurobi','glpk','cplex']
 
 
 user_config = DotDict(dict(
@@ -101,9 +101,10 @@ user_config = DotDict(dict(
     cost_load_shedding = 1000, #$/MWh    
     load_shedding_allowed = False,
     dispatch_decommit_allowed = False,
-    solver = 'glpk',
+    solver = 'gurobi',
     
-    
+    reserve_fixed = 0,
+    reserve_load_fraction = 0.0,    
     
     visualization = False,
     show_clock = False,

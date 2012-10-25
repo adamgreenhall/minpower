@@ -5,6 +5,7 @@ import logging,random
 logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s')
 
 from minpower import optimization,powersystems,schedule,solve,config
+from minpower.config import user_config
 from minpower.optimization import value
 
 from test_utils import *
@@ -58,8 +59,8 @@ def load_shedding():
     generators=[make_cheap_gen(Pmax=Pmax)]
     Pdt=[110,Pdt1,110]
     
-    config.user_config.load_shedding_allowed = True
-    config.user_config.duals = True
+    user_config.load_shedding_allowed = True
+    user_config.duals = True
     
     power_system,times=solve_problem(generators,**make_loads_times(Pdt=Pdt))
     load=power_system.loads()[0]
@@ -70,7 +71,7 @@ def load_shedding():
     assert load_t1_shed==Pdt1-Pmax
     assert price_t1==config.user_config.cost_load_shedding
     
-    config.user_config.load_shedding_allowed = False
+    user_config.load_shedding_allowed = False
      
 if __name__ == "__main__": 
     uc.run()

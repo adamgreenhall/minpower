@@ -20,6 +20,6 @@ if __name__ == "__main__":
     'unit_commitment.uc',
     'opf.opf',
     'bidding.bidding',
-    'memory_test.mem'
+#    'memory_test.mem'
     ])
     all_tests.run()

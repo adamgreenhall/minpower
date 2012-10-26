@@ -226,7 +226,8 @@ class OptimizationProblem(OptimizationObject):
         def map_args(kind='Continuous',low=None,high=None): return dict(bounds=(low,high),domain=variable_kinds[kind]) 
         var=pyomo.Var(name=name, **map_args(**kwargs))
         self._model._add_component(name,var)
-    def add_constraint(self,name,expression):
+    def add_constraint(self,name,expression, time=None):
+        if time is not None: name=self._t_id(name,time)
         self._model._add_component(name,new_constraint(name,expression))
     def get_component(self,name,scenario=None): 
         '''Get an optimization component'''

@@ -147,6 +147,7 @@ class Solution(object):
         out.extend(['name={}'.format(self.get_values('generators','name')),
                     'u={}'.format(self.get_values('generators','status',t)),
                     'P={}'.format(self.get_values('generators','power',t)),
+                    # 'Pavail={}'.format(self.get_values('generators','power_available',t)),
                     'IC={}'.format(self.get_values('generators','incrementalcost',t))])
         return out
     def info_loads(self,t):

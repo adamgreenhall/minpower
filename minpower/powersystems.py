@@ -727,13 +727,16 @@ class PowerSystem(OptimizationProblem):
         # system reserve constraint
         if (self.reserve_fixed>0 or self.reserve_load_fraction>0):
             for time in times:
-                required_generation_availability = self.reserve_fixed + (1.0+self.reserve_load_fraction) * sum(load.power(time) for load in self.loads)
-                generation_availability = sum(gen.power_available(time) for gen in self.generators)
-                self.add_constraint('system_reserve', required_generation_availability >= generation_availability )
+                required_generation_availability = self.reserve_fixed + (1.0 + self.reserve_load_fraction) * sum(load.power(time) for load in self.loads())
+                generation_availability = sum(gen.power_available(time) for gen in self.generators())
+                self.add_constraint('reserve', generation_availability >= required_generation_availability, time=time )
         
         self.add_constraint('system_cost_first_stage',self.cost_first_stage()==sum(bus.cost_first_stage(times) for bus in self.buses))
         self.add_constraint('system_cost_second_stage',self.cost_second_stage()==sum(bus.cost_second_stage(times) for bus in self.buses))
-    def iden(self,time): return 'system'
+    def iden(self,time=None): 
+        name='system'
+        if time is not None: name+='_'+str(time)
+        return name
     
     def get_generator_with_scenarios(self):
         gens = filter(lambda gen: getattr(gen,'has_scenarios',False), self.generators())

@@ -21,7 +21,8 @@ def make_cheap_gen(**kwargs):
 def make_mid_gen(**kwargs):
     return Generator(name='middle-range gen', costcurvestring='{}P'.format(gen_costs['mid']), **kwargs)    
 def make_expensive_gen(**kwargs):
-    return Generator(name='expensive gen', costcurvestring='{}P'.format(gen_costs['expensive']), **kwargs)    
+    if 'costcurvestring' not in kwargs: kwargs['costcurvestring']='{}P'.format(gen_costs['expensive'])
+    return Generator(name='expensive gen', **kwargs)    
 def make_loads_times(Pd=200,Pdt=None,**kwargs):
     if Pdt is None:
         loads=[powersystems.Load_Fixed(P=Pd,**kwargs)]

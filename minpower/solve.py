@@ -223,6 +223,14 @@ def main():
     parser.add_argument('--overlap_hours','-o', type=int, 
                     default=user_config.hours_commitment_overlap,
                     help='number hours to overlap commitments in a rolling UC')
+                    
+    parser.add_argument('--reserve_fixed', type=float, 
+                    default=user_config.reserve_fixed,
+                    help='The static amount of reserve required at all times (in MW)')
+    parser.add_argument('--reserve_load_fraction', type=float, 
+                    default=user_config.reserve_load_fraction,
+                    help='The fraction of the total system load which is required as reserve')
+                    
     parser.add_argument('--problemfile','-p',action="store_true", 
                     default=user_config.problem_filename,
                     help='flag to write the problem formulation to a problem-formulation.lp file -- useful for debugging')

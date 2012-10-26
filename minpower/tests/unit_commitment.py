@@ -72,6 +72,43 @@ def load_shedding():
     assert price_t1==config.user_config.cost_load_shedding
     
     user_config.load_shedding_allowed = False
-     
+
+@uc.test
+def reserve_fixed():
+    '''
+    Create two generators, the cheaper one with a limit near the load.
+    Require 50MW of reserve (which exceeds Pmax of cheap)
+    Ensure that: g2 is turned on to meet reserve req.
+
+    Pg1+Pg2 = load
+    Pavail1 + Pavail2 = load + reserve
+    '''
+    
+    Pmax=100
+    Pdt1=90
+    reserve_req = 30
+    
+    generators=[make_cheap_gen(Pmax=Pmax), make_expensive_gen(Pmin=0, costcurvestring='5000+30P')]
+    Pdt=[80,Pdt1]    
+    
+    user_config.reserve_fixed = reserve_req
+    
+    power_system,times=solve_problem(generators,**make_loads_times(Pdt=Pdt))
+    load=power_system.loads()[0]
+    load_t1=load.power(times[1],evaluate=True)
+    total_power = sum(value(gen.power(times[1])) for gen in generators)
+    total_available_power = [sum(value(gen.power_available(time)) for gen in generators) for time in times]
+        
+#    print load_t1 + reserve_req
+#    print [[value(gen.power(time)) for gen in generators] for time in times]
+#    print total_available_power
+#    print [reserve_req + Pd for Pd in Pdt]
+    
+    assert load_t1 == total_power
+    assert total_available_power >= [reserve_req + Pd for Pd in Pdt]
+    
+    
+    
 if __name__ == "__main__": 
-    uc.run()
+    # uc.run()
+    reserve_fixed()

@@ -1,0 +1,15 @@
+language: python
+python:
+  - 2.7
+before_install: 
+    - sudo apt-get update
+    - sudo apt-get install python-numpy glpk
+install: pip install --use-mirrors .
+script:
+    - pip install --use-mirrors attest objgraph
+    - python minpower/tests/testall.py
+    
+branches:
+  only:
+    - master
+    - stage

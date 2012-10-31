@@ -11,6 +11,7 @@ import schedule
 from addons import *
 from commonscripts import *
 from stochastic import construct_simple_scenario_tree
+from config import user_config
 
 import os,sys,logging
 
@@ -46,8 +47,7 @@ fields_initial={
     'hoursinstatus':'hoursinstatus',
     'ic':None}
     
-def parsedir(datadir='.',
-        Nscenarios = None,
+def parsedir(
         file_gens='generators.csv',
         file_loads='loads.csv',
         file_lines='lines.csv',
@@ -69,6 +69,9 @@ def parsedir(datadir='.',
     :return lines:, list of :class:`~powersystems.Line` objects
     :return times:, list of :class:`~schedule.Timelist` object
     """
+    
+    datadir = user_config.directory
+    
     if not os.path.isdir(datadir): raise OSError('data directory "{d}" does not exist'.format(d=datadir) )
     [file_gens,file_loads,file_lines,file_init]=[joindir(datadir,filename) for filename in (file_gens,file_loads,file_lines,file_init)]
     
@@ -92,7 +95,7 @@ def parsedir(datadir='.',
     setup_initialcond(init_data,generators,times)
     
     #setup scenario tree (if applicable)
-    scenario_tree=setup_scenarios(generators,times, Nscenarios)
+    scenario_tree=setup_scenarios(generators, times, user_config.scenarios)
     return generators,loads,lines,times,scenario_tree
 
 def setup_initialcond(data,generators,times):
@@ -176,7 +179,9 @@ def build_class_list(data,model,datadir,times=None,model_schedule=schedule.make_
         if scenariosfilename is not None:    obj.scenarios_filename  = joindir(datadir,scenariosfilename)
         elif scenariosdirectory is not None: 
             obj.scenarios_directory = joindir(datadir, scenariosdirectory)
-            obj.observed_filename = joindir(datadir, observedfilename)
+            try: obj.observed_filename = joindir(datadir, observedfilename)
+            except: 
+                raise AttributeError('you must provide a observed filename for a rolling stochastic UC')
         all_models.append( obj )
         index+=1
     return all_models
@@ -229,9 +234,6 @@ def setup_times(generators_data,loads_data,datadir):
     return schedule.make_times(time_dates)
 
 def setup_scenarios(generators,times, Nscenarios = None):
-    # no_scenario_indexes=[]
-    # FIXME - need to think about how rolling will work here
-    
     has_scenarios=[]
     for gen in generators:
         if (getattr(gen,'scenarios_filename',None) is not None) or (getattr(gen, 'scenarios_directory', None) is not None): 
@@ -266,26 +268,27 @@ def setup_scenarios(generators,times, Nscenarios = None):
         import pandas
         from pandas.io.parsers import read_csv as dataframe_from_csv
         from collections import OrderedDict
-        
+        from glob import glob
         scenario_trees = OrderedDict()
         gen.scenario_values = OrderedDict()
         gen.has_scenarios_multistage = True
         
         # load in the observations (needed to decide the final states of each stage)
         gen.observed_values = dataframe_from_csv(gen.observed_filename, parse_dates=True, index_col=0, squeeze=True)
+        # TODO - check for same frequency 
         
-        for root, dirs, files in os.walk(gen.scenarios_directory):
-            for i,f in enumerate(sorted(files)):
-                data = dataframe_from_csv(joindir(root,f), parse_dates=True, index_col=0)
-                
-                if Nscenarios is not None:
-                    data = data[ data.index<Nscenarios ]
-                    data['probability'] = data['probability']/sum( data['probability'] )
-                
-                # data_times = pandas.date_range(data.columns[1], data.columns[-1],freq='5min')
-                day = parse_time(data.columns[1]) #first col is probability
-                
-                gen.scenario_values[day] = data
-                # defer construction until actual time stage starts
-                # scenario_trees[day] = construct_simple_scenario_tree( data['probability'].values.tolist(), time_stage=i )
+        for i,f in enumerate(glob("{}/*.csv".format(gen.scenarios_directory))):
+            logging.debug('reading scenarios from %s', f)
+            data = dataframe_from_csv(f, parse_dates=True, index_col=0)
+            
+            if Nscenarios is not None:
+                data = data[ data.index<Nscenarios ]
+                data['probability'] = data['probability']/sum( data['probability'] )
+            
+            # data_times = pandas.date_range(data.columns[1], data.columns[-1],freq='5min')
+            day = parse_time(data.columns[1]) #first col is probability
+            
+            gen.scenario_values[day] = data
+            # defer construction until actual time stage starts
+            # scenario_trees[day] = construct_simple_scenario_tree( data['probability'].values.tolist(), time_stage=i )
         return scenario_trees

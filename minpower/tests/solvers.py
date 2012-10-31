@@ -33,7 +33,11 @@ def simple_problem():
 
 def test_one_solver(solver_name):
     prob=simple_problem()
-    prob.solve(solver=solver_name,get_duals=False)
+    orig_solver = config.user_config.solver
+    config.user_config.duals = False
+    config.user_config.solver = solver_name 
+    
+    prob.solve()
     if mem_tracking: tracker.create_snapshot('prob. solved')
     status=prob.solved
     del prob
@@ -44,6 +48,9 @@ def test_one_solver(solver_name):
         models_left=objgraph.by_type('ConcreteModel')
         logging.critical( models_left )
         objgraph.show_backrefs(models_left,filename='backrefs-simple-problem.png')
+    
+    config.user_config.duals = True
+    config.user_config.solver = orig_solver
     return status
 
 @solvers.test

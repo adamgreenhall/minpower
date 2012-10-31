@@ -10,7 +10,7 @@ variable_kinds = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyom
 
 import logging,time,weakref
 
-import config
+from config import user_config
 from commonscripts import * # update_attributes,show_clock
 
 class OptimizationObject(object):
@@ -110,7 +110,7 @@ class OptimizationObject(object):
 
     def add_parameter(self,name,index=None,default=None, **kwargs):
         name=self._id(name)
-        self._parent_problem().add_component_to_problem(pyomo.Param(index,name=name,default=default, **kwargs))
+        self._parent_problem().add_component_to_problem(pyomo.Param(index,name=name,default=default,mutable=True, **kwargs))
         
     def add_constraint(self,name,time,expression): 
         '''Create a new constraint and add it to the object's constraints and the model's constraints.'''
@@ -226,7 +226,8 @@ class OptimizationProblem(OptimizationObject):
         def map_args(kind='Continuous',low=None,high=None): return dict(bounds=(low,high),domain=variable_kinds[kind]) 
         var=pyomo.Var(name=name, **map_args(**kwargs))
         self._model._add_component(name,var)
-    def add_constraint(self,name,expression):
+    def add_constraint(self,name,expression, time=None):
+        if time is not None: name=self._t_id(name,time)
         self._model._add_component(name,new_constraint(name,expression))
     def get_component(self,name,scenario=None): 
         '''Get an optimization component'''
@@ -247,16 +248,91 @@ class OptimizationProblem(OptimizationObject):
         try: self._model.write(filename)
         except: self._model.pprint(filename)
     def reset_model(self):
-        #piecewise models leak memory
-        #keep until Coopr release integrates: https://software.sandia.gov/trac/coopr/changeset/5781 
-        for pw in self._model.active_components(pyomo.Piecewise).values():
-            pw._constraints_dict=None
-            pw._vars_dict=None
-            pw._sets_dict=None
+        instances = [self._model]
+        if self.stochastic_formulation:
+            instances.append(self._stochastic_instance)
+
+
+        for instance in instances:
+#        piecewise models leak memory
+#        keep until Coopr release integrates: https://software.sandia.gov/trac/coopr/changeset/5781 
+            for pw in instance.active_components(pyomo.Piecewise).values():
+                pw._constraints_dict=None
+                pw._vars_dict=None
+                pw._sets_dict=None
+            
+            # another memory leak
+            for key, var in instance.active_components(pyomo.Var).iteritems():
+                var.reset()
+                var._data = None
+                # var._varval = None
+                
+                #var = None
+                #if instance==self._stochastic_instance: debug()
+                instance._clear_attribute(key)
         
-        self._model=None
+#        debug()
+        # for stage in self._scenario_tree._stages
+        
+        
+        if True and self.stochastic_formulation:
+            # destroy scenario tree
+            for stage in self._scenario_tree._stages:
+                stage._cost_variable = None
+                for node in stage._tree_nodes:
+                    node._children = None
+                    node._parent = None
+                    node.__dict__ = {}
+                else: stage._tree_nodes = None
+            else: self._scenario_tree._stages = None
+            
+            for scenario in self._scenario_tree._scenarios:
+                scenario._leaf_node = None
+                scenario._node_list = None
+            else: self._scenario_tree._scenarios = None
+            
+            self._scenario_tree._tree_node_map = None
+            self._scenario_tree._tree_nodes = None
+            self._scenario_tree = None      
+            
+            self._stochastic_instance.components._component = {}
+            self._stochastic_instance.components._declarations = {}
+            
+            self._stochastic_instance = None
+
+        if False: 
+            import objgraph,inspect,random,gc
+            from pprint import pprint
+            objgraph.show_backrefs(objgraph.by_type('Stage'), filename='objgraph-stage-backref-all.png')
+            objgraph.show_backrefs(objgraph.by_type('ScenarioTreeNode'), filename='objgraph-ScenarioTreeNode-backref-all.png')
+            # print gc.collect()
+            # pprint(gc.get_referrers(objgraph.by_type('ScenarioTreeNode')[0]))
+
+            try: 
+                tree = objgraph.by_type('Scenario')[0]
+                objgraph.show_refs( [tree], filename='objgraph-Scenario-refs.png')
+                objgraph.show_backrefs([tree], filename='objgraph-Scenario-backref.png')
+            except: print 'no Scenario'
+            
+            try: 
+                tree = objgraph.by_type('ScenarioTree')[0]
+                objgraph.show_refs( [tree], filename='objgraph-tree-refs.png')
+                objgraph.show_backrefs([tree], filename='objgraph-tree-backref.png')
+            except: print 'no tree'
+                
+            stage = objgraph.by_type('Stage')[0]
+            objgraph.show_refs( [stage], filename='objgraph-stage-refs.png')
+            objgraph.show_backrefs([stage], filename='objgraph-stage-backref.png')
+            objgraph.show_chain(
+                objgraph.find_backref_chain( stage, inspect.ismodule),
+                filename='objgraph-stage-backref-chain.png'
+                )
+            if stage._cost_variable is not None: 
+                objgraph.show_backrefs(stage._cost_variable[0], filename='objgraph-stage-cost-var-backrefs.png')
+            debug()            
         self.solved=False
         self._model=pyomo.ConcreteModel() 
+
     def show_model(self):
         components=self._model.components._component
         items = [pyomo.Set, pyomo.Param, pyomo.Var, pyomo.Objective, pyomo.Constraint]
@@ -278,53 +354,38 @@ class OptimizationProblem(OptimizationObject):
                 else: raise
                 
             
-    def solve(self,solver=config.optimization_solver,problem_filename=False,get_duals=True):
+    def solve(self, user_config=user_config):
         '''
         Solve the optimization problem.
         
         :param solver: name of solver (lowercase string).
         :param problem_filename: write MIP problem formulation to a file, if a file name is specified
         :param get_duals: get the duals, or prices, of the optimization problem
-        '''
-                    
-        def cooprsolve(instance,suffixes=['dual'],keepFiles=False):
-            if not keepFiles: logging.getLogger().setLevel(logging.WARNING) 
-            opt_solver = cooprsolver.SolverFactory(solver)
-            if opt_solver is None: 
-                msg='solver "{}" not found'.format(solver)
-                raise OptimizationError(msg)
-            start = time.time()
-            results= opt_solver.solve(instance,suffixes=suffixes) #,keepFiles=keepFiles
-            try: opt_solver._symbol_map=None #this should mimic the memory leak bugfix at: software.sandia.gov/trac/coopr/changeset/5449
-            except AttributeError: pass      #should remove after this fix becomes part of a release 
-            elapsed = (time.time() - start)
-            logging.getLogger().setLevel(config.logging_level)
-            return results,elapsed
+        '''        
         
+        solver = user_config.solver
+        get_duals = user_config.duals
         
         logging.info('Solving with {s} ... {t}'.format(s=solver,t=show_clock()))
+        
+        # create instance
         if self.stochastic_formulation:
             instance=self._stochastic_instance
         else: 
             instance=self._model.create()
             logging.debug('... model created ... {t}'.format(t=show_clock()))     
         
-        results,elapsed=cooprsolve(instance,suffixes=[])
+        results, elapsed = self._solve_instance(instance, solver)
         
-        status_text = str(results.solver[0]['Termination condition'])
-        if (not status_text =='optimal' and solver!='cbc') or status_text=='infeasible':
-            logging.critical('problem not solved. Solver terminated with status: "{}"'.format(status_text))
-            self.solved=False
-        else:
-            self.solved=True
+        if self.solved:
             self.solution_time =elapsed #results.Solver[0]['Wallclock time']
             logging.info('Problem solved in {}s.'.format(self.solution_time))
             logging.debug('... {t}'.format(t=show_clock()))
         
-        if problem_filename:
+        if user_config.problem_filename:
             logging.getLogger().setLevel(logging.CRITICAL) #disable coopr's funny loggings when writing lp files.  
             self.write_model(problem_filename)
-            logging.getLogger().setLevel(config.logging_level)
+            logging.getLogger().setLevel(user_config.logging_level)
                 
         if not self.solved:
             if self.stochastic_formulation: 
@@ -335,40 +396,16 @@ class OptimizationProblem(OptimizationObject):
         instance.load(results)
 #        instance._load_solution(results.solution(0), ignore_invalid_labels=True )
         logging.debug('... solution loaded ... {t}'.format(t=show_clock()))
-
         
-        def fix_variables(instance):
-            active_vars= instance.active_components(pyomo.Var)
-            for var in active_vars.values():
-                if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet): 
-                    if var.is_indexed(): 
-                        for key,ind_var in var.iteritems(): ind_var.fixed=True
-                    else: var.fixed=True
-        
-        def resolve_with_fixed_variables(instance,results):
+        if get_duals: 
+            # resolve with fixed variables
             logging.info('resolving fixed-integer LP for duals')
-            if self.stochastic_formulation:
-                fix_variables(instance)
-                for scenario_block in instance.active_components(pyomo.Block).values():
-                    fix_variables(scenario_block)
-            else:
-                fix_variables(instance)
-            instance.preprocess()
+            self._fix_variables(instance)
             
-            try:
-                results,elapsed=cooprsolve(instance,suffixes=['dual'])
-                self.solution_time+=elapsed
-            except RuntimeError:
-                logging.error('coopr raised an error in solving. keep the files for debugging.')
-                results= cooprsolve(instance, keepFiles=True)    
+            results,elapsed = self._solve_instance(instance, get_duals=get_duals)
+            self.solution_time+=elapsed
             
             instance.load(results)
-            return instance,results
-
-        if get_duals: 
-            try: instance,results = resolve_with_fixed_variables(instance,results)
-            except RuntimeError:
-                logging.error('in re-solving for the duals. the duals will be set to default value.')
             logging.debug('... LP problem solved ... {t}'.format(t=show_clock()))    
         
         if self.stochastic_formulation:
@@ -377,8 +414,8 @@ class OptimizationProblem(OptimizationObject):
         def get_objective(name):
             try: return results.Solution.objective[name].value
             except AttributeError: return results.Solution.objective['__default_objective__'].value
-        obj_name='objective'
-        if self.stochastic_formulation: obj_name='MASTER'
+        obj_name='objective' if (not self.stochastic_formulation) else 'MASTER'
+        
         #print results.Solution.objective
         #print get_duals,self.stochastic_formulation,obj_name
         self.objective = get_objective(obj_name)
@@ -386,8 +423,74 @@ class OptimizationProblem(OptimizationObject):
         #self.constraints = instance.active_components(pyomo.Constraint)
         #self.variables =   instance.active_components(pyomo.Var)
 
-        return 
+        return instance
     def __str__(self): return 'power_system_problem'
+
+    def _solve_instance(self, instance, solver=user_config.solver, get_duals=False, keepFiles=False):
+        if not keepFiles: 
+            logger = logging.getLogger()
+            current_log_level = logger.level
+            logger.setLevel(logging.WARNING) 
+        suffixes = ['dual'] if get_duals else []
+
+        if not hasattr(self,'_opt_solver'):
+            self._opt_solver = cooprsolver.SolverFactory(solver)
+            if self._opt_solver is None: 
+                msg='solver "{}" not found by coopr'.format(solver)
+                raise OptimizationError(msg)
+
+        start = time.time()
+        results= self._opt_solver.solve(instance, suffixes=suffixes, keepFiles=keepFiles)
+        try: self._opt_solver._symbol_map=None #this should mimic the memory leak bugfix at: software.sandia.gov/trac/coopr/changeset/5449
+        except AttributeError: pass      #should remove after this fix becomes part of a release 
+        elapsed = (time.time() - start)
+        if not keepFiles: logger.setLevel(current_log_level)
+        self.solved = detect_status(results, self._opt_solver.name)
+        return results, elapsed
+        
+    def _fix_variables(self, instance):
+        ''' fix binary variables to their solved values to create an LP problem'''
+        active_vars= instance.active_components(pyomo.Var)
+        for var in active_vars.values():
+            if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet): 
+                if var.is_indexed(): 
+                    for key,ind_var in var.iteritems(): ind_var.fixed=True
+                else: var.fixed=True
+        if self.stochastic_formulation:                
+            for scenario_block in instance.active_components(pyomo.Block).values():
+                self._fix_variables(scenario_block)
+        # need to preprocess after fixing
+        instance.preprocess()
+
+
+    def resolve_stochastic_with_observed( self, instance, stage_solution ):
+        fixed_status = stage_solution.stage_generators_status
+        gen_with_scenarios = self.get_generator_with_scenarios()
+        s = stage_solution.scenarios[0]
+        times = stage_solution.times.non_overlap_times
+        
+        resolve_instance = instance.active_components(pyomo.Block)[s]
+        power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen_with_scenarios))]
+        for time in times:
+            power[str(time)] = gen_with_scenarios.observed_values[time.Start]
+        
+        self._fix_variables(resolve_instance)
+        results, elapsed = self._solve_instance( resolve_instance )
+
+        if self.solved: 
+            logging.info('resolved stochastic instance of stage with observed values (in {}s)'.format(elapsed))
+        else:
+            for time in times: 
+                total_gen = [value(gen.power(time,s)) for gen in self.generators()]
+                print time, total_gen, sum(total_gen), value(self.loads()[0].power(time))
+
+            raise OptimizationResolveError('could not find a solution to the stage with observed wind and the stochastic commitment')
+        
+        stage_solution._calc_gen_power(sln=results.solution[0], scenario_prefix=s)        
+        # avoid loading this instance - because it is different from the mainline stochastic solution
+        # resolve_instance.load(results)
+        return         
+
 
 def value(variable):
     '''
@@ -414,7 +517,13 @@ def new_constraint(name,expression):
     '''Create an optimization constraint.'''
     return pyomo.Constraint(name=name,rule=expression)
 
-
+def detect_status(results, solver):
+    '''decide between a solver success or failure'''
+    status_text = str(results.solver[0]['Termination condition'])
+    success = not ((not status_text =='optimal' and solver!='cbc') or status_text=='infeasible')
+    if not success:
+        logging.critical('problem not solved. Solver terminated with status: "{}"'.format(status_text))
+    return success
 
 
 
@@ -425,8 +534,12 @@ class OptimizationError(Exception):
         if ivalue: self.value=ivalue
         else: self.value="Optimization Error: there was a problem"
         Exception.__init__( self, self.value)
-
     def __str__(self): return self.value
+    
+class OptimizationResolveError(OptimizationError):
+    '''Error that occurs when re-solving an optimization problem.'''
+    pass
+
 class NotInModelError(Exception):
     '''Error that occurs when trying to find a component in the optimization model.'''
     def __init__(self, ivalue):
@@ -435,3 +548,4 @@ class NotInModelError(Exception):
         Exception.__init__( self, self.value)
 
     def __str__(self): return self.value
+    

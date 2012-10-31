@@ -9,7 +9,33 @@ import itertools,operator
 import datetime
 from dateutil import parser
 from dateutil.parser import parse as parse_time
+
 from pdb import set_trace as debug
+import pandas
+
+def gen_time_dataframe(generators, times, values=()):
+    kwargs = dict(columns = generators, index = [t.Start for t in times])
+    if values:
+        df = pandas.DataFrame(values, **kwargs)
+    else: 
+        df = pandas.DataFrame(**kwargs)
+    df.index.name = 'time'
+    return df
+try: # for development
+    from pdb import set_trace as debug #pudb
+    from pprint import pprint
+except: pass 
+
+def bool_to_int(x): return 1 if x else 0
+
+class DotDict(dict):
+    '''a dict with dot notation access'''
+    def __getattr__(self, attr):
+        return self.get(attr)
+    def copy(self): return DotDict(dict(self))
+    
+    __setattr__= dict.__setitem__
+    __delattr__= dict.__delitem__
 
 ###### matrix stuff #######
 def getColumn(matrix,colNum): return [row[colNum] for row in matrix]#equiv to matrix(:,j)

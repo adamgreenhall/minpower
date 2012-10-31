@@ -3,7 +3,8 @@ Time and schedule related models.
 """
 
 import dateutil
-from commonscripts import hours,parseTime, readCSV,getclass_inlist, drop_case_spaces,transpose,frange,getattrL,getTimeFormat,writeCSV
+from datetime import timedelta, datetime
+from commonscripts import *
 from operator import attrgetter
 
 class Time(object):
@@ -107,17 +108,30 @@ class Timelist(object):
         self.span = self.End - self.Start
         self.spanhrs = hours(self.span)
         self.setInitial(initialTime)
+        self._subdivided = False
         
     def __repr__(self): return repr(self.times)
     def __contains__(self, item): return item in self.times
     def __len__(self): return len(self.times)
-    def __getitem__(self, i): return self.times[i]
+    def __getitem__(self, i, circular=False): 
+        if i==-1 and not circular:
+            return self.initialTime
+        else:
+            return self.times[i]
     def __getslice__(self, i, j): return self.times[i:j]
     def index(self,val): return self.times.index(val)
     def setInitial(self,initialTime=None): 
         if initialTime: self.initialTime= initialTime
         else: self.initialTime = Time(Start=self.Start-self.interval, interval=self.interval,index='Init')
         self.wInitial = tuple([self.initialTime] + list(self.times))
+    
+    def post_horizon(self, stage_hours=24):
+        if self._subdivided:
+            return self.times[len(self.non_overlap_times):]
+        else:
+            return self.times[int(stage_hours / self.intervalhrs):]
+    
+
     def subdivide(self,division_hrs=24,interval_hrs=None,overlap_hrs=0,offset_hrs=0):
         """
         Subdivide a list of times into serval stages,  each stage
@@ -173,6 +187,7 @@ class Timelist(object):
             if t>0:        stage.setInitial( newtimesL[t-1][-1-intervals['overlap']] )
             elif t==0: stage.setInitial( self.initialTime )
             stage.non_overlap_times = stage[:-1-int(intervals['overlap'])+1] if intervals['overlap']>0 else stage
+            stage._subdivided = True
         else:
             #the last stage has no overlap and may not cover the whole division
             stage.non_overlap_times = stage

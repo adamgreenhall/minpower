@@ -8,7 +8,9 @@ an optimization framework from :class:`~optimization.OptimizationObject`.
 
 from optimization import value,dual,OptimizationObject,OptimizationProblem
 from commonscripts import * # hours,drop_case_spaces,flatten,getattrL,unique,update_attributes,show_clock
-import config, bidding
+import config
+from config import user_config
+import bidding
 from schedule import FixedSchedule
 import logging
 #import threading
@@ -121,15 +123,28 @@ class Generator(OptimizationObject):
         
     def power(self,time=None,scenario=None): 
         '''real power output at time'''
-        return self.get_variable('power',time,scenario=scenario,indexed=True)
+        if time is not None and time.index=='Init':
+            return self.initial_power
+        else:
+            return self.get_variable('power',time,scenario=scenario,indexed=True)
+    
+    def power_available(self, time=None, scenario=None):
+        '''power availble (constrained by Pmax, ramprate, ...) at time'''
+        var_name = 'power_available' if self.commitment_problem else 'power'
+        return self.get_variable(var_name,time,scenario=scenario,indexed=True)
+    
     def status(self,time=None,scenario=None): 
         '''on/off status at time'''
-        if self.commitment_problem: return self.get_variable('status',time,scenario=scenario,indexed=True)
+        if self.commitment_problem: 
+            if time is not None and time.index=='Init':
+                return self.initial_status
+            else:
+                return self.get_variable('status',time,scenario=scenario,indexed=True)
         else: return 1
     def status_change(self,t,times): 
         '''is the unit changing status between t and t-1'''
         if t>0: previous_status=self.status(times[t-1])
-        else:   previous_status=self.initial_status
+        else:   previous_status=self.initial_status        
         return self.status(times[t]) - previous_status
     def power_change(self,t,times):
         '''change in output between power between t and t-1'''
@@ -162,12 +177,14 @@ class Generator(OptimizationObject):
     def cost_second_stage(self,times): return sum(self.operatingcost(time) for time in times)
     def getstatus(self,t,times): return dict(u=value(self.status(t)),P=value(self.power(t)),hoursinstatus=self.gethrsinstatus(t,times))
 #    def plot_cost_curve(self,P=None,filename=None): self.cost_model.plot(P,filename)
-    def gethrsinstatus(self,tm,times):
+    def gethrsinstatus(self,tm,times, status_var=None):
         if not self.is_controllable: return None
-        status=value(self.status(tm))
+        if status_var is None: status_var = self.status
+        
+        status=value(status_var(tm))
         timesClipped=times[:times.index(tm)]
         try: 
-            t_lastchange=(t for t in reversed(timesClipped) if value(self.status(t))!=status ).next()
+            t_lastchange=(t for t in reversed(timesClipped) if value(status_var(t))!=status ).next()
             return hours(tm.End-t_lastchange.Start)
         except StopIteration: #no changes over whole time period
             h=hours(tm.End-times[0].Start)
@@ -177,8 +194,8 @@ class Generator(OptimizationObject):
     def set_initial_condition(self,time=None, P=None, u=True, hoursinstatus=100):
         '''Set the initial condition at time.'''
         if P is None: P=(self.Pmax-self.Pmin)/2 #set default power as median output
-        self.initial_status=u
-        self.initial_power =P*u #note: this eliminates ambiguity of off status with power non-zero output
+        self.initial_status = bool_to_int(u)
+        self.initial_power =  P * self.initial_status #note: this eliminates ambiguity of off status with power non-zero output
         self.initial_status_hours = hoursinstatus
     def build_cost_model(self):
         '''
@@ -195,7 +212,7 @@ class Generator(OptimizationObject):
         
         if self.bid_points is None:
             # polynomial specification
-            self.cost_breakpoints=config.default_num_breakpoints
+            self.cost_breakpoints=user_config.breakpoints
             if getattr(self,'heatratestring',None) is not None: 
                 self.cost_coeffs=[self.fuelcost*mult for mult in bidding.parse_polynomial(self.heatratestring)]
             else:
@@ -233,8 +250,8 @@ class Generator(OptimizationObject):
         self.add_variable('power', index=times.set, low=0, high=self.Pmax)
         if self.commitment_problem:
             self.add_variable('status', index=times.set, kind='Binary',fixed_value=1 if self.mustrun else None)
-            #only use capacity if reserve req. 
-            #self.add_variable('capacity',index=times.set, low=0,high=self.Pmax)
+            #power_available exists for easier reserve requirement
+            self.add_variable('power_available',index=times.set, low=0,high=self.Pmax)
             if self.startupcost>0:  self.add_variable('startupcost',index=times.set, low=0,high=self.startupcost)                                                                                                                            
             if self.shutdowncost>0: self.add_variable('shutdowncost',index=times.set, low=0,high=self.shutdowncost)
 
@@ -250,9 +267,8 @@ class Generator(OptimizationObject):
             m=int(n)
             if n!=m: raise ValueError('min up/down times must be integer number of intervals, not {}'.format(n))
             return m
-
-        commitment_problem= len(times)>1        
-        if commitment_problem:
+   
+        if self.commitment_problem:
             #set initial and final time constraints
             tInitial = times.initialTime
             tEnd = len(times)
@@ -289,10 +305,22 @@ class Generator(OptimizationObject):
         for t,time in enumerate(times):
             #min/max power
             if self.Pmin>0: self.add_constraint('min gen power', time, self.power(time)>=self.status(time)*self.Pmin)
-            self.add_constraint('max gen power', time, self.power(time)<=self.status(time)*self.Pmax)
+            
+            self.add_constraint('max gen power', time, self.power_available(time)<=self.status(time)*self.Pmax)
             
             if len(times)==1: continue #if ED or OPF problem
-        
+            
+            self.add_constraint('max gen power avail', time, self.power(time) <= self.power_available(time) )
+            
+
+            #ramping power
+            if self.rampratemax is not None:
+                self.add_constraint('ramp lim high', time, self.power_available(time) <= self.power(times[t-1]) + self.rampratemax*self.status(times[t-1]) )
+            
+            if self.rampratemin is not None:
+                self.add_constraint('ramp lim low', time,  self.rampratemin <= self.power_change(t,times) )
+
+            
             #min up time 
             if t >= min_up_intervals_remaining_init and self.minuptime>0:
                 no_shut_down=range(t,min(tEnd,t+min_up_intervals))
@@ -306,11 +334,6 @@ class Generator(OptimizationObject):
                 E=sum([1-self.status(times[s]) for s in no_start_up]) >= min_down_intervals_remaining * -1 * self.status_change(t,times)
                 self.add_constraint('min down time', time, E)
                                         
-            #ramping power
-            if self.rampratemax is not None:
-                self.add_constraint('ramp lim high', time, self.power_change(t,times) <= self.rampratemax)
-            if self.rampratemin is not None:
-                self.add_constraint('ramp lim low', time,  self.rampratemin <= self.power_change(t,times) )
 
             #start up and shut down costs
             if self.startupcost>0:
@@ -391,7 +414,8 @@ class Generator_Stochastic(Generator_nonControllable):
     def _get_scenario_values(self,times,s=0):
         if self.has_scenarios_multistage:
             values = self.scenario_values[times[0].Start]
-            scenario = values.ix[s].values.tolist()
+            try: scenario = values.ix[s].values.tolist()
+            except: raise KeyError('{} is not an available scenario number'.format(s))
             scenario.pop(0) # dont include the probability
             return [ scenario[t] for t in range(len(times)) ]
         else:
@@ -431,7 +455,7 @@ class Load(OptimizationObject):
     """
     def __init__(self,kind='varying',name='',index=None,bus=None,schedule=None,
                  shedding_allowed=False,
-                 cost_shedding=config.cost_load_shedding
+                 cost_shedding=user_config.cost_load_shedding
                  ):
         update_attributes(self,locals()) #load in inputs
         self.init_optimization()
@@ -470,7 +494,7 @@ class Load_Fixed(Load):
     """
     def __init__(self,kind='fixed',name='',index=None,bus=None,P=0,
                  shedding_allowed=False,
-                 cost_load_shedding=config.cost_load_shedding
+                 cost_load_shedding=user_config.cost_load_shedding
                  ):
         update_attributes(self,locals(),exclude=['p']) #load in inputs
         self.Pfixed = P
@@ -598,21 +622,19 @@ class PowerSystem(OptimizationProblem):
     :param generators: list of :class:`~powersystem.Generator` objects
     :param loads: list of :class:`~powersystem.Load` objects
     :param lines: list of :class:`~powersystem.Line` objects
-    :param num_breakpoints: number of break points to use in linearization
-      of a generator's bid (or cost) polynomials (equal to number of segments + 1)
-    :param load_shedding_allowed: flag - whether load shedding is allowed
-    :param cost_load_shedding: price of load shedding [$/MWh]
-    :param dispatch_decommit_allowed: flag - if generators can be decommitted during dispatch 
+    
+    Other settings are inherited from `user_config`.
     '''
-    def __init__(self,
-                 generators,loads,lines=None,
-                 num_breakpoints=config.default_num_breakpoints,
-                 load_shedding_allowed=False,
-                 cost_load_shedding=config.cost_load_shedding,
-                 #spinning_reserve_requirement=0,
-                 dispatch_decommit_allowed=False,
-                 ):
+    def __init__(self, generators, loads, lines=None):
         update_attributes(self,locals(),exclude=['generators','loads','lines']) #load in inputs
+        self.num_breakpoints           = user_config.breakpoints
+        self.load_shedding_allowed     = user_config.load_shedding_allowed
+        self.cost_load_shedding        = user_config.cost_load_shedding
+        self.dispatch_decommit_allowed = user_config.dispatch_decommit_allowed
+        self.reserve_fixed             = user_config.reserve_fixed
+        self.reserve_load_fraction     = user_config.reserve_load_fraction
+
+        
         if lines is None: lines=[]    
             
         buses=self.make_buses_list(loads,generators)
@@ -623,13 +645,13 @@ class PowerSystem(OptimizationProblem):
         self.add_children(lines,'lines')
         
         #add system mode parameters to relevant components
-        self.set_load_shedding(load_shedding_allowed) #set load shedding
+        self.set_load_shedding(self.load_shedding_allowed) #set load shedding
         for load in loads:
-                try: load.cost_breakpoints=num_breakpoints
+                try: load.cost_breakpoints = self.num_breakpoints
                 except AttributeError: pass #load has no cost model   
         for gen in generators:
-            gen.dispatch_decommit_allowed=dispatch_decommit_allowed
-            try: gen.cost_breakpoints=num_breakpoints
+            gen.dispatch_decommit_allowed = self.dispatch_decommit_allowed
+            try: gen.cost_breakpoints = self.num_breakpoints
             except AttributeError: pass #gen has no cost model
             
     def set_load_shedding(self,is_allowed):
@@ -701,7 +723,51 @@ class PowerSystem(OptimizationProblem):
     def create_constraints(self,times):
         for bus in self.buses: bus.create_constraints(times,self.Bmatrix,self.buses)
         for line in self.lines: line.create_constraints(times,self.buses)
-        #a system reserve constraint would go here
+
+        # system reserve constraint
+        if (self.reserve_fixed>0 or self.reserve_load_fraction>0):
+            for time in times:
+                required_generation_availability = self.reserve_fixed + (1.0 + self.reserve_load_fraction) * sum(load.power(time) for load in self.loads())
+                generation_availability = sum(gen.power_available(time) for gen in self.generators())
+                self.add_constraint('reserve', generation_availability >= required_generation_availability, time=time )
+        
         self.add_constraint('system_cost_first_stage',self.cost_first_stage()==sum(bus.cost_first_stage(times) for bus in self.buses))
         self.add_constraint('system_cost_second_stage',self.cost_second_stage()==sum(bus.cost_second_stage(times) for bus in self.buses))
-    def iden(self,time): return 'system'
+    def iden(self,time=None): 
+        name='system'
+        if time is not None: name+='_'+str(time)
+        return name
+    
+    def get_generator_with_scenarios(self):
+        gens = filter(lambda gen: getattr(gen,'has_scenarios',False), self.generators())
+        if len(gens)>1: raise NotImplementedError('Dont handle the case of multiple stochastic generators')
+        elif len(gens)==0: return []
+        else: return gens[0]
+    
+    def get_finalconditions(self, stage_solution):
+        times = stage_solution.times
+        tEnd = times.non_overlap_times[-1] 
+        for gen in self.generators():
+            if stage_solution.is_stochastic:
+                finalstatus = dict(
+                    P =  stage_solution.observed_generator_power[gen][tEnd.Start], 
+                    u =  stage_solution.stage_generators_status[gen][tEnd.Start], 
+                    hoursinstatus = gen.gethrsinstatus(
+                        tEnd, 
+                        times, 
+                        status_var = lambda time: stage_solution.stage_generators_status[gen][time.Start]
+                        )
+                    )
+            else: finalstatus = gen.getstatus(t=tEnd,times=times)
+            gen.finalstatus = finalstatus
+        return
+        
+    def set_initialconditions(self, initTime, stage_number, stage_solutions):
+        #first stage of problem already has initial time defined
+        if stage_number == 0: return
+        for gen in self.generators():
+            finalstatus = getattr(gen, 'finalstatus', {})
+            if finalstatus: 
+                gen.set_initial_condition(time=initTime, **finalstatus)
+                del gen.finalstatus
+        return 

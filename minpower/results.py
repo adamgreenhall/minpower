@@ -7,10 +7,11 @@ import yaml
 import logging
 from collections import OrderedDict
 
-from commonscripts import flatten,transpose,elementwiseAdd, getattrL,within,writeCSV,joindir,replace_all,update_attributes
+from commonscripts import * # flatten,transpose,elementwiseAdd, getattrL,within,writeCSV,joindir,replace_all,update_attributes
 from schedule import Timelist
 from optimization import value,dual
 import config,stochastic
+from config import user_config
 
 for_publication=True
 
@@ -65,10 +66,10 @@ def make_solution(power_system,times,**kwargs):
     kind=classify_problem(times,power_system)
     return problem_type[kind](power_system,times,**kwargs)
 
-def make_multistage_solution(power_system,*args,**kwargs):
+def make_multistage_solution(power_system, stage_times, stage_solutions):
     '''Create a multi stage solution object.'''
     if power_system.lines: logging.warning('no visualization for multistage SCUC yet')
-    return Solution_UC_multistage(power_system,*args,**kwargs)
+    return Solution_UC_multistage(power_system, stage_times, stage_solutions)
 
 class Solution(object):
     '''
@@ -76,7 +77,7 @@ class Solution(object):
     Each problem type has its own class for visualization and
     spreadsheet output, e.g. :class:`~solution.Solution_ED`.
     '''
-    def __init__(self,power_system,times,datadir='.'):
+    def __init__(self,power_system,times,datadir='.', is_stochastic=False):
         update_attributes(self,locals())
         self._get_problem_info()
         self._get_costs()
@@ -146,6 +147,7 @@ class Solution(object):
         out.extend(['name={}'.format(self.get_values('generators','name')),
                     'u={}'.format(self.get_values('generators','status',t)),
                     'P={}'.format(self.get_values('generators','power',t)),
+                    # 'Pavail={}'.format(self.get_values('generators','power_available',t)),
                     'IC={}'.format(self.get_values('generators','incrementalcost',t))])
         return out
     def info_loads(self,t):
@@ -175,7 +177,7 @@ class Solution(object):
         'percentage difference\t\t={diff:.2%}'.format(diff=self.costerror),
         ]
     # def save(self,filename=None):
-    #     if filename is None: filename=joindir(self.datadir,'solution.yaml')
+    #     if filename is None: filename=joindir(user_config.directory,'solution.yaml')
     #     def get_time_listing(component,attr):
     #         try: return dict(zip(self.times.non_overlap_times,[self.get_values(component,attr,t) for t in self.times.non_overlap_times]))
     #         except AttributeError:
@@ -192,7 +194,7 @@ class Solution_ED(Solution):
     def visualization(self,filename=None,show_cost_also=False):
         ''' economic dispatch visualization of linearized incremental cost'''
         if not do_plotting: return
-        if filename is None: filename=joindir(self.datadir,'dispatch.png')
+        if filename is None: filename=joindir(user_config.directory,'dispatch.png')
         t=self.times[0]
         price=self.lmps[str(t)][0]
         generators,loads=self.generators(),self.loads()
@@ -234,7 +236,7 @@ class Solution_ED(Solution):
             plot.legend(plotted_loads, names_loads, fancybox=True,title='Loads:',loc='best')
             plot.gca().add_artist(legendGens) #add first legend to the axes manually bcs multiple legends get overwritten
 
-        self.savevisualization(filename=joindir(self.datadir,'dispatch.png'))
+        self.savevisualization(filename=joindir(user_config.directory,'dispatch.png'))
 
         if show_cost_also:
             #show a plot of the cost space, illustrating the linearization
@@ -260,7 +262,7 @@ class Solution_ED(Solution):
             self.savevisualization(filename='dispatch-cost.png')
     def saveCSV(self,filename=None):
         '''economic dispatch generator solution values in spreadsheet form'''
-        if filename is None: filename=joindir(self.datadir,'dispatch.csv')
+        if filename is None: filename=joindir(user_config.directory,'dispatch.csv')
         def niceTF(value): return 0 if value==0 else 1
         def nice_zeros(value): return 0 if value==0 else value
 
@@ -286,7 +288,7 @@ class Solution_OPF(Solution):
     def visualization(self,filename=None):
         '''power flow visualization'''
         if not do_plotting: return
-        if filename is None: filename=joindir(self.datadir,'powerflow.png')
+        if filename is None: filename=joindir(user_config.directory,'powerflow.png')
         try: import networkx as nx
         except ImportError:
             logging.warning("Could'nt import networkx -- skipping plotting.")
@@ -324,7 +326,7 @@ class Solution_OPF(Solution):
         fields.append('u');  data.append(self.get_values('generators','status',t))
         fields.append('P');  data.append(self.get_values('generators','power',t))
         fields.append('IC');  data.append(self.get_values('generators','incrementalcost',t))
-        if filename is None: filename=joindir(self.datadir,'powerflow-generators.csv')
+        if filename is None: filename=joindir(user_config.directory,'powerflow-generators.csv')
         writeCSV(fields,transpose(data),filename=filename)
 
 
@@ -333,7 +335,7 @@ class Solution_OPF(Solution):
         fields.append('to');  data.append(self.get_values('lines','To'))
         fields.append('power'); data.append(self.get_values('lines','power',t))
         fields.append('congestion shadow price'); data.append(self.line_prices[str(t)])
-        if filename_lines is None: filename_lines=joindir(self.datadir,'powerflow-lines.csv')
+        if filename_lines is None: filename_lines=joindir(user_config.directory,'powerflow-lines.csv')
         writeCSV(fields,transpose(data),filename=filename_lines)
 
     def info_price(self,t): return [] #built into bus info
@@ -342,53 +344,62 @@ class Solution_UC(Solution):
     def info_buses(self,t): return []
     def saveCSV(self,filename=None,save_final_status=False):
         '''generator power values and statuses for unit commitment'''
-        if filename is None: filename=joindir(self.datadir,'commitment.csv')
-        times=self.times
-        fields,data=[],[]
-        fields.append('times');  data.append([t.Start for t in times])
-        fields.append('prices'); data.append([self.lmps[str(t)][0] for t in times])
-
-        for g,gen in enumerate(self.generators()):
-            if gen.is_controllable:
-                fields.append('status: '+str(gen.name))
-                data.append([self.generators_status[t][g] for t,time in enumerate(times)])
-            fields.append('power: '+str(gen.name))
-            data.append([self.generators_power[t][g] for t,time in enumerate(times)])
-        for load in self.loads():
-            fields.append('load power: '+str(load.name))
-            data.append([value(load.power(t)) for t in times])
-            shed=[value(load.shed(t)) for t in times]
-            if sum(shed)>0:
-                fields.append('load shed: '+str(load.name))
-                data.append(shed)
-        writeCSV(fields,transpose(data),filename=filename)
-
-        if save_final_status:
-            filename=joindir(self.datadir,'statuses-final.csv')
+        if filename is None: filename=joindir(user_config.directory,'commitment.csv')
+        
+        if self.is_stochastic:
+            # mutlistage stochastic UC
+            # output is the generator powers under observed wind
+            self.generators_power.to_csv(joindir(user_config.directory,'commitment-power.csv'))
+            self.generators_status.to_csv(joindir(user_config.directory,'commitment-status.csv'))
+            
+        else:
+            
+            times=self.times
             fields,data=[],[]
-            fields.append('generators')
-            data.append([gen.name for gen in self.generators()])
+            fields.append('times');  data.append([t.Start for t in times])
+            fields.append('prices'); data.append([self.lmps[str(t)][0] for t in times])
 
-            t_final=self.times[-1]
-            fields.append('status')
-            data.append([gen.status(t_final) for gen in self.generators()])
-            fields.append('hours')
-            data.append([gen.gethrsinstatus(t_final,self.times) for gen in self.generators()])
-
+            for g,gen in enumerate(self.generators()):
+                if gen.is_controllable:
+                    fields.append('status: '+str(gen.name))
+                    data.append([self.generators_status[t][g] for t,time in enumerate(times)])
+                fields.append('power: '+str(gen.name))
+                data.append([self.generators_power[t][g] for t,time in enumerate(times)])
+            for load in self.loads():
+                fields.append('load power: '+str(load.name))
+                data.append([value(load.power(t)) for t in times])
+                shed=[value(load.shed(t)) for t in times]
+                if sum(shed)>0:
+                    fields.append('load shed: '+str(load.name))
+                    data.append(shed)
             writeCSV(fields,transpose(data),filename=filename)
+
+            if save_final_status:
+                filename=joindir(user_config.directory,'statuses-final.csv')
+                fields,data=[],[]
+                fields.append('generators')
+                data.append([gen.name for gen in self.generators()])
+
+                t_final=self.times[-1]
+                fields.append('status')
+                data.append([gen.status(t_final) for gen in self.generators()])
+                fields.append('hours')
+                data.append([gen.gethrsinstatus(t_final,self.times) for gen in self.generators()])
+
+                writeCSV(fields,transpose(data),filename=filename)
 
     def visualization(self,filename=None,withPrices=True,filename_DR=None):
         '''generator output visualization for unit commitment'''
         if not do_plotting: return
-        if filename is None: filename=joindir(self.datadir,'commitment.png')
+        if filename is None: filename=joindir(user_config.directory,'commitment.png')
         prices=[self.lmps[str(t)][0] for t in self.times]
-        stack_plot_UC(self,self.generators(),self.times,prices,self.datadir, withPrices=withPrices)
+        stack_plot_UC(self,self.generators(),self.times,prices,user_config.directory, withPrices=withPrices)
         self.savevisualization(filename)
         # DR_loads=filter(lambda d: getattr(d, 'kind','') in ['shifting','bidding','shifting-bidding'], self.loads())
         # if DR_loads:
         #     interval= int(DR_loads[0].interval_hours) if (len(self.times)<=24 and len(DR_loads)==1 and 'shifting' in getattr(DR_loads[0], 'kind','')) else None
         #     stack_plot_UC(DR_loads,self.times,prices,withPrices=withPrices,hours_tick_interval=interval)
-        #     if filename_DR is None: filename_DR=joindir(self.datadir,'commitment-DR.png')
+        #     if filename_DR is None: filename_DR=joindir(user_config.directory,'commitment-DR.png')
         #     self.savevisualization(filename_DR)
 
 
@@ -402,8 +413,10 @@ class Solution_UC_multistage(Solution_UC):
     Each element of the list :param:stage_solutions is a :class:`~results.Solution_UC` object.
 
     '''
-    def __init__(self,power_system,stage_times,datadir,stage_solutions):
+    def __init__(self,power_system, stage_times, stage_solutions):
         update_attributes(self,locals(),exclude=['stage_solutions','stage_times'])
+        
+        self.is_stochastic = any(sln.is_stochastic for sln in stage_solutions)
         self.times=Timelist(flatten([list(times.non_overlap_times) for times in stage_times]))
         self.times.setInitial(stage_times[0].initialTime)
 
@@ -415,22 +428,48 @@ class Solution_UC_multistage(Solution_UC):
         self._get_costs(stage_solutions)
         self._get_prices(stage_solutions)
     def _sum_over(self,attrib,stage_solutions): return sum(getattr(sln, attrib) for sln in stage_solutions)
+    
     def _get_outputs(self,stage_solutions):
-        self.generators_power=flatten([stage.generators_power for stage in stage_solutions])
-        self.generators_status=flatten([stage.generators_status for stage in stage_solutions])
+        '''the outputs under observed wind'''
+        if self.is_stochastic:
+            self.generators_power = pandas.concat([stage.observed_generator_power for stage in stage_solutions])
+            self.generators_status = pandas.concat([stage.stage_generators_status for stage in stage_solutions])
+        else: 
+            self.generators_power  = flatten([sln.generators_power for sln in stage_solutions])
+            self.generators_status = flatten([sln.generators_status for sln in stage_solutions])
+    
     def _get_costs(self,stage_solutions):
         self.fuelcost_generation=self._sum_over('fuelcost_generation',stage_solutions)
-        self.fuelcost_true_generation=self._sum_over('fuelcost_true_generation',stage_solutions)
         self.totalcost_generation=self._sum_over('totalcost_generation',stage_solutions)
-        self.load_shed=          self._sum_over('load_shed',stage_solutions)
-        self._get_cost_error()
+        self.load_shed = self._sum_over('load_shed',stage_solutions)
+        
+        if not self.is_stochastic: 
+            self.fuelcost_true_generation=self._sum_over('fuelcost_true_generation',stage_solutions)
+            self._get_cost_error()
+
+        
+            
     def info_cost(self):
-        return ['objective cost={}'.format(self.objective),
-        'total generation costs={}'.format(self.totalcost_generation),
-        'linearized fuel cost of generation={}'.format(self.fuelcost_generation),
-        ' non-linearized cost of generation={}'.format(self.fuelcost_true_generation),
-        'percentage difference\t\t={diff:.2%}'.format(diff=self.costerror),
+        expected = 'expected' if self.is_stochastic else ''
+        observed = 'observed' if self.is_stochastic else ''
+        
+        out = [
+        '{} objective cost={}'.format(expected, self.objective),
+        'total {} generation costs={}'.format(observed, self.totalcost_generation),
+        'linearized {} fuel cost of generation={}'.format(observed, self.fuelcost_generation),
         ]
+        if self.is_stochastic:
+            pass
+#            out.extend([
+#                'value of stochastic solution={}'.format(),
+#                'value of perfect information={}'.format(),
+#            ])
+        else: 
+            out.extend([
+                ' non-linearized cost of generation={}'.format(self.fuelcost_true_generation),
+                'percentage difference\t\t={diff:.2%}'.format(diff=self.costerror),
+            ])
+        return out
 
     def _get_prices(self,stage_solutions):
         self.lmps={}
@@ -447,26 +486,19 @@ class Solution_UC_multistage(Solution_UC):
         return ['solved multistage problem in a total solver time of {time:0.4f} sec'.format(time=self.solve_time)]
     def info_shedding(self):
         return ['total load shed={}MW'.format(self.load_shed) if self.load_shed>0 else '']
+    
 
-
-class Solution_Stochsatic(Solution):
-    def __init__(self,power_system,times,datadir='.'):
+class Solution_Stochastic(Solution):
+    def __init__(self,power_system,times,datadir='.', is_stochastic=True):
         update_attributes(self,locals())
         self.scenarios=sorted(self.power_system._scenario_instances.keys())
-
+        
         self._get_problem_info()
+        self._get_outputs()
         self._get_costs()
         self._get_prices()
-        self._get_outputs()
 
-    def _get_costs(self):
-        instances=self.power_system._scenario_instances
-        tree=self.power_system._scenario_tree
-        root_node = tree._stages[0]._tree_nodes[0]
-        self.expected_cost = root_node.computeExpectedNodeCost(instances)
-        self.cost_per_scenario=stochastic.get_scenario_based_costs(tree,instances)
-    def _get_cost_error(self): pass
-    def _get_prices(self): pass
+    
     def _get_outputs(self):
         generators= self.power_system.generators()
         self.generators_power=dict([(s,{}) for s in self.scenarios])
@@ -475,6 +507,57 @@ class Solution_Stochsatic(Solution):
             for time in self.times:
                 self.generators_power[s][time] =[value(gen.power(time,s)) for gen in generators]
                 self.generators_status[s][time] =[value(gen.status(time,s))==1 for gen in generators]
+
+        times_to_store = self.times.non_overlap_times if self.times._subdivided else self.times
+        self.stage_generators_status = gen_time_dataframe(
+            self.generators(), 
+            times_to_store, 
+            values=[self.generators_status[self.scenarios[0]][time] for time in times_to_store]
+            )
+        self.stage_generators_status = self.stage_generators_status.astype(int)
+        return
+
+    def _get_costs(self):
+        instances=self.power_system._scenario_instances
+        tree=self.power_system._scenario_tree
+        root_node = tree._stages[0]._tree_nodes[0]
+        self.expected_cost = root_node.computeExpectedNodeCost(instances)
+        self.cost_per_scenario=stochastic.get_scenario_based_costs(tree,instances)
+    
+    def _get_observed_costs(self):    
+        generators=self.generators()
+        times=getattr(self.times,'non_overlap_times',self.times)
+        
+        P = self.observed_generator_power
+        u = self.stage_generators_status
+        status_change = u.diff()
+        
+        cost = 0
+        fixed_cost = 0
+        
+        for gen in generators:
+            for t,time in enumerate(times):
+                cost += value(u[gen][time.Start])*gen.bids.output_true(P[gen][time.Start])
+                du = status_change[gen][time.Start]
+                if du==1:    fixed_cost += gen.startupcost
+                elif du==-1: fixed_cost += gen.shutdowncost
+        
+        self.fuelcost_generation = cost
+        self.totalcost_generation = cost + fixed_cost
+
+        self.load_shed = 0 
+        self.load_shed += sum(sum(load.schedule.get_energy(time) for time in times) for load in self.loads()) - P.sum().sum()
+
+    def _get_cost_error(self): pass
+
+#    def _get_prices(self):
+#        self.lmps={}
+#        self.line_prices={}
+#        for t in self.times:
+#            self.lmps[str(t)]=[bus.price(t) for bus in self.buses()]
+#            self.line_prices[str(t)]=[line.price(t) for line in self.lines()]
+        
+
 
     def info_cost(self):
         return ["expected cost= {}".format(self.expected_cost),
@@ -498,14 +581,35 @@ class Solution_Stochsatic(Solution):
         print '\n'.join(out)
         #P=self.generators()[2].power(self.times[0])
         #print P.name,values
+    def _calc_gen_power(self, sln, scenario_prefix='s0t0'):
+        '''calculate generator power from a resolved solution using the observed stochastic gen's power'''
+        import pandas
+        gen_with_scenarios = self.power_system.get_generator_with_scenarios()
+        times = self.times.non_overlap_times
+        
+        power = gen_time_dataframe(self.generators(), times)  
+        #dict([(time,{}) for time in times])
+        for time in times:
+            for gen in self.generators():
+                try: 
+                    # yuck - parse the power out of the native pyomo solution object 
+                    # trying to avoid loading the instance - because it is different from the mainline stochastic solution
+                    val = sln.variable['{s}_power_{g}({t})'.format(s=scenario_prefix, g=str(gen),t=str(time))]['Value']
+                except KeyError:
+                    if gen == gen_with_scenarios:
+                        val = gen_with_scenarios.observed_values[time.Start]
+                    else: raise
+                power[gen][time.Start] = val
 
-class Solution_Stochastic_UC(Solution_Stochsatic):
-    def gen_final_status(self):
-        tEnd = self.times.non_overlap_times[-1]
-        return self.generator_status[self.scenarios[0]][tEnd]
+        self.observed_generator_power = power
+        self._get_observed_costs()
+        return
+    
+
+class Solution_Stochastic_UC(Solution_Stochastic):
     def saveCSV(self,filename=None):
-        '''generator power values and statuses for unit commitment'''
-        if filename is None: filename=joindir(self.datadir,'commitment.csv')
+        '''generator power values and statuses for stochastic unit commitment'''
+        if filename is None: filename=joindir(user_config.directory,'commitment.csv')
         data=[]
         fields=['generators','times','scenarios','power','status']
         for g,gen in enumerate(self.generators()):
@@ -519,6 +623,10 @@ class Solution_Stochastic_UC(Solution_Stochsatic):
                          ]
                     data.append(row)
         writeCSV(fields,data,filename=filename)
+
+#    def gen_final_status(self):
+#        tEnd = self.times.non_overlap_times[-1]
+#        return self.generator_status[self.scenarios[0]][tEnd]
 
 
 def _colormap(numcolors,colormapName='gist_rainbow',mincolor=1):

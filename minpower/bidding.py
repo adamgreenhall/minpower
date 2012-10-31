@@ -1,6 +1,6 @@
-from commonscripts import update_attributes,frange,pairwise
+from commonscripts import * # update_attributes,frange,pairwise
 from optimization import value,OptimizationObject
-from config import default_num_breakpoints
+from config import user_config
 import re,weakref
 from coopr.pyomo import Piecewise
 
@@ -26,7 +26,7 @@ class Bid(OptimizationObject):
             input_variable=0,
             min_input=0,
             max_input=1000,
-            num_breakpoints=default_num_breakpoints,
+            num_breakpoints=user_config.breakpoints,
             status_variable=True,
             fixed_input=False):
         update_attributes(self,locals(),exclude=['owner'])
@@ -75,7 +75,6 @@ class Bid(OptimizationObject):
 
         pw_representation.name=self.iden()
         self._parent_problem().add_component_to_problem(pw_representation)
-        
             
                 
             
@@ -129,7 +128,7 @@ def is_linear(multipliers):
     else: return False
 
 def discretize_range(num_breakpoints,minimum,maximum):
-    step = (maximum-minimum)/float(num_breakpoints)
+    step = (maximum-minimum)/float(num_breakpoints-1)
     return [x * step + minimum for x in range(int(num_breakpoints))]
 
 def polynomial_value(multipliers,variable):

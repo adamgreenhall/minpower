@@ -1,5 +1,8 @@
 from minpower import optimization,powersystems,schedule,solve,config
 from minpower.powersystems import Generator
+from pdb import set_trace as debug
+
+user_config_defaults = config.user_config.copy()
 
 singletime=schedule.just_one_time()
 
@@ -18,7 +21,8 @@ def make_cheap_gen(**kwargs):
 def make_mid_gen(**kwargs):
     return Generator(name='middle-range gen', costcurvestring='{}P'.format(gen_costs['mid']), **kwargs)    
 def make_expensive_gen(**kwargs):
-    return Generator(name='expensive gen', costcurvestring='{}P'.format(gen_costs['expensive']), **kwargs)    
+    if 'costcurvestring' not in kwargs: kwargs['costcurvestring']='{}P'.format(gen_costs['expensive'])
+    return Generator(name='expensive gen', **kwargs)    
 def make_loads_times(Pd=200,Pdt=None,**kwargs):
     if Pdt is None:
         loads=[powersystems.Load_Fixed(P=Pd,**kwargs)]
@@ -31,10 +35,10 @@ def make_loads_times(Pd=200,Pdt=None,**kwargs):
     
     return dict(loads=loads,times=times)
 
-def solve_problem(generators,loads=None,times=None, gen_init=None, lines=None, 
-                  solver=config.optimization_solver,load_shedding_allowed=False,problem_filename=False,
-                  get_duals=False
-                  ):
+def solve_problem(generators,loads=None,times=None, gen_init=None, lines=None):
+    
+    
+    
     if lines is None: lines=[]
 
     if len(times)>0: 
@@ -45,9 +49,12 @@ def solve_problem(generators,loads=None,times=None, gen_init=None, lines=None,
             
     
     
-    power_system=powersystems.PowerSystem(generators,loads,lines,load_shedding_allowed=load_shedding_allowed)
+    power_system=powersystems.PowerSystem(generators,loads,lines)
     solve.create_problem(power_system,times)
-    power_system.solve(solver=solver,problem_filename=problem_filename,get_duals=get_duals)
+    power_system.solve()
+    
+    config.user_config = user_config_defaults
+    
     if power_system.solved:
         power_system.update_variables()
     else:

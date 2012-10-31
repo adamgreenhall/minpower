@@ -28,7 +28,7 @@ setup(
         'coopr.core>=1.0',
         'pyutilib>=4.0',
         'numpy>=1.6.1',
-        'pandas>=0.9',
+        'pandas>=0.9',  #pip install --upgrade git+git://github.com/pydata/pandas.git#egg=pandas
         # 'matplotlib>=1.0.1',
         # 'networkx>=1.5',
         'python-dateutil>=1.4.1',

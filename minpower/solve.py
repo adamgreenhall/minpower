@@ -241,6 +241,11 @@ def main():
                     help='solve a stochastic problem deterministically using the forecast_filename paramter')
     # parser.add_argument('--solution_file',type=str,default=False,
     #                    help='save solution file to disk')
+    
+    parser.add_argument('--output_prefix', action="store_true", 
+                    default=user_config.output_prefix,
+                    help = 'Prefix all results files with the process id (for a record of simulataneous solves)')
+    
     parser.add_argument('--profile',action="store_true",
                     default=False,
                     help='run cProfile and output to minpower.profile')

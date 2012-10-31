@@ -7,7 +7,7 @@ import yaml
 import logging
 from collections import OrderedDict
 
-from commonscripts import * # flatten,transpose,elementwiseAdd, getattrL,within,writeCSV,joindir,replace_all,update_attributes
+from commonscripts import *
 from schedule import Timelist
 from optimization import value,dual
 import config,stochastic
@@ -34,6 +34,11 @@ except ImportError:
 
 import pandas
 
+
+def full_filename(filename):
+    if user_config.output_prefix:
+        filename = '{}-{}'.format(os.getpid(), filename)
+    return joindir(user_config.directory, filename)
 
 def classify_problem(times,power_system):
     '''
@@ -222,13 +227,13 @@ class Solution(object):
         self.load_shed = 0 
         self.load_shed += sum(sum(load.schedule.get_energy(time) for time in times) for load in self.loads()) - P.sum().sum()
 
+
 class Solution_ED(Solution):
     def info_lines(self,t): return []
     def info_buses(self,t): return []
-    def visualization(self,filename=None,show_cost_also=False):
+    def visualization(self, show_cost_also=False):
         ''' economic dispatch visualization of linearized incremental cost'''
         if not do_plotting: return
-        if filename is None: filename=joindir(user_config.directory,'dispatch.png')
         t=self.times[0]
         price=self.lmps[str(t)][0]
         generators,loads=self.generators(),self.loads()
@@ -270,7 +275,7 @@ class Solution_ED(Solution):
             plot.legend(plotted_loads, names_loads, fancybox=True,title='Loads:',loc='best')
             plot.gca().add_artist(legendGens) #add first legend to the axes manually bcs multiple legends get overwritten
 
-        self.savevisualization(filename=joindir(user_config.directory,'dispatch.png'))
+        self.savevisualization(filename=full_filename('dispatch.png'))
 
         if show_cost_also:
             #show a plot of the cost space, illustrating the linearization
@@ -293,10 +298,10 @@ class Solution_ED(Solution):
                 plot.legend(plotted_loads, names_loads, fancybox=True,title='Loads:',loc='best')
                 plot.gca().add_artist(legendGens) #add first legend to the axes manually bcs multiple legends get overwritten
 
-            self.savevisualization(filename='dispatch-cost.png')
-    def saveCSV(self,filename=None):
+            self.savevisualization(filename=full_filename('dispatch-cost.png'))
+            
+    def saveCSV(self):
         '''economic dispatch generator solution values in spreadsheet form'''
-        if filename is None: filename=joindir(user_config.directory,'dispatch.csv')
         def niceTF(value): return 0 if value==0 else 1
         def nice_zeros(value): return 0 if value==0 else value
 
@@ -317,12 +322,14 @@ class Solution_ED(Solution):
         fields.append('IC')
         data.append([nice_zeros(g.incrementalcost(t)) for g in components])
 
-        writeCSV(fields,transpose(data),filename=filename)
+        writeCSV(fields,transpose(data),filename=full_filename('dispatch.csv'))
+        
+        
 class Solution_OPF(Solution):
     def visualization(self,filename=None):
         '''power flow visualization'''
         if not do_plotting: return
-        if filename is None: filename=joindir(user_config.directory,'powerflow.png')
+        
         try: import networkx as nx
         except ImportError:
             logging.warning("Could'nt import networkx -- skipping plotting.")
@@ -349,9 +356,9 @@ class Solution_OPF(Solution):
         atLimLines=[(f,t) for f,t,edata in G.edges(data=True) if within(edata['P'],val=edata['Plim'],eps=1e-3) ]
         nx.draw_networkx_edges(G,edge_color='0.6',pos=pos,width=Plines,alpha=0.5)
         nx.draw_networkx_edges(G,edgelist=atLimLines,edge_color='r',pos=pos,width=Plines,alpha=0.5)
-        self.savevisualization(filename)
+        self.savevisualization(full_filename('powerflow.png'))
 
-    def saveCSV(self,filename=None,filename_lines=None):
+    def saveCSV(self):
         '''OPF generator and line power values in spreadsheet form'''
         t=self.times[0]
 
@@ -360,8 +367,8 @@ class Solution_OPF(Solution):
         fields.append('u');  data.append(self.get_values('generators','status',t))
         fields.append('P');  data.append(self.get_values('generators','power',t))
         fields.append('IC');  data.append(self.get_values('generators','incrementalcost',t))
-        if filename is None: filename=joindir(user_config.directory,'powerflow-generators.csv')
-        writeCSV(fields,transpose(data),filename=filename)
+        
+        writeCSV(fields,transpose(data),filename=full_filename('powerflow-generators.csv'))
 
 
         fields,data=[],[]
@@ -369,22 +376,23 @@ class Solution_OPF(Solution):
         fields.append('to');  data.append(self.get_values('lines','To'))
         fields.append('power'); data.append(self.get_values('lines','power',t))
         fields.append('congestion shadow price'); data.append(self.line_prices[str(t)])
-        if filename_lines is None: filename_lines=joindir(user_config.directory,'powerflow-lines.csv')
-        writeCSV(fields,transpose(data),filename=filename_lines)
+        
+        writeCSV(fields,transpose(data),filename=full_filename('powerflow-lines.csv'))
 
     def info_price(self,t): return [] #built into bus info
+    
+    
 class Solution_UC(Solution):
     def info_lines(self,t): return []
     def info_buses(self,t): return []
-    def saveCSV(self,filename=None,save_final_status=False):
+    def saveCSV(self, save_final_status=False):
         '''generator power values and statuses for unit commitment'''
-        if filename is None: filename=joindir(user_config.directory,'commitment.csv')
         
         if self.is_stochastic or user_config.deterministic_solve:
             # mutlistage stochastic UC
             # output is the generator powers under observed wind
-            self.generators_power.to_csv(joindir(user_config.directory,'commitment-power.csv'))
-            self.generators_status.to_csv(joindir(user_config.directory,'commitment-status.csv'))
+            self.generators_power.to_csv(full_filename('commitment-power.csv'))
+            self.generators_status.to_csv(full_filename('commitment-status.csv'))
 
         else:
             
@@ -406,10 +414,9 @@ class Solution_UC(Solution):
                 if sum(shed)>0:
                     fields.append('load shed: '+str(load.name))
                     data.append(shed)
-            writeCSV(fields,transpose(data),filename=filename)
+            writeCSV(fields,transpose(data),filename=full_filename('commitment.csv'))
 
             if save_final_status:
-                filename=joindir(user_config.directory,'statuses-final.csv')
                 fields,data=[],[]
                 fields.append('generators')
                 data.append([gen.name for gen in self.generators()])
@@ -420,15 +427,15 @@ class Solution_UC(Solution):
                 fields.append('hours')
                 data.append([gen.gethrsinstatus(t_final,self.times) for gen in self.generators()])
 
-                writeCSV(fields,transpose(data),filename=filename)
+                writeCSV(fields,transpose(data),filename=full_filename('statuses-final.csv'))
 
-    def visualization(self,filename=None,withPrices=True,filename_DR=None):
+    def visualization(self, withPrices=True):
         '''generator output visualization for unit commitment'''
         if not do_plotting: return
-        if filename is None: filename=joindir(user_config.directory,'commitment.png')
+        
         prices=[self.lmps[str(t)][0] for t in self.times]
-        stack_plot_UC(self,self.generators(),self.times,prices,user_config.directory, withPrices=withPrices)
-        self.savevisualization(filename)
+        stack_plot_UC(self, self.generators(), self.times, prices, withPrices=withPrices)
+        self.savevisualization(full_filename('commitment.png'))
 
     def _calc_gen_power(self, sln, scenario_prefix=None):
         '''calculate generator power from a resolved solution using the observed wind power'''
@@ -633,9 +640,8 @@ class Solution_Stochastic(Solution):
         return power    
 
 class Solution_Stochastic_UC(Solution_Stochastic):
-    def saveCSV(self,filename=None):
+    def saveCSV(self):
         '''generator power values and statuses for stochastic unit commitment'''
-        if filename is None: filename=joindir(user_config.directory,'commitment.csv')
         data=[]
         fields=['generators','times','scenarios','power','status']
         for g,gen in enumerate(self.generators()):
@@ -648,11 +654,7 @@ class Solution_Stochastic_UC(Solution_Stochastic):
                          self.generators_status[scenario][time][g]
                          ]
                     data.append(row)
-        writeCSV(fields,data,filename=filename)
-
-#    def gen_final_status(self):
-#        tEnd = self.times.non_overlap_times[-1]
-#        return self.generator_status[self.scenarios[0]][tEnd]
+        writeCSV(fields,data,filename=full_filename('commitment.csv'))
 
 
 def _colormap(numcolors,colormapName='gist_rainbow',mincolor=1):
@@ -660,7 +662,6 @@ def _colormap(numcolors,colormapName='gist_rainbow',mincolor=1):
     return [cm(1.*i/numcolors) for i in range(mincolor,numcolors+mincolor)]
 
 def stack_plot_UC(solution,generators,times,prices,
-                  datadir=None,
                   withPrices=True,
                   seperate_legend=False,
                   hours_tick_interval=None
@@ -774,7 +775,7 @@ def stack_plot_UC(solution,generators,times,prices,
     if seperate_legend:
         figlegend = plot.figure()
         figlegend.legend(plottedL, legend_labels[::-1],prop=legend_font,loc='center')
-        figlegend.savefig(joindir(datadir,'commitment-legend.png'))
+        figlegend.savefig(full_filename('commitment-legend.png'))
         plot.close(figlegend)
     else:
         ax.legend(plottedL, legend_labels[::-1],prop=legend_font)#,loc='center left', bbox_to_anchor=(1, 0.5))

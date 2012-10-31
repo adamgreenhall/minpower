@@ -107,8 +107,7 @@ def reserve_fixed():
     assert load_t1 == total_power
     assert total_available_power >= [reserve_req + Pd for Pd in Pdt]
     
-    
+    user_config.reserve_fixed = 0
     
 if __name__ == "__main__": 
-    # uc.run()
-    reserve_fixed()
+    uc.run()

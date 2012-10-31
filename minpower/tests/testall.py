@@ -17,8 +17,9 @@ if __name__ == "__main__":
     all_tests=Tests([
     'solvers.solvers',
     'generators.generation',
-    'unit_commitment.uc',
     'opf.opf',
-    'bidding.bidding'
+    'unit_commitment.uc',
+    'bidding.bidding',
+    #memory_test
     ])
     all_tests.run()

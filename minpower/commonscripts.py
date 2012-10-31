@@ -162,7 +162,7 @@ def convert_str2num(s):
 def indexCaseSpaceInsensitive(L,s): return map(drop_case_spaces,L).index( drop_case_spaces(s) )
 def drop_case_spaces(s): 
     '''get rid of spaces in a string and make lower case. will also work with list of strings'''
-    try: return s.lower().replace(' ','')
+    try: return s.lower().replace(' ','').replace('_','')
     except AttributeError: 
         if s is None: return None
         elif isinstance(s, list): return map(drop_case_spaces,s)

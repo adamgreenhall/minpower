@@ -20,12 +20,14 @@ fields_gens={
     'pmin':'Pmin','pmax':'Pmax','powermin':'Pmin','powermax':'Pmax',
     'p':'power','pg':'power','power':'power', #for a non-controllable gen in an ED
     'rampratemin':'rampratemin','rampratemax':'rampratemax',
+    'rampmin':'rampratemin','rampmax':'rampratemax',
     'minuptime':'minuptime','uptimemin':'minuptime',
     'mindowntime':'mindowntime','downtimemin':'mindowntime',
     'costcurvepointsfilename':'costcurvepointsfilename',
     'noloadcost':'noloadcost', #for a bid points defined gen, this replaces the constant polynomial in the cost coefficient
     'costcurveequation':'costcurvestring','cost':'costcurvestring',
-    'heatrateequation':'heatratestring','fuelcost':'fuelcost',
+    'heatrateequation':'heatratestring',
+    'fuelcost':'fuelcost',
     'startupcost':'startupcost','shutdowncost':'shutdowncost',
     'schedulefilename':'schedulefilename','mustrun':'mustrun',
     'scenariosfilename':'scenariosfilename',

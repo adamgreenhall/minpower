@@ -31,7 +31,10 @@ fields_gens={
     'schedulefilename':'schedulefilename','mustrun':'mustrun',
     'scenariosfilename':'scenariosfilename',
     'scenariosdirectory':'scenariosdirectory',
-    'observedfilename':'observedfilename'}
+    # observed filename is the observed wind and will evaluate the cost of a stochastic solution
+    'observedfilename':'observedfilename',
+    # forecast filename is a deterministic (point) wind forecast and will be evaluated against observed wind
+    'forecastfilename':'forecastfilename'}
     
 fields_loads={'name':'name','bus':'bus','type':'kind','kind':'kind',
             'p':'P','pd':'P', 'power':'P',
@@ -273,6 +276,9 @@ def setup_scenarios(generators,times, Nscenarios = None):
         
         # load in the observations (needed to decide the final states of each stage)
         gen.observed_values = dataframe_from_csv(gen.observed_filename, parse_dates=True, index_col=0, squeeze=True)
+        if gen.forecast_filename is not None:
+            # load in the deterministic forecast - will be solved independently and evaluated against observed
+            gen.forecast_values = dataframe_from_csv(gen.forecast_filename, parse_dates=True, index_col=0, squeeze=True)
         # TODO - check for same frequency 
         
         for i,f in enumerate(glob("{}/*.csv".format(gen.scenarios_directory))):

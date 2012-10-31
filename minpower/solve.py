@@ -174,9 +174,7 @@ def solve_multistage(power_system, times, scenario_tree):
         
         if stage_solution.is_stochastic:
             # resolve with observed power and fixed status from stochastic solution
-            power_system.resolve_stochastic_with_observed(instance, stage_solution)                        
-            
-            # TODO - evaluate performance against this resolve with perfect information
+            power_system.resolve_stochastic_with_forecast_observed(instance, stage_solution)
             
         power_system.get_finalconditions(stage_solution)
         stage_solutions.append(stage_solution)

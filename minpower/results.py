@@ -32,6 +32,7 @@ except ImportError:
     logging.warning("Can't import matplotlib -- skipping plotting.")
     do_plotting=False
 
+import pandas
 
 
 def classify_problem(times,power_system):
@@ -583,7 +584,6 @@ class Solution_Stochastic(Solution):
         #print P.name,values
     def _calc_gen_power(self, sln, scenario_prefix='s0t0'):
         '''calculate generator power from a resolved solution using the observed stochastic gen's power'''
-        import pandas
         gen_with_scenarios = self.power_system.get_generator_with_scenarios()
         times = self.times.non_overlap_times
         
@@ -600,11 +600,7 @@ class Solution_Stochastic(Solution):
                         val = gen_with_scenarios.observed_values[time.Start]
                     else: raise
                 power[gen][time.Start] = val
-
-        self.observed_generator_power = power
-        self._get_observed_costs()
-        return
-    
+        return power    
 
 class Solution_Stochastic_UC(Solution_Stochastic):
     def saveCSV(self,filename=None):

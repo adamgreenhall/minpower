@@ -463,7 +463,7 @@ class OptimizationProblem(OptimizationObject):
         instance.preprocess()
 
 
-    def resolve_stochastic_with_observed( self, instance, stage_solution ):
+    def resolve_stochastic_with_forecast_observed( self, instance, stage_solution ):
         fixed_status = stage_solution.stage_generators_status
         gen_with_scenarios = self.get_generator_with_scenarios()
         s = stage_solution.scenarios[0]
@@ -486,9 +486,33 @@ class OptimizationProblem(OptimizationObject):
 
             raise OptimizationResolveError('could not find a solution to the stage with observed wind and the stochastic commitment')
         
-        stage_solution._calc_gen_power(sln=results.solution[0], scenario_prefix=s)        
+        stage_solution.stochastic_sln_observed_power = stage_solution._calc_gen_power(sln=results.solution[0], scenario_prefix=s)        
         # avoid loading this instance - because it is different from the mainline stochastic solution
-        # resolve_instance.load(results)
+        
+        # get deterministic solution (point forecast)
+        resolve_instance = instance.active_components(pyomo.Block)[s]
+        power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen_with_scenarios))]
+        for time in times:
+            power[str(time)] = gen_with_scenarios.forecast_values[time.Start]
+        results, elapsed = self._solve_instance( resolve_instance )
+        if not self.solved: raise OptimizationResolveError('couldnt find solution to deterministic problem')
+        
+        stage_solution.deterministic_sln_status = stage_solution._calc_gen_status(sln=results.solution[0], scenario_prefix=s)        
+        
+        # evaluated against the observed power
+        for time in times:
+            power[str(time)] = gen_with_scenarios.observed_values[time.Start]
+        self._fix_variables(resolve_instance)
+        results, elapsed = self._solve_instance( resolve_instance )
+        if not self.solved: raise OptimizationResolveError('couldnt find solution to deterministic fixed evaluation problem')
+        
+        stage_solution.deterministic_sln_observed_power = stage_solution._calc_gen_power(sln=results.solution[0], scenario_prefix=s)        
+        
+        
+        stage_solution._get_observed_costs()
+        debug()
+        
+        # TODO - evaluate performance against this resolve with perfect information
         return         
 
 

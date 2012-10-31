@@ -118,6 +118,8 @@ class Timelist(object):
             return self.initialTime
         else:
             return self.times[i]
+    def last(self): return self.__getitem__(-1, circular=True)
+    
     def __getslice__(self, i, j): return self.times[i:j]
     def index(self,val): return self.times.index(val)
     def setInitial(self,initialTime=None): 

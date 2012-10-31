@@ -108,9 +108,12 @@ class OptimizationObject(object):
             
 
 
-    def add_parameter(self,name,index=None,default=None, **kwargs):
+    def add_parameter(self, name, index=None, values=None, mutable=True, default=None, **kwargs):
         name=self._id(name)
-        self._parent_problem().add_component_to_problem(pyomo.Param(index,name=name,default=default,mutable=True, **kwargs))
+        self._parent_problem().add_component_to_problem(pyomo.Param(index,name=name,default=default, mutable=mutable, **kwargs))
+        if values is not None:
+            var=self._parent_problem().get_component(name)
+            for i in index: var[i]=values[i]
         
     def add_constraint(self,name,time,expression): 
         '''Create a new constraint and add it to the object's constraints and the model's constraints.'''
@@ -129,6 +132,13 @@ class OptimizationObject(object):
             var_name=self._t_id(name,time)
             return self._parent_problem().get_component(var_name,scenario)
     def get_constraint(self,name,time): return self._parent_problem().get_component(self._t_id(name,time))
+
+    def get_parameter(self,name,time, indexed=False): 
+        if indexed:
+            name = self._id(name)
+            if time is None: return self._parent_problem().get_component(name)
+            else: return self._parent_problem().get_component(name)[str(time)]
+        else: return self._parent_problem().get_component(self._t_id(name,time))
     
     def add_children(self,objects,name):
         '''Add a child :class:`~optimization.OptimizationObject` to this object.''' 
@@ -463,8 +473,7 @@ class OptimizationProblem(OptimizationObject):
         instance.preprocess()
 
 
-    def resolve_stochastic_with_observed( self, instance, stage_solution ):
-        fixed_status = stage_solution.stage_generators_status
+    def resolve_stochastic_with_observed(self, instance, stage_solution):
         gen_with_scenarios = self.get_generator_with_scenarios()
         s = stage_solution.scenarios[0]
         times = stage_solution.times.non_overlap_times
@@ -486,9 +495,32 @@ class OptimizationProblem(OptimizationObject):
 
             raise OptimizationResolveError('could not find a solution to the stage with observed wind and the stochastic commitment')
         
-        stage_solution._calc_gen_power(sln=results.solution[0], scenario_prefix=s)        
+        stage_solution.observed_generator_power = stage_solution._calc_gen_power(sln=results.solution[0], scenario_prefix=s)        
         # avoid loading this instance - because it is different from the mainline stochastic solution
-        # resolve_instance.load(results)
+        stage_solution._get_observed_costs()
+    
+    def resolve_determinisitc_with_observed(self, instance, stage_solution):
+        # get deterministic solution (point forecast)
+        
+        gen_with_observed = self.get_generator_with_observed()
+        
+        times = stage_solution.times.non_overlap_times
+        
+        resolve_instance = instance
+        power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen_with_observed))]
+        for time in times:
+            power[str(time)] = gen_with_observed.observed_values[time.Start]
+        
+        self._fix_variables(resolve_instance)
+        
+        results, elapsed = self._solve_instance( resolve_instance )
+        if not self.solved: raise OptimizationResolveError('couldnt find solution to deterministic fixed problem')
+        
+        stage_solution.observed_generator_power = stage_solution._calc_gen_power(sln=results.solution[0])        
+    
+        stage_solution._get_observed_costs()
+        
+        # TODO - evaluate performance against this resolve with perfect information
         return         
 
 

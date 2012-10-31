@@ -182,7 +182,9 @@ class Generator(OptimizationObject):
         if status_var is None: status_var = self.status
         
         status=value(status_var(tm))
-        timesClipped=times[:times.index(tm)]
+        
+        try: timesClipped=times[:times.index(tm)]
+        except: debug(); raise
         try: 
             t_lastchange=(t for t in reversed(timesClipped) if value(status_var(t))!=status ).next()
             return hours(tm.End-t_lastchange.Start)
@@ -372,7 +374,9 @@ class Generator_nonControllable(Generator):
         self.shutdowncost=0
         self.build_cost_model()
         self.init_optimization()
-    def power(self,time): return self.schedule.get_energy(time)
+    def power(self,time): 
+        return self.get_parameter('power',time, indexed=True)
+        # return self.schedule.get_energy(time)
     def status(self,time=None,scenarios=None): return True
     def set_initial_condition(self,time=None, P=None, u=None, hoursinstatus=None):
         try: 
@@ -381,6 +385,7 @@ class Generator_nonControllable(Generator):
         except AttributeError: pass #fixed schedule
     def getstatus(self,t,times): return {}
     def create_variables(self,times):
+        self.add_parameter('power', index=times.set, values=dict([(str(time), self.schedule.get_energy(time)) for time in times]) )
         self.bids=bidding.Bid(
             polynomial=self.cost_coeffs,
             owner=self,
@@ -743,10 +748,12 @@ class PowerSystem(OptimizationProblem):
         if len(gens)>1: raise NotImplementedError('Dont handle the case of multiple stochastic generators')
         elif len(gens)==0: return []
         else: return gens[0]
-    
+    def get_generator_with_observed(self):
+        return filter(lambda gen: getattr(gen,'observed_values',None) is not None, self.generators())[0]
+
     def get_finalconditions(self, stage_solution):
         times = stage_solution.times
-        tEnd = times.non_overlap_times[-1] 
+        tEnd = times.non_overlap_times.last()
         for gen in self.generators():
             if stage_solution.is_stochastic:
                 finalstatus = dict(

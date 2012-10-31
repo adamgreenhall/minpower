@@ -113,5 +113,5 @@ user_config = DotDict(dict(
     problem_filename = False,
     
     scenarios_limit = None,
-    
+    deterministic_solve = False,
     ))

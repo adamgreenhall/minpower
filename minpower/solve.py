@@ -44,7 +44,6 @@ def solve_problem(datadir='.',
     generators,loads,lines,times,scenario_tree=get_data.parsedir()
     logging.debug('data read {}'.format(show_clock()))
     power_system=powersystems.PowerSystem(generators,loads,lines)
-                #spinning_reserve_requirement=0
 
     logging.debug('power system set up {}'.format(show_clock()))
     if times.spanhrs <= user_config.hours_commitment + user_config.hours_commitment_overlap:
@@ -114,15 +113,6 @@ def create_problem(power_system,times):
 
 
 def solve_multistage(power_system, times, scenario_tree):
-#    datadir,
-#  solver=config.optimization_solver,
-#  interval_hours=None,
-#  stage_hours=config.default_hours_commitment,
-#  overlap_hours=config.default_hours_commitment_overlap,
-#                              scenario_tree=None,
-#  problemfile=False,
-#  get_duals=True,
-#                              showclock=True):
     """
     Solve a rolling or multi-stage power systems optimization problem.
     Each stage will be one optimization run. A stage's final
@@ -145,7 +135,9 @@ def solve_multistage(power_system, times, scenario_tree):
 
     if not user_config.interval_hours: interval_hours=times.intervalhrs
 
-    stage_times=times.subdivide(user_config.hours_commitment, interval_hrs=interval_hours, overlap_hrs=user_config.hours_commitment_overlap)
+    stage_times=times.subdivide(user_config.hours_commitment, 
+        interval_hrs=interval_hours, 
+        overlap_hrs=user_config.hours_commitment_overlap )
     buses=power_system.buses
     stage_solutions=[]
     
@@ -174,18 +166,18 @@ def solve_multistage(power_system, times, scenario_tree):
         
         if stage_solution.is_stochastic:
             # resolve with observed power and fixed status from stochastic solution
-            power_system.resolve_stochastic_with_forecast_observed(instance, stage_solution)
-            
+            power_system.resolve_stochastic_with_observed(instance, stage_solution)
+        elif user_config.deterministic_solve:
+            # resolve with observed power and fixed status from determinisitic solution
+            power_system.resolve_determinisitc_with_observed(instance, stage_solution)
+        
         power_system.get_finalconditions(stage_solution)
         stage_solutions.append(stage_solution)
 
         if stg < (Nstages-1): # if not the last stage 
             power_system.reset_model()
             #commonscripts.show_memory_growth()
-#            if stg==1:
-#                commonscripts.show_memory_refs('_VarArray')
-#                commonscripts.show_memory_backrefs('_VarArray')
-#                commonscripts.show_memory_backrefs('Piecewise')
+            
     return stage_solutions, stage_times
 
 
@@ -244,6 +236,9 @@ def main():
     parser.add_argument('--scenarios',type=int, 
                     default=user_config.scenarios_limit,
                     help='limit the number of scenarios to N')
+    parser.add_argument('--deterministic_solve', action='store_true',
+                    default=user_config.deterministic_solve,
+                    help='solve a stochastic problem deterministically using the forecast_filename paramter')
     # parser.add_argument('--solution_file',type=str,default=False,
     #                    help='save solution file to disk')
     parser.add_argument('--profile',action="store_true",

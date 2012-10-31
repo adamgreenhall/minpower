@@ -5,13 +5,17 @@ Many of them are one liners.
 
 import os
 import csv
-import itertools,operator
+import logging
+import itertools
+import operator
 import datetime
 from dateutil import parser
 from dateutil.parser import parse as parse_time
 
 from collections import OrderedDict
 from glob import glob
+
+import numpy as np
 
 import pandas
 from pandas.io.parsers import read_csv as dataframe_from_csv

@@ -90,7 +90,7 @@ generator_defaults=dict(
     )
 
 
-available_solvers = ['gurobi','glpk','cplex']
+available_solvers = ['gurobi','glpk']
 
 
 user_config = DotDict(dict(

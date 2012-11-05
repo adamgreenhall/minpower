@@ -18,7 +18,13 @@ from glob import glob
 import numpy as np
 
 import pandas
+from pandas import DataFrame, Series
 from pandas.io.parsers import read_csv as dataframe_from_csv
+
+from pdb import set_trace #pudb
+from pprint import pprint
+    
+
 
 def gen_time_dataframe(generators, times, values=()):
     kwargs = dict(columns = generators, index = [t.Start for t in times])
@@ -28,10 +34,16 @@ def gen_time_dataframe(generators, times, values=()):
         df = pandas.DataFrame(**kwargs)
     df.index.name = 'time'
     return df
-try: # for development
-    from pudb import set_trace as debug #pudb
-    from pprint import pprint
-except: pass 
+    
+def ts_from_csv(filename,index_col=0, squeeze=True, timezone=None, is_df=True, **kwargs):
+    kwargs['header']=0 if is_df else None
+    
+    df = dataframe_from_csv(filename, index_col=index_col, squeeze=squeeze, **kwargs)
+    df.index = pandas.DatetimeIndex(df.index)
+    if timezone is not None: 
+        # pandas seems to convert any stamps to UTC in the DatetimeIndex call
+        df.index = df.index.tz_localize('UTC').tz_convert(timezone)
+    return df
 
 def bool_to_int(x): return 1 if x else 0
 

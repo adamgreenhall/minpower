@@ -49,12 +49,17 @@ fields_initial={
     'p':'P','pg':'P','power':'P',
     'hoursinstatus':'hoursinstatus',
     'ic':None}
+
+def _has_valid_attr(obj, name):
+    return getattr(obj, name, None) is not None
     
 def parsedir(
         file_gens='generators.csv',
         file_loads='loads.csv',
         file_lines='lines.csv',
-        file_init='initial.csv'):
+        file_init='initial.csv',
+        file_timeseries='timeseries.csv'
+        ):
     """
     Import data from spreadsheets and build lists of
     :mod:`powersystems` classes.
@@ -76,7 +81,7 @@ def parsedir(
     datadir = user_config.directory
     
     if not os.path.isdir(datadir): raise OSError('data directory "{d}" does not exist'.format(d=datadir) )
-    [file_gens,file_loads,file_lines,file_init]=[joindir(datadir,filename) for filename in (file_gens,file_loads,file_lines,file_init)]
+    [file_gens,file_loads,file_lines,file_init, file_timeseries]=[joindir(datadir,filename) for filename in (file_gens,file_loads,file_lines,file_init, file_timeseries)]
     
     generators_data=csv2dicts(file_gens,field_map=fields_gens)
     loads_data=csv2dicts(file_loads,field_map=fields_loads)
@@ -85,9 +90,8 @@ def parsedir(
     try: init_data=csv2dicts(file_init,field_map=fields_initial)
     except IOError: init_data=[]
     
-    
     #create times
-    times=setup_times(generators_data,loads_data,datadir)
+    times=setup_times(generators_data,loads_data, file_timeseries, datadir)
     #add loads
     loads=build_class_list(loads_data,powersystems.makeLoad,datadir,times=times)
     #add generators
@@ -152,10 +156,7 @@ def build_class_list(data,model,datadir,times=None,model_schedule=schedule.make_
         if newmodel is None: return model,model_schedule
         else:
             modname,classname=newmodel.split('.')
-            if 'Shifting' in classname: 
-                model_schedule_row=getattr(globals()[modname],'make_shifting_schedule')
-            else: 
-                model_schedule_row=model_schedule
+            model_schedule_row=model_schedule
             return getattr(globals()[modname],classname),model_schedule_row
     
     all_models=[]
@@ -204,7 +205,7 @@ def build_class_list(data,model,datadir,times=None,model_schedule=schedule.make_
         index+=1
     return all_models
 
-def setup_times(generators_data,loads_data,datadir):
+def setup_times(generators_data, loads_data, filename_timeseries, datadir):
     """ 
     Create list of :class:`~schedule.Time` objects 
     from the schedule files. If there are no schedule
@@ -217,12 +218,16 @@ def setup_times(generators_data,loads_data,datadir):
     
     :returns: a :class:`~schedule.Timelist` object
     """
+    print 'hit'
+    set_trace()
+    timeseries = dataframe_from_csv(filename_timeseries, index_col=0, parse_dates=True)
+
 
     time_strings=[]
     schedule_filenames=[]
     
-    field_sched='schedulefilename'
-    def valid_sched_file(D): return D.get(field_sched,None) is not None and not D.get('model','').count('Shifting')
+    field_sched = 'schedulefilename'
+    def valid_sched_file(D): return _has_valid_attr(d,field_sched)
     schedule_filenames.extend([load[field_sched] for load in loads_data if valid_sched_file(load)])
     schedule_filenames.extend([gen[field_sched] for gen in generators_data if valid_sched_file(gen)])
     

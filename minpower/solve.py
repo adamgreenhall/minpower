@@ -252,6 +252,9 @@ def main():
     parser.add_argument('--error','-e',action="store_true",
                     default=False,
                     help='redirect error messages to the standard output (useful for debugging on remote machines)')
+    parser.add_argument('--debugger',action="store_true",
+                    default=False,
+                    help='use pudb when an error is raised')
 
     #figure out the command line arguments
     args = parser.parse_args()
@@ -280,4 +283,3 @@ def main():
             if args.error:
                 print 'There was an error:'
                 traceback.print_exc(file=sys.stdout)
-            else: raise

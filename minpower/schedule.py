@@ -217,11 +217,15 @@ class TimeIndex(Timelist):
         self.initialTime.index = 'Init'
         self._subdivided = False
         self._index_based = True
+        self._start_index = 0
 
     def get_interval(self):
         if self.times.freq is not None:
             self.interval = self.times.freq
             self.intervalhrs = self.interval.n if self.interval.freqstr=='H' else None
+            
+    def set_repr(self):
+        return ['t{ind:02d}'.format(ind=ind+self._start_index) for range(len(self.times))]
     
 def is_init(time):
     return getattr(time,'index',None)=='Init'        

@@ -49,7 +49,9 @@ class Bid(OptimizationObject):
             pw_representation=Piecewise(self.times.set,self.output(),self.input_variable(),
                                            f_rule=pw_rule,
                                            pw_pts=in_pts,
-                                           pw_constr_type='LB')
+                                           pw_constr_type='LB',
+                                           warn_domain_coverage = False, # gen lower power bounds are set to zero (status trick) and Piecewise complains if Pmin>0 
+                                           )
             
         else:
             # custom bid points
@@ -71,7 +73,9 @@ class Bid(OptimizationObject):
                                           pw_pts=in_pts,
                                           pw_constr_type='LB',
                                           pw_repn='DCC', # the disagregated convex combination method 
-                                          f_rule=pw_rule)
+                                          f_rule=pw_rule,
+                                          warn_domain_coverage = False
+                                          )
 
         pw_representation.name=self.iden()
         self._parent_problem().add_component_to_problem(pw_representation)

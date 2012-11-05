@@ -74,9 +74,8 @@ def create_solve_problem(power_system, times, scenario_tree=None,
     stochastic_formulation = False
     if scenario_tree is not None and not rerun:
         if multistage: # multiple time stages
-            gen = filter(lambda gen: getattr(gen, 'has_scenarios',False) , power_system.generators())[0]
-            day_start = times[0].Start
-            tree = stochastic.construct_simple_scenario_tree( gen.scenario_values[day_start]['probability'].values.tolist(), time_stage=stage_number )
+            gen = power_system.get_generator_with_scenarios()
+            tree = stochastic.construct_simple_scenario_tree( gen.scenario_values[times.startdate]['probability'].values.tolist(), time_stage=stage_number )
             logging.debug('constructed tree for stage %i'%stage_number)
         else: tree = scenario_tree
         stochastic_formulation = True
@@ -144,7 +143,7 @@ def solve_multistage(power_system, times, scenario_tree):
     Nstages = len(stage_times)
 
     for stg,t_stage in enumerate(stage_times):
-        logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(user_config.show_clock)))
+        logging.info('Stage starting at {}, {}'.format(t_stage.Start, show_clock(user_config.show_clock)))
         
         power_system.set_initialconditions(t_stage.initialTime, stg, stage_solutions)
 
@@ -283,3 +282,7 @@ def main():
             if args.error:
                 print 'There was an error:'
                 traceback.print_exc(file=sys.stdout)
+            else: raise
+            
+# for use in dev
+if __name__=='__main__': main()

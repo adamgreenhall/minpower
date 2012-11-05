@@ -35,14 +35,23 @@ fields_gens={
     'scenariosdirectory':'scenariosdirectory',
     # observed filename is the observed wind and will evaluate the cost of a stochastic solution
     'observedfilename':'observedfilename',
-    # forecast filename is a deterministic (point) wind forecast and will be evaluated against observed wind
-    'forecastfilename':'forecastfilename'}
+     # forecast filename is a deterministic (point) wind forecast and will be evaluated against observed wind
+    'forecastfilename':'forecastfilename',
+    
+    'schedulename':'schedulename',
+    'forecastname':'forecastname',
+    'observedname':'observedname',
+    
+    }
     
 fields_loads={'name':'name','bus':'bus','type':'kind','kind':'kind',
             'p':'P','pd':'P', 'power':'P',
             'pmin':'Pmin','pmax':'Pmax',
             'schedulefilename':'schedulefilename','model':'model',
-            'bidequation':'costcurvestring','costcurveequation':'costcurvestring'}
+            'bidequation':'costcurvestring','costcurveequation':'costcurvestring',
+            
+            'schedulename':'schedulename',
+            }
 fields_initial={
     'name':'name','generatorname':'name',
     'status':'u','u':'u',
@@ -93,7 +102,7 @@ def parsedir(
     except IOError: init_data=[]
     
     #create times
-    timeseries = setup_times(generators_data, loads_data, file_timeseries)
+    timeseries, times = setup_times(generators_data, loads_data, file_timeseries)
     #add loads
     loads = build_class_list(loads_data, powersystems.makeLoad, timeseries)
     #add generators
@@ -101,13 +110,14 @@ def parsedir(
     #add lines
     lines = build_class_list(lines_data, powersystems.Line)    
     #add initial conditions
-    setup_initialcond(init_data, generators, timeseries)
+    
+    setup_initialcond(init_data, generators, times)
     
     #setup scenario tree (if applicable)
     if user_config.deterministic_solve: 
         scenario_tree = None
     else: 
-        scenario_tree=setup_scenarios(generators, times)
+        scenario_tree = setup_scenarios(generators, times)
     
     return generators,loads,lines,times,scenario_tree
 
@@ -154,21 +164,25 @@ def build_class_list(data, model, timeseries=None):
     
     all_models=[]
     index=0
-    for row in data:
-        model_row,model_schedule_row=get_model(row)
-        schedulefilename=row.pop('schedulefilename',None)
-        scenariosfilename=row.pop('scenariosfilename',None)
-        scenariosdirectory=row.pop('scenariosdirectory',None)
-        observedfilename = row.pop('observedfilename', None)
-        bid_points_filename = row.pop('costcurvepointsfilename', None)
-        forecast_filename = row.pop('forecastfilename',None)
+    for row in data:      
+        row_model = model
+        sched_col = row.pop('schedulename',None)
+        observed_col = row.pop('observedname', None)
+        forecast_col = row.pop('forecastname',None)
         
-        if schedulefilename is not None: row['schedule']=model_schedule_row(joindir(datadir,schedulefilename),times)
-        elif (scenariosfilename is not None) or (scenariosdirectory is not None): model_row = powersystems.Generator_Stochastic
+        scenariosfilename = row.pop('scenariosfilename',None)
+        scenariosdirectory=row.pop('scenariosdirectory',None)
+        bid_points_filename = row.pop('costcurvepointsfilename', None)
+        
+        if sched_col is not None: 
+            row['schedule'] = timeseries[sched_col]
+        elif (scenariosfilename is not None) or (scenariosdirectory is not None):
+            row_model = powersystems.Generator_Stochastic
+        
         
         if user_config.deterministic_solve and forecast_filename is not None: 
-            model_row = powersystems.Generator_nonControllable
-            row['schedule']=model_schedule_row(joindir(datadir,forecast_filename),times)
+            row_model = powersystems.Generator_nonControllable
+            row['schedule'] = timeseries[forecast_col]
         
         # load a custom bid points filename with {power, cost} columns 
         if bid_points_filename is not None: 
@@ -177,20 +191,19 @@ def build_class_list(data, model, timeseries=None):
             row['costcurvestring'] = None
             
         
-        try: obj=model_row(index=index, **row)
+        try: obj=row_model(index=index, **row)
         except TypeError:
-            msg='{} model got unexpected parameter'.format(model_row)
+            msg='{} model got unexpected parameter'.format(model)
             print msg
             raise
 
         if user_config.deterministic_solve and observedfilename is not None:
-            obj.observed_filename = joindir(datadir, observedfilename)
-            obj.observed_values = dataframe_from_csv(obj.observed_filename, parse_dates=True, index_col=0, squeeze=True)
+            obj.observed_values = timeseries[observed_col]
         elif scenariosfilename is not None:
             obj.scenarios_filename  = joindir(datadir,scenariosfilename)
         elif scenariosdirectory is not None: 
             obj.scenarios_directory = joindir(datadir, scenariosdirectory)
-            try: obj.observed_filename = joindir(datadir, observedfilename)
+            try: obj.observed_values = timeseries[observed_col]
             except: 
                 raise AttributeError('you must provide a observed filename for a rolling stochastic UC')
 
@@ -198,7 +211,7 @@ def build_class_list(data, model, timeseries=None):
         index+=1
     return all_models
 
-def setup_times(generators_data, loads_data, filename_timeseries, datadir):
+def setup_times(generators_data, loads_data, filename_timeseries):
     """ 
     Create list of :class:`~schedule.Time` objects 
     from the schedule files. If there are no schedule
@@ -213,7 +226,12 @@ def setup_times(generators_data, loads_data, filename_timeseries, datadir):
     """
     try: 
         timeseries = dataframe_from_csv(filename_timeseries, index_col=0, parse_dates=True)
-        return timeseries
+        if timeseries.index[1] - timeseries.index[0] == datetime.timedelta(0,3600):
+            timeseries = timeseries.asfreq('1h')
+        
+        times = schedule.TimeIndex(timeseries.index)
+        
+        return timeseries, times
     except IOError:
         pass
         # the old way...
@@ -230,7 +248,7 @@ def setup_times(generators_data, loads_data, filename_timeseries, datadir):
     if len(schedule_filenames)==0:
         #this is a ED or OPF problem - only one time
         return schedule.just_one_time()
-
+    datadir = user_config.directory
     for filename in schedule_filenames:
         try: time_strings.append( csvColumn(joindir(datadir,filename),'time') )
         except ValueError:
@@ -251,7 +269,7 @@ def setup_times(generators_data, loads_data, filename_timeseries, datadir):
         time_dates=sorted(unique(time_dates))
     return schedule.make_times(time_dates)
 
-def setup_scenarios(generators,times, Nscenarios = user_config.scenarios):
+def setup_scenarios(generators, times, Nscenarios = user_config.scenarios):
     if user_config.deterministic_solve: return None
 
     has_scenarios=[]
@@ -289,11 +307,15 @@ def setup_scenarios(generators,times, Nscenarios = user_config.scenarios):
         gen.scenario_values = OrderedDict()
         gen.has_scenarios_multistage = True
         
+        # already did this above 
         # load in the observations (needed to decide the final states of each stage)
-        gen.observed_values = dataframe_from_csv(gen.observed_filename, parse_dates=True, index_col=0, squeeze=True)
+        # gen.observed_values = dataframe_from_csv(gen.observed_filename, parse_dates=True, index_col=0, squeeze=True)
         # TODO - check for same frequency 
         
-        for i,f in enumerate(glob("{}/*.csv".format(gen.scenarios_directory))):
+        filenames = sorted(glob(joindir(gen.scenarios_directory,"*.csv")))
+        if len(filenames)==0: raise ValueError('no scenario files in directory "{}"'.format(gen.scenarios_directory))
+        
+        for i,f in enumerate(filenames):
             logging.debug('reading scenarios from %s', f)
             data = dataframe_from_csv(f, parse_dates=True, index_col=0)
             

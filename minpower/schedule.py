@@ -68,7 +68,7 @@ def make_times_basic(N):
     times=Timelist(Start=S,End=E,interval=I)
     times.setInitial()
     return times
-    
+
 class Timelist(object):
     """
     A container for :class:`schedule.Time` objects.
@@ -95,13 +95,7 @@ class Timelist(object):
                 elif isinstance(list_of_times, Timelist): self.times = list_of_times.times[:]
                 else: self.times = tuple(list_of_times)
         
-        interval=self.times[0].interval
-        
-        for t in self.times: 
-            if t.interval != interval: raise ValueError('time intervals within list varies at {t}. This time has interval {i}. List (1st element) has interval of {li}.:'.format(t=t.Start,i=t.interval,li=interval))
-        else: 
-            self.interval = interval
-            self.intervalhrs = hours(self.interval)
+        self.get_interval()
             
         self.Start = self.times[0].Start
         self.End = self.times[-1].End
@@ -109,7 +103,17 @@ class Timelist(object):
         self.spanhrs = hours(self.span)
         self.setInitial(initialTime)
         self._subdivided = False
+        self._index_based = False
         
+        
+    def get_interval(self):
+        try: interval=self.times[0].interval            
+        except AttributeError:
+            interval = self.times[1] - self.times[0]
+        self.interval = interval
+        self.intervalhrs = hours(self.interval)
+        return self.interval    
+    
     def __repr__(self): return repr(self.times)
     def __contains__(self, item): return item in self.times
     def __len__(self): return len(self.times)
@@ -167,7 +171,7 @@ class Timelist(object):
         span_intervals= division_hrs/interval_hrs
         overlap_intervals = overlap_hrs/interval_hrs
         offset_intervals = offset_hrs/interval_hrs
-        intervals={'span':span_intervals,'overlap':overlap_intervals,'offset':offset_intervals}
+        intervals={'span':span_intervals,'overlap':overlap_intervals,'offset':offset_intervals ,'index_based': self._index_based }
         for nm,val in intervals.items():
             if val!=int(val): 
                 msg='for time subdivision {nm} must be an integer number of intervals (is {val})'.format(nm=nm,val=val)
@@ -196,14 +200,42 @@ class Timelist(object):
         return newtimesL
         
 
-def divide_into_stages(L, span=0,overlap=0,offset=0):
+class TimeIndex(Timelist):
+    '''convert a pandas.Index to a Timelist'''
+    def __init__(self, index):
+        self.times = index.copy()
+
+        self.get_interval()
+        self.Start = self.times[0]
+        self.startdate = datetime.datetime(self.Start.year, self.Start.month, self.Start.day)
+        
+        self.End = self.times[-1] + self.interval
+        self.span = self.End-self.Start
+        self.spanhrs = hours(self.span)
+        
+        self.initialTime = self.Start - self.interval
+        self.initialTime.index = 'Init'
+        self._subdivided = False
+        self._index_based = True
+
+    def get_interval(self):
+        if self.times.freq is not None:
+            self.interval = self.times.freq
+            self.intervalhrs = self.interval.n if self.interval.freqstr=='H' else None
+    
+def is_init(time):
+    return getattr(time,'index',None)=='Init'        
+    
+
+def divide_into_stages(L, span=0,overlap=0,offset=0, index_based=False):
     """divide list into stage_size-sized chunks, with optional overlap."""
+    klass = TimeIndex if index_based else Timelist
     stages=[]
     for i in xrange(offset, len(L), span): 
-        stages.append( Timelist(L[i:i+span+overlap]) )
+        stages.append( klass(L[i:i+span+overlap]) )
     else:
         #the last stage has no overlap and can contain less than the full stage_size intervals
-        stages[-1]=Timelist(L[i:])
+        stages[-1]=klass(L[i:])
     return stages
      
 def make_schedule(filename,times=None):

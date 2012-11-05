@@ -83,6 +83,8 @@ def parsedir(
     if not os.path.isdir(datadir): raise OSError('data directory "{d}" does not exist'.format(d=datadir) )
     [file_gens,file_loads,file_lines,file_init, file_timeseries]=[joindir(datadir,filename) for filename in (file_gens,file_loads,file_lines,file_init, file_timeseries)]
     
+    
+    
     generators_data=csv2dicts(file_gens,field_map=fields_gens)
     loads_data=csv2dicts(file_loads,field_map=fields_loads)
     try: lines_data=csv2dicts(file_lines,field_map=fields_lines)
@@ -91,15 +93,15 @@ def parsedir(
     except IOError: init_data=[]
     
     #create times
-    times=setup_times(generators_data,loads_data, file_timeseries, datadir)
+    timeseries = setup_times(generators_data, loads_data, file_timeseries)
     #add loads
-    loads=build_class_list(loads_data,powersystems.makeLoad,datadir,times=times)
+    loads = build_class_list(loads_data, powersystems.makeLoad, timeseries)
     #add generators
-    generators=build_class_list(generators_data,powersystems.makeGenerator,datadir,times=times)
+    generators = build_class_list(generators_data, powersystems.makeGenerator, timeseries)
     #add lines
-    lines=build_class_list(lines_data,powersystems.Line,datadir)    
+    lines = build_class_list(lines_data, powersystems.Line)    
     #add initial conditions
-    setup_initialcond(init_data,generators,times)
+    setup_initialcond(init_data, generators, timeseries)
     
     #setup scenario tree (if applicable)
     if user_config.deterministic_solve: 
@@ -136,7 +138,7 @@ def setup_initialcond(data,generators,times):
         generators[g].set_initial_condition(time=t_init,**row)        
     return generators
 
-def build_class_list(data,model,datadir,times=None,model_schedule=schedule.make_schedule):
+def build_class_list(data, model, timeseries=None):
     """
     Create list of class instances from data in a spreadsheet.
     
@@ -148,16 +150,7 @@ def build_class_list(data,model,datadir,times=None,model_schedule=schedule.make_
     
     :returns: a list of class objects
     """
-
-    
-    def get_model(inputs,default=model,field='model'):
-        model=default
-        newmodel=inputs.pop(field,None)
-        if newmodel is None: return model,model_schedule
-        else:
-            modname,classname=newmodel.split('.')
-            model_schedule_row=model_schedule
-            return getattr(globals()[modname],classname),model_schedule_row
+    datadir = user_config.directory
     
     all_models=[]
     index=0
@@ -218,11 +211,13 @@ def setup_times(generators_data, loads_data, filename_timeseries, datadir):
     
     :returns: a :class:`~schedule.Timelist` object
     """
-    print 'hit'
-    set_trace()
-    timeseries = dataframe_from_csv(filename_timeseries, index_col=0, parse_dates=True)
-
-
+    try: 
+        timeseries = dataframe_from_csv(filename_timeseries, index_col=0, parse_dates=True)
+        return timeseries
+    except IOError:
+        pass
+        # the old way...
+    
     time_strings=[]
     schedule_filenames=[]
     

@@ -50,10 +50,11 @@ def define_stage_variables(scenario_tree,power_system,times):
     variables_first_stage=Set()
     variables_second_stage=Set()
 
-    for gen in filter(lambda gen: getattr(gen,'has_scenarios',False)==False, power_system.generators()):
+    for gen in power_system.get_generators_without_scenarios():
         # for each non stochastic generator
-        if gen.is_controllable: variables_first_stage.add(str(gen.get_variable('status',indexed=True,time=None))+'[*]')
-        variables_second_stage.add(str(gen.get_variable('power',indexed=True,time=None))+'[*]')
+        if gen.is_controllable: 
+            variables_first_stage.add(str(gen.get_variable('status',indexed=True,time=None))+'[*]')
+            variables_second_stage.add(str(gen.get_variable('power',indexed=True,time=None))+'[*]')
         #note - appending '[*]' to the indicies is required to get pysp to assign all the variables in the array to a shape
         
     # variables_first_stage.pprint()

@@ -304,7 +304,7 @@ class Generator_nonControllable(Generator):
         self.shutdowncost=0
         self.build_cost_model()
         self.init_optimization()
-    def power(self,time): 
+    def power(self,time, scenario=None): 
         return self.get_parameter('power',time, indexed=True)
         # return self.schedule.get_energy(time)
     def status(self,time=None,scenarios=None): return True

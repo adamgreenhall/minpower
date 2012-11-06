@@ -20,6 +20,12 @@ import numpy as np
 import pandas
 from pandas.io.parsers import read_csv as dataframe_from_csv
 
+try: # for development
+    from pdb import set_trace as debug #pudb
+    from pprint import pprint
+except: pass 
+
+
 def gen_time_dataframe(generators, times, values=()):
     kwargs = dict(columns = generators, index = [t.Start for t in times])
     if values:
@@ -28,10 +34,6 @@ def gen_time_dataframe(generators, times, values=()):
         df = pandas.DataFrame(**kwargs)
     df.index.name = 'time'
     return df
-try: # for development
-    from pudb import set_trace as debug #pudb
-    from pprint import pprint
-except: pass 
 
 def bool_to_int(x): return 1 if x else 0
 

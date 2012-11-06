@@ -466,8 +466,8 @@ class OptimizationProblem(OptimizationObject):
                 if var.is_indexed(): 
                     for key,ind_var in var.iteritems(): ind_var.fixed=True
                 else: var.fixed=True
-        if self.stochastic_formulation:                
-            for scenario_block in instance.active_components(pyomo.Block).values():
+        if self.stochastic_formulation:
+            for scenario_block in filter(lambda blk: type(blk)!=pyomo.Piecewise, instance.active_components(pyomo.Block).values()):
                 self._fix_variables(scenario_block)
         # need to preprocess after fixing
         instance.preprocess()

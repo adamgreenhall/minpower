@@ -625,18 +625,19 @@ class Solution_Stochastic(Solution):
         times = self.times.non_overlap_times
         
         power = gen_time_dataframe(self.generators(), times)  
-        #dict([(time,{}) for time in times])
-        for time in times:
-            for gen in self.generators():
-                try: 
-                    # yuck - parse the power out of the native pyomo solution object 
-                    # trying to avoid loading the instance - because it is different from the mainline stochastic solution
-                    val = sln.variable['{s}_power_{g}({t})'.format(s=scenario_prefix, g=str(gen),t=str(time))]['Value']
-                except KeyError:
-                    if gen == gen_with_scenarios:
-                        val = gen_with_scenarios.observed_values[time.Start]
-                    else: raise
-                power[gen][time.Start] = val
+        
+        for gen in self.generators(): 
+        
+            if gen == gen_with_scenarios:
+                get_val = lambda time: gen.observed_values[time.Start]
+            elif gen.is_controllable: 
+                # yuck - parse the power out of the native pyomo solution object 
+                # trying to avoid loading the instance - because it is different from the mainline stochastic solution
+                get_val = lambda time: sln.variable['{s}_power_{g}({t})'.format(s=scenario_prefix, g=str(gen),t=str(time))]['Value']                
+            else:
+                get_val = lambda time: gen.schedule.get_energy(time)
+                
+            for time in times: power[gen][time.Start] = get_val(time)
         return power    
 
 class Solution_Stochastic_UC(Solution_Stochastic):

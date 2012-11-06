@@ -108,7 +108,7 @@ user_config = DotDict(dict(
     
     visualization = False,
     show_clock = False,
-    logging_level = logging.INFO,
+    logging_level = logging.DEBUG,
     logging_filename = False,
     problem_filename = False,
     output_prefix = False,

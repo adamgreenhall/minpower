@@ -324,7 +324,11 @@ class PowerSystem(OptimizationProblem):
         name='system'
         if time is not None: name+='_'+str(time)
         return name
-    
+
+    def get_generators_without_scenarios(self):
+        return filter(lambda gen: getattr(gen,'has_scenarios',False)==False, self.generators())
+
+            
     def get_generator_with_scenarios(self):
         gens = filter(lambda gen: getattr(gen,'has_scenarios',False), self.generators())
         if len(gens)>1: raise NotImplementedError('Dont handle the case of multiple stochastic generators')

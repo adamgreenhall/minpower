@@ -292,8 +292,10 @@ def setup_scenarios(generators,times, Nscenarios = user_config.scenarios):
         # load in the observations (needed to decide the final states of each stage)
         gen.observed_values = dataframe_from_csv(gen.observed_filename, parse_dates=True, index_col=0, squeeze=True)
         # TODO - check for same frequency 
+        filenames = sorted(glob(joindir(gen.scenarios_directory, "*.csv")))
+        if not filenames: raise IOError('no scenario files in "{}"'.format(gen.scenarios_directory))
         
-        for i,f in enumerate(glob("{}/*.csv".format(gen.scenarios_directory))):
+        for i,f in enumerate(filenames):
             logging.debug('reading scenarios from %s', f)
             data = dataframe_from_csv(f, parse_dates=True, index_col=0)
             

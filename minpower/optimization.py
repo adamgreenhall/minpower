@@ -272,8 +272,11 @@ class OptimizationProblem(OptimizationObject):
                 pw._sets_dict=None
             
             # another memory leak
+            for key, var in instance.active_components(pyomo.Param).iteritems():
+                var._index = None            
             for key, var in instance.active_components(pyomo.Var).iteritems():
                 var.reset()
+                var._index = None
                 var._data = None
                 # var._varval = None
                 
@@ -515,6 +518,7 @@ class OptimizationProblem(OptimizationObject):
         
         results, elapsed = self._solve_instance( resolve_instance )
         if not self.solved: raise OptimizationResolveError('couldnt find solution to deterministic fixed problem')
+        else: logging.info('resolved deterministic instance of stage with observed values (in {}s)'.format(elapsed))
         
         stage_solution.observed_generator_power = stage_solution._calc_gen_power(sln=results.solution[0])        
     

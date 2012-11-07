@@ -227,6 +227,30 @@ class Solution(object):
         self.load_shed = 0 
         self.load_shed += sum(sum(load.schedule.get_energy(time) for time in times) for load in self.loads()) - P.sum().sum()
 
+    def _calc_gen_power(self, sln, scenario_prefix=None):
+        '''calculate generator power from a resolved solution using the observed stochastic gen's power'''
+        gen_with_scenarios = self.power_system.get_generator_with_scenarios()
+        times = self.times.non_overlap_times
+        
+        power = gen_time_dataframe(self.generators(), times)  
+        
+        pfx = ('' if scenario_prefix is None else scenario_prefix+'_') + 'power_'
+        
+        for gen in self.generators(): 
+        
+            if gen == gen_with_scenarios:
+                get_val = lambda time: gen.observed_values[time.Start]
+            elif gen.is_controllable: 
+                # yuck - parse the power out of the native pyomo solution object 
+                # trying to avoid loading the instance - because it is different from the mainline stochastic solution
+                get_val = lambda time: sln.variable[pfx+'{g}({t})'.format(g=str(gen),t=str(time))]['Value']                
+            else:
+                get_val = lambda time: gen.schedule.get_energy(time)
+                
+            for time in times: power[gen][time.Start] = get_val(time)
+        return power    
+
+
 
 class Solution_ED(Solution):
     def info_lines(self,t): return []
@@ -437,25 +461,6 @@ class Solution_UC(Solution):
         stack_plot_UC(self, self.generators(), self.times, prices, withPrices=withPrices)
         self.savevisualization(full_filename('commitment.png'))
 
-    def _calc_gen_power(self, sln, scenario_prefix=None):
-        '''calculate generator power from a resolved solution using the observed wind power'''
-        
-        gen_with_observed = self.power_system.get_generator_with_observed()
-        times = self.times.non_overlap_times
-        
-        power = gen_time_dataframe(self.generators(), times)
-        for time in times:
-            for gen in self.generators():
-                try: 
-                    # yuck - parse the power out of the native pyomo solution object 
-                    # trying to avoid loading the instance - because it is different from the mainline stochastic solution
-                    val = sln.variable['power_{g}({t})'.format(g=str(gen),t=str(time))]['Value']
-                except KeyError:
-                    if gen == gen_with_observed:
-                        val = gen_with_observed.observed_values[time.Start]
-                    else: raise
-                power[gen][time.Start] = val
-        return power    
 
 class Solution_SCUC(Solution_UC):
     def visualization(self): logging.warning('no visualization for SCUC. Spreadsheet output is valid, except for the price column is the price on first bus only.')
@@ -619,26 +624,6 @@ class Solution_Stochastic(Solution):
         print '\n'.join(out)
         #P=self.generators()[2].power(self.times[0])
         #print P.name,values
-    def _calc_gen_power(self, sln, scenario_prefix=None):
-        '''calculate generator power from a resolved solution using the observed stochastic gen's power'''
-        gen_with_scenarios = self.power_system.get_generator_with_scenarios()
-        times = self.times.non_overlap_times
-        
-        power = gen_time_dataframe(self.generators(), times)  
-        
-        for gen in self.generators(): 
-        
-            if gen == gen_with_scenarios:
-                get_val = lambda time: gen.observed_values[time.Start]
-            elif gen.is_controllable: 
-                # yuck - parse the power out of the native pyomo solution object 
-                # trying to avoid loading the instance - because it is different from the mainline stochastic solution
-                get_val = lambda time: sln.variable['{s}_power_{g}({t})'.format(s=scenario_prefix, g=str(gen),t=str(time))]['Value']                
-            else:
-                get_val = lambda time: gen.schedule.get_energy(time)
-                
-            for time in times: power[gen][time.Start] = get_val(time)
-        return power    
 
 class Solution_Stochastic_UC(Solution_Stochastic):
     def saveCSV(self):

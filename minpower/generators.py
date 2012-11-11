@@ -109,17 +109,18 @@ class Generator(OptimizationObject):
 #    def plot_cost_curve(self,P=None,filename=None): self.cost_model.plot(P,filename)
     def gethrsinstatus(self,tm,times, status_var=None):
         if not self.is_controllable: return None
+        # assuming that tm is the last entry of times
+        if times.last()!=tm: raise ValueError()
+        
         if status_var is None: status_var = self.status
         
         status=value(status_var(tm))
         
-        try: timesClipped=times[:times.index(tm)]
-        except: debug(); raise
         try: 
-            t_lastchange=(t for t in reversed(timesClipped) if value(status_var(t))!=status ).next()
+            t_lastchange=(t for t in reversed(times) if value(status_var(t))!=status ).next()
             return hours(tm.End-t_lastchange.Start)
         except StopIteration: #no changes over whole time period
-            h=hours(tm.End-times[0].Start)
+            h=times.spanhrs
             if value(self.initial_status) == status: h+=self.initial_status_hours
             return h
     
@@ -314,7 +315,7 @@ class Generator_nonControllable(Generator):
         except AttributeError: pass #fixed schedule
     def getstatus(self,t,times): return {}
     def create_variables(self,times):
-        self.add_parameter('power', index=times.set, values=dict([(str(time), self.get_scheduled_ouput(time)) for time in times]) )
+        self.add_parameter('power', index=times.set, values=dict([(t, self.get_scheduled_ouput(t)) for t in times]) )
         self.bids=bidding.Bid(
             polynomial=self.cost_coeffs,
             owner=self,

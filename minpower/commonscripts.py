@@ -16,22 +16,21 @@ from collections import OrderedDict
 from glob import glob
 
 import numpy as np
-
-import pandas
-from pandas import DataFrame, Series
+import pandas as pd
+from pandas import DataFrame, Series, date_range
 from pandas.io.parsers import read_csv as dataframe_from_csv
 
-from pdb import set_trace #pudb
+from ipdb import set_trace #pudb
 from pprint import pprint
     
 
 
 def gen_time_dataframe(generators, times, values=()):
-    kwargs = dict(columns = generators, index = [t.Start for t in times])
+    kwargs = dict(columns = generators, index = times.strings.index)
     if values:
-        df = pandas.DataFrame(values, **kwargs)
+        df = DataFrame(values, **kwargs)
     else: 
-        df = pandas.DataFrame(**kwargs)
+        df = DataFrame(**kwargs)
     df.index.name = 'time'
     return df
     
@@ -39,7 +38,7 @@ def ts_from_csv(filename,index_col=0, squeeze=True, timezone=None, is_df=True, *
     kwargs['header']=0 if is_df else None
     
     df = dataframe_from_csv(filename, index_col=index_col, squeeze=squeeze, **kwargs)
-    df.index = pandas.DatetimeIndex(df.index)
+    df.index = pd.DatetimeIndex(df.index)
     if timezone is not None: 
         # pandas seems to convert any stamps to UTC in the DatetimeIndex call
         df.index = df.index.tz_localize('UTC').tz_convert(timezone)

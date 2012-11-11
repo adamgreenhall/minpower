@@ -7,6 +7,9 @@ from datetime import timedelta, datetime
 from commonscripts import *
 from operator import attrgetter
 
+def get_schedule(filename):
+    return ts_from_csv(filename)
+
 class Time(object):
     """
     Describes a time interval.
@@ -51,14 +54,14 @@ class Time(object):
     def __unicode__(self):
         return unicode(self.Start)+' to '+unicode(self.End)
     def __repr__(self): return repr(self.Start)
-def make_times(datetimeL):
-    '''convert list of :py:class:`datetime.datetime` objects to :class:`~schedule.Timelist` object'''
-    S=datetimeL[0]
-    I=datetimeL[1] - S #interval
-    E=datetimeL[-1] + I #one past the last time
-    times=Timelist(Start=S,End=E,interval=I)
-    times.setInitial()
-    return times
+# def make_times(datetimeL):
+#     '''convert list of :py:class:`datetime.datetime` objects to :class:`~schedule.Timelist` object'''
+#     S=datetimeL[0]
+#     I=datetimeL[1] - S #interval
+#     E=datetimeL[-1] + I #one past the last time
+#     times=Timelist(Start=S,End=E,interval=I)
+#     times.setInitial()
+#     return times
 
 def make_times_basic(N):
     ''' make a :class:`schedule.Timelist` of N times, assume hourly interval.'''
@@ -203,8 +206,11 @@ class Timelist(object):
 class TimeIndex(Timelist):
     '''convert a pandas.Index to a Timelist'''
     def __init__(self, index):
+        strings = ['t%02d'%i for i in range(len(index))]
         self.times = index.copy()
-
+        self.strings = Series(strings,index=self.times)
+        self._set = self.strings.values.tolist()
+        
         self.get_interval()
         self.Start = self.times[0]
         self.startdate = datetime.datetime(self.Start.year, self.Start.month, self.Start.day)
@@ -213,19 +219,64 @@ class TimeIndex(Timelist):
         self.span = self.End-self.Start
         self.spanhrs = hours(self.span)
         
-        self.initialTime = self.Start - self.interval
+        self.initialTime = pd.Timestamp(self.Start - self.interval)
         self.initialTime.index = 'Init'
+        
         self._subdivided = False
+        self._int_overlap = 0
         self._index_based = True
         self._start_index = 0
 
     def get_interval(self):
-        if self.times.freq is not None:
-            self.interval = self.times.freq
+        freq = self.strings.index.freq
+        if freq is not None:
+            self.interval = freq
+            set_trace()
             self.intervalhrs = self.interval.n if self.interval.freqstr=='H' else None
-            
-    def set_repr(self):
-        return ['t{ind:02d}'.format(ind=ind+self._start_index) for range(len(self.times))]
+        else:            
+            self.interval = self.times[1] - self.times[0]
+            self.intervalhrs = self.interval.total_seconds() / 3600.0
+        return
+
+    # def __contains__(self, item): return item in self.times
+    def __len__(self): return len(self.times)
+    def __getitem__(self, i, circular=False): 
+        if i==-1 and not circular:
+            return self.initialTime
+        else:
+            return self.strings[i]
+    def last(self): return self.__getitem__(-1, circular=True)
+    
+    def __getslice__(self, i, j): return self.strings[i:j]
+
+    def non_overlap(self):
+        if self._subdivided and self._int_overlap > 0:
+            return TimeIndex(self.times.ix[:-1-int_overlap+1])
+        else: 
+            return self
+        return 
+
+    def subdivide(self, division_hrs=24, overlap_hrs=0):
+        int_division = int(division_hrs / self.intervalhrs)
+        int_overlap = int(overlap_hrs / self.intervalhrs)
+        subsets = []
+        for stg in range(int(len(self) / int_division)):
+            start = stg * int_division
+            end_point = start + int_division + int_overlap
+            end_point = min(end_point, len(self))
+
+            subset = TimeIndex(self.times[start:end_point])
+            subset.strings = self.strings[start:end_point]
+            subset._set = subset.strings.values.tolist()
+            subset._int_overlap = int_overlap
+            subsets.append(subset)
+
+        return subsets
+        
+
+
+
+
     
 def is_init(time):
     return getattr(time,'index',None)=='Init'        

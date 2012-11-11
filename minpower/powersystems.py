@@ -300,7 +300,7 @@ class PowerSystem(OptimizationProblem):
     def create_variables(self,times):
         self.add_variable('cost_first_stage')
         self.add_variable('cost_second_stage')        
-        self.add_set('times',[str(t) for t in times])
+        self.add_set('times', times._set)
         times.set=self._model.times
         for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
@@ -338,7 +338,7 @@ class PowerSystem(OptimizationProblem):
 
     def get_finalconditions(self, stage_solution):
         times = stage_solution.times
-        tEnd = times.non_overlap_times.last()
+        tEnd = times.non_overlap().last()
         for gen in self.generators():
             if stage_solution.is_stochastic:
                 finalstatus = dict(

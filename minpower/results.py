@@ -8,7 +8,7 @@ import logging
 from collections import OrderedDict
 
 from commonscripts import *
-from schedule import Timelist
+from schedule import TimeIndex
 from optimization import value,dual
 import config,stochastic
 from config import user_config
@@ -93,12 +93,25 @@ class Solution(object):
         self.solve_time  =self.power_system.solution_time
         self.objective  =float(value(self.power_system.objective))
     def _get_outputs(self):
-        self.generators_power =[self.get_values('generators','power',time) for time in self.times]
-        self.generators_status=[[s==1 for s in self.get_values('generators','status',time)] for time in self.times]
+        times_to_store = self.times.non_overlap()
+        
+        self.generators_power = gen_time_dataframe(
+            self.generators(), 
+            times_to_store, 
+            values=[self.get_values('generators','power',time) for time in times_to_store]
+            )
+        self.generators_status = gen_time_dataframe(
+            self.generators(), 
+            times_to_store, 
+            values=[self.get_values('generators','status',time) for time in times_to_store]
+            )
+        self.generators_status = self.generators_status.astype(int)
+        return
+        
 
     def _get_costs(self):
         generators=self.generators()
-        times=getattr(self.times,'non_overlap_times',self.times)
+        times=self.times.non_overlap()
         gen_fuel_costs_pwlmodel   = [[value(gen.operatingcost(t,evaluate=True)) for t in times] for gen in generators]
         gen_fuel_costs_polynomial = [[gen.truecost(t) for t in times] for gen in generators]
         self.totalcost_generation = sum(flatten([[float(gen.cost(t,evaluate=True)) for t in times] for gen in generators]))
@@ -199,7 +212,7 @@ class Solution(object):
     
     def _get_observed_costs(self):    
         generators=self.generators()
-        times=getattr(self.times,'non_overlap_times',self.times)
+        times=self.times.non_overlap()
         
         P = self.observed_generator_power
         if self.is_stochastic:
@@ -388,46 +401,10 @@ class Solution_UC(Solution):
     def saveCSV(self, save_final_status=False):
         '''generator power values and statuses for unit commitment'''
         
-        if self.is_stochastic or user_config.deterministic_solve:
-            # mutlistage stochastic UC
-            # output is the generator powers under observed wind
-            self.generators_power.to_csv(full_filename('commitment-power.csv'))
-            self.generators_status.to_csv(full_filename('commitment-status.csv'))
-
-        else:
-            
-            times=self.times
-            fields,data=[],[]
-            fields.append('times');  data.append([t.Start for t in times])
-            fields.append('prices'); data.append([self.lmps[str(t)][0] for t in times])
-
-            for g,gen in enumerate(self.generators()):
-                if gen.is_controllable:
-                    fields.append('status: '+str(gen.name))
-                    data.append([self.generators_status[t][g] for t,time in enumerate(times)])
-                fields.append('power: '+str(gen.name))
-                data.append([self.generators_power[t][g] for t,time in enumerate(times)])
-            for load in self.loads():
-                fields.append('load power: '+str(load.name))
-                data.append([value(load.power(t)) for t in times])
-                shed=[value(load.shed(t)) for t in times]
-                if sum(shed)>0:
-                    fields.append('load shed: '+str(load.name))
-                    data.append(shed)
-            writeCSV(fields,transpose(data),filename=full_filename('commitment.csv'))
-
-            if save_final_status:
-                fields,data=[],[]
-                fields.append('generators')
-                data.append([gen.name for gen in self.generators()])
-
-                t_final=self.times[-1]
-                fields.append('status')
-                data.append([gen.status(t_final) for gen in self.generators()])
-                fields.append('hours')
-                data.append([gen.gethrsinstatus(t_final,self.times) for gen in self.generators()])
-
-                writeCSV(fields,transpose(data),filename=full_filename('statuses-final.csv'))
+        # mutlistage UC
+        # for stochastic: output is the generators' power under observed wind
+        self.generators_power.to_csv(full_filename('commitment-power.csv'))
+        self.generators_status.to_csv(full_filename('commitment-status.csv'))
 
     def visualization(self, withPrices=True):
         '''generator output visualization for unit commitment'''
@@ -441,7 +418,7 @@ class Solution_UC(Solution):
         '''calculate generator power from a resolved solution using the observed wind power'''
         
         gen_with_observed = self.power_system.get_generator_with_observed()
-        times = self.times.non_overlap_times
+        times = self.times.non_overlap()
         
         power = gen_time_dataframe(self.generators(), times)
         for time in times:
@@ -471,7 +448,8 @@ class Solution_UC_multistage(Solution_UC):
         update_attributes(self,locals(),exclude=['stage_solutions','stage_times'])
         
         self.is_stochastic = any(sln.is_stochastic for sln in stage_solutions)
-        self.times=Timelist(flatten([list(times.non_overlap_times) for times in stage_times]))
+        times = pd.concat([times.non_overlap().strings for times in stage_times]).index
+        self.times=TimeIndex(times)
         self.times.setInitial(stage_times[0].initialTime)
 
         self.objective = self._sum_over('objective',stage_solutions)
@@ -486,11 +464,11 @@ class Solution_UC_multistage(Solution_UC):
     def _get_outputs(self,stage_solutions):
         '''the outputs under observed wind'''
         if self.is_stochastic or user_config.deterministic_solve:
-            self.generators_power = pandas.concat([stage.observed_generator_power for stage in stage_solutions])
-            self.generators_status = pandas.concat([stage.stage_generators_status for stage in stage_solutions])
+            self.generators_power = pd.concat([stage.observed_generator_power for stage in stage_solutions])
+            self.generators_status = pd.concat([stage.stage_generators_status for stage in stage_solutions])
         else: 
-            self.generators_power  = flatten([sln.generators_power for sln in stage_solutions])
-            self.generators_status = flatten([sln.generators_status for sln in stage_solutions])
+            self.generators_power  = pd.concat([stage.generators_power for stage in stage_solutions])
+            self.generators_status = pd.concat([stage.generators_status for stage in stage_solutions])
     
     def _get_costs(self,stage_solutions):
         self.fuelcost_generation=self._sum_over('fuelcost_generation',stage_solutions)
@@ -567,7 +545,7 @@ class Solution_Stochastic(Solution):
                 self.generators_power[s][time] =[value(gen.power(time,s)) for gen in generators]
                 self.generators_status[s][time] =[value(gen.status(time,s))==1 for gen in generators]
 
-        times_to_store = self.times.non_overlap_times if self.times._subdivided else self.times
+        times_to_store = self.times.non_overlap()
         self.stage_generators_status = gen_time_dataframe(
             self.generators(), 
             times_to_store, 
@@ -622,7 +600,7 @@ class Solution_Stochastic(Solution):
     def _calc_gen_power(self, sln, scenario_prefix=None):
         '''calculate generator power from a resolved solution using the observed stochastic gen's power'''
         gen_with_scenarios = self.power_system.get_generator_with_scenarios()
-        times = self.times.non_overlap_times
+        times = self.times.non_overlap()
         
         power = gen_time_dataframe(self.generators(), times)  
         #dict([(time,{}) for time in times])

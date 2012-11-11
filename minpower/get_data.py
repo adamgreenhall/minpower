@@ -7,8 +7,7 @@ object.
 """
 
 import powersystems
-import schedule
-from addons import *
+from schedule import *
 from commonscripts import *
 from stochastic import construct_simple_scenario_tree
 from config import user_config
@@ -196,7 +195,7 @@ def build_class_list(data, model, timeseries=None):
             msg='{} model got unexpected parameter'.format(model)
             print msg
             raise
-
+        
         if user_config.deterministic_solve and observedfilename is not None:
             obj.observed_values = timeseries[observed_col]
         elif scenariosfilename is not None:
@@ -225,7 +224,7 @@ def setup_times(generators_data, loads_data, filename_timeseries):
     :returns: a :class:`~schedule.Timelist` object
     """
     try: 
-        timeseries = dataframe_from_csv(filename_timeseries, index_col=0, parse_dates=True)
+        timeseries = ts_from_csv(filename_timeseries, is_df=True)
         if timeseries.index[1] - timeseries.index[0] == datetime.timedelta(0,3600):
             timeseries = timeseries.asfreq('1h')
         
@@ -236,38 +235,31 @@ def setup_times(generators_data, loads_data, filename_timeseries):
         pass
         # the old way...
     
-    time_strings=[]
-    schedule_filenames=[]
-    
     field_sched = 'schedulefilename'
-    def valid_sched_file(D): return _has_valid_attr(d,field_sched)
-    schedule_filenames.extend([load[field_sched] for load in loads_data if valid_sched_file(load)])
-    schedule_filenames.extend([gen[field_sched] for gen in generators_data if valid_sched_file(gen)])
+
+    valid_sched = lambda obj: obj.get(field_sched, None) is not None
     
+    scheduled_components = filter(valid_sched, loads_data+generators_data)
     
-    if len(schedule_filenames)==0:
+    if len(scheduled_components)==0:
         #this is a ED or OPF problem - only one time
-        return schedule.just_one_time()
+        return None, just_one_time()
+    
     datadir = user_config.directory
-    for filename in schedule_filenames:
-        try: time_strings.append( csvColumn(joindir(datadir,filename),'time') )
-        except ValueError:
-            time_strings.append( csvColumn(joindir(datadir,filename),'times') )
-            
+    for obj in scheduled_components:
+        fnm = obj.pop(field_sched)
+        obj['schedule'] = get_schedule(joindir(datadir,fnm) )
     
-    nT =[len(L) for L in time_strings]
-    if not all(nT[0]==N for N in nT):
-        msg='there is a schedule with inconsistent times. schedule lengths={L}.'.format(L=dict(zip(schedule_filenames,nT)))
-        raise ValueError(msg)
+    lengths = [len(obj['schedule']) for obj in scheduled_components]
+    if not all(ln==lengths[0] for ln in lengths):
+        raise ValueError('not all schedules the same length')
     
-    
-    time_strings=flatten(time_strings)
-    time_dates=schedule.parse_timestrings(time_strings)
-    
-    if not len(time_strings) == max(nT): 
-        #need to get a unique list
-        time_dates=sorted(unique(time_dates))
-    return schedule.make_times(time_dates)
+    times = TimeIndex(scheduled_components[0]['schedule'].index)
+
+    for obj in scheduled_components:
+        obj['schedule'].index = times.strings.values
+
+    return None, times
 
 def setup_scenarios(generators, times, Nscenarios = user_config.scenarios):
     if user_config.deterministic_solve: return None
@@ -323,7 +315,7 @@ def setup_scenarios(generators, times, Nscenarios = user_config.scenarios):
                 data = data[ data.index<Nscenarios ]
                 data['probability'] = data['probability']/sum( data['probability'] )
             
-            # data_times = pandas.date_range(data.columns[1], data.columns[-1],freq='5min')
+            # data_times = date_range(data.columns[1], data.columns[-1],freq='5min')
             day = parse_time(data.columns[1]) #first col is probability
             
             gen.scenario_values[day] = data

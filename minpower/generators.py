@@ -3,7 +3,7 @@ from config import user_config
 from commonscripts import *
 
 from optimization import value,OptimizationObject
-from schedule import FixedSchedule, is_init
+from schedule import is_init
 import bidding
 
 

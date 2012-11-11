@@ -150,7 +150,7 @@ class Solution(object):
         out.extend(['Solution information','-'*10,''])
         if len(self.times)<5:
             for t in self.times:
-                out.append('{tm}: {start}'.format(tm=t,start=t.Start))
+                if len(self.times)>1: out.append(t)
                 out.extend(self.info_price(t))
                 out.extend(self.info_generators(t))
                 out.extend(self.info_loads(t))
@@ -450,7 +450,7 @@ class Solution_UC_multistage(Solution_UC):
         self.is_stochastic = any(sln.is_stochastic for sln in stage_solutions)
         times = pd.concat([times.non_overlap().strings for times in stage_times]).index
         self.times=TimeIndex(times)
-        self.times.setInitial(stage_times[0].initialTime)
+        self.times.set_initial(stage_times[0].initialTime)
 
         self.objective = self._sum_over('objective',stage_solutions)
         self.solve_time = self._sum_over('solve_time',stage_solutions)

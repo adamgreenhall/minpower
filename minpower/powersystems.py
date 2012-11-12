@@ -52,8 +52,8 @@ class Load(OptimizationObject):
             if evaluate: power=value(power)
             return power
         else: 
-            return self.schedule.get_energy(time)
-    def shed(self,time,evaluate=False): return self.schedule.get_energy(time) - self.power(time,evaluate)
+            return self.get_scheduled_ouput(time)
+    def shed(self,time,evaluate=False): return self.get_scheduled_ouput(time) - self.power(time,evaluate)
     def cost(self,time): return self.cost_shedding*self.shed(time)
     def cost_first_stage(self,times): return 0
     def cost_second_stage(self,times): return sum(self.cost(time) for time in times)
@@ -63,13 +63,16 @@ class Load(OptimizationObject):
     def create_constraints(self,times):
         if self.shedding_allowed:
             for time in times:
-                self.add_constraint('max_load_power',time,self.power(time)<=self.schedule.get_energy(time))
+                self.add_constraint('max_load_power',time,self.power(time)<=self.get_scheduled_ouput(time))
     def create_objective(self,times):
         return sum([ self.cost(time) for time in times])
 
     def __str__(self): return 'd{ind}'.format(ind=self.index)    
     def __int__(self): return self.index
     def iden(self,t):     return str(self)+str(t)
+    
+    def get_scheduled_ouput(self, time): 
+        return float(self.schedule.ix[time])
     
 class Load_Fixed(Load):
     """
@@ -297,7 +300,7 @@ class PowerSystem(OptimizationProblem):
     def create_variables(self,times):
         self.add_variable('cost_first_stage')
         self.add_variable('cost_second_stage')        
-        self.add_set('times',[str(t) for t in times])
+        self.add_set('times', times._set)
         times.set=self._model.times
         for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
@@ -339,7 +342,7 @@ class PowerSystem(OptimizationProblem):
 
     def get_finalconditions(self, stage_solution):
         times = stage_solution.times
-        tEnd = times.non_overlap_times.last()
+        tEnd = times.non_overlap().last()
         for gen in self.generators():
             if stage_solution.is_stochastic:
                 finalstatus = dict(

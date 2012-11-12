@@ -313,36 +313,6 @@ class OptimizationProblem(OptimizationObject):
             
             self._stochastic_instance = None
 
-        if False: 
-            import objgraph,inspect,random,gc
-            from pprint import pprint
-            objgraph.show_backrefs(objgraph.by_type('Stage'), filename='objgraph-stage-backref-all.png')
-            objgraph.show_backrefs(objgraph.by_type('ScenarioTreeNode'), filename='objgraph-ScenarioTreeNode-backref-all.png')
-            # print gc.collect()
-            # pprint(gc.get_referrers(objgraph.by_type('ScenarioTreeNode')[0]))
-
-            try: 
-                tree = objgraph.by_type('Scenario')[0]
-                objgraph.show_refs( [tree], filename='objgraph-Scenario-refs.png')
-                objgraph.show_backrefs([tree], filename='objgraph-Scenario-backref.png')
-            except: print 'no Scenario'
-            
-            try: 
-                tree = objgraph.by_type('ScenarioTree')[0]
-                objgraph.show_refs( [tree], filename='objgraph-tree-refs.png')
-                objgraph.show_backrefs([tree], filename='objgraph-tree-backref.png')
-            except: print 'no tree'
-                
-            stage = objgraph.by_type('Stage')[0]
-            objgraph.show_refs( [stage], filename='objgraph-stage-refs.png')
-            objgraph.show_backrefs([stage], filename='objgraph-stage-backref.png')
-            objgraph.show_chain(
-                objgraph.find_backref_chain( stage, inspect.ismodule),
-                filename='objgraph-stage-backref-chain.png'
-                )
-            if stage._cost_variable is not None: 
-                objgraph.show_backrefs(stage._cost_variable[0], filename='objgraph-stage-cost-var-backrefs.png')
-            debug()            
         self.solved=False
         self._model=pyomo.ConcreteModel() 
 

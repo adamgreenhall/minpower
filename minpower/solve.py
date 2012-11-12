@@ -61,22 +61,17 @@ def solve_problem(datadir='.',
 
 def create_solve_problem(power_system, times, scenario_tree=None,
     multistage=False, stage_number=None, rerun=False): 
-    # , standalone = True
 
-    
-    
-    # if multistage and standalone: 
-
-    if user_config.problemfile: user_config.problemfile = joindir(directory, 'problem-formulation.lp')
+    if user_config.problemfile:
+        user_config.problemfile = joindir(directory, 'problem-formulation.lp')
 
     create_problem(power_system,times)
 
     stochastic_formulation = False
     if scenario_tree is not None and not rerun:
         if multistage: # multiple time stages
-            gen = filter(lambda gen: getattr(gen, 'has_scenarios',False) , power_system.generators())[0]
-            day_start = times[0].Start
-            tree = stochastic.construct_simple_scenario_tree( gen.scenario_values[day_start]['probability'].values.tolist(), time_stage=stage_number )
+            gen = power_system.get_generator_with_scenarios()
+            tree = stochastic.construct_simple_scenario_tree( gen.scenario_values[times.startdate]['probability'].values.tolist(), time_stage=stage_number )
             logging.debug('constructed tree for stage %i'%stage_number)
         else: tree = scenario_tree
         stochastic_formulation = True
@@ -133,10 +128,7 @@ def solve_multistage(power_system, times, scenario_tree):
 
     """
 
-    if not user_config.interval_hours: interval_hours=times.intervalhrs
-
     stage_times=times.subdivide(user_config.hours_commitment, 
-        interval_hrs=interval_hours, 
         overlap_hrs=user_config.hours_commitment_overlap )
     buses=power_system.buses
     stage_solutions=[]
@@ -144,7 +136,8 @@ def solve_multistage(power_system, times, scenario_tree):
     Nstages = len(stage_times)
 
     for stg,t_stage in enumerate(stage_times):
-        logging.info('Stage starting at {}, {}'.format(t_stage[0].Start, show_clock(user_config.show_clock)))
+        logging.info('Stage starting at {}, {}'.format(t_stage.Start, show_clock(user_config.show_clock)))
+        
         
         power_system.set_initialconditions(t_stage.initialTime, stg, stage_solutions)
 
@@ -252,6 +245,9 @@ def main():
     parser.add_argument('--error','-e',action="store_true",
                     default=False,
                     help='redirect error messages to the standard output (useful for debugging on remote machines)')
+    parser.add_argument('--debugger',action="store_true",
+                    default=False,
+                    help='use pudb when an error is raised')
 
     #figure out the command line arguments
     args = parser.parse_args()
@@ -281,3 +277,6 @@ def main():
                 print 'There was an error:'
                 traceback.print_exc(file=sys.stdout)
             else: raise
+            
+# for use in dev
+if __name__=='__main__': main()

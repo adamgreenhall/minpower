@@ -3,7 +3,7 @@ from config import user_config
 from commonscripts import *
 
 from optimization import value,OptimizationObject
-from schedule import FixedSchedule
+from schedule import is_init
 import bidding
 
 
@@ -53,7 +53,7 @@ class Generator(OptimizationObject):
         
     def power(self,time=None,scenario=None): 
         '''real power output at time'''
-        if time is not None and time.index=='Init':
+        if time is not None and is_init(time):
             return self.initial_power
         else:
             return self.get_variable('power',time,scenario=scenario,indexed=True)
@@ -66,7 +66,7 @@ class Generator(OptimizationObject):
     def status(self,time=None,scenario=None): 
         '''on/off status at time'''
         if self.commitment_problem: 
-            if time is not None and time.index=='Init':
+            if time is not None and is_init(time):
                 return self.initial_status
             else:
                 return self.get_variable('status',time,scenario=scenario,indexed=True)
@@ -109,17 +109,18 @@ class Generator(OptimizationObject):
 #    def plot_cost_curve(self,P=None,filename=None): self.cost_model.plot(P,filename)
     def gethrsinstatus(self,tm,times, status_var=None):
         if not self.is_controllable: return None
+        # assuming that tm is the last entry of times
+        if times.last()!=tm: raise ValueError()
+        
         if status_var is None: status_var = self.status
         
         status=value(status_var(tm))
         
-        try: timesClipped=times[:times.index(tm)]
-        except: debug(); raise
         try: 
-            t_lastchange=(t for t in reversed(timesClipped) if value(status_var(t))!=status ).next()
+            t_lastchange=(t for t in reversed(times) if value(status_var(t))!=status ).next()
             return hours(tm.End-t_lastchange.Start)
         except StopIteration: #no changes over whole time period
-            h=hours(tm.End-times[0].Start)
+            h=times.spanhrs
             if value(self.initial_status) == status: h+=self.initial_status_hours
             return h
     
@@ -306,7 +307,6 @@ class Generator_nonControllable(Generator):
         self.init_optimization()
     def power(self,time, scenario=None): 
         return self.get_parameter('power',time, indexed=True)
-        # return self.schedule.get_energy(time)
     def status(self,time=None,scenarios=None): return True
     def set_initial_condition(self,time=None, P=None, u=None, hoursinstatus=None):
         try: 
@@ -315,7 +315,7 @@ class Generator_nonControllable(Generator):
         except AttributeError: pass #fixed schedule
     def getstatus(self,t,times): return {}
     def create_variables(self,times):
-        self.add_parameter('power', index=times.set, values=dict([(str(time), self.schedule.get_energy(time)) for time in times]) )
+        self.add_parameter('power', index=times.set, values=dict([(t, self.get_scheduled_ouput(t)) for t in times]) )
         self.bids=bidding.Bid(
             polynomial=self.cost_coeffs,
             owner=self,
@@ -327,6 +327,7 @@ class Generator_nonControllable(Generator):
     def operatingcost(self,time=None,evaluate=False): return self.bids.output_true( self.power(time) )
     def truecost(self,time): return self.cost(time)
     def incrementalcost(self,time): return self.bids.output_incremental(self.power(time))
+    def get_scheduled_ouput(self, time): return float(self.schedule.ix[time])
 
 class Generator_Stochastic(Generator_nonControllable):
     """
@@ -348,7 +349,7 @@ class Generator_Stochastic(Generator_nonControllable):
     
     def _get_scenario_values(self,times,s=0):
         if self.has_scenarios_multistage:
-            values = self.scenario_values[times[0].Start]
+            values = self.scenario_values[times.startdate]
             try: scenario = values.ix[s].values.tolist()
             except: raise KeyError('{} is not an available scenario number'.format(s))
             scenario.pop(0) # dont include the probability
@@ -423,5 +424,4 @@ def makeGenerator(kind='generic',**kwargs):
         kwargs.pop('power')
 
     kwargs.pop('is_controllable')
-
     return classname(kind=kind,**kwargs)

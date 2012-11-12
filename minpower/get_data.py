@@ -7,8 +7,7 @@ object.
 """
 
 import powersystems
-import schedule
-from addons import *
+from schedule import *
 from commonscripts import *
 from stochastic import construct_simple_scenario_tree
 from config import user_config
@@ -35,26 +34,40 @@ fields_gens={
     'scenariosdirectory':'scenariosdirectory',
     # observed filename is the observed wind and will evaluate the cost of a stochastic solution
     'observedfilename':'observedfilename',
-    # forecast filename is a deterministic (point) wind forecast and will be evaluated against observed wind
-    'forecastfilename':'forecastfilename'}
+     # forecast filename is a deterministic (point) wind forecast and will be evaluated against observed wind
+    'forecastfilename':'forecastfilename',
+    
+    'schedulename':'schedulename',
+    'forecastname':'forecastname',
+    'observedname':'observedname',
+    
+    }
     
 fields_loads={'name':'name','bus':'bus','type':'kind','kind':'kind',
             'p':'P','pd':'P', 'power':'P',
             'pmin':'Pmin','pmax':'Pmax',
             'schedulefilename':'schedulefilename','model':'model',
-            'bidequation':'costcurvestring','costcurveequation':'costcurvestring'}
+            'bidequation':'costcurvestring','costcurveequation':'costcurvestring',
+            
+            'schedulename':'schedulename',
+            }
 fields_initial={
     'name':'name','generatorname':'name',
     'status':'u','u':'u',
     'p':'P','pg':'P','power':'P',
     'hoursinstatus':'hoursinstatus',
     'ic':None}
+
+def _has_valid_attr(obj, name):
+    return getattr(obj, name, None) is not None
     
 def parsedir(
         file_gens='generators.csv',
         file_loads='loads.csv',
         file_lines='lines.csv',
-        file_init='initial.csv'):
+        file_init='initial.csv',
+        file_timeseries='timeseries.csv'
+        ):
     """
     Import data from spreadsheets and build lists of
     :mod:`powersystems` classes.
@@ -76,7 +89,9 @@ def parsedir(
     datadir = user_config.directory
     
     if not os.path.isdir(datadir): raise OSError('data directory "{d}" does not exist'.format(d=datadir) )
-    [file_gens,file_loads,file_lines,file_init]=[joindir(datadir,filename) for filename in (file_gens,file_loads,file_lines,file_init)]
+    [file_gens,file_loads,file_lines,file_init, file_timeseries]=[joindir(datadir,filename) for filename in (file_gens,file_loads,file_lines,file_init, file_timeseries)]
+    
+    
     
     generators_data=csv2dicts(file_gens,field_map=fields_gens)
     loads_data=csv2dicts(file_loads,field_map=fields_loads)
@@ -85,23 +100,23 @@ def parsedir(
     try: init_data=csv2dicts(file_init,field_map=fields_initial)
     except IOError: init_data=[]
     
-    
     #create times
-    times=setup_times(generators_data,loads_data,datadir)
+    timeseries, times = setup_times(generators_data, loads_data, file_timeseries)
     #add loads
-    loads=build_class_list(loads_data,powersystems.makeLoad,datadir,times=times)
+    loads = build_class_list(loads_data, powersystems.makeLoad, timeseries)
     #add generators
-    generators=build_class_list(generators_data,powersystems.makeGenerator,datadir,times=times)
+    generators = build_class_list(generators_data, powersystems.makeGenerator, timeseries)
     #add lines
-    lines=build_class_list(lines_data,powersystems.Line,datadir)    
+    lines = build_class_list(lines_data, powersystems.Line)    
     #add initial conditions
-    setup_initialcond(init_data,generators,times)
+    
+    setup_initialcond(init_data, generators, times)
     
     #setup scenario tree (if applicable)
     if user_config.deterministic_solve: 
         scenario_tree = None
     else: 
-        scenario_tree=setup_scenarios(generators, times)
+        scenario_tree = setup_scenarios(generators, times)
     
     return generators,loads,lines,times,scenario_tree
 
@@ -132,7 +147,7 @@ def setup_initialcond(data,generators,times):
         generators[g].set_initial_condition(time=t_init,**row)        
     return generators
 
-def build_class_list(data,model,datadir,times=None,model_schedule=schedule.make_schedule):
+def build_class_list(data, model, timeseries=None):
     """
     Create list of class instances from data in a spreadsheet.
     
@@ -144,37 +159,29 @@ def build_class_list(data,model,datadir,times=None,model_schedule=schedule.make_
     
     :returns: a list of class objects
     """
-
-    
-    def get_model(inputs,default=model,field='model'):
-        model=default
-        newmodel=inputs.pop(field,None)
-        if newmodel is None: return model,model_schedule
-        else:
-            modname,classname=newmodel.split('.')
-            if 'Shifting' in classname: 
-                model_schedule_row=getattr(globals()[modname],'make_shifting_schedule')
-            else: 
-                model_schedule_row=model_schedule
-            return getattr(globals()[modname],classname),model_schedule_row
+    datadir = user_config.directory
     
     all_models=[]
     index=0
-    for row in data:
-        model_row,model_schedule_row=get_model(row)
-        schedulefilename=row.pop('schedulefilename',None)
-        scenariosfilename=row.pop('scenariosfilename',None)
-        scenariosdirectory=row.pop('scenariosdirectory',None)
-        observedfilename = row.pop('observedfilename', None)
-        bid_points_filename = row.pop('costcurvepointsfilename', None)
-        forecast_filename = row.pop('forecastfilename',None)
+    for row in data:      
+        row_model = model
+        sched_col = row.pop('schedulename',None)
+        observed_col = row.pop('observedname', None)
+        forecast_col = row.pop('forecastname',None)
         
-        if schedulefilename is not None: row['schedule']=model_schedule_row(joindir(datadir,schedulefilename),times)
-        elif (scenariosfilename is not None) or (scenariosdirectory is not None): model_row = powersystems.Generator_Stochastic
+        scenariosfilename = row.pop('scenariosfilename',None)
+        scenariosdirectory=row.pop('scenariosdirectory',None)
+        bid_points_filename = row.pop('costcurvepointsfilename', None)
+        
+        if sched_col is not None: 
+            row['schedule'] = timeseries[sched_col]
+        elif (scenariosfilename is not None) or (scenariosdirectory is not None):
+            row_model = powersystems.Generator_Stochastic
+        
         
         if user_config.deterministic_solve and forecast_filename is not None: 
-            model_row = powersystems.Generator_nonControllable
-            row['schedule']=model_schedule_row(joindir(datadir,forecast_filename),times)
+            row_model = powersystems.Generator_nonControllable
+            row['schedule'] = timeseries[forecast_col]
         
         # load a custom bid points filename with {power, cost} columns 
         if bid_points_filename is not None: 
@@ -183,20 +190,19 @@ def build_class_list(data,model,datadir,times=None,model_schedule=schedule.make_
             row['costcurvestring'] = None
             
         
-        try: obj=model_row(index=index, **row)
+        try: obj=row_model(index=index, **row)
         except TypeError:
-            msg='{} model got unexpected parameter'.format(model_row)
+            msg='{} model got unexpected parameter'.format(model)
             print msg
             raise
-
+        
         if user_config.deterministic_solve and observedfilename is not None:
-            obj.observed_filename = joindir(datadir, observedfilename)
-            obj.observed_values = dataframe_from_csv(obj.observed_filename, parse_dates=True, index_col=0, squeeze=True)
+            obj.observed_values = timeseries[observed_col]
         elif scenariosfilename is not None:
             obj.scenarios_filename  = joindir(datadir,scenariosfilename)
         elif scenariosdirectory is not None: 
             obj.scenarios_directory = joindir(datadir, scenariosdirectory)
-            try: obj.observed_filename = joindir(datadir, observedfilename)
+            try: obj.observed_values = timeseries[observed_col]
             except: 
                 raise AttributeError('you must provide a observed filename for a rolling stochastic UC')
 
@@ -204,7 +210,7 @@ def build_class_list(data,model,datadir,times=None,model_schedule=schedule.make_
         index+=1
     return all_models
 
-def setup_times(generators_data,loads_data,datadir):
+def setup_times(generators_data, loads_data, filename_timeseries):
     """ 
     Create list of :class:`~schedule.Time` objects 
     from the schedule files. If there are no schedule
@@ -217,41 +223,45 @@ def setup_times(generators_data,loads_data,datadir):
     
     :returns: a :class:`~schedule.Timelist` object
     """
+    try: 
+        timeseries = ts_from_csv(filename_timeseries, is_df=True)
+        if timeseries.index[1] - timeseries.index[0] == datetime.timedelta(0,3600):
+            timeseries = timeseries.asfreq('1h')
+        
+        times = schedule.TimeIndex(timeseries.index)
+        
+        return timeseries, times
+    except IOError:
+        pass
+        # the old way...
+    
+    field_sched = 'schedulefilename'
 
-    time_strings=[]
-    schedule_filenames=[]
+    valid_sched = lambda obj: obj.get(field_sched, None) is not None
     
-    field_sched='schedulefilename'
-    def valid_sched_file(D): return D.get(field_sched,None) is not None and not D.get('model','').count('Shifting')
-    schedule_filenames.extend([load[field_sched] for load in loads_data if valid_sched_file(load)])
-    schedule_filenames.extend([gen[field_sched] for gen in generators_data if valid_sched_file(gen)])
+    scheduled_components = filter(valid_sched, loads_data+generators_data)
     
-    
-    if len(schedule_filenames)==0:
+    if len(scheduled_components)==0:
         #this is a ED or OPF problem - only one time
-        return schedule.just_one_time()
+        return None, just_one_time()
+    
+    datadir = user_config.directory
+    for obj in scheduled_components:
+        fnm = obj.pop(field_sched)
+        obj['schedule'] = get_schedule(joindir(datadir,fnm) )
+    
+    lengths = [len(obj['schedule']) for obj in scheduled_components]
+    if not all(ln==lengths[0] for ln in lengths):
+        raise ValueError('not all schedules the same length')
+    
+    times = TimeIndex(scheduled_components[0]['schedule'].index)
 
-    for filename in schedule_filenames:
-        try: time_strings.append( csvColumn(joindir(datadir,filename),'time') )
-        except ValueError:
-            time_strings.append( csvColumn(joindir(datadir,filename),'times') )
-            
-    
-    nT =[len(L) for L in time_strings]
-    if not all(nT[0]==N for N in nT):
-        msg='there is a schedule with inconsistent times. schedule lengths={L}.'.format(L=dict(zip(schedule_filenames,nT)))
-        raise ValueError(msg)
-    
-    
-    time_strings=flatten(time_strings)
-    time_dates=schedule.parse_timestrings(time_strings)
-    
-    if not len(time_strings) == max(nT): 
-        #need to get a unique list
-        time_dates=sorted(unique(time_dates))
-    return schedule.make_times(time_dates)
+    for obj in scheduled_components:
+        obj['schedule'].index = times.strings.values
 
-def setup_scenarios(generators,times, Nscenarios = user_config.scenarios):
+    return None, times
+
+def setup_scenarios(generators, times, Nscenarios = user_config.scenarios):
     if user_config.deterministic_solve: return None
 
     has_scenarios=[]
@@ -289,8 +299,9 @@ def setup_scenarios(generators,times, Nscenarios = user_config.scenarios):
         gen.scenario_values = OrderedDict()
         gen.has_scenarios_multistage = True
         
+        # already did this above 
         # load in the observations (needed to decide the final states of each stage)
-        gen.observed_values = dataframe_from_csv(gen.observed_filename, parse_dates=True, index_col=0, squeeze=True)
+        # gen.observed_values = dataframe_from_csv(gen.observed_filename, parse_dates=True, index_col=0, squeeze=True)
         # TODO - check for same frequency 
         filenames = sorted(glob(joindir(gen.scenarios_directory, "*.csv")))
         if not filenames: raise IOError('no scenario files in "{}"'.format(gen.scenarios_directory))
@@ -303,7 +314,7 @@ def setup_scenarios(generators,times, Nscenarios = user_config.scenarios):
                 data = data[ data.index<Nscenarios ]
                 data['probability'] = data['probability']/sum( data['probability'] )
             
-            # data_times = pandas.date_range(data.columns[1], data.columns[-1],freq='5min')
+            # data_times = date_range(data.columns[1], data.columns[-1],freq='5min')
             day = parse_time(data.columns[1]) #first col is probability
             
             gen.scenario_values[day] = data

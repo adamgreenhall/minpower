@@ -10,6 +10,7 @@ import powersystems
 from schedule import *
 from commonscripts import *
 from stochastic import construct_simple_scenario_tree
+from powersystems import PowerSystem
 from config import user_config
 
 import os,sys,logging
@@ -60,6 +61,45 @@ fields_initial={
 
 def _has_valid_attr(obj, name):
     return getattr(obj, name, None) is not None
+
+def parse_standalone(
+        times,
+        file_gens='generators.csv',
+        file_loads='loads.csv',
+        file_lines='lines.csv'):
+    datadir = user_config.directory
+    
+    if not os.path.isdir(datadir): 
+        raise OSError('data directory "{d}" does not exist'.format(d=datadir))
+    [file_gens,file_loads,file_lines]=[joindir(datadir,fnm) for fnm in (file_gens,file_loads,file_lines)]
+    
+    generators_data=csv2dicts(file_gens,field_map=fields_gens)
+    loads_data=csv2dicts(file_loads,field_map=fields_loads)
+    try: lines_data=csv2dicts(file_lines,field_map=fields_lines)
+    except IOError: lines_data=[]
+    
+    #add loads
+    loads = build_class_list(loads_data, powersystems.makeLoad)
+    #add generators
+    generators = build_class_list(generators_data, powersystems.makeGenerator)
+    #add lines
+    lines = build_class_list(lines_data, powersystems.Line)    
+    
+    # remove times not in stage
+    for obj in filter(lambda obj: _has_valid_attr(obj, 'schedule'), loads+generators):
+        obj.schedule = obj.schedule[times.strings.index]
+        obj.schedule.index = times.strings.values
+    
+    #setup scenario tree (if applicable)
+    if user_config.deterministic_solve: 
+        scenario_tree = None
+    else: 
+        scenario_tree = setup_scenarios(generators, times)
+    
+    power_system = PowerSystem(generators,loads,lines)
+    
+    return power_system,times,scenario_tree
+
     
 def parsedir(
         file_gens='generators.csv',
@@ -169,12 +209,16 @@ def build_class_list(data, model, timeseries=None):
         observed_col = row.pop('observedname', None)
         forecast_col = row.pop('forecastname',None)
         
+        
+        schedulefilename = row.pop('schedulefilename',None)        
         scenariosfilename = row.pop('scenariosfilename',None)
         scenariosdirectory=row.pop('scenariosdirectory',None)
         bid_points_filename = row.pop('costcurvepointsfilename', None)
         
         if sched_col is not None: 
             row['schedule'] = timeseries[sched_col]
+        elif schedulefilename is not None:
+            row['schedule'] = get_schedule(joindir(datadir, schedulefilename))
         elif (scenariosfilename is not None) or (scenariosdirectory is not None):
             row_model = powersystems.Generator_Stochastic
         

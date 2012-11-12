@@ -20,8 +20,8 @@ def just_one_time():
 
 class TimeIndex(object):
     '''a list of times (underlying model is pandas.Index)'''
-    def __init__(self, index):
-        strings = ['t%02d'%i for i in range(len(index))]
+    def __init__(self, index, str_start=0):
+        strings = ['t%02d'%(i+str_start) for i in range(len(index))]
         self.times = index.copy()
         self.strings = Series(strings,index=self.times)
         self._set = self.strings.values.tolist()
@@ -36,10 +36,8 @@ class TimeIndex(object):
         
         self.set_initial()
                 
-        self._subdivided = False
         self._int_overlap = 0
-        self._index_based = True
-        self._start_index = 0
+        self._str_start = str_start
 
     def set_initial(self,initialTime=None): 
         if initialTime: self.initialTime= initialTime
@@ -73,11 +71,14 @@ class TimeIndex(object):
     def __getslice__(self, i, j): return self.strings[i:j]
 
     def non_overlap(self):
-        if self._subdivided and self._int_overlap > 0:
-            return TimeIndex(self.times.ix[:-1-int_overlap+1])
+        if self._int_overlap > 0:
+            return TimeIndex(self.strings.ix[:-1-self._int_overlap], self._str_start)
         else: 
             return self
         return 
+        
+    def last_non_overlap(self): return self.strings.index[-1-self._int_overlap]
+
 
     def subdivide(self, division_hrs=24, overlap_hrs=0):
         int_division = int(division_hrs / self.intervalhrs)
@@ -88,9 +89,7 @@ class TimeIndex(object):
             end_point = start + int_division + int_overlap
             end_point = min(end_point, len(self))
 
-            subset = TimeIndex(self.times[start:end_point])
-            subset.strings = self.strings[start:end_point]
-            subset._set = subset.strings.values.tolist()
+            subset = TimeIndex(self.times[start:end_point], start)
             subset._int_overlap = int_overlap
             subsets.append(subset)
 

@@ -21,6 +21,7 @@ setup(
     entry_points="""
     [console_scripts]
     minpower = minpower.solve:main
+    standalone_minpower = minpower.solve:standaloneUC
     """,
 
     install_requires=[

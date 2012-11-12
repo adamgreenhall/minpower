@@ -4,11 +4,13 @@ Many of them are one liners.
 """
 
 import os
+import sys
 import csv
 import logging
 import itertools
 import operator
 import datetime
+import subprocess
 from dateutil import parser
 from dateutil.parser import parse as parse_time
 
@@ -20,17 +22,30 @@ import pandas as pd
 from pandas import DataFrame, Series, date_range
 from pandas.io.parsers import read_csv as dataframe_from_csv
 
+from pprint import pprint
 try: # for development
     from ipdb import set_trace #pudb
-    from pprint import pprint
-except: pass 
+except: 
+    from pdb import set_trace
 
 def gen_time_dataframe(generators, times, values=()):
-    kwargs = dict(columns = generators, index = times.strings.index)
+    kwargs = dict(columns = [str(g) for g in generators])
+    try: kwargs['index'] = times.strings.index
+    except AttributeError: kwargs['index'] = times
+
+    flip = len(generators) > len(times)
+    if flip: 
+        kwargs['columns'] = kwargs['index']
+        kwargs['index'] = [str(g) for g in generators]
+    
+    
     if values:
         df = DataFrame(values, **kwargs)
     else: 
         df = DataFrame(**kwargs)
+        
+    if flip: 
+        df = df.T
     df.index.name = 'time'
     return df
     

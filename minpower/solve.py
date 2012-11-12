@@ -10,8 +10,82 @@ import time as timer
 
 from optimization import OptimizationError
 import config, get_data, powersystems, stochastic, results
+from standalone import * 
 from commonscripts import * # joindir,show_clock
 from config import user_config
+
+
+
+def solve_multistage(power_system, times, scenario_tree):
+    """
+    Solve a rolling or multi-stage power systems optimization problem.
+    Each stage will be one optimization run. A stage's final
+    conditions will be the next stage's initial conditions
+    """
+    
+    wipe_storage()
+    
+    stage_times=times.subdivide(user_config.hours_commitment, 
+        user_config.hours_commitment_overlap)
+    buses=power_system.buses
+    stage_solutions=[]
+    
+    Nstages = len(stage_times)
+
+    # store stage initial state
+    storage = store_state(power_system, stage_times, None)
+
+    for stg,t_stage in enumerate(stage_times):
+        logging.info('Stage starting at {}, {}'.format(t_stage.Start, show_clock()))
+        # store current stage times
+        storage = store_times(t_stage, storage)
+        storage.close()
+        storage = None
+        subprocess.check_call( 
+            'standalone_minpower {} {}'.format(user_config.directory, stg), 
+            shell=True, stdout=sys.stdout)
+    
+    storage = get_storage()
+    
+    return storage, stage_times
+
+def standaloneUC():
+    # standalone_minpower
+    user_config.directory = sys.argv[1]
+    stg = int(sys.argv[2])
+
+    # load stage data
+    power_system, times, scenario_tree = load_state()
+    
+    try: 
+        stage_solution, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg) 
+    except OptimizationError:
+        #re-do stage, with load shedding allowed
+        logging.critical('stage infeasible, re-running with load shedding.')
+        power_system.reset_model()
+        power_system.set_load_shedding(True)
+        try:
+            stage_solution, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg, rerun=True)
+        except OptimizationError:
+            raise OptimizationError('failed to solve, even with load shedding.')
+        power_system.set_load_shedding(False)
+
+    logging.debug('solved... get results... {}'.format(show_clock()))
+    
+    if stage_solution.is_stochastic:
+        # resolve with observed power and fixed status from stochastic solution
+        power_system.resolve_stochastic_with_observed(instance, stage_solution)
+    elif user_config.deterministic_solve:
+        # resolve with observed power and fixed status from determinisitic solution
+        power_system.resolve_determinisitc_with_observed(instance, stage_solution)
+
+    power_system.get_finalconditions(stage_solution)
+    stage_solution.stage_number = stg
+    
+    store = store_state(power_system, times, stage_solution)
+    store.flush()
+    
+    return
 
 def solve_problem(datadir='.',
         shell=True,
@@ -107,71 +181,71 @@ def create_problem(power_system,times):
     return
 
 
-def solve_multistage(power_system, times, scenario_tree):
-    """
-    Solve a rolling or multi-stage power systems optimization problem.
-    Each stage will be one optimization run. A stage's final
-    conditions will be the next stage's initial condition.
+#def solve_multistage(power_system, times, scenario_tree):
+#    """
+#    Solve a rolling or multi-stage power systems optimization problem.
+#    Each stage will be one optimization run. A stage's final
+#    conditions will be the next stage's initial condition.
 
-    :param power_system: :class:`~powersystems.PowerSystem` object
-    :param datadir: directory of spreadsheets
-    :param times: :class:`~schedule.Timelist` object. Will be split up into stages
-    :param interval_hours: number of hours per interval
-    :param stage_hours: number of hours per stage (e.g. run one commitment every stage_hours)
-    :param overlap_hours: number of hours that stages overlap (e.g. run a 36hr commitment every 24hrs)
-    :param writeproblem: save the formulation of each stage to a file
-    :param get_duals: get the duals, or prices, of the optimization problem
-    :param showclock: show the current system time at the start of each stage
+#    :param power_system: :class:`~powersystems.PowerSystem` object
+#    :param datadir: directory of spreadsheets
+#    :param times: :class:`~schedule.Timelist` object. Will be split up into stages
+#    :param interval_hours: number of hours per interval
+#    :param stage_hours: number of hours per stage (e.g. run one commitment every stage_hours)
+#    :param overlap_hours: number of hours that stages overlap (e.g. run a 36hr commitment every 24hrs)
+#    :param writeproblem: save the formulation of each stage to a file
+#    :param get_duals: get the duals, or prices, of the optimization problem
+#    :param showclock: show the current system time at the start of each stage
 
-    :returns: a list of :class:`~results.Solution_UC` objects (one per stage)
-    :returns: a list of :class:`~schedule.Timelist` objects (one per stage)
+#    :returns: a list of :class:`~results.Solution_UC` objects (one per stage)
+#    :returns: a list of :class:`~schedule.Timelist` objects (one per stage)
 
-    """
+#    """
 
-    stage_times=times.subdivide(user_config.hours_commitment, 
-        overlap_hrs=user_config.hours_commitment_overlap )
-    buses=power_system.buses
-    stage_solutions=[]
-    
-    Nstages = len(stage_times)
+#    stage_times=times.subdivide(user_config.hours_commitment, 
+#        overlap_hrs=user_config.hours_commitment_overlap )
+#    buses=power_system.buses
+#    stage_solutions=[]
+#    
+#    Nstages = len(stage_times)
 
-    for stg,t_stage in enumerate(stage_times):
-        logging.info('Stage starting at {}, {}'.format(t_stage.Start, show_clock(user_config.show_clock)))
-        
-        
-        power_system.set_initialconditions(t_stage.initialTime, stg, stage_solutions)
+#    for stg,t_stage in enumerate(stage_times):
+#        logging.info('Stage starting at {}, {}'.format(t_stage.Start, show_clock(user_config.show_clock)))
+#        
+#        
+#        power_system.set_initialconditions(t_stage.initialTime, stg, stage_solutions)
 
-        try: 
-            stage_solution, instance = create_solve_problem(power_system, t_stage, scenario_tree, multistage=True, stage_number=stg) 
-        except OptimizationError:
-            #re-do stage, with load shedding allowed
-            logging.critical('stage infeasible, re-running with load shedding.')
-            power_system.reset_model()
-            power_system.set_load_shedding(True)
-            try:
-                stage_solution, instance = create_solve_problem(power_system, t_stage, scenario_tree, multistage=True, stage_number=stg, rerun=True)
-            except OptimizationError:
-                if stage_solutions: stage_solutions[-1].saveCSV(joindir(datadir,'last-stage-solved-commitment.csv'), save_final_status=True)
-                raise OptimizationError('failed to solve, even with load shedding.')
-            power_system.set_load_shedding(False)
+#        try: 
+#            stage_solution, instance = create_solve_problem(power_system, t_stage, scenario_tree, multistage=True, stage_number=stg) 
+#        except OptimizationError:
+#            #re-do stage, with load shedding allowed
+#            logging.critical('stage infeasible, re-running with load shedding.')
+#            power_system.reset_model()
+#            power_system.set_load_shedding(True)
+#            try:
+#                stage_solution, instance = create_solve_problem(power_system, t_stage, scenario_tree, multistage=True, stage_number=stg, rerun=True)
+#            except OptimizationError:
+#                if stage_solutions: stage_solutions[-1].saveCSV(joindir(datadir,'last-stage-solved-commitment.csv'), save_final_status=True)
+#                raise OptimizationError('failed to solve, even with load shedding.')
+#            power_system.set_load_shedding(False)
 
-        logging.debug('solved... get results... {}'.format(show_clock(user_config.show_clock)))
-        
-        if stage_solution.is_stochastic:
-            # resolve with observed power and fixed status from stochastic solution
-            power_system.resolve_stochastic_with_observed(instance, stage_solution)
-        elif user_config.deterministic_solve:
-            # resolve with observed power and fixed status from determinisitic solution
-            power_system.resolve_determinisitc_with_observed(instance, stage_solution)
-        
-        power_system.get_finalconditions(stage_solution)
-        stage_solutions.append(stage_solution)
+#        logging.debug('solved... get results... {}'.format(show_clock(user_config.show_clock)))
+#        
+#        if stage_solution.is_stochastic:
+#            # resolve with observed power and fixed status from stochastic solution
+#            power_system.resolve_stochastic_with_observed(instance, stage_solution)
+#        elif user_config.deterministic_solve:
+#            # resolve with observed power and fixed status from determinisitic solution
+#            power_system.resolve_determinisitc_with_observed(instance, stage_solution)
+#        
+#        power_system.get_finalconditions(stage_solution)
+#        stage_solutions.append(stage_solution)
 
-        if stg < (Nstages-1): # if not the last stage 
-            power_system.reset_model()
-            #commonscripts.show_memory_growth()
-            
-    return stage_solutions, stage_times
+#        if stg < (Nstages-1): # if not the last stage 
+#            power_system.reset_model()
+#            #commonscripts.show_memory_growth()
+#            
+#    return stage_solutions, stage_times
 
 
 def _setup_logging():

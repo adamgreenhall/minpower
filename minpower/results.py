@@ -75,7 +75,8 @@ def make_solution(power_system,times,**kwargs):
 def make_multistage_solution(power_system, stage_times, stage_solutions):
     '''Create a multi stage solution object.'''
     if power_system.lines: logging.warning('no visualization for multistage SCUC yet')
-    return Solution_UC_multistage(power_system, stage_times, stage_solutions)
+    klass = MultistageStandalone if getattr(stage_solutions, 'path', False) else Solution_UC_multistage
+    return klass(power_system, stage_times, stage_solutions)
 
 class Solution(object):
     '''
@@ -117,6 +118,9 @@ class Solution(object):
         self.totalcost_generation = sum(flatten([[float(gen.cost(t,evaluate=True)) for t in times] for gen in generators]))
         self.fuelcost_generation=float(sum( c for c in flatten(gen_fuel_costs_pwlmodel) ))
         self.fuelcost_true_generation=float(sum( c for c in flatten(gen_fuel_costs_polynomial) ))
+        self.load_shed_timeseries = Series(
+            [sum(load.shed(t,evaluate=True) for load in self.loads()) for t in times],
+            index = times.strings.index)
         self.load_shed = sum( sum(load.shed(t,evaluate=True) for load in self.loads()) for t in times )
         self._get_cost_error()
     def _get_cost_error(self):
@@ -442,7 +446,7 @@ class Solution_UC(Solution):
 class Solution_SCUC(Solution_UC):
     def visualization(self): logging.warning('no visualization for SCUC. Spreadsheet output is valid, except for the price column is the price on first bus only.')
 
-
+        
 class Solution_UC_multistage(Solution_UC):
     '''
     Muti-stage unit commitment. Each stage represents one optimization problem.
@@ -752,3 +756,34 @@ def prettify_axes(ax):
 def shrink_axis(ax,percent_horizontal=0.20,percent_vertical=0):
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width * (1-percent_horizontal), box.height*(1-percent_vertical)])
+    
+    
+class MultistageStandalone(Solution_UC_multistage):
+    def __init__(self, power_system, stage_times, store):
+        
+        self.is_stochastic = len(power_system.get_generator_with_scenarios()) > 0
+        self._resolved = self.is_stochastic or user_config.deterministic_solve
+        times = pd.concat([times.non_overlap().strings for times in stage_times]).index
+        self.times=TimeIndex(times)
+        self.times.set_initial(stage_times[0].initialTime)
+
+        self.objective = store['expected_cost'].sum()
+        if self._resolved:
+            self.observed_cost = store['observed_cost'].sum()
+        self.generators_power = store['power']
+        self.generators_status = store['status']
+
+        # set_trace()
+        self.load_shed = store['load_shed'].sum()
+        self.solve_time = store['solve_time'].sum()
+                
+    def info_cost(self):
+        resolved = self._resolved
+        expected = 'expected ' if resolved else ''
+        observed = 'observed ' if resolved else ''
+        
+        out = ['{}objective cost={}'.format(expected, self.objective)]
+        if resolved: out.append(
+            'total {}generation costs={}'.format(observed, self.observed_cost))
+        
+        return out    

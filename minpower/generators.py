@@ -130,6 +130,7 @@ class Generator(OptimizationObject):
         self.initial_status = bool_to_int(u)
         self.initial_power =  P * self.initial_status #note: this eliminates ambiguity of off status with power non-zero output
         self.initial_status_hours = hoursinstatus
+        
     def build_cost_model(self):
         '''
         parse the coefficients for the polynomial bid curve or point definition
@@ -309,11 +310,12 @@ class Generator_nonControllable(Generator):
         return self.get_parameter('power',time, indexed=True)
     def status(self,time=None,scenarios=None): return True
     def set_initial_condition(self,time=None, P=None, u=None, hoursinstatus=None):
-        try: 
-            if P is None: P=sorted(self.schedule.energy.items())[0][1] #set initial value to first value
-            self.schedule.energy[time]=P 
-        except AttributeError: pass #fixed schedule
-    def getstatus(self,t,times): return {}
+        self.initial_power = 0
+        self.initial_status = 1
+        self.initial_status_hours = 0
+        
+
+    def getstatus(self,t,times): return dict(u=1,P=self.power(t),hoursinstatus=0)
     def create_variables(self,times):
         self.add_parameter('power', index=times.set, values=dict([(t, self.get_scheduled_ouput(t)) for t in times]) )
         self.bids=bidding.Bid(

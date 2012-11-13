@@ -106,21 +106,20 @@ class Generator(OptimizationObject):
         return self.bids.output_incremental(self.power(time)) if value(self.status(time)) else None
     def cost_first_stage(self,times):  return sum(self.cost_startup(time)+self.cost_shutdown(time) for time in times)
     def cost_second_stage(self,times): return sum(self.operatingcost(time) for time in times)
-    def getstatus(self,times,status): 
-        t = times.strings.index[-1]
+    def getstatus(self, tend, times, status): 
         return dict(
-            u=value(self.status(t)),
-            P=value(self.power(t)),
-            hoursinstatus=self.gethrsinstatus(t,times, status))
-    def gethrsinstatus(self, tend, times, status):
+            u=value(self.status(tend)),
+            P=value(self.power(tend)),
+            hoursinstatus=self.gethrsinstatus(times, status))
+    def gethrsinstatus(self, times, stat):
         if not self.is_controllable: return 0
-        set_trace()
-        end_status = status.ix[tEnd]
-        last_noneq = status[status != end_status]
+        valcol = stat.name
+        status = stat.reset_index()
+        end_status = status[valcol][status.index[-1]]
+        last_noneq = status[status[valcol] != end_status]
         if len(last_noneq)==0: return 0
         else:
-            set_trace()
-            intervals = len(stat[last_noneq.index[-1]+1:])
+            intervals = len(status[last_noneq.index[-1]+1:])
         
         hrs = intervals * times.intervalhrs
         if self.initial_status == end_status:
@@ -319,7 +318,8 @@ class Generator_nonControllable(Generator):
         self.initial_status_hours = 0
 
 
-    def getstatus(self,t,times): return dict(u=1,P=self.power(t),hoursinstatus=0)
+    def getstatus(self, tend, times=None, status=None): 
+        return dict(u=1,P=self.power(tend),hoursinstatus=0)
     def create_variables(self,times):
         self.add_parameter('power', index=times.set, values=dict([(t, self.get_scheduled_ouput(t)) for t in times]) )
         self.bids=bidding.Bid(

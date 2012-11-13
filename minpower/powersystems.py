@@ -358,12 +358,13 @@ class PowerSystem(OptimizationProblem):
             g = str(gen)
             stat = status[g]
             if sln.is_stochastic:
-                finalstatus = dict(
+                gen.finalstatus = dict(
                     P =  sln.observed_generator_power[g][tEnd],
                     u =  sln.stage_generators_status[g][tEnd],
-                    hoursinstatus = gen.gethrsinstatus(tEnd, times.non_overlap(), stat))
+                    hoursinstatus = gen.gethrsinstatus(times.non_overlap(), stat))
+                
             else:
-                gen.finalstatus = gen.getstatus(times.non_overlap(), stat)
+                gen.finalstatus = gen.getstatus(tEndstr, times.non_overlap(), stat)
         return
 
     def set_initialconditions(self, initTime, stage_number, stage_solutions):

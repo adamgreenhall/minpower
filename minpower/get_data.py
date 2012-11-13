@@ -84,12 +84,16 @@ def parse_standalone(
     generators = build_class_list(generators_data, powersystems.makeGenerator)
     #add lines
     lines = build_class_list(lines_data, powersystems.Line)    
-    
+        
     # remove times not in stage
     for obj in filter(lambda obj: _has_valid_attr(obj, 'schedule'), loads+generators):
         obj.schedule = obj.schedule[times.strings.index]
         obj.schedule.index = times.strings.values
-    
+
+    for obj in filter(lambda obj: _has_valid_attr(obj, 'observed_values'), generators):
+        obj.observed_values = obj.observed_values[times.strings.index]
+        obj.observed_values.index = times.strings.values
+        
     #setup scenario tree (if applicable)
     if user_config.deterministic_solve: 
         scenario_tree = None
@@ -210,7 +214,9 @@ def build_class_list(data, model, timeseries=None):
         forecast_col = row.pop('forecastname',None)
         
         
-        schedulefilename = row.pop('schedulefilename',None)        
+        schedulefilename = row.pop('schedulefilename',None)
+        observedfilename = row.pop('observedfilename',None)
+            
         scenariosfilename = row.pop('scenariosfilename',None)
         scenariosdirectory=row.pop('scenariosdirectory',None)
         bid_points_filename = row.pop('costcurvepointsfilename', None)
@@ -246,9 +252,12 @@ def build_class_list(data, model, timeseries=None):
             obj.scenarios_filename  = joindir(datadir,scenariosfilename)
         elif scenariosdirectory is not None: 
             obj.scenarios_directory = joindir(datadir, scenariosdirectory)
-            try: obj.observed_values = timeseries[observed_col]
-            except: 
-                raise AttributeError('you must provide a observed filename for a rolling stochastic UC')
+            if observedfilename is not None:
+                obj.observed_values = get_schedule(joindir(datadir, observedfilename))
+            else: 
+                try: obj.observed_values = timeseries[observed_col]
+                except: 
+                    raise AttributeError('you must provide a observed filename for a rolling stochastic UC')
 
         all_models.append( obj )
         index+=1
@@ -305,8 +314,10 @@ def setup_times(generators_data, loads_data, filename_timeseries):
 
     return None, times
 
-def setup_scenarios(generators, times, Nscenarios = user_config.scenarios):
+def setup_scenarios(generators, times):
     if user_config.deterministic_solve: return None
+    
+    Nscenarios = user_config.scenarios
 
     has_scenarios=[]
     for gen in generators:

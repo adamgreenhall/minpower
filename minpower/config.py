@@ -97,7 +97,7 @@ user_config = DotDict(dict(
     get_duals = True,
     breakpoints = 11,
     hours_commitment = 24,
-    hours_commitment_overlap = 0,
+    hours_overlap = 0,
     cost_load_shedding = 1000, #$/MWh    
     load_shedding_allowed = False,
     dispatch_decommit_allowed = False,
@@ -113,7 +113,7 @@ user_config = DotDict(dict(
     problem_filename = False,
     output_prefix = False,
     
-    scenarios_limit = None,
+    scenarios = None,
     deterministic_solve = False,
     
     

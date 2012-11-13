@@ -447,14 +447,14 @@ class OptimizationProblem(OptimizationObject):
 
 
     def resolve_stochastic_with_observed(self, instance, stage_solution):
-        gen_with_scenarios = self.get_generator_with_scenarios()
+        gen = self.get_generator_with_scenarios()
         s = stage_solution.scenarios[0]
-        times = stage_solution.times.non_overlap_times
+        times = stage_solution.times.non_overlap()
         
         resolve_instance = instance.active_components(pyomo.Block)[s]
-        power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen_with_scenarios))]
+        power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen))]
         for time in times:
-            power[str(time)] = gen_with_scenarios.observed_values[time.Start]
+            power[time] = gen.observed_values[time]
         
         self._fix_variables(resolve_instance)
         results, elapsed = self._solve_instance( resolve_instance )
@@ -477,7 +477,7 @@ class OptimizationProblem(OptimizationObject):
         
         gen_with_observed = self.get_generator_with_observed()
         
-        times = stage_solution.times.non_overlap_times
+        times = stage_solution.times.non_overlap()
         
         resolve_instance = instance
         power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen_with_observed))]

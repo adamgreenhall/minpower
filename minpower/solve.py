@@ -10,29 +10,22 @@ import time as timer
 
 from optimization import OptimizationError
 import config, get_data, powersystems, stochastic, results
-from standalone import * 
-from commonscripts import * # joindir,show_clock
 from config import user_config
-
-
+from standalone import store_state, get_storage, load_state, store_times, wipe_storage
+from commonscripts import * # joindir,show_clock
 
 def solve_multistage(power_system, times, scenario_tree):
-    """
-    Solve a rolling or multi-stage power systems optimization problem.
-    Each stage will be one optimization run. A stage's final
-    conditions will be the next stage's initial conditions
-    """
-    
+    # standalone
+    user_config.store_filename = joindir(user_config.directory, 'stage-store{}.hd5').format(
+        '-{}'.format(os.getpid()) if user_config.output_prefix else '')
+        
     wipe_storage()
-    
-    stage_times=times.subdivide(user_config.hours_commitment, 
-        user_config.hours_commitment_overlap)
+    stage_times=times.subdivide(user_config.hours_commitment, user_config.hours_overlap)
     buses=power_system.buses
     stage_solutions=[]
     
     Nstages = len(stage_times)
 
-    # store stage initial state
     storage = store_state(power_system, stage_times, None)
 
     for stg,t_stage in enumerate(stage_times):
@@ -42,7 +35,9 @@ def solve_multistage(power_system, times, scenario_tree):
         storage.close()
         storage = None
         subprocess.check_call( 
-            'standalone_minpower {} {}'.format(user_config.directory, stg), 
+            'standalone_minpower {dir} {stg} {pid}'.format(
+                dir=user_config.directory, stg=stg, 
+                pid=os.getpid() if user_config.output_prefix else ''), 
             shell=True, stdout=sys.stdout)
     
     storage = get_storage()
@@ -51,12 +46,17 @@ def solve_multistage(power_system, times, scenario_tree):
 
 def standaloneUC():
     # standalone_minpower
+    from config import user_config
+    _setup_logging()
     user_config.directory = sys.argv[1]
     stg = int(sys.argv[2])
 
+    user_config.store_filename = joindir(user_config.directory, 'stage-store{}.hd5').format(
+        '-{}'.format(sys.argv[3]) if len(sys.argv)>3 else '')
+    
     # load stage data
     power_system, times, scenario_tree = load_state()
-    
+
     try: 
         stage_solution, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg) 
     except OptimizationError:
@@ -105,7 +105,7 @@ def solve_problem(datadir='.',
     :param solver: choice of solver, a lowercase string
     :param num_breakpoints: number of break points to use in linearization of bid (or cost) polynomials (equal to number of segments + 1)
     :param hours_commitment: maximum length of a single unit commitment, times beyond this will be divided into multiple problems and solved in a rolling commitment
-    :param hours_commitment_overlap: overlap of commitments for rolling commitments
+    :param hours_overlap: overlap of commitments for rolling commitments
     :param get_duals: get the duals, or prices, of the optimization problem
     :param dispatch_decommit_allowed: allow de-commitment of units in an ED -- useful for getting initial conditions for UCs
     :returns: :class:`~results.Solution` object
@@ -120,7 +120,7 @@ def solve_problem(datadir='.',
     power_system=powersystems.PowerSystem(generators,loads,lines)
 
     logging.debug('power system set up {}'.format(show_clock()))
-    if times.spanhrs <= user_config.hours_commitment + user_config.hours_commitment_overlap:
+    if times.spanhrs <= user_config.hours_commitment + user_config.hours_overlap:
         solution, instance = create_solve_problem(power_system, times, scenario_tree)
     else: #split into multiple stages and solve
         stage_solutions, stage_times = solve_multistage(power_system, times, scenario_tree)
@@ -145,12 +145,12 @@ def create_solve_problem(power_system, times, scenario_tree=None,
     if scenario_tree is not None and not rerun:
         if multistage: # multiple time stages
             gen = power_system.get_generator_with_scenarios()
-            tree = stochastic.construct_simple_scenario_tree( gen.scenario_values[times.startdate]['probability'].values.tolist(), time_stage=stage_number )
+            tree = stochastic.construct_simple_scenario_tree( gen.scenario_values[times.start_datetime]['probability'].values.tolist(), time_stage=stage_number )
             logging.debug('constructed tree for stage %i'%stage_number)
         else: tree = scenario_tree
         stochastic_formulation = True
         stochastic.define_stage_variables(tree,power_system,times)
-        power_system = stochastic.create_problem_with_scenarios(power_system,times, tree, user_config.hours_commitment, user_config.hours_commitment_overlap, stage_number=stage_number)
+        power_system = stochastic.create_problem_with_scenarios(power_system,times, tree, user_config.hours_commitment, user_config.hours_overlap, stage_number=stage_number)
 
     instance = power_system.solve(user_config)
 
@@ -203,7 +203,7 @@ def create_problem(power_system,times):
 #    """
 
 #    stage_times=times.subdivide(user_config.hours_commitment, 
-#        overlap_hrs=user_config.hours_commitment_overlap )
+#        overlap_hrs=user_config.hours_overlap )
 #    buses=power_system.buses
 #    stage_solutions=[]
 #    
@@ -277,8 +277,8 @@ def main():
     parser.add_argument('--commitment_hours','-c', type=int, 
                     default=user_config.hours_commitment,
                     help='number hours per commitment in a rolling UC (exclusive of overlap)')
-    parser.add_argument('--overlap_hours','-o', type=int, 
-                    default=user_config.hours_commitment_overlap,
+    parser.add_argument('--hours_overlap','-o', type=int, 
+                    default=user_config.hours_overlap,
                     help='number hours to overlap commitments in a rolling UC')
                     
     parser.add_argument('--reserve_fixed', type=float, 
@@ -301,7 +301,7 @@ def main():
                     default=user_config.logging_filename,
                     help='log file, default is to log to terminal')
     parser.add_argument('--scenarios',type=int, 
-                    default=user_config.scenarios_limit,
+                    default=user_config.scenarios,
                     help='limit the number of scenarios to N')
     parser.add_argument('--deterministic_solve', action='store_true',
                     default=user_config.deterministic_solve,

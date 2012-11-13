@@ -4,20 +4,22 @@ from config import user_config
 from schedule import TimeIndex
 from get_data import parse_standalone
 
-filename = 'stage-store.hd5'
 
 def wipe_storage():
-    print 'wipe storage'
-    os.remove(joindir(user_config.directory, filename))
+    try: 
+        os.remove(user_config.store_filename)
+        print 'wipe storage'
+    except OSError: pass
+    
 
-def get_storage(): 
-    return pd.HDFStore(joindir(user_config.directory, filename))
+def get_storage():
+    return pd.HDFStore(user_config.store_filename)
 
         
 def store_times(tstage, storage=None):
     if storage is None:
         storage = get_storage()
-    storage['times'] = tstage.strings        
+    storage['times'] = tstage.strings
     return storage
         
 def store_state(power_system, times, sln=None):
@@ -27,18 +29,16 @@ def store_state(power_system, times, sln=None):
     if sln is None: 
         # pre-first stage
         stages = len(times) #stage_times
-        times = [times[0].initialTime]
+        t = [times[0].initialTime]
         
-        storage['power'] = gen_time_dataframe(generators, times, 
+        storage['power'] = gen_time_dataframe(generators, t, 
             values = [gen.initial_power for gen in generators])        
-        storage['status'] = gen_time_dataframe(generators, times, 
+        storage['status'] = gen_time_dataframe(generators, t, 
             values = [gen.initial_status for gen in generators])
-        storage['load_shed'] = Series( [0], index=times)
+        storage['load_shed'] = Series( [0], index=t)
 
-        storage['hrsinstatus'] = gen_time_dataframe(generators, times, 
+        storage['hrsinstatus'] = gen_time_dataframe(generators, t, 
             values = [gen.initial_status_hours for gen in generators])
-        
-        
         
         # per-stage results 
         storage['expected_cost'] = Series(index=range(stages))
@@ -46,34 +46,42 @@ def store_state(power_system, times, sln=None):
         storage['solve_time'] = Series(index=range(stages))
         
         # store configuration
-        storage['configuration'] = Series(user_config)
-        print 'store init config'
-        
+        # store stage initial state
+        user_config._int_overlap = times[0]._int_overlap
+        user_config._int_division = times[0]._int_division
+        storage['configuration'] = Series(user_config)        
     else:
         stg = sln.stage_number
-        storage['power'] = storage['power'].append(sln.generators_power)
-        storage['status'] = storage['status'].append(sln.generators_status)
-        storage['load_shed'] = storage['load_shed'].append(sln.load_shed_timeseries)
+        if sln.is_stochastic:
+            storage['power'] = storage['power'].append(sln.observed_generator_power)
+            storage['status'] = storage['status'].append(sln.stage_generators_status)
+            storage['load_shed'] = storage['load_shed'].append(sln.load_shed_timeseries)
+
+        else:
+            storage['power'] = storage['power'].append(sln.generators_power)
+            storage['status'] = storage['status'].append(sln.generators_status)
+            storage['load_shed'] = storage['load_shed'].append(sln.load_shed_timeseries)
         
         tEnd = times.last_non_overlap()
         storage['hrsinstatus'] = gen_time_dataframe(generators, [tEnd], 
             values = [gen.finalstatus['hoursinstatus'] for gen in generators])
         
-        _add_stage_val(storage, 'expected_cost', stg, sln.objective)
-        _add_stage_val(storage, 'solve_time', stg, sln.solve_time)                
+        _add_tbl_val(storage, 'expected_cost', stg, sln.objective)
+        _add_tbl_val(storage, 'solve_time', stg, sln.solve_time)                
         
         if sln.is_stochastic or user_config.deterministic_solve:
-            _add_stage_val(storage, 'observed_cost', stg, sln.totalcost_generation)                
+            _add_tbl_val(storage, 'observed_cost', stg, sln.totalcost_generation)                
                 
     return storage
     
 def load_state():
     storage = get_storage()
-    user_config = storage['configuration'].to_dict()
+    user_config.update(storage['configuration'].to_dict())
     
     startidx = int(storage['times'][0].strip('t'))
     times = TimeIndex(storage['times'].index, startidx)
-
+    times._int_overlap = user_config._int_overlap
+    times._int_division = user_config._int_division
     # create power_system
     power_system, times, scenario_tree = parse_standalone(times)
     generators = power_system.generators()
@@ -92,7 +100,7 @@ def load_state():
     
     return power_system, times, scenario_tree
     
-def _add_stage_val(storage, tablename, index, value):
+def _add_tbl_val(storage, tablename, index, value):
     tbl = storage[tablename]
     tbl[index] = value
     storage[tablename] = tbl

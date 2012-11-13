@@ -106,7 +106,7 @@ def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_
     
     def relax_non_anticipatory_constraints(): 
         #relax the non-anticipatory constraints on the generator status variables beyond the UC time horizon
-        for time in times.post_horizon(stage_hours):
+        for time in times.post_horizon():
             logging.debug('get rid of NA constraint at '+str(time))
             for scenario in scenario_instances.keys():
                 for gen in power_system.generators():

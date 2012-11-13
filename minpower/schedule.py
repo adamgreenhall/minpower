@@ -28,7 +28,7 @@ class TimeIndex(object):
         
         self.get_interval()
         self.Start = self.times[0]
-        self.startdate = self.Start.date()
+        self.start_datetime = self.Start.to_datetime()
         
         self.End = self.times[-1] + self.interval
         self.span = self.End-self.Start
@@ -37,6 +37,7 @@ class TimeIndex(object):
         self.set_initial()
                 
         self._int_overlap = 0
+        self._int_division = len(self)
         self._str_start = str_start
 
     def set_initial(self,initialTime=None): 
@@ -72,11 +73,20 @@ class TimeIndex(object):
 
     def non_overlap(self):
         if self._int_overlap > 0:
-            return TimeIndex(self.strings.ix[:-1-self._int_overlap], self._str_start)
+            return TimeIndex(self.strings.index[:-1-self._int_overlap+1], self._str_start)
         else: 
             return self
         return 
-        
+    
+    def post_horizon(self):
+        if len(self) > self._int_division:
+            str_start = int(self.strings.ix[self._int_division+1].strip('t'))            
+            return TimeIndex(self.strings.index[self._int_division+1:], str_start)
+        else: 
+            return Series()
+        return 
+    
+    
     def last_non_overlap(self): return self.strings.index[-1-self._int_overlap]
 
 
@@ -91,8 +101,8 @@ class TimeIndex(object):
 
             subset = TimeIndex(self.times[start:end_point], start)
             subset._int_overlap = int_overlap
+            subset._int_division = int_division
             subsets.append(subset)
-
         return subsets
         
 def is_init(time):

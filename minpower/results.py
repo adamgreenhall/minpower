@@ -206,13 +206,18 @@ class Solution(object):
         cost = 0
         fixed_cost = 0
         
+        cost = P.copy()
+        fixed_cost = status_change.copy()
+        if len(fixed_cost[status_change==1])>0:
+            fixed_cost[status_change==1] *= [gen.startupcost for gen in generators]
+        if len(fixed_cost[status_change==-1])>0:            
+            fixed_cost[status_change==-1] *= [gen.shutdowncost for gen in generators]
+        
         for gen in generators:
-            for t,time in enumerate(times):
-                cost += value(u[gen][time.Start])*gen.bids.output_true(P[gen][time.Start])
-                du = status_change[gen][time.Start]
-                if du==1:    fixed_cost += gen.startupcost
-                elif du==-1: fixed_cost += gen.shutdowncost
-        return cost, fixed_cost        
+            g = str(gen)
+            cost[g] = cost[g].map(lambda power: gen.bids.output_true(power))
+        
+        return cost.sum().sum(), fixed_cost.sum().sum()
     
     def _get_observed_costs(self):    
         generators=self.generators()
@@ -241,13 +246,15 @@ class Solution(object):
         self.fuelcost_generation = cost
         self.totalcost_generation = cost + fixed_cost
         
-        self.load_shed = 0 
-        self.load_shed += sum(sum(load.schedule.get_energy(time) for time in times) for load in self.loads()) - P.sum().sum()
+        self.load_shed_timeseries = self.loads()[0].schedule - P.sum()
+                    
+        self.load_shed = sum(sum(load.schedule[time] for time in times) for load in self.loads()) - P.sum().sum()
+
 
     def _calc_gen_power(self, sln, scenario_prefix=None):
         '''calculate generator power from a resolved solution using the observed stochastic gen's power'''
         gen_with_scenarios = self.power_system.get_generator_with_scenarios()
-        times = self.times.non_overlap_times
+        times = self.times.non_overlap()
         
         power = gen_time_dataframe(self.generators(), times)  
         
@@ -256,15 +263,16 @@ class Solution(object):
         for gen in self.generators(): 
         
             if gen == gen_with_scenarios:
-                get_val = lambda time: gen.observed_values[time.Start]
+                get_val = lambda time: gen.observed_values[time]
             elif gen.is_controllable: 
                 # yuck - parse the power out of the native pyomo solution object 
                 # trying to avoid loading the instance - because it is different from the mainline stochastic solution
                 get_val = lambda time: sln.variable[pfx+'{g}({t})'.format(g=str(gen),t=str(time))]['Value']                
             else:
-                get_val = lambda time: gen.schedule.get_energy(time)
-                
-            for time in times: power[gen][time.Start] = get_val(time)
+                get_val = lambda time: gen.schedule[time]
+
+            for time, tstr in times.strings.to_dict().items(): 
+                power[str(gen)][time] = get_val(tstr)
         return power    
 
 
@@ -561,6 +569,7 @@ class Solution_Stochastic(Solution):
             values=[self.generators_status[self.scenarios[0]][time] for time in times_to_store]
             )
         self.stage_generators_status = self.stage_generators_status.astype(int)
+        
         return
 
     def _get_costs(self):
@@ -568,10 +577,7 @@ class Solution_Stochastic(Solution):
         tree=self.power_system._scenario_tree
         root_node = tree._stages[0]._tree_nodes[0]
         self.expected_cost = root_node.computeExpectedNodeCost(instances)
-        self.cost_per_scenario=stochastic.get_scenario_based_costs(tree,instances)
-        
-        # TODO - calculate the expected cost 
-        
+        self.cost_per_scenario=stochastic.get_scenario_based_costs(tree,instances)        
 
     def _get_cost_error(self): pass
 
@@ -761,7 +767,7 @@ def shrink_axis(ax,percent_horizontal=0.20,percent_vertical=0):
 class MultistageStandalone(Solution_UC_multistage):
     def __init__(self, power_system, stage_times, store):
         
-        self.is_stochastic = len(power_system.get_generator_with_scenarios()) > 0
+        self.is_stochastic = power_system.is_stochastic
         self._resolved = self.is_stochastic or user_config.deterministic_solve
         times = pd.concat([times.non_overlap().strings for times in stage_times]).index
         self.times=TimeIndex(times)
@@ -773,7 +779,6 @@ class MultistageStandalone(Solution_UC_multistage):
         self.generators_power = store['power']
         self.generators_status = store['status']
 
-        # set_trace()
         self.load_shed = store['load_shed'].sum()
         self.solve_time = store['solve_time'].sum()
                 
@@ -786,4 +791,4 @@ class MultistageStandalone(Solution_UC_multistage):
         if resolved: out.append(
             'total {}generation costs={}'.format(observed, self.observed_cost))
         
-        return out    
+        return out  

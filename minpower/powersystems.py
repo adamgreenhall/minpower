@@ -243,6 +243,8 @@ class PowerSystem(OptimizationProblem):
             gen.dispatch_decommit_allowed = self.dispatch_decommit_allowed
             try: gen.cost_breakpoints = self.num_breakpoints
             except AttributeError: pass #gen has no cost model
+
+        self.is_stochastic = len(filter(lambda gen: gen.is_stochastic, generators))>0
             
     def set_load_shedding(self,is_allowed):
         '''set system mode for load shedding'''
@@ -342,19 +344,26 @@ class PowerSystem(OptimizationProblem):
 
     def get_finalconditions(self, stage_solution):
         times = stage_solution.times
-        tEnd = times.non_overlap().last()
+        
+        tEnd = times.last_non_overlap() # like 2011-01-01 23:00:00
+        tEndstr = times.non_overlap().last() # like t99
+        
+        status = stage_solution.stage_generators_status.copy()
+        status.index = times.non_overlap().strings.values
+        
         for gen in self.generators():
             if stage_solution.is_stochastic:
+                g = str(gen)
                 finalstatus = dict(
-                    P =  stage_solution.observed_generator_power[gen][tEnd.Start], 
-                    u =  stage_solution.stage_generators_status[gen][tEnd.Start], 
+                    P =  stage_solution.observed_generator_power[g][tEnd], 
+                    u =  stage_solution.stage_generators_status[g][tEnd], 
                     hoursinstatus = gen.gethrsinstatus(
-                        tEnd, 
-                        times, 
-                        status_var = lambda time: stage_solution.stage_generators_status[gen][time.Start]
+                        tEndstr, 
+                        times.non_overlap(), 
+                        status_var = lambda time: status[g][time]
                         )
                     )
-            else: finalstatus = gen.getstatus(t=tEnd,times=times)
+            else: finalstatus = gen.getstatus(t=tEndstr,times=times)
             gen.finalstatus = finalstatus
         return
         

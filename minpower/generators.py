@@ -47,6 +47,7 @@ class Generator(OptimizationObject):
         update_attributes(self,locals()) #load in inputs     
         if self.rampratemin is None and self.rampratemax is not None: self.rampratemin = -1*self.rampratemax
         self.is_controllable=True
+        self.is_stochastic = False
         self.commitment_problem=True
         self.build_cost_model()
         self.init_optimization()
@@ -110,7 +111,8 @@ class Generator(OptimizationObject):
     def gethrsinstatus(self,tm,times, status_var=None):
         if not self.is_controllable: return None
         # assuming that tm is the last entry of times
-        if times.last()!=tm: raise ValueError()
+        if times.last()!=tm: 
+            raise ValueError()
         
         if status_var is None: status_var = self.status
         
@@ -347,15 +349,17 @@ class Generator_Stochastic(Generator_nonControllable):
         self.is_stochastic=True
         self.build_cost_model()
         self.init_optimization()
+        self.startupcost = 0
+        self.shutdowncost = 0        
+        
     def power(self,time,scenario=None): return self.get_variable('power',time=time,scenario=scenario,indexed=True)
     
     def _get_scenario_values(self,times,s=0):
         if self.has_scenarios_multistage:
-            values = self.scenario_values[times.startdate]
+            values = self.scenario_values[times.start_datetime]
             try: scenario = values.ix[s].values.tolist()
             except: raise KeyError('{} is not an available scenario number'.format(s))
-            scenario.pop(0) # dont include the probability
-            return [ scenario[t] for t in range(len(times)) ]
+            return scenario[1:len(times)+1] # dont include the probability
         else:
             return [ self.scenario_values[s][time] for time in times ]
     

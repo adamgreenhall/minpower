@@ -76,7 +76,7 @@ def parse_standalone(
     except IOError: lines_data=[]
     
     #add loads
-    loads = build_class_list(loads_data, powersystems.makeLoad)
+    loads = build_class_list(loads_data, powersystems.Load)
     #add generators
     generators = build_class_list(generators_data, powersystems.Generator)
     #add lines
@@ -84,8 +84,7 @@ def parse_standalone(
         
     # remove times not in stage
     for obj in filter(lambda obj: _has_valid_attr(obj, 'schedule'), loads+generators):
-        try: obj.schedule = obj.schedule[times.strings.index]
-        except: set_trace()
+        obj.schedule = obj.schedule[times.strings.index]
         obj.schedule.index = times.strings.values
 
     for obj in filter(lambda obj: _has_valid_attr(obj, 'observed_values'), generators):
@@ -145,7 +144,7 @@ def parsedir(
     #create times
     timeseries, times = setup_times(generators_data, loads_data, file_timeseries)
     #add loads
-    loads = build_class_list(loads_data, powersystems.makeLoad, times, timeseries)
+    loads = build_class_list(loads_data, powersystems.Load, times, timeseries)
     #add generators
     generators = build_class_list(generators_data, powersystems.Generator, times, timeseries)
     #add lines
@@ -223,27 +222,25 @@ def build_class_list(data, model, times=None, timeseries=None):
             forecast_col = row.pop('forecastname',None)
                         
             observedfilename = row.pop('observedfilename',None)
+            forecastfilename = row.pop('forecastfilename',None)
                 
-            scenariosfilename = row.pop('scenariosfilename',None)
             scenariosdirectory=row.pop('scenariosdirectory',None)
             bid_points_filename = row.pop('costcurvepointsfilename', None)
 
         
         if power is not None: 
             row['schedule'] = Series([power], times.strings.index)
-        elif sched_col is not None: 
-            row['schedule'] = timeseries[sched_col]
-        elif schedulefilename is not None:
-            row['schedule'] = get_schedule(joindir(datadir, schedulefilename))
-        elif is_generator and ((scenariosfilename is not None) or (scenariosdirectory is not None)):
+        elif (sched_col is not None) or (schedulefilename is not None):
+            row['schedule'] = _tsorfile(schedulefilename, datadir, timeseries, sched_col)  
+        elif is_generator and (scenariosdirectory is not None):
             row_model = powersystems.Generator_Stochastic
         
         if is_generator and row.get('schedule') is not None:
             row_model = powersystems.Generator_nonControllable
         
-        if is_generator and user_config.deterministic_solve and (forecast_filename is not None): 
+        if is_generator and user_config.deterministic_solve and (forecastfilename is not None): 
             row_model = powersystems.Generator_nonControllable
-            row['schedule'] = timeseries[forecast_col]
+            row['schedule'] = _tsorfile(forecastfilename, datadir, timeseries, forecast_col)            
         
         # load a custom bid points filename with {power, cost} columns 
         if is_generator and (bid_points_filename is not None): 
@@ -256,23 +253,30 @@ def build_class_list(data, model, times=None, timeseries=None):
             msg='{} model got unexpected parameter'.format(model)
             print msg
             raise
-        
-        if user_config.deterministic_solve and (observedfilename is not None):
-            obj.observed_values = timeseries[observed_col]
-        elif is_generator and (scenariosfilename is not None):
-            obj.scenarios_filename  = joindir(datadir,scenariosfilename)
-        elif is_generator and (scenariosdirectory is not None): 
-            obj.scenarios_directory = joindir(datadir, scenariosdirectory)
-            if observedfilename is not None:
-                obj.observed_values = get_schedule(joindir(datadir, observedfilename))
-            else: 
-                try: obj.observed_values = timeseries[observed_col]
-                except: 
-                    raise AttributeError('you must provide a observed filename for a rolling stochastic UC')
+
+        if is_generator:
+            if user_config.deterministic_solve and (observedfilename is not None):
+                obj.observed_values = _tsorfile(observedfilename, datadir, timeseries, observed_col)
+            elif scenariosdirectory is not None: 
+                obj.scenarios_directory = joindir(datadir, scenariosdirectory)
+                try:
+                    obj.observed_values = _tsorfile(observedfilename, datadir, timeseries, observed_col)
+                except:
+                    raise IOError('you must provide a observed filename for a rolling stochastic UC')
+                    
 
         all_models.append( obj )
         index+=1
     return all_models
+
+def _tsorfile(filename, datadir, timeseries, col):
+    if timeseries is not None:
+        sched = timeseries[col]
+    else:
+        sched = get_schedule(joindir(datadir, filename))
+    return sched
+    
+    
 
 def setup_times(generators_data, loads_data, filename_timeseries):
     """ 

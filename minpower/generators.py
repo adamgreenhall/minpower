@@ -187,6 +187,7 @@ class Generator(OptimizationObject):
         
         if self.commitment_problem or self.dispatch_decommit_allowed:
             self.add_variable('status', index=times.set, kind='Binary',fixed_value=1 if self.mustrun else None)
+        
         if self.commitment_problem:
             #power_available exists for easier reserve requirement
             self.add_variable('power_available',index=times.set, low=0,high=self.Pmax)
@@ -208,7 +209,7 @@ class Generator(OptimizationObject):
 
         if self.commitment_problem:
             #set initial and final time constraints
-            tInitial = times.initialTime
+            tInitial = times.initialTimestr
             tEnd = len(times)
             if self.minuptime>0:
                 up_intervals_remaining=roundoff((self.minuptime - self.initial_status_hours)/times.intervalhrs)

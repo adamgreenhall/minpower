@@ -61,15 +61,17 @@ def standaloneUC():
         stage_solution, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg) 
     except OptimizationError:
         #re-do stage, with load shedding allowed
-        logging.critical('stage infeasible, re-running with load shedding.')
-        set_trace()
-        power_system.reset_model()
-        power_system.set_load_shedding(True)
-        try:
-            stage_solution, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg, rerun=True)
-        except OptimizationError:
-            raise OptimizationError('failed to solve, even with load shedding.')
-        power_system.set_load_shedding(False)
+        power_system.write_model('unsolved.lp')
+        raise OptimizationError('failed stage')
+        
+#        logging.critical('stage infeasible, re-running with load shedding.')
+#        power_system.reset_model()
+#        power_system.set_load_shedding(True)
+#        try:
+#            stage_solution, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg, rerun=True)
+#        except OptimizationError:
+#            raise OptimizationError('failed to solve, even with load shedding.')
+#        power_system.set_load_shedding(False)
 
     logging.debug('solved... get results... {}'.format(show_clock()))
     
@@ -277,7 +279,7 @@ def main():
     parser.add_argument('--breakpoints','-b',  type=int, 
                     default=user_config.breakpoints,
                     help='number of breakpoints to use in piece-wise linearization of polynomial costs')
-    parser.add_argument('--commitment_hours','-c', type=int, 
+    parser.add_argument('--hours_commitment','-c', type=int, 
                     default=user_config.hours_commitment,
                     help='number hours per commitment in a rolling UC (exclusive of overlap)')
     parser.add_argument('--hours_overlap','-o', type=int, 

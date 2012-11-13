@@ -32,20 +32,15 @@ def gen_time_dataframe(generators, times, values=()):
     kwargs = dict(columns = [str(g) for g in generators])
     try: kwargs['index'] = times.strings.index
     except AttributeError: kwargs['index'] = times
-
-    flip = len(generators) > len(times)
-    if flip: 
-        kwargs['columns'] = kwargs['index']
-        kwargs['index'] = [str(g) for g in generators]
-    
-    
+        
     if values:
+        values = np.array(values)
+        if values.shape != (len(times),len(generators)):
+            values = values.T
         df = DataFrame(values, **kwargs)
     else: 
         df = DataFrame(**kwargs)
         
-    if flip: 
-        df = df.T
     df.index.name = 'time'
     return df
     

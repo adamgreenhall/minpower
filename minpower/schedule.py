@@ -45,6 +45,7 @@ class TimeIndex(object):
         else: 
             self.initialTime = pd.Timestamp(self.Start - self.interval)
             self.initialTime.index = 'Init'
+        self.initialTimestr = 'tInit'
         
     def get_interval(self):
         freq = self.strings.index.freq

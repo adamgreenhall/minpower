@@ -201,9 +201,11 @@ class Solution(object):
         ]
 
     def _get_generator_cost(self, generators, times, P, u):
-        status_change = pd.concat([
-            gen_time_dataframe(generators, [times.initialTime], [gen.initial_status for gen in generators]),
-            u]).diff().ix[times.strings.index]
+        init_status = gen_time_dataframe(
+            generators, 
+            [times.initialTime], 
+            [[gen.initial_status for gen in generators]])
+        status_change = pd.concat([init_status, u]).diff().ix[times.strings.index]
 
         cost = 0
         fixed_cost = 0
@@ -226,6 +228,8 @@ class Solution(object):
         P = self.observed_generator_power
         if self.is_stochastic:
             u = self.stage_generators_status
+        elif user_config.deterministic_solve:
+            u = self.generators_status
         else:
             # this is a deterministic problem - put status into a df
             self.stage_generators_status = gen_time_dataframe(self.generators(), times, values=self.generators_status).astype(int)
@@ -361,9 +365,10 @@ class Solution_ED(Solution):
         components=flatten([generators,output_loads])
         fields.append('name')
         data.append(getattrL(components,'name'))
-
-        fields.append('u');
-        data.append([niceTF(value(g.status(t))) for g in components])
+        
+        if user_config.dispatch_decommit_allowed:
+            fields.append('u')
+            data.append([niceTF( value(g.status(t)) and value(g.power(t))>0) for g in components])
 
         fields.append('P')
         data.append([nice_zeros(value(g.power(t))) for g in components])

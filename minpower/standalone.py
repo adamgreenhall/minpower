@@ -32,13 +32,13 @@ def store_state(power_system, times, sln=None):
         t = [times[0].initialTime]
         
         storage['power'] = gen_time_dataframe(generators, t, 
-            values = [gen.initial_power for gen in generators])        
+            values = [[gen.initial_power for gen in generators]])
         storage['status'] = gen_time_dataframe(generators, t, 
-            values = [gen.initial_status for gen in generators])
+            values = [[gen.initial_status for gen in generators]])
         storage['load_shed'] = Series( [0], index=t)
 
         storage['hrsinstatus'] = gen_time_dataframe(generators, t, 
-            values = [gen.initial_status_hours for gen in generators])
+            values = [[gen.initial_status_hours for gen in generators]])
         
         # per-stage results 
         storage['expected_cost'] = Series(index=range(stages))
@@ -64,7 +64,7 @@ def store_state(power_system, times, sln=None):
         
         tEnd = times.last_non_overlap()
         storage['hrsinstatus'] = gen_time_dataframe(generators, [tEnd], 
-            values = [gen.finalstatus['hoursinstatus'] for gen in generators])
+            values = [[gen.finalstatus['hoursinstatus'] for gen in generators]])
         
         _add_tbl_val(storage, 'expected_cost', stg, sln.objective)
         _add_tbl_val(storage, 'solve_time', stg, sln.solve_time)                

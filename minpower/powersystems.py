@@ -15,18 +15,6 @@ from config import user_config
 
 
 
-def makeLoad(kind='varying',**kwargs):
-    """
-    Create a :class:`~powersystems.Load` object (if a power
-    :class:`~schedule.Schedule` is specified) or a
-    cost_load_sheddingrsystems.Load_Fixed` object (if a single
-    power value :attr:`P` is specified).
-    """
-    if 'P' in kwargs.keys(): return Load_Fixed(kind=kind, **kwargs)
-    else: return Load(kind=kind,**kwargs)
-
-
-
 class Load(OptimizationObject):
     """
     Describes a power system load (demand).
@@ -73,31 +61,6 @@ class Load(OptimizationObject):
 
     def get_scheduled_ouput(self, time):
         return float(self.schedule.ix[time])
-
-class Load_Fixed(Load):
-    """
-    Describes a load that does not vary with time.
-    This can be an easy way to add a load for an ED/OPF problem,
-    or a system base load.
-
-    :param P: real power consumed by load (MW/hr)
-    """
-    def __init__(self,kind='fixed',name='',index=None,bus=None,P=0,
-                 shedding_allowed=False,
-                 cost_load_shedding=user_config.cost_load_shedding
-                 ):
-        update_attributes(self,locals(),exclude=['p']) #load in inputs
-        self.Pfixed = P
-        self.init_optimization()
-    def shed(self,time,evaluate=False): return self.Pfixed- self.power(time,evaluate)
-    def power(self,time=None,evaluate=False):
-        if self.shedding_allowed:
-            return self.get_variable('power',time) if evaluate else value(self.get_variable('power',time))
-        else: return self.Pfixed
-
-    def create_variables(self,times=None):
-        if self.shedding_allowed:
-            for time in times: self.add_variable('power',time=time,low=0,high=self.Pfixed)
 
 class Line(OptimizationObject):
     """

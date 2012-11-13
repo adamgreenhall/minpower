@@ -224,6 +224,8 @@ class OptimizationProblem(OptimizationObject):
 
     def add_component_to_problem(self,component):
         '''add a optimization component to the model'''
+        if ':' in component.name: 
+            raise ValueError('no colons allowed in optimization object names')
         self._model._add_component(component.name,component)
     def add_objective(self,expression,sense=pyomo.minimize):
         '''add an objective to the problem'''            
@@ -475,14 +477,15 @@ class OptimizationProblem(OptimizationObject):
     def resolve_determinisitc_with_observed(self, instance, stage_solution):
         # get deterministic solution (point forecast)
         
-        gen_with_observed = self.get_generator_with_observed()
+        gen = self.get_generator_with_observed()
         
         times = stage_solution.times.non_overlap()
         
         resolve_instance = instance
-        power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen_with_observed))]
+        power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen))]
+        
         for time in times:
-            power[str(time)] = gen_with_observed.observed_values[time.Start]
+            power[time] = gen.observed_values[time]
         
         self._fix_variables(resolve_instance)
         

@@ -106,23 +106,26 @@ class Generator(OptimizationObject):
         return self.bids.output_incremental(self.power(time)) if value(self.status(time)) else None
     def cost_first_stage(self,times):  return sum(self.cost_startup(time)+self.cost_shutdown(time) for time in times)
     def cost_second_stage(self,times): return sum(self.operatingcost(time) for time in times)
-    def getstatus(self,t,times): return dict(u=value(self.status(t)),P=value(self.power(t)),hoursinstatus=self.gethrsinstatus(t,times))
-#    def plot_cost_curve(self,P=None,filename=None): self.cost_model.plot(P,filename)
-    def gethrsinstatus(self,tm,times, status_var=None):
-        if not self.is_controllable: return None
-
-        if status_var is None: status_var = self.status
-
-        status=value(status_var(tm))
-
-        try:
-            t_lastchange=(t for t in reversed(times) if value(status_var(t))!=status ).next()
+    def getstatus(self,times,status): 
+        t = times.strings.index[-1]
+        return dict(
+            u=value(self.status(t)),
+            P=value(self.power(t)),
+            hoursinstatus=self.gethrsinstatus(t,times, status))
+    def gethrsinstatus(self, tend, times, status):
+        if not self.is_controllable: return 0
+        set_trace()
+        end_status = status.ix[tEnd]
+        last_noneq = status[status != end_status]
+        if len(last_noneq)==0: return 0
+        else:
             set_trace()
-            return hours(tm.End-t_lastchange.Start)
-        except StopIteration: #no changes over whole time period
-            h=times.spanhrs
-            if value(self.initial_status) == status: h+=self.initial_status_hours
-            return h
+            intervals = len(stat[last_noneq.index[-1]+1:])
+        
+        hrs = intervals * times.intervalhrs
+        if self.initial_status == end_status:
+            hrs += self.initial_status_hours
+        return hrs
 
     def set_initial_condition(self,time=None, P=None, u=True, hoursinstatus=100):
         '''Set the initial condition at time.'''

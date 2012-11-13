@@ -342,32 +342,28 @@ class PowerSystem(OptimizationProblem):
     def get_generator_with_observed(self):
         return filter(lambda gen: getattr(gen,'observed_values',None) is not None, self.generators())[0]
 
-    def get_finalconditions(self, stage_solution):
-        times = stage_solution.times
+    def get_finalconditions(self, sln):
+        times = sln.times
 
         tEnd = times.last_non_overlap() # like 2011-01-01 23:00:00
         tEndstr = times.non_overlap().last() # like t99
 
-        if stage_solution.is_stochastic:
-            status = stage_solution.stage_generators_status.copy()
+        if sln.is_stochastic:
+            status = sln.stage_generators_status
             # status.index = times.non_overlap().strings.values
         else:
-            status = stage_solution.generators_status
+            status = sln.generators_status
 
         for gen in self.generators():
-            if stage_solution.is_stochastic:
-                g = str(gen)
-                stat = status[g]
-                last_noneq = stat[stat != stat.ix[tEnd]]
-                if len(last_noneq)==0: intervals=0
-                else:
-                    intervals = len(stat[last_noneq.index[-1]+1:])
+            g = str(gen)
+            stat = status[g]
+            if sln.is_stochastic:
                 finalstatus = dict(
-                    P =  stage_solution.observed_generator_power[g][tEnd],
-                    u =  stage_solution.stage_generators_status[g][tEnd],
-                    hoursinstatus = intervals * times.intervalhrs)
-            else: finalstatus = gen.getstatus(t=tEndstr,times=times)
-            gen.finalstatus = finalstatus
+                    P =  sln.observed_generator_power[g][tEnd],
+                    u =  sln.stage_generators_status[g][tEnd],
+                    hoursinstatus = gen.gethrsinstatus(tEnd, times.non_overlap(), stat))
+            else:
+                gen.finalstatus = gen.getstatus(times.non_overlap(), stat)
         return
 
     def set_initialconditions(self, initTime, stage_number, stage_solutions):

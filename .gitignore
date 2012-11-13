@@ -18,6 +18,7 @@ addons/*.py
 *powerflow-*.csv
 *stage*.csv
 *solution*.csv
+*.hd5
 
 # Compiled source #
 ###################

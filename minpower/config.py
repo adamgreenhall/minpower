@@ -98,23 +98,23 @@ user_config = DotDict(dict(
     breakpoints = 11,
     hours_commitment = 24,
     hours_overlap = 0,
-    cost_load_shedding = 1000, #$/MWh    
+    cost_load_shedding = 1000, #$/MWh
     load_shedding_allowed = False,
     dispatch_decommit_allowed = False,
-    solver = 'gurobi',
-    
+    solver = 'cplex',
+
     reserve_fixed = 0,
-    reserve_load_fraction = 0.0,    
-    
+    reserve_load_fraction = 0.0,
+
     visualization = False,
     show_clock = False,
     logging_level = logging.DEBUG,
     logging_filename = False,
     problem_filename = False,
     output_prefix = False,
-    
+
     scenarios = None,
     deterministic_solve = False,
-    
-    
+
+
     ))

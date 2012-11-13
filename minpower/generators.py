@@ -182,10 +182,12 @@ class Generator(OptimizationObject):
         Create the optimization variables for a generator over all times.
         Also create the :class:`bidding.Bid` objects and their variables.
         '''
-        self.commitment_problem= len(times)>1 or self.dispatch_decommit_allowed
+        self.commitment_problem = len(times)>1
         self.add_variable('power', index=times.set, low=0, high=self.Pmax)
-        if self.commitment_problem:
+        
+        if self.commitment_problem or self.dispatch_decommit_allowed:
             self.add_variable('status', index=times.set, kind='Binary',fixed_value=1 if self.mustrun else None)
+        if self.commitment_problem:
             #power_available exists for easier reserve requirement
             self.add_variable('power_available',index=times.set, low=0,high=self.Pmax)
             if self.startupcost>0:  self.add_variable('startupcost',index=times.set, low=0,high=self.startupcost)
@@ -302,7 +304,7 @@ class Generator_nonControllable(Generator):
         if power is not None and schedule is None:
             self.schedule = FixedSchedule(P=power)
 
-        if Pmax is None: self.Pmax = self.schedule.maxvalue
+        if Pmax is None: self.Pmax = self.schedule.max()
         self.is_controllable=False
         self.startupcost=0
         self.shutdowncost=0
@@ -357,11 +359,16 @@ class Generator_Stochastic(Generator_nonControllable):
     def power(self,time,scenario=None): return self.get_variable('power',time=time,scenario=scenario,indexed=True)
 
     def _get_scenario_values(self,times,s=0):
-        if self.has_scenarios_multistage:
-            values = self.scenario_values[times.start_datetime]
-            try: scenario = values.ix[s].values.tolist()
-            except: raise KeyError('{} is not an available scenario number'.format(s))
-            return scenario[1:len(times)+1] # dont include the probability
+        if self.has_scenarios_multistage:        
+            scenarios = self.scenario_values[times.startdate]
+            try:   
+                values = scenarios.ix[s].values.tolist()
+            except: 
+                raise KeyError('{} is not an available scenario number'.format(s))
+
+            # FIXME - this makes probability column order very important!
+            
+            return values[:len(times)] # dont include the probability
         else:
             return [ self.scenario_values[s][time] for time in times ]
 
@@ -384,52 +391,54 @@ class Generator_Stochastic(Generator_nonControllable):
     def cost_shutdown(self,time): return 0
 
 
-def makeGenerator(kind='generic',**kwargs):
-    """
-    Create a :class:`~powersystems.Generator` object
-    (or a :class:`~powersystems.Generator_nonControllable`
-    object depending on the kind). Set defaults
-    depending on the kind (default values come from :mod:`config`).
+#def makeGenerator(kind='generic',**kwargs):
+#    """
+#    Create a :class:`~powersystems.Generator` object
+#    (or a :class:`~powersystems.Generator_nonControllable`
+#    object depending on the kind). Set defaults
+#    depending on the kind (default values come from :mod:`config`).
 
-    :param kind: define the kind of generator (all
-        kinds are defined in :data:`config.generator_kinds`)
+#    :param kind: define the kind of generator (all
+#        kinds are defined in :data:`config.generator_kinds`)
 
-    Other parameters are detailed in :class:`~powersystems.Generator`.
+#    Other parameters are detailed in :class:`~powersystems.Generator`.
 
-    :returns: a :class:`~powersystems.Generator` object
-    """
+#    :returns: a :class:`~powersystems.Generator` object
+#    """
 
-    def parse_args(kind,**inputs):
-        '''check kind pull defaults from the config file'''
-        kind=drop_case_spaces(kind)
-        if kind not in config.generator_kinds:
-            logging.info('"{k}" is an unknown kind of generator, using generic defaults.'.format(k=kind))
-            kind='generic'
+#    def parse_args(kind,**inputs):
+#        '''check kind pull defaults from the config file'''
+#        kind=drop_case_spaces(kind)
+#        if kind not in config.generator_kinds:
+#            logging.info('"{k}" is an unknown kind of generator, using generic defaults.'.format(k=kind))
+#            kind='generic'
 
-        ignore_names=['power','is_controllable','costcurvestring']
+#        ignore_names=['power','is_controllable','costcurvestring']
 
-        #get defaults from config file
-        defaults=dict()
-        for name,val in config.generator_defaults.iteritems():
-            try: defaults[name]=val[kind]
-            except KeyError:
-                if inputs.get(name,None) in ['',None] and name not in ignore_names: logging.debug('no {d} default found for kind "{k}", using default from generic.'.format(d=name,k=kind))
-                defaults[name]=val['generic']
-            except TypeError:
-                defaults[name]=val #no kind-distincted defaults
+#        #get defaults from config file
+#        defaults=dict()
+#        for name,val in config.generator_defaults.iteritems():
+#            try: defaults[name]=val[kind]
+#            except KeyError:
+#                if inputs.get(name,None) in ['',None] and name not in ignore_names: logging.debug('no {d} default found for kind "{k}", using default from generic.'.format(d=name,k=kind))
+#                defaults[name]=val['generic']
+#            except TypeError:
+#                defaults[name]=val #no kind-distincted defaults
 
-        #use the values that are defined in the inputs
-        outputs=defaults
-        outputs.update(inputs)
-        return kind,outputs
+#        #use the values that are defined in the inputs
+#        outputs=defaults
+#        outputs.update(inputs)
+#        return kind,outputs
 
 
-    kind,kwargs=parse_args(kind,**kwargs)
-    if kind=='wind' or not kwargs['is_controllable'] or kwargs.get('schedule',None) or (kwargs.get('power') is not None):
-        classname=Generator_nonControllable
-    else:
-        classname=Generator
-        kwargs.pop('power')
+#    kind,kwargs=parse_args(kind,**kwargs)
 
-    kwargs.pop('is_controllable')
-    return classname(kind=kind,**kwargs)
+#    if _has_valid_attr(kwargs,'schedule'):
+#       classname=Generator_nonControllable
+#    else:
+#        classname=Generator
+#        kwargs.pop('power')
+
+#    kwargs.pop('is_controllable')
+#    try: return classname(kind=kind,**kwargs)
+#    except: set_trace()

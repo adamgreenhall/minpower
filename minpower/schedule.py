@@ -28,7 +28,7 @@ class TimeIndex(object):
         
         self.get_interval()
         self.Start = self.times[0]
-        self.start_datetime = self.Start.to_datetime()
+        self.startdate = self.Start.date()
         
         self.End = self.times[-1] + self.interval
         self.span = self.End-self.Start

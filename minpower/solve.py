@@ -62,6 +62,7 @@ def standaloneUC():
     except OptimizationError:
         #re-do stage, with load shedding allowed
         logging.critical('stage infeasible, re-running with load shedding.')
+        set_trace()
         power_system.reset_model()
         power_system.set_load_shedding(True)
         try:
@@ -145,7 +146,9 @@ def create_solve_problem(power_system, times, scenario_tree=None,
     if scenario_tree is not None and not rerun:
         if multistage: # multiple time stages
             gen = power_system.get_generator_with_scenarios()
-            tree = stochastic.construct_simple_scenario_tree( gen.scenario_values[times.start_datetime]['probability'].values.tolist(), time_stage=stage_number )
+            tree = stochastic.construct_simple_scenario_tree( 
+                gen.scenario_values[times.startdate]['probability'].values.tolist(), 
+                time_stage=stage_number)
             logging.debug('constructed tree for stage %i'%stage_number)
         else: tree = scenario_tree
         stochastic_formulation = True

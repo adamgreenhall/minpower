@@ -74,7 +74,13 @@ def standaloneUC():
     
     if stage_solution.is_stochastic:
         # resolve with observed power and fixed status from stochastic solution
-        power_system.resolve_stochastic_with_observed(instance, stage_solution)
+        try: 
+            power_system.resolve_stochastic_with_observed(instance, stage_solution)
+        except OptimizationResolveError:
+            power_system.set_load_shedding(True)
+            __, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg)
+            power_system.resolve_stochastic_with_observed(instance, stage_solution)
+            
     elif user_config.deterministic_solve:
         # resolve with observed power and fixed status from determinisitic solution
         try: 

@@ -7,7 +7,9 @@ in the :module:`~generators`. Each of these objects inherits an
 optimization framework from :class:`~optimization.OptimizationObject`.
 """
 
-from optimization import value,dual,OptimizationObject,OptimizationProblem
+from coopr import pyomo
+from optimization import (value, dual, OptimizationObject, OptimizationProblem,
+    OptimizationResolveError)
 from generators import *
 from commonscripts import *
 import config
@@ -265,7 +267,7 @@ class PowerSystem(OptimizationProblem):
     def create_variables(self,times):
         self.add_variable('cost_first_stage')
         self.add_variable('cost_second_stage')
-        self.add_set('times', times._set)
+        self.add_set('times', times._set, ordered=True)
         times.set=self._model.times
         for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
@@ -339,3 +341,59 @@ class PowerSystem(OptimizationProblem):
                 gen.set_initial_condition(time=initTime, **finalstatus)
                 del gen.finalstatus
         return
+
+        
+    def resolve_stochastic_with_observed(self, instance, stage_solution):
+        gen = self.get_generator_with_scenarios()
+        s = stage_solution.scenarios[0]
+        times = stage_solution.times.non_overlap()
+        
+        resolve_instance = instance.active_components(pyomo.Block)[s]
+        power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen))]
+        for time in times:
+            power[time] = gen.observed_values[time]
+        
+        self._fix_variables(resolve_instance)
+        results, elapsed = self._solve_instance( resolve_instance )
+
+        if self.solved: 
+            logging.info('resolved stochastic instance of stage with observed values (in {}s)'.format(elapsed))
+        else:
+            #for time in times: 
+            #    total_gen = [value(gen.power(time,s)) for gen in self.generators()]
+            #    print time, total_gen, sum(total_gen), value(self.loads()[0].power(time))
+            # resolve_instance.write(joindir(user_config.directory, 'unsolved-resolve.lp'))
+            raise OptimizationResolveError('could not find a solution to the stage with observed wind and the stochastic commitment')
+        
+        stage_solution.observed_generator_power, stage_solution.load_shed_timeseries = stage_solution._calc_gen_power(sln=results.solution[0], scenario_prefix=s)        
+        # avoid loading this instance - because it is different from the mainline stochastic solution
+        stage_solution._get_observed_costs()
+    
+    def resolve_determinisitc_with_observed(self, instance, stage_solution):
+        # get deterministic solution (point forecast)
+        
+        gen = self.get_generator_with_observed()
+        
+        times = stage_solution.times.non_overlap()
+        
+        resolve_instance = instance
+        power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen))]
+        
+        for time in times:
+            power[time] = gen.observed_values[time]
+        
+        self._fix_variables(resolve_instance)
+        
+        results, elapsed = self._solve_instance( resolve_instance )
+        if not self.solved: 
+            # resolve_instance.write(joindir(user_config.directory, 'unsolved-resolve.lp'))
+            raise OptimizationResolveError('couldnt find solution to deterministic fixed problem')
+        else: logging.info('resolved deterministic instance of stage with observed values (in {}s)'.format(elapsed))
+        
+        stage_solution.observed_generator_power, stage_solution.load_shed_timeseries = stage_solution._calc_gen_power(sln=results.solution[0])
+              
+    
+        stage_solution._get_observed_costs()
+        
+        # TODO - evaluate performance against this resolve with perfect information
+        return                 

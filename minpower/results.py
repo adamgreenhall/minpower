@@ -222,8 +222,8 @@ class Solution(object):
         return cost.sum().sum(), fixed_cost.sum().sum()
 
     def _get_observed_costs(self):
-        generators=self.generators()
-        times=self.times.non_overlap()
+        generators = self.generators()
+        times = self.times.non_overlap()
 
         P = self.observed_generator_power
         if self.is_stochastic:
@@ -250,34 +250,44 @@ class Solution(object):
         self.fuelcost_generation = cost
         self.totalcost_generation = cost + fixed_cost
 
-        self.load_shed_timeseries = self.loads()[0].schedule - P.sum()
-
-        self.load_shed = sum(sum(load.schedule[time] for time in times) for load in self.loads()) - P.sum().sum()
-
+        self.load_shed = self.load_shed_timeseries.sum()
+        
+        
 
     def _calc_gen_power(self, sln, scenario_prefix=None):
         '''calculate generator power from a resolved solution using the observed stochastic gen's power'''
-        gen_with_scenarios = self.power_system.get_generator_with_scenarios()
+        gen_with_obs = self.power_system.get_generator_with_observed()
         times = self.times.non_overlap()
 
         power = gen_time_dataframe(self.generators(), times)
 
         pfx = ('' if scenario_prefix is None else scenario_prefix+'_') + 'power_'
-
+        
+        load = self.loads()[0]
+        ld = str(load)
+        
+        if '{p}{d}({t})'.format(p=pfx, d=ld, t=times[0]) in sln.variable:
+            load_power = Series([sln.variable[pfx+'{d}({t})'.format(d=ld, t=time)]['Value'] for time in times], index=times.strings.index)
+            shed = load.schedule.values[:len(load_power)] - load_power
+        else:
+            shed = Series(0, index=times.strings.index)
+        
         for gen in self.generators():
 
-            if gen == gen_with_scenarios:
+            if gen == gen_with_obs:
                 get_val = lambda time: gen.observed_values[time]
             elif gen.is_controllable:
                 # yuck - parse the power out of the native pyomo solution object
                 # trying to avoid loading the instance - because it is different from the mainline stochastic solution
+
                 get_val = lambda time: sln.variable[pfx+'{g}({t})'.format(g=str(gen),t=str(time))]['Value']
             else:
                 get_val = lambda time: gen.schedule[time]
 
             for time, tstr in times.strings.to_dict().items():
                 power[str(gen)][time] = get_val(tstr)
-        return power
+
+        return power, shed
 
 
 

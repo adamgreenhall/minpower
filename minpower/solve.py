@@ -8,7 +8,7 @@ problems and solving them.
 import logging
 import time as timer
 
-from optimization import OptimizationError
+from optimization import OptimizationError, OptimizationResolveError
 import config, get_data, powersystems, stochastic, results
 from config import user_config
 from standalone import store_state, get_storage, load_state, store_times, wipe_storage
@@ -60,18 +60,15 @@ def standaloneUC():
     try: 
         stage_solution, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg) 
     except OptimizationError:
-        #re-do stage, with load shedding allowed
-        power_system.write_model('unsolved.lp')
-        raise OptimizationError('failed stage')
-        
-#        logging.critical('stage infeasible, re-running with load shedding.')
-#        power_system.reset_model()
-#        power_system.set_load_shedding(True)
-#        try:
-#            stage_solution, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg, rerun=True)
-#        except OptimizationError:
-#            raise OptimizationError('failed to solve, even with load shedding.')
-#        power_system.set_load_shedding(False)
+        #re-do stage, with load shedding allowed        
+        logging.critical('stage infeasible, re-running with load shedding.')
+        power_system.reset_model()
+        power_system.set_load_shedding(True)
+        try:
+            stage_solution, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg, rerun=True)
+        except OptimizationError:
+            raise OptimizationError('failed to solve, even with load shedding.')
+        power_system.set_load_shedding(False)
 
     logging.debug('solved... get results... {}'.format(show_clock()))
     
@@ -80,11 +77,17 @@ def standaloneUC():
         power_system.resolve_stochastic_with_observed(instance, stage_solution)
     elif user_config.deterministic_solve:
         # resolve with observed power and fixed status from determinisitic solution
-        power_system.resolve_determinisitc_with_observed(instance, stage_solution)
+        try: 
+            power_system.resolve_determinisitc_with_observed(instance, stage_solution)
+        except OptimizationResolveError:
+            power_system.set_load_shedding(True)
+            __, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg)
+            power_system.resolve_determinisitc_with_observed(instance, stage_solution)
 
     power_system.get_finalconditions(stage_solution)
+
+    power_system.set_load_shedding(False)
     stage_solution.stage_number = stg
-    
     store = store_state(power_system, times, stage_solution)
     store.flush()
     

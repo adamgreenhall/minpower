@@ -362,16 +362,18 @@ class Generator_Stochastic(Generator_nonControllable):
     def _get_scenario_values(self,times,s=0):
         if self.has_scenarios_multistage:        
             scenarios = self.scenario_values[times.startdate]
-            try:   
-                values = scenarios.ix[s].values.tolist()
-            except: 
-                raise KeyError('{} is not an available scenario number'.format(s))
-
-            # FIXME - this makes probability column order very important!
-            
-            return values[:len(times)] # dont include the probability
         else:
-            return [ self.scenario_values[s][time] for time in times ]
+            scenarios = self.scenario_values
+    
+        try:   
+            values = scenarios.ix[s].values.tolist()
+        except: 
+            raise KeyError('{} is not an available scenario number'.format(s))
+
+        if scenarios.columns[0]=='probability':
+            return values[1:(1+len(times))]
+        else: #assume probability is at the end
+            return values[:len(times)] # dont include the probability
 
     def create_variables(self,times):
         self.add_parameter('power', index=times.set, nochecking=True)

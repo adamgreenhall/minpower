@@ -225,6 +225,10 @@ def build_class_list(data, model, times=None, timeseries=None):
             forecastfilename = row.pop('forecastfilename',None)
                 
             scenariosdirectory=row.pop('scenariosdirectory',None)
+            
+            if scenariosdirectory and user_config.scenarios_directory:
+                scenariosdirectory = user_config.scenarios_directory
+            
             bid_points_filename = row.pop('costcurvepointsfilename', None)
 
         

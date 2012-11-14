@@ -347,9 +347,15 @@ def main():
     parser.add_argument('--scenarios',type=int, 
                     default=user_config.scenarios,
                     help='limit the number of scenarios to N')
+
     parser.add_argument('--deterministic_solve', action='store_true',
                     default=user_config.deterministic_solve,
                     help='solve a stochastic problem deterministically using the forecast_filename paramter')
+    parser.add_argument('--scenarios_directory', type=str,
+                    default=user_config.scenarios_directory,
+                    help='override scenarios directory for stochastic problem')
+                    
+                    
     # parser.add_argument('--solution_file',type=str,default=False,
     #                    help='save solution file to disk')
     

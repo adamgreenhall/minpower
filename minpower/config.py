@@ -115,6 +115,6 @@ user_config = DotDict(dict(
 
     scenarios = None,
     deterministic_solve = False,
-
+    scenarios_directory = None,
 
     ))

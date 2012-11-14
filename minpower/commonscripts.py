@@ -37,6 +37,20 @@ try: # for development
 except: 
     from pdb import set_trace
 
+class StreamToLogger(object):
+   """
+   Fake file-like stream object that redirects writes to a logger instance.
+   """
+   def __init__(self, logger=logging, log_level=logging.INFO):
+      self.logger = logger
+      self.log_level = log_level
+      self.linebuf = ''
+ 
+   def write(self, buf):
+      for line in buf.rstrip().splitlines():
+         self.logger.log(self.log_level, line.rstrip())
+
+
 def gen_time_dataframe(generators, times, values=()):
     kwargs = dict(columns = [str(g) for g in generators])
     try: kwargs['index'] = times.strings.index

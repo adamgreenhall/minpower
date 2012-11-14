@@ -157,7 +157,13 @@ def solve_problem(datadir='.',
         stage_solutions, stage_times = solve_multistage(power_system, times, scenario_tree)
         solution = results.make_multistage_solution(power_system, stage_times, stage_solutions)
 
-    if shell: solution.show()
+    if shell: 
+        if user_config.output_prefix:
+            stdout = sys.stdout
+            sys.stdout = StreamToLogger()
+            solution.show()
+            sys.stdout = stdout
+        solution.show()
     if csv: solution.saveCSV()
     if user_config.visualization: solution.visualization()
     # if solution_file: solution.save(solution_file)

@@ -70,54 +70,52 @@ def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_
         
     #for node in scenariotreeinstance.nodes:
     
-    scenario_tree = ScenarioTree(scenarioinstance=power_system._model, scenariotreeinstance=scenariotreeinstance)
+    scenario_tree = ScenarioTree(
+        scenarioinstance=power_system._model, 
+        scenariotreeinstance=scenariotreeinstance)
 
 
-    if scenario_tree.validate()==False: 
+    if not scenario_tree.validate(): 
         for s,scenario in enumerate(scenario_tree._scenarios):
             print s,scenario
-        debug()
         raise ValueError('not a valid scenario tree')
-    
-    #construct scenario instances
-    # gc.disable()
-    gen_w_scenarios = power_system.get_generator_with_scenarios()
+
+    gen = power_system.get_generator_with_scenarios()
     
     scenario_instances={}
-    time_names = [str(time) for time in times]
-    Nt = len(times)
+
+    #construct scenario instances
+    gc.disable()  
     for s,scenario in enumerate(scenario_tree._scenarios):
-        #print 'scenario: {s}'.format(s=s)
-        scenario_instance=power_system._model.clone()
+        scenario_instance = power_system._model.clone()
         
-        power=getattr(scenario_instance,'power_{}'.format(str(gen_w_scenarios)))
+        power=getattr(scenario_instance,'power_{}'.format(str(gen)))
         #set the values of the parameter for this scenario
         logging.debug('setting scenario values for s%i'%s)
-        scenario_vals = gen_w_scenarios._get_scenario_values(times, s=s)        
-        for t in range(Nt): power[time_names[t]] = scenario_vals[t]
+        scenario_vals = gen._get_scenario_values(times, s=s)        
+        for t, time in enumerate(times): power[time] = scenario_vals[t]
         
         #power.pprint()
         scenario_instance.preprocess()
         scenario_instances[scenario._name] = scenario_instance    
 
+    gc.enable()
     scenario_tree.defineVariableIndexSets(scenario_instances)
-    full_problem_instance=create_ef_instance(scenario_tree, scenario_instances)
+    full_problem_instance = create_ef_instance(scenario_tree, scenario_instances)
+    # could generate cvar here
     #full_problem_instance.pprint()
     
-    def relax_non_anticipatory_constraints(): 
-        #relax the non-anticipatory constraints on the generator status variables beyond the UC time horizon
-        for time in times.post_horizon():
-            logging.debug('get rid of NA constraint at '+str(time))
-            for scenario in scenario_instances.keys():
-                for gen in power_system.generators():
-                    if not gen.is_controllable: continue
-                    u=gen.status().name
-                    #print 'clear constraint on {s}_{u}_{t}'.format(s=scenario,u=u,t=str(time))
-                    full_problem_instance._clear_attribute('{s}_{u}_{t}'.format(s=scenario,u=u,t=str(time)))
+    #relax the non-anticipatory constraints on the generator status variables beyond the UC time horizon
+    for time in times.post_horizon():
+        logging.debug('get rid of NA constraint at '+str(time))
+        for scenario in scenario_instances.keys():
+            for gen in power_system.generators():
+                if not gen.is_controllable: continue
+                u=gen.status().name
+                #print 'clear constraint on {s}_{u}_{t}'.format(s=scenario,u=u,t=str(time))
+                full_problem_instance._clear_attribute('{s}_{u}_{t}'.format(s=scenario,u=u,t=str(time)))
     
-    
-    relax_non_anticipatory_constraints()
-    
+        
     power_system.stochastic_formulation=True
     power_system._stochastic_instance=full_problem_instance
     power_system._scenario_tree=scenario_tree

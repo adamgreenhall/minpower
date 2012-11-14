@@ -92,11 +92,10 @@ def load_state():
     
     for gen in generators: 
         g = str(gen)
-        try: gen.set_initial_condition(t, 
+        gen.set_initial_condition(t, 
             P=storage['power'][g][t],
             u=storage['status'][g][t],
             hoursinstatus=storage['hrsinstatus'][g][t])
-        except: set_trace()
     
     return power_system, times, scenario_tree
     

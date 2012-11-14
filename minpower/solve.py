@@ -11,13 +11,20 @@ import time as timer
 from optimization import OptimizationError, OptimizationResolveError
 import config, get_data, powersystems, stochastic, results
 from config import user_config
-from standalone import store_state, get_storage, load_state, store_times, wipe_storage
-from commonscripts import * # joindir,show_clock
+from standalone import (store_state, load_state, store_times,
+    get_storage, wipe_storage)
+from commonscripts import *
+
+def _get_store_filename():
+    fnm = 'stage-store.hd5'
+    if user_config.output_prefix:
+        fnm = '{}-{}'.format(user_config._pid, fnm)
+    
+    user_config.store_filename = joindir(user_config.directory, fnm)
 
 def solve_multistage(power_system, times, scenario_tree):
     # standalone
-    user_config.store_filename = joindir(user_config.directory, 'stage-store{}.hd5').format(
-        '-{}'.format(os.getpid()) if user_config.output_prefix else '')
+    _get_store_filename()
         
     wipe_storage()
     stage_times=times.subdivide(user_config.hours_commitment, user_config.hours_overlap)
@@ -37,7 +44,7 @@ def solve_multistage(power_system, times, scenario_tree):
         subprocess.check_call( 
             'standalone_minpower {dir} {stg} {pid}'.format(
                 dir=user_config.directory, stg=stg, 
-                pid=os.getpid() if user_config.output_prefix else ''), 
+                pid='--pid {}'.format(os.getpid()) if user_config.output_prefix else ''), 
             shell=True, stdout=sys.stdout)
     
     storage = get_storage()
@@ -47,12 +54,24 @@ def solve_multistage(power_system, times, scenario_tree):
 def standaloneUC():
     # standalone_minpower
     from config import user_config
-    _setup_logging()
-    user_config.directory = sys.argv[1]
-    stg = int(sys.argv[2])
+    import argparse
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('directory', type=str, help='the problem direcory')
+    parser.add_argument('stg', type=int, help='the stage number')
+    parser.add_argument('--pid', type=int, default=None,
+        help='the process id of the parent')
 
-    user_config.store_filename = joindir(user_config.directory, 'stage-store{}.hd5').format(
-        '-{}'.format(sys.argv[3]) if len(sys.argv)>3 else '')
+    args = parser.parse_args()
+    stg = args.stg
+    user_config.directory = args.directory
+    if args.pid: 
+        user_config.output_prefix = True
+        user_config._pid = args.pid
+    
+    _get_store_filename()
+    
+    _setup_logging()
     
     # load stage data
     power_system, times, scenario_tree = load_state()
@@ -164,6 +183,8 @@ def create_solve_problem(power_system, times, scenario_tree=None,
         else: tree = scenario_tree
         stochastic_formulation = True
         stochastic.define_stage_variables(tree,power_system,times)
+        # ipython_shell()
+        # %prun from minpower import stochastic; stochastic.create_problem_with_scenarios(power_system,times, tree, 24, 12, stage_number=0)
         power_system = stochastic.create_problem_with_scenarios(power_system,times, tree, user_config.hours_commitment, user_config.hours_overlap, stage_number=stage_number)
 
     instance = power_system.solve(user_config)
@@ -265,7 +286,10 @@ def create_problem(power_system,times):
 def _setup_logging():
     ''' set up the logging to report on the status'''
     kwds = dict(level = user_config.logging_level, format='%(levelname)s: %(message)s')
-    if user_config.logging_filename: kwds['filename']=user_config.logging_filename
+    if user_config.logging_filename:
+        kwds['filename']=user_config.logging_filename
+    if user_config.output_prefix: 
+        kwds['filename'] = joindir(user_config.directory, '{}.log'.format(user_config._pid))
     logging.basicConfig(**kwds)
 
 
@@ -302,7 +326,7 @@ def main():
                     default=user_config.reserve_load_fraction,
                     help='The fraction of the total system load which is required as reserve')
                     
-    parser.add_argument('--problemfile','-p',action="store_true", 
+    parser.add_argument('--problemfile',action="store_true", 
                     default=user_config.problem_filename,
                     help='flag to write the problem formulation to a problem-formulation.lp file -- useful for debugging')
     parser.add_argument('--duals_off','-u',action="store_true", 
@@ -323,7 +347,7 @@ def main():
     # parser.add_argument('--solution_file',type=str,default=False,
     #                    help='save solution file to disk')
     
-    parser.add_argument('--output_prefix', action="store_true", 
+    parser.add_argument('--output_prefix','-p', action="store_true", 
                     default=user_config.output_prefix,
                     help = 'Prefix all results files with the process id (for a record of simulataneous solves)')
     
@@ -348,7 +372,7 @@ def main():
     
     user_config.update(vars(args))
     user_config.duals = not args.duals_off
-    
+    if user_config.output_prefix: user_config._pid = os.getpid()
     
     if args.profile:
         print 'run profile'

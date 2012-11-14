@@ -25,6 +25,15 @@ from pandas.io.parsers import read_csv as dataframe_from_csv
 from pprint import pprint
 try: # for development
     from ipdb import set_trace #pudb
+    import IPython
+    from IPython.frontend.terminal.embed import InteractiveShellEmbed
+#    from IPython.config.loader import Config
+#    
+#    cfg = Config()
+#    cfg.InteractiveShellEmbed.prompt_in1="myprompt [\\#]> "
+#    cfg.InteractiveShellEmbed.prompt_out="myprompt [\\#]: "
+#    cfg.InteractiveShellEmbed.profile=ipythonprofile
+    ipython_shell = InteractiveShellEmbed() #config=cfg, user_ns=namespace, banner2=banner)
 except: 
     from pdb import set_trace
 

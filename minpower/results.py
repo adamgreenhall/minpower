@@ -632,12 +632,14 @@ class Solution_Stochastic_UC(Solution_Stochastic):
     def saveCSV(self):
         '''generator power values and statuses for stochastic unit commitment'''
         data=[]
+        
         fields=['generators','times','scenarios','power','status']
+        
         for g,gen in enumerate(self.generators()):
             for time in self.times:
                 for scenario in self.scenarios:
                     row=[gen.name,
-                         str(time.Start),
+                         time,
                          scenario,
                          self.generators_power[scenario][time][g],
                          self.generators_status[scenario][time][g]

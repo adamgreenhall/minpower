@@ -45,7 +45,7 @@ fields_gens={
     }
     
 fields_loads={'name':'name','bus':'bus','type':'kind','kind':'kind',
-            'p':'P','pd':'P', 'power':'P',
+            'p':'power','pd':'power', 'power':'power',
             'pmin':'Pmin','pmax':'Pmax',
             'schedulefilename':'schedulefilename','model':'model',
             'bidequation':'costcurvestring','costcurveequation':'costcurvestring',
@@ -223,8 +223,9 @@ def build_class_list(data, model, times=None, timeseries=None):
                         
             observedfilename = row.pop('observedfilename',None)
             forecastfilename = row.pop('forecastfilename',None)
-                
-            scenariosdirectory=row.pop('scenariosdirectory',None)
+
+            scenariosfilename = row.pop('scenariosfilename',None)
+            scenariosdirectory = row.pop('scenariosdirectory',None)
             
             if scenariosdirectory and user_config.scenarios_directory:
                 scenariosdirectory = user_config.scenarios_directory
@@ -233,10 +234,11 @@ def build_class_list(data, model, times=None, timeseries=None):
 
         
         if power is not None: 
-            row['schedule'] = Series([power], times.strings.index)
+            # a fixed power for all times
+            row['schedule'] = Series(power, times.strings.index)
         elif (sched_col is not None) or (schedulefilename is not None):
             row['schedule'] = _tsorfile(schedulefilename, datadir, timeseries, sched_col)  
-        elif is_generator and (scenariosdirectory is not None):
+        elif is_generator and ((scenariosdirectory is not None) or (scenariosfilename is not None)):
             row_model = powersystems.Generator_Stochastic
         
         if is_generator and row.get('schedule') is not None:
@@ -267,6 +269,8 @@ def build_class_list(data, model, times=None, timeseries=None):
                     obj.observed_values = _tsorfile(observedfilename, datadir, timeseries, observed_col)
                 except:
                     raise IOError('you must provide a observed filename for a rolling stochastic UC')
+            elif scenariosfilename is not None:
+                obj.scenarios_filename = scenariosfilename
                     
 
         all_models.append( obj )
@@ -333,16 +337,25 @@ def setup_times(generators_data, loads_data, filename_timeseries):
 
     return None, times
 
+def _parse_scenario_day(filename):
+    logging.debug('reading scenarios from %s', filename)
+    data = dataframe_from_csv(filename, parse_dates=True, index_col=0)
+    Nscenarios = user_config.scenarios
+    
+    if Nscenarios is not None:
+        data = data[ data.index<Nscenarios ]
+        data['probability'] = data['probability']/sum( data['probability'] )
+        
+    return data  
+
 def setup_scenarios(generators, times, only_stage=False):
     if user_config.deterministic_solve: return None
     
-    Nscenarios = user_config.scenarios
-
     has_scenarios=[]
     for gen in generators:
         if (getattr(gen,'scenarios_filename',None) is not None) or (getattr(gen, 'scenarios_directory', None) is not None): 
             has_scenarios.append(gen.index)
-    
+            
     if len(has_scenarios)==0: #deterministic model
         return None
     elif len(has_scenarios)>1:
@@ -352,21 +365,17 @@ def setup_scenarios(generators, times, only_stage=False):
     gen=generators[has_scenarios[0]]
     gen.has_scenarios=True
     gen.scenario_values=[]
+    
     if getattr(gen,'scenarios_filename',None) is not None:
+        
         gen.has_scenarios_multistage = False
-        data=csv2dicts(gen.scenarios_filename)
-        if Nscenarios is not None:
-            data = data[:Nscenarios]
+        fnm = joindir(user_config.directory, gen.scenarios_filename)
+        gen.scenario_values = dataframe_from_csv(fnm)
         
-        probabilities=[row['probability'] for row in data]
-        if Nscenarios is not None:
-            pr = sum(probabilities)
-            probabilities=[ p/pr for p in probabilities ]
+        probabilities = gen.scenario_values['probability'].values.tolist()
         
-        for row in data:
-            row.pop('probability')
-            gen.scenario_values.append(dict( (times[t],row[time]) for t,time in enumerate(sorted(row.iterkeys())) ))
         return construct_simple_scenario_tree( probabilities )
+        
     elif getattr(gen, 'scenarios_directory', None) is not None: # directory of scenarios grouped by days
         # key scenarios by day (initialization)
         scenario_trees = OrderedDict()
@@ -383,19 +392,12 @@ def setup_scenarios(generators, times, only_stage=False):
         if not filenames: raise IOError('no scenario files in "{}"'.format(gen.scenarios_directory))
         
         for i,f in enumerate(filenames):
-            logging.debug('reading scenarios from %s', f)
-            data = dataframe_from_csv(f, parse_dates=True, index_col=0)
-            
-            if Nscenarios is not None:
-                data = data[ data.index<Nscenarios ]
-                data['probability'] = data['probability']/sum( data['probability'] )
-            
-            # data_times = date_range(data.columns[1], data.columns[-1],freq='5min')
-            day = parse_time(data.columns[1]).date() #first col is probability
-            
+            data = _parse_scenario_day(f)
+            day_idx = 1 if data.columns[0]=='probability' else 0
+            day = parse_time(data.columns[day_idx]).date() 
             gen.scenario_values[day] = data
-            # defer construction until actual time stage starts
-            # scenario_trees[day] = construct_simple_scenario_tree( data['probability'].values.tolist(), time_stage=i )
+        
+        # defer construction until actual time stage starts
         return scenario_trees
 
 def _has_valid_attr(obj, name):

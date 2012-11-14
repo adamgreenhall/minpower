@@ -12,6 +12,7 @@ Just fix it before you push your change.
 
 import sys,os,glob,traceback,logging
 from minpower import config
+from minpower.config import user_config
 from minpower.commonscripts import joindir,splitFilename
 
 def wipeTestSlate(dir):
@@ -41,6 +42,7 @@ def main(solver=config.user_config.solver):
             os.system('python {s}'.format(s=hasPyscript(testDir)[0]))
         else:
             try: 
+                user_config.scenarios = 2
                 solve.solve_problem(testDir)
                 sys.stdout = sys.__stdout__ #switch back to standard outputting
                 fError.close()

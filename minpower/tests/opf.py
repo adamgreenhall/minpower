@@ -6,6 +6,7 @@ logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s'
 
 from minpower import optimization,powersystems,schedule,solve,config
 from minpower.optimization import value
+from minpower.commonscripts import Series
 
 from test_utils import solve_problem,make_loads_times,make_cheap_gen,make_mid_gen,make_expensive_gen,singletime
 
@@ -81,9 +82,9 @@ def three_buses():
         make_expensive_gen(bus='C'),
         ]    
     loads=[
-        powersystems.makeLoad(P=Pd[0],bus='A'),
-        powersystems.makeLoad(P=Pd[1],bus='B'),
-        powersystems.makeLoad(P=Pd[2],bus='C')
+        powersystems.Load(schedule=Series(Pd[0],singletime), bus='A'),
+        powersystems.Load(schedule=Series(Pd[1],singletime),bus='B'),
+        powersystems.Load(schedule=Series(Pd[2],singletime),bus='C')
         ]
     lines=[
         powersystems.Line(From='A',To='B'),

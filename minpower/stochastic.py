@@ -9,7 +9,7 @@ from coopr.pysp.scenariotree import ScenarioTree
 from coopr.pysp.ef import create_ef_instance
 
 from optimization import OptimizationProblem
-import gc,logging
+import gc, logging
 
 def construct_simple_scenario_tree(probabilities, time_stage=None):
     '''Construct a simple scenario tree instance'''

@@ -1,6 +1,6 @@
+from minpower.commonscripts import *
 from minpower import optimization,powersystems,schedule,solve,config
 from minpower.powersystems import Generator
-from pdb import set_trace as debug
 
 user_config_defaults = config.user_config.copy()
 
@@ -25,12 +25,13 @@ def make_expensive_gen(**kwargs):
     return Generator(name='expensive gen', **kwargs)    
 def make_loads_times(Pd=200,Pdt=None,**kwargs):
     if Pdt is None:
-        loads=[powersystems.Load_Fixed(P=Pd,**kwargs)]
-        times=singletime
+        times = singletime
+        sched = Series(Pd, index=times)
+        loads=[powersystems.Load(schedule=sched, **kwargs)]
     else: 
         times = schedule.make_times_basic(N=len(Pdt))
         #logging.critical([unicode(t) for t in times])
-        sched = schedule.Schedule(times=times, P=Pdt)
+        sched = Series(Pdt, index=times)
         loads=[powersystems.Load(schedule=sched,**kwargs)]
     
     return dict(loads=loads,times=times)

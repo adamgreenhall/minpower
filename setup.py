@@ -22,6 +22,7 @@ setup(
     [console_scripts]
     minpower = minpower.solve:main
     standalone_minpower = minpower.solve:standaloneUC
+    hyak_minpower = minpower.experiments.minpower_hyak:main
     """,
 
     install_requires=[
@@ -30,8 +31,6 @@ setup(
         'pyutilib>=4.0',
         'numpy>=1.6.1',
         'pandas>=0.9',  #pip install --upgrade git+git://github.com/pydata/pandas.git#egg=pandas
-        # 'matplotlib>=1.0.1',
-        # 'networkx>=1.5',
         'python-dateutil>=1.4.1',
         'ordereddict>=1.1',
         'PyYAML>=3.10',

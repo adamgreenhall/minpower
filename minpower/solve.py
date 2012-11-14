@@ -295,7 +295,7 @@ def _setup_logging():
     if user_config.logging_filename:
         kwds['filename']=user_config.logging_filename
     if user_config.output_prefix: 
-        kwds['filename'] = joindir(user_config.directory, '{}.log'.format(user_config._pid))
+        kwds['filename'] = joindir(user_config.directory, '{}.pylog'.format(user_config._pid))
     logging.basicConfig(**kwds)
 
 

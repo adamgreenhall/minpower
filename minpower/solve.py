@@ -335,10 +335,10 @@ def main():
     parser.add_argument('--problemfile',action="store_true", 
                     default=user_config.problem_filename,
                     help='flag to write the problem formulation to a problem-formulation.lp file -- useful for debugging')
-    parser.add_argument('--duals_off','-u',action="store_true", 
-                    default=not user_config.duals,
-                    help='flag to skip getting the the duals, or prices, of the optimization problem')
-    parser.add_argument('--dispatch_decommit_allowed','-d', action="store_true", 
+    parser.add_argument('--duals','-d',action="store_true", 
+                    default=user_config.duals,
+                    help='flag to get the duals, or prices, of the optimization problem')
+    parser.add_argument('--dispatch_decommit_allowed', action="store_true", 
                     default=user_config.dispatch_decommit_allowed,
                     help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
     parser.add_argument('--logfile','-l',type=str,
@@ -383,7 +383,6 @@ def main():
         raise OSError(msg)
     
     user_config.update(vars(args))
-    user_config.duals = not args.duals_off
     if user_config.output_prefix: user_config._pid = os.getpid()
     
     if args.profile:

@@ -94,7 +94,7 @@ available_solvers = ['gurobi','glpk']
 
 
 user_config = DotDict(dict(
-    get_duals = True,
+    get_duals = False,
     breakpoints = 11,
     hours_commitment = 24,
     hours_overlap = 0,

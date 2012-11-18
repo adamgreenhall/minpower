@@ -213,6 +213,9 @@ class PowerSystem(OptimizationProblem):
 
     def set_load_shedding(self,is_allowed):
         '''set system mode for load shedding'''
+
+        self.load_shedding_allowed = is_allowed
+        
         for load in self.loads():
             load.shedding_allowed=is_allowed
             load.cost_shedding=self.cost_load_shedding
@@ -282,7 +285,8 @@ class PowerSystem(OptimizationProblem):
         for line in self.lines: line.create_constraints(times,self.buses)
 
         # system reserve constraint
-        if (self.reserve_fixed>0 or self.reserve_load_fraction>0):
+        if not self.load_shedding_allowed and \
+            (self.reserve_fixed>0 or self.reserve_load_fraction>0):
             for time in times:
                 required_generation_availability = self.reserve_fixed + (1.0 + self.reserve_load_fraction) * sum(load.power(time) for load in self.loads())
                 generation_availability = sum(gen.power_available(time) for gen in self.generators())
@@ -374,13 +378,14 @@ class PowerSystem(OptimizationProblem):
         
         gen = self.get_generator_with_observed()
         
-        times = stage_solution.times.non_overlap()
-        
         resolve_instance = instance
         power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen))]
         
-        for time in times:
+        for time in stage_solution.times:
             power[time] = gen.observed_values[time]
+        
+        # TODO - ideally the resolve problem would be 
+        # filtered to non_overlap times only
         
         self._fix_variables(resolve_instance)
         
@@ -391,9 +396,8 @@ class PowerSystem(OptimizationProblem):
         else: logging.info('resolved deterministic instance of stage with observed values (in {}s)'.format(elapsed))
         
         stage_solution.observed_generator_power, stage_solution.load_shed_timeseries = stage_solution._calc_gen_power(sln=results.solution[0])
-              
     
         stage_solution._get_observed_costs()
         
-        # TODO - evaluate performance against this resolve with perfect information
+        # TODO - evaluate performance with perfect information
         return                 

@@ -477,9 +477,20 @@ def new_constraint(name,expression):
 def detect_status(results, solver):
     '''decide between a solver success or failure'''
     status_text = str(results.solver[0]['Termination condition'])
-    success = not ((not status_text =='optimal' and solver!='cbc') or status_text=='infeasible')
+    
+    if status_text == 'optimal': 
+        success = True
+    elif status_text in ['infeasible', 'unbounded']:
+        success = False
+    elif status_text == 'unknown':
+        # this is an edge case encountered in resolves
+        success = len(results.Solution[0].Variable.keys()) > 0
+    else:
+        success = False
+        
     if not success:
-        logging.critical('problem not solved. Solver terminated with status: "{}"'.format(status_text))
+        logging.critical('problem not solved' + 
+            ' - solver terminated with status: "{}"'.format(status_text))
     return success
 
 

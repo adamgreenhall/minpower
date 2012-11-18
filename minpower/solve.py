@@ -36,7 +36,7 @@ def solve_multistage(power_system, times, scenario_tree):
     storage = store_state(power_system, stage_times, None)
 
     for stg,t_stage in enumerate(stage_times):
-        logging.info('Stage starting at {}, {}'.format(t_stage.Start, show_clock()))
+        logging.info('Stage starting at {}, {}'.format(t_stage.Start.date(), show_clock()))
         # store current stage times
         storage = store_times(t_stage, storage)
         storage.close()

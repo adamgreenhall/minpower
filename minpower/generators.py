@@ -315,6 +315,9 @@ class Generator_nonControllable(Generator):
     def power(self,time, scenario=None):
         return self.get_parameter('power',time, indexed=True)
     def status(self,time=None,scenarios=None): return True
+    def power_available(self, time=None, scenario=None):
+        return self.power(time,scenario=scenario)
+
     def set_initial_condition(self,time=None, P=None, u=None, hoursinstatus=None):
         self.initial_power = 0
         self.initial_status = 1

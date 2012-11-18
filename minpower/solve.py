@@ -102,11 +102,14 @@ def standaloneUC():
             
     elif user_config.deterministic_solve:
         # resolve with observed power and fixed status from determinisitic solution
+        logging.info('resolving with observed values')
         try: 
             power_system.resolve_determinisitc_with_observed(instance, stage_solution)
         except OptimizationResolveError:
-            power_system.set_load_shedding(True)
+            power_system.set_load_shedding(True)         
+            logging.debug('making dummy instance with load shedding enabled')
             __, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg)
+            logging.debug('resolving with observed values and load shedding')
             power_system.resolve_determinisitc_with_observed(instance, stage_solution)
 
     power_system.get_finalconditions(stage_solution)
@@ -176,33 +179,17 @@ def create_solve_problem(power_system, times, scenario_tree=None,
     if user_config.problemfile:
         user_config.problemfile = joindir(directory, 'problem-formulation.lp')
 
-    create_problem(power_system,times)
-
-    stochastic_formulation = False
-    if scenario_tree is not None and not rerun:
-        if multistage: # multiple time stages
-            gen = power_system.get_generator_with_scenarios()
-            tree = stochastic.construct_simple_scenario_tree( 
-                gen.scenario_values[times.startdate]['probability'].values.tolist(), 
-                time_stage=stage_number)
-            logging.debug('constructed tree for stage %i'%stage_number)
-        else: tree = scenario_tree
-        stochastic_formulation = True
-        stochastic.define_stage_variables(tree,power_system,times)
-        # ipython_shell()
-        # %prun from minpower import stochastic; stochastic.create_problem_with_scenarios(power_system,times, tree, 24, 12, stage_number=0)
-        power_system = stochastic.create_problem_with_scenarios(power_system,times, tree, user_config.hours_commitment, user_config.hours_overlap, stage_number=stage_number)
+    create_problem(power_system, times, scenario_tree,
+        multistage, stage_number, rerun)
 
     instance = power_system.solve(user_config)
-
-    # if stochastic_formulation:
-    #     power_system.scenario_tree=scenario_tree
-    #     power_system.scenario_instances=scenario_instances
 
     solution=results.make_solution(power_system,times,datadir=user_config.directory)
 
     return solution, instance
-def create_problem(power_system,times):
+    
+def create_problem(power_system, times, scenario_tree, 
+    multistage=False, stage_number=None, rerun=False):
     """
     Create an optimization problem.
 
@@ -219,6 +206,21 @@ def create_problem(power_system,times):
     logging.debug('created objective {}'.format(show_clock()))
     power_system.create_constraints(times)
     logging.debug('created constraints {}'.format(show_clock()))
+    
+    stochastic_formulation = False
+    if scenario_tree is not None and not rerun:
+        if multistage: # multiple time stages
+            gen = power_system.get_generator_with_scenarios()
+            tree = stochastic.construct_simple_scenario_tree( 
+                gen.scenario_values[times.startdate]['probability'].values.tolist(), 
+                time_stage=stage_number)
+            logging.debug('constructed tree for stage %i'%stage_number)
+        else: tree = scenario_tree
+        stochastic_formulation = True
+        stochastic.define_stage_variables(tree,power_system,times)
+        # ipython_shell()
+        # %prun from minpower import stochastic; stochastic.create_problem_with_scenarios(power_system,times, tree, 24, 12, stage_number=0)
+        power_system = stochastic.create_problem_with_scenarios(power_system,times, tree, user_config.hours_commitment, user_config.hours_overlap, stage_number=stage_number)    
     return
 
 

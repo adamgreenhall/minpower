@@ -111,7 +111,9 @@ def standaloneUC():
             __, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg)
             logging.debug('resolving with observed values and load shedding')
             power_system.resolve_determinisitc_with_observed(instance, stage_solution)
-
+            logging.debug('shed {}MW in non-overlap period'.format(
+                stage_solution.load_shed_timeseries.sum()))
+ 
     power_system.get_finalconditions(stage_solution)
 
     power_system.set_load_shedding(False)

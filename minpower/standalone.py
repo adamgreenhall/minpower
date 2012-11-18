@@ -66,12 +66,13 @@ def store_state(power_system, times, sln=None):
         storage['hrsinstatus'] = gen_time_dataframe(generators, [tEnd], 
             values = [[gen.finalstatus['hoursinstatus'] for gen in generators]])
         
-        _add_tbl_val(storage, 'expected_cost', stg, sln.objective)
         _add_tbl_val(storage, 'solve_time', stg, sln.solve_time)                
         
         if sln.is_stochastic or user_config.deterministic_solve:
             _add_tbl_val(storage, 'observed_cost', stg, sln.totalcost_generation)                
-                
+            _add_tbl_val(storage, 'expected_cost', stg, sln.expected_totalcost_generation)
+        else:
+            _add_tbl_val(storage, 'expected_cost', stg, sln.objective)
     return storage
     
 def load_state():

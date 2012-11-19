@@ -202,8 +202,8 @@ class Solution(object):
 
     def _get_generator_cost(self, generators, times, P, u):
         init_status = gen_time_dataframe(
-            generators, 
-            [times.initialTime], 
+            generators,
+            [times.initialTime],
             [[gen.initial_status for gen in generators]])
         status_change = pd.concat([init_status, u]).diff().ix[times.strings.index]
 
@@ -246,16 +246,16 @@ class Solution(object):
             self.expected_load_shed = self.load_shed
         elif self.is_stochastic:
             # FIXME - these are over all times (including overlap)
-            self.expected_fuelcost_generation = self.fuelcost_generation
-            self.expected_totalcost_generation = self.totalcost_generation
-            self.expected_load_shed = self.load_shed
+            self.expected_fuelcost_generation = 0 #self.fuelcost_generation
+            self.expected_totalcost_generation = 0 #self.totalcost_generation
+            self.expected_load_shed = 0 #self.load_shed
 
         self.fuelcost_generation = cost
         self.totalcost_generation = cost + fixed_cost
 
         self.load_shed = self.load_shed_timeseries.sum()
-        
-        
+
+
 
     def _calc_gen_power(self, sln, scenario_prefix=None):
         '''calculate generator power from a resolved solution using the observed stochastic gen's power'''
@@ -265,16 +265,16 @@ class Solution(object):
         power = gen_time_dataframe(self.generators(), times)
 
         pfx = ('' if scenario_prefix is None else scenario_prefix+'_') + 'power_'
-        
+
         load = self.loads()[0]
         ld = str(load)
-        
+
         if '{p}{d}({t})'.format(p=pfx, d=ld, t=times[0]) in sln.variable:
             load_power = Series([sln.variable[pfx+'{d}({t})'.format(d=ld, t=time)]['Value'] for time in times], index=times.strings.index)
             shed = load.schedule.values[:len(load_power)] - load_power
         else:
             shed = Series(0, index=times.strings.index)
-        
+
         for gen in self.generators():
 
             if gen == gen_with_obs:
@@ -378,7 +378,7 @@ class Solution_ED(Solution):
         components=flatten([generators,output_loads])
         fields.append('name')
         data.append(getattrL(components,'name'))
-        
+
         if user_config.dispatch_decommit_allowed:
             fields.append('u')
             data.append([niceTF( value(g.status(t)) and value(g.power(t))>0) for g in components])
@@ -596,10 +596,10 @@ class Solution_Stochastic(Solution):
         root_node = tree._stages[0]._tree_nodes[0]
         self.expected_cost = root_node.computeExpectedNodeCost(instances)
         self.cost_per_scenario=stochastic.get_scenario_based_costs(tree,instances)
-        
+
         # TODO - get expected cost of non_overlap times
-        
-        
+
+
     def _get_cost_error(self): pass
 
 #    def _get_prices(self):
@@ -638,9 +638,9 @@ class Solution_Stochastic_UC(Solution_Stochastic):
     def saveCSV(self):
         '''generator power values and statuses for stochastic unit commitment'''
         data=[]
-        
+
         fields=['generators','times','scenarios','power','status']
-        
+
         for g,gen in enumerate(self.generators()):
             for time in self.times:
                 for scenario in self.scenarios:

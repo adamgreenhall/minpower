@@ -350,11 +350,14 @@ class PowerSystem(OptimizationProblem):
     def resolve_stochastic_with_observed(self, instance, stage_solution):
         gen = self.get_generator_with_scenarios()
         s = stage_solution.scenarios[0]
-        times = stage_solution.times.non_overlap()
         
         resolve_instance = instance.active_components(pyomo.Block)[s]
         power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen))]
-        for time in times:
+
+        # FIXME - the whole resolve problem should be 
+        # filtered to non_overlap times only
+        
+        for time in stage_solution.times:
             power[time] = gen.observed_values[time]
         
         self._fix_variables(resolve_instance)
@@ -381,11 +384,11 @@ class PowerSystem(OptimizationProblem):
         resolve_instance = instance
         power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen))]
         
-        for time in stage_solution.times:
-            power[time] = gen.observed_values[time]
-        
-        # TODO - ideally the resolve problem would be 
+        # FIXME the resolve problem should be 
         # filtered to non_overlap times only
+
+        for time in stage_solution.times:
+            power[time] = gen.observed_values[time]        
         
         self._fix_variables(resolve_instance)
         

@@ -103,6 +103,19 @@ def standaloneUC():
     elif user_config.deterministic_solve:
         # resolve with observed power and fixed status from determinisitic solution
         logging.info('resolving with observed values')
+        
+        # FIXME the resolve problem should be 
+        # filtered to non_overlap times only
+        
+        # create a problem instance (without solving it)
+        # instance = create_problem(power_system, times.non_overlap(),
+        #     scenario_tree, multistage=True, stage_number=stg)
+        # set all the power, status values to the stage_solution solved values
+        # set the wind power to the observed values
+        # fix the statuses
+        # solve!
+        # figure out results        
+        
         try: 
             power_system.resolve_determinisitc_with_observed(instance, stage_solution)
         except OptimizationResolveError:

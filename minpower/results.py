@@ -244,8 +244,11 @@ class Solution(object):
             self.expected_fuelcost_generation = self.fuelcost_generation
             self.expected_totalcost_generation = self.totalcost_generation
             self.expected_load_shed = self.load_shed
-
-        # TODO - stochastcic problem: get expected generation cost over all sceanrios
+        elif self.is_stochastic:
+            # FIXME - these are over all times (including overlap)
+            self.expected_fuelcost_generation = self.fuelcost_generation
+            self.expected_totalcost_generation = self.totalcost_generation
+            self.expected_load_shed = self.load_shed
 
         self.fuelcost_generation = cost
         self.totalcost_generation = cost + fixed_cost
@@ -593,7 +596,10 @@ class Solution_Stochastic(Solution):
         root_node = tree._stages[0]._tree_nodes[0]
         self.expected_cost = root_node.computeExpectedNodeCost(instances)
         self.cost_per_scenario=stochastic.get_scenario_based_costs(tree,instances)
-
+        
+        # TODO - get expected cost of non_overlap times
+        
+        
     def _get_cost_error(self): pass
 
 #    def _get_prices(self):

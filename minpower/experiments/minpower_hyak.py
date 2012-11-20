@@ -16,11 +16,11 @@ def main():
 
     if 'hyak' not in os.uname()[1]:
         scheduler_args = ['nohup']
-        stdout = open('/dev/null','w')
+        stdout = open('{}.out'.format(os.getpid()),'w')
         stderr = open('{}.err'.format(os.getpid()),'w')
     else:
         scheduler_args = ['qsub',
-            '-l nodes=1:ppn=12,feature=12core,mem=16gb,walltime=10:00:00',
+            '-l nodes=1:ppn=12,feature=12core,mem=16gb,walltime=48:00:00',
             '-m ae', #mail on completion/failure
             '-M argreen@uw.edu'
             ]

@@ -421,6 +421,8 @@ class OptimizationProblem(OptimizationObject):
 
         if not hasattr(self,'_opt_solver'):
             self._opt_solver = cooprsolver.SolverFactory(solver)
+            # self._opt_solver.options.mipgap = '0.001'
+            
             if self._opt_solver is None: 
                 msg='solver "{}" not found by coopr'.format(solver)
                 raise OptimizationError(msg)
@@ -432,6 +434,10 @@ class OptimizationProblem(OptimizationObject):
         elapsed = (time.time() - start)
         if not keepFiles: logger.setLevel(current_log_level)
         self.solved = detect_status(results, self._opt_solver.name)
+        
+        try: logging.debug('solution gap={}'.format(results.Solution[0]['Gap']))
+        except: pass
+        
         return results, elapsed
         
     def _fix_variables(self, instance):

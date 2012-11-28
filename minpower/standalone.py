@@ -53,12 +53,8 @@ def store_state(power_system, times, sln=None):
         storage['configuration'] = Series(user_config)        
     else:
         stg = sln.stage_number
-        if sln.is_stochastic:
-            storage['power'] = storage['power'].append(sln.observed_generator_power)
-            storage['status'] = storage['status'].append(sln.stage_generators_status)
-        else:
-            storage['power'] = storage['power'].append(sln.generators_power)
-            storage['status'] = storage['status'].append(sln.generators_status)
+        storage['power'] = storage['power'].append(sln.generators_power)
+        storage['status'] = storage['status'].append(sln.generators_status)
             
         storage['load_shed'] = storage['load_shed'].append(sln.load_shed_timeseries)
         

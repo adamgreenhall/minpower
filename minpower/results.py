@@ -634,6 +634,7 @@ class Solution_Stochastic(Solution):
 
     def _get_outputs(self, resolve=False):
         if resolve:
+            # observed generator power
             self.generators_power = self.gen_time_df('power', self.scenarios[0])
         else:
             self.generators_power_scenarios = self.stg_panel('power')
@@ -655,8 +656,16 @@ class Solution_Stochastic(Solution):
         if resolve: 
             # resolved on the first scenario
             s = self.scenarios[0]
-            self.observed_totalcost = self.gen_time_df('cost', s, evaluate=True)
-            self.observed_fuelcost = self.gen_time_df('operatingcost', s, evaluate=True)
+            self.observed_totalcost = self.totalcost_generation = \
+                self.gen_time_df('cost', s, evaluate=True)
+            self.observed_fuelcost =  self.fuelcost = \
+                self.gen_time_df('operatingcost', s, evaluate=True)
+            
+            #calc observed load shed            
+            if len(self.loads)>1: raise NotImplementedError
+            self.load_shed_timeseries = self.generators_power.sum(axis=1) - \
+                self.loads[0].schedule.ix[self.times_non_overlap]
+            
         else: 
             # instances = self.power_system._scenario_instances
             # tree = self.power_system._scenario_tree

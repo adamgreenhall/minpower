@@ -275,7 +275,7 @@ class PowerSystem(OptimizationProblem):
         for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
         logging.debug('... created power system vars... returning... {}'.format(show_clock()))
-        #for var in self.all_variables(times).values(): self.add_variable(var)
+        
     def cost_first_stage(self,scenario=None): return self.get_component('cost_first_stage',scenario=scenario)
     def cost_second_stage(self,scenario=None): return self.get_component('cost_second_stage',scenario=scenario)
     def create_objective(self,times):
@@ -317,19 +317,15 @@ class PowerSystem(OptimizationProblem):
         tEnd = times.last_non_overlap() # like 2011-01-01 23:00:00
         tEndstr = times.non_overlap().last() # like t99
 
-        if sln.is_stochastic:
-            status = sln.stage_generators_status
-            # status.index = times.non_overlap().strings.values
-        else:
-            status = sln.generators_status
+        status = sln.generators_status
 
         for gen in self.generators():
             g = str(gen)
             stat = status[g]
             if sln.is_stochastic:
                 gen.finalstatus = dict(
-                    P =  sln.observed_generator_power[g][tEnd],
-                    u =  sln.stage_generators_status[g][tEnd],
+                    P =  sln.generators_power[g][tEnd],
+                    u =  sln.generators_status[g][tEnd],
                     hoursinstatus = gen.gethrsinstatus(times.non_overlap(), stat))
                 
             else:

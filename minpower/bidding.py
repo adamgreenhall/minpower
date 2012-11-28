@@ -34,11 +34,11 @@ class Bid(OptimizationObject):
         self.owner_id=str(owner)
         
         self.is_pwl = (self.bid_points is not None)
+        self.is_linear = is_linear(self.polynomial)
         
         if not fixed_input: self.build_model()
     def build_model(self): 
         if self.bid_points is None:
-            self.is_linear=is_linear(self.polynomial)
             self.is_pwl = False
             if self.is_linear: return
 
@@ -98,14 +98,22 @@ class Bid(OptimizationObject):
             out += status*self.constant_term
             
         return out
-    def output_true(self,input_var): 
+
+    def output_true(self, input_var, force_linear=False): 
         '''true output value of bid'''
         input_val = value(input_var)
-        if self.is_pwl:
+        
+        if (self.is_pwl or force_linear) and not self.is_linear:
+            if not self.is_pwl and self.bid_points is None:
+                # construct the bid points
+                bid_pt_outputs = map(lambda pt: polynomial_value(self.polynomial, pt), self.discrete_input_points)
+                self.bid_points = zip(self.discrete_input_points, bid_pt_outputs)
+            
             for A,B in pairwise(self.bid_points):
                 if A[0]<=input_val<=B[0]: return get_line_value(A, B, input_val) + self.constant_term
         else: 
             return polynomial_value(self.polynomial, input_val)
+
     def output_incremental(self,input_var):
         input_val = value(input_var)
         if self.is_pwl:
@@ -113,6 +121,7 @@ class Bid(OptimizationObject):
                 if A[0]<=input_val<=B[0]: return get_line_slope(A,B)
         else:
             return polynomial_incremental_value(self.polynomial,value(input_var))
+
     def output_incremental_range(self):
         if self.is_pwl: 
             input_range = self.discrete_input_points

@@ -402,5 +402,14 @@ class PowerSystem(OptimizationProblem):
     
         stage_solution._get_observed_costs()
         
+        # TODO- check that observed cost calc is correct
+#       this is **really** ugly to do 
+#        tstrings = stage_solution.times.non_overlap().strings.values.tolist()
+#        fuel_cost_keys = filter(lambda k: k.startswith('cost_bid') & (k[-4:-1] in tstrings), results.Solution.Variable.keys())
+#        x = sum( [results.Solution.Variable[k]['Value'] for k in fuel_cost_keys] )
+#        print 'check', x
+#        print 'calcd', stage_solution.fuelcost_generation
+#        set_trace()
+
         # TODO - evaluate performance with perfect information
         return                 

@@ -215,7 +215,8 @@ class Solution(object):
 
         for gen in generators:
             g = str(gen)
-            cost[g] = cost[g].map(lambda power: gen.bids.output_true(power))
+            # evaluate the observed costs based on the linearized bids
+            cost[g] = u[g] * P[g].map(lambda power: gen.bids.output_true(power, force_linear=True))
             fixed_cost[g][fixed_cost[g]==1] = fixed_cost[g][fixed_cost[g]==1] * gen.startupcost
             fixed_cost[g][fixed_cost[g]==-1] = fixed_cost[g][fixed_cost[g]==-1] * gen.shutdowncost
 

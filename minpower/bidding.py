@@ -82,18 +82,21 @@ class Bid(OptimizationObject):
             
                 
             
-    def output(self,time=None,evaluate=False):
+    def output(self, time=None, scenario=None, evaluate=False):
         if self.is_linear: 
+            status = self.status_variable(time, scenario)
+            power = self.input_variable(time, scenario)        
             if evaluate: 
-                out = value(self.status_variable(time))*self.polynomial[0]+self.polynomial[1]*value(self.input_variable(time))
-            else:
-                out = self.status_variable(time)*self.polynomial[0]+self.polynomial[1]*self.input_variable(time)
+                status = value(status)
+                power = value(power)
+            out = self.polynomial[0]*status + self.polynomial[1]*power
         else: 
-            out = self.get_variable('cost',time=time,indexed=True)
+            out = self.get_variable('cost', 
+                time=time, scenario=scenario, indexed=True)
             if evaluate: out = value(out)
         
         if self.is_pwl and self.constant_term!=0:
-            status = self.status_variable(time)
+            status = self.status_variable(time, scenario)
             if evaluate: status=value(status) 
             out += status*self.constant_term
             

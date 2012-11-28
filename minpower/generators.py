@@ -82,30 +82,37 @@ class Generator(OptimizationObject):
         if t>0: previous_power=self.power(times[t-1])
         else:   previous_power=self.initial_power
         return self.power(times[t])-previous_power
-    def cost(self,time,evaluate=False):
+        
+    def cost(self, time, scenario=None, evaluate=False):
         '''total cost at time (operating + startup + shutdown)'''
-        return self.operatingcost(time,evaluate)+self.cost_startup(time,evaluate)+self.cost_shutdown(time,evaluate)
-    def cost_startup(self,time,evaluate=False):
+        return self.operatingcost(time, scenario, evaluate) + \
+            self.cost_startup(time, scenario, evaluate) + \
+            self.cost_shutdown(time, scenario, evaluate)
+            
+    def cost_startup(self, time, scenario=None, evaluate=False):
         if self.startupcost==0 or not self.commitment_problem: return 0
         else:
-            c=self.get_variable('startupcost',time,indexed=True)
+            c=self.get_variable('startupcost',time, scenario=scenario, indexed=True)
             return c if not evaluate else value(c)
-    def cost_shutdown(self,time,evaluate=False):
+            
+    def cost_shutdown(self, time, scenario=None, evaluate=False):
         if self.shutdowncost==0 or not self.commitment_problem: return 0
         else:
-            c=self.get_variable('shutdowncost',time,indexed=True)
+            c=self.get_variable('shutdowncost', time, scenario=scenario, indexed=True)
             return c if not evaluate else value(c)
-    def operatingcost(self,time=None,evaluate=False):
+            
+    def operatingcost(self, time=None, scenario=None, evaluate=False):
         '''cost of real power production at time (based on bid model approximation).'''
-        return self.bids.output(time,evaluate)
-    def truecost(self,time):
+        return self.bids.output(time, scenario=scenario, evaluate=evaluate)
+        
+    def truecost(self, time, scenario=None):
         '''exact cost of real power production at time (based on exact bid polynomial).'''
-        return value(self.status(time))*self.bids.output_true(self.power(time))
-    def incrementalcost(self,time):
+        return value(self.status(time, scenario)) * self.bids.output_true(self.power(time, scenario))
+    def incrementalcost(self, time, scenario=None):
         '''change in cost with change in power at time (based on exact bid polynomial).'''
-        return self.bids.output_incremental(self.power(time)) if value(self.status(time)) else None
-    def cost_first_stage(self,times):  return sum(self.cost_startup(time)+self.cost_shutdown(time) for time in times)
-    def cost_second_stage(self,times): return sum(self.operatingcost(time) for time in times)
+        return self.bids.output_incremental(self.power(time, scenario)) if value(self.status(time, scenario)) else None
+    def cost_first_stage(self, times):  return sum(self.cost_startup(time)+self.cost_shutdown(time) for time in times)
+    def cost_second_stage(self, times): return sum(self.operatingcost(time) for time in times)
     def getstatus(self, tend, times, status): 
         return dict(
             u=value(self.status(tend)),
@@ -335,10 +342,14 @@ class Generator_nonControllable(Generator):
             fixed_input=True
             )
     def create_constraints(self,times): return {}
-    def cost(self,time,evaluate=False): return self.operatingcost(time)
-    def operatingcost(self,time=None,evaluate=False): return self.bids.output_true( self.power(time) )
-    def truecost(self,time): return self.cost(time)
-    def incrementalcost(self,time): return self.bids.output_incremental(self.power(time))
+    def cost(self, time, scenario=None, evaluate=False): 
+        return self.operatingcost(time)
+    def operatingcost(self, time=None, scenario=None, evaluate=False): 
+        return self.bids.output_true( self.power(time) )
+    def truecost(self, time, scenario=None): 
+        return self.cost(time)
+    def incrementalcost(self, time, scenario=None): 
+        return self.bids.output_incremental(self.power(time))
     def get_scheduled_ouput(self, time): return float(self.schedule.ix[time])
 
 class Generator_Stochastic(Generator_nonControllable):
@@ -393,8 +404,8 @@ class Generator_Stochastic(Generator_nonControllable):
             fixed_input=True
             )
         return
-    def cost_startup(self,time): return 0
-    def cost_shutdown(self,time): return 0
+    def cost_startup(self, time, scenario=None): return 0
+    def cost_shutdown(self, time, scenario=None): return 0
 
 
 #def makeGenerator(kind='generic',**kwargs):

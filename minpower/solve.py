@@ -203,7 +203,7 @@ def create_solve_problem(power_system, times, scenario_tree=None,
 
     return solution, instance
     
-def create_problem(power_system, times, scenario_tree, 
+def create_problem(power_system, times, scenario_tree=None, 
     multistage=False, stage_number=None, rerun=False):
     """
     Create an optimization problem.

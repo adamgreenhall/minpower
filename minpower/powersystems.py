@@ -347,9 +347,9 @@ class PowerSystem(OptimizationProblem):
         return
 
         
-    def resolve_stochastic_with_observed(self, instance, stage_solution):
+    def resolve_stochastic_with_observed(self, instance, sln):
         gen = self.get_generator_with_scenarios()
-        s = stage_solution.scenarios[0]
+        s = sln.scenarios[0]
         
         resolve_instance = instance.active_components(pyomo.Block)[s]
         power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen))]
@@ -357,59 +357,71 @@ class PowerSystem(OptimizationProblem):
         # FIXME - the whole resolve problem should be 
         # filtered to non_overlap times only
         
-        for time in stage_solution.times:
+        for time in sln.times:
             power[time] = gen.observed_values[time]
         
         self._fix_variables(resolve_instance)
         results, elapsed = self._solve_instance( resolve_instance )
 
         if self.solved: 
-            logging.info('resolved stochastic instance of stage with observed values (in {}s)'.format(elapsed))
+            logging.info('resolved stochastic instance of stage ' + \
+                'with observed values (in {}s)'.format(elapsed))
         else:
-            #for time in times: 
-            #    total_gen = [value(gen.power(time,s)) for gen in self.generators()]
-            #    print time, total_gen, sum(total_gen), value(self.loads()[0].power(time))
-            # resolve_instance.write(joindir(user_config.directory, 'unsolved-resolve.lp'))
-            raise OptimizationResolveError('could not find a solution to the stage with observed wind and the stochastic commitment')
-        
-        stage_solution.observed_generator_power, stage_solution.load_shed_timeseries = stage_solution._calc_gen_power(sln=results.solution[0], scenario_prefix=s)        
-        # avoid loading this instance - because it is different from the mainline stochastic solution
-        stage_solution._get_observed_costs()
+            raise OptimizationResolveError('could not find a solution to the ',
+                'stage with observed wind and the stochastic commitment')
+
+        sln.expected_fuelcost = sln.fuelcost.copy()
+        sln.expected_totalcost = sln.totalcost_generation.copy()
+        sln.expected_load_shed = sln.load_shed
+
+        resolve_instance.load(results)
+
+        # re-store the generator outputs and costs
+        sln._get_outputs(resolve=True)
+        sln._get_costs(resolve=True)
+                                
+#        # avoid loading this instance - because it is different from the mainline stochastic solution
+#        
+#        stage_solution._calc_gen_power(sln=results.solution[0], scenario_prefix=s)
+#        stage_solution._get_observed_costs()
     
-    def resolve_determinisitc_with_observed(self, instance, stage_solution):
+    def resolve_determinisitc_with_observed(self, instance, sln):
         # get deterministic solution (point forecast)
         
         gen = self.get_generator_with_observed()
         
-        resolve_instance = instance
-        power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen))]
+        power = instance.active_components(pyomo.Param)['power_{}'.format(str(gen))]
         
         # FIXME the resolve problem should be 
         # filtered to non_overlap times only
 
-        for time in stage_solution.times:
+        for time in sln.times:
             power[time] = gen.observed_values[time]        
         
-        self._fix_variables(resolve_instance)
+        self._fix_variables(instance)
         
-        results, elapsed = self._solve_instance( resolve_instance )
+        results, elapsed = self._solve_instance( instance )
         if not self.solved: 
             # resolve_instance.write(joindir(user_config.directory, 'unsolved-resolve.lp'))
             raise OptimizationResolveError('couldnt find solution to deterministic fixed problem')
         else: logging.info('resolved deterministic instance of stage with observed values (in {}s)'.format(elapsed))
+
+        # store the useful expected value solution information        
+        sln.expected_generators_power = sln.generators_power.copy()
         
-        stage_solution.observed_generator_power, stage_solution.load_shed_timeseries = stage_solution._calc_gen_power(sln=results.solution[0])
-    
-        stage_solution._get_observed_costs()
+        sln.expected_fuelcost = sln.fuelcost.copy()
+        sln.expected_totalcost = sln.totalcost_generation.copy()
+        sln.expected_load_shed = float(sln.load_shed)
         
-        # TODO- check that observed cost calc is correct
-#       this is **really** ugly to do 
-#        tstrings = stage_solution.times.non_overlap().strings.values.tolist()
-#        fuel_cost_keys = filter(lambda k: k.startswith('cost_bid') & (k[-4:-1] in tstrings), results.Solution.Variable.keys())
-#        x = sum( [results.Solution.Variable[k]['Value'] for k in fuel_cost_keys] )
-#        print 'check', x
-#        print 'calcd', stage_solution.fuelcost_generation
-#        set_trace()
+        # load the observed resolve results into the instance
+        instance.load(results)
+
+        # re-store the generator outputs and costs
+        sln._get_outputs()
+        sln._get_costs()
+                
+        sln.observed_fuelcost = sln.fuelcost
+        sln.observed_totalcost = sln.totalcost_generation
 
         # TODO - evaluate performance with perfect information
-        return                 
+        return

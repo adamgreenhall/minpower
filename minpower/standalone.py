@@ -39,10 +39,11 @@ def store_state(power_system, times, sln=None):
 
         storage['hrsinstatus'] = gen_time_dataframe(generators, t, 
             values = [[gen.initial_status_hours for gen in generators]])
+
+        storage['expected_cost'] = DataFrame()
+        storage['observed_cost'] = DataFrame()
         
         # per-stage results 
-        storage['expected_cost'] = Series(index=range(stages))
-        storage['observed_cost'] = Series(index=range(stages))
         storage['solve_time'] = Series(index=range(stages))
         
         # store configuration
@@ -55,12 +56,11 @@ def store_state(power_system, times, sln=None):
         if sln.is_stochastic:
             storage['power'] = storage['power'].append(sln.observed_generator_power)
             storage['status'] = storage['status'].append(sln.stage_generators_status)
-            storage['load_shed'] = storage['load_shed'].append(sln.load_shed_timeseries)
-
         else:
             storage['power'] = storage['power'].append(sln.generators_power)
             storage['status'] = storage['status'].append(sln.generators_status)
-            storage['load_shed'] = storage['load_shed'].append(sln.load_shed_timeseries)
+            
+        storage['load_shed'] = storage['load_shed'].append(sln.load_shed_timeseries)
         
         tEnd = times.last_non_overlap()
         storage['hrsinstatus'] = gen_time_dataframe(generators, [tEnd], 
@@ -69,10 +69,10 @@ def store_state(power_system, times, sln=None):
         _add_tbl_val(storage, 'solve_time', stg, sln.solve_time)                
         
         if sln.is_stochastic or user_config.deterministic_solve:
-            _add_tbl_val(storage, 'observed_cost', stg, sln.totalcost_generation)                
-            _add_tbl_val(storage, 'expected_cost', stg, sln.expected_totalcost_generation)
+            storage['observed_cost'] = storage['observed_cost'].append(sln.totalcost_generation)
+            storage['expected_cost'] = storage['expected_cost'].append(sln.expected_totalcost)
         else:
-            _add_tbl_val(storage, 'expected_cost', stg, sln.objective)
+            storage['expected_cost'] = storage['expected_cost'].append(sln.totalcost_generation)
     return storage
     
 def load_state():

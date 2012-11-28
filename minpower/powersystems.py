@@ -366,10 +366,6 @@ class PowerSystem(OptimizationProblem):
             raise OptimizationResolveError('could not find a solution to the ',
                 'stage with observed wind and the stochastic commitment')
 
-        sln.expected_fuelcost = sln.fuelcost.copy()
-        sln.expected_totalcost = sln.totalcost_generation.copy()
-        sln.expected_load_shed = sln.load_shed
-
         resolve_instance.load(results)
 
         # re-store the generator outputs and costs

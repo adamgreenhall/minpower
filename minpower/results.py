@@ -225,102 +225,6 @@ class Solution(object):
         'percentage difference\t\t={diff:.2%}'.format(diff=self.costerror),
         ]
 
-#    def _get_generator_cost(self, generators, times, P, u):
-#        init_status = gen_time_dataframe(
-#            generators,
-#            [times.initialTime],
-#            [[gen.initial_status for gen in generators]])
-#        status_change = pd.concat([init_status, u]).diff().ix[times.strings.index]
-
-#        cost = 0
-#        fixed_cost = 0
-
-#        cost = P.copy()
-#        fixed_cost = status_change.copy()
-
-#        for gen in generators:
-#            g = str(gen)
-#            # evaluate the observed costs based on the linearized bids * status
-#            cost[g] = u[g] * P[g].map(lambda power: gen.bids.output_true(power, force_linear=True))
-#            fixed_cost[g][fixed_cost[g]==1] = fixed_cost[g][fixed_cost[g]==1] * gen.startupcost
-#            fixed_cost[g][fixed_cost[g]==-1] = fixed_cost[g][fixed_cost[g]==-1] * gen.shutdowncost
-
-#        return cost.sum().sum(), fixed_cost.sum().sum()
-
-#    def _get_observed_costs(self):
-#        generators = self.generators()
-#        times = self.times.non_overlap()
-
-#        P = self.observed_generator_power
-#        if self.is_stochastic:
-#            u = self.stage_generators_status
-#        elif user_config.deterministic_solve:
-#            u = self.generators_status
-#        else:
-#            # this is a deterministic problem - put status into a df
-#            self.stage_generators_status = gen_time_dataframe(self.generators(), times, values=self.generators_status).astype(int)
-#            u = self.stage_generators_status
-
-#            # here it is also easy to see the power difference in forecast/observed
-#            # self.observed_generator_power - gen_time_dataframe(self.generators(), times, values=self.generators_power)
-
-#        cost, fixed_cost = self._get_generator_cost(generators, times, P, u)
-
-#        if user_config.deterministic_solve:
-#            self.expected_fuelcost_generation = self.fuelcost_generation
-#            self.expected_totalcost_generation = self.totalcost_generation
-#            self.expected_load_shed = self.load_shed
-#        elif self.is_stochastic:
-#            # FIXME - these are over all times (including overlap)
-#            self.expected_fuelcost_generation = 0 #self.fuelcost_generation
-#            self.expected_totalcost_generation = 0 #self.totalcost_generation
-#            self.expected_load_shed = 0 #self.load_shed
-
-#        self.fuelcost_generation = cost
-#        self.totalcost_generation = cost + fixed_cost
-
-#        self.load_shed = self.load_shed_timeseries.sum()
-
-
-
-#    def _calc_gen_power(self, sln, scenario_prefix=None):
-#        '''calculate generator power from a resolved solution using the observed stochastic gen's power'''
-#        gen_with_obs = self.power_system.get_generator_with_observed()
-#        times = self.times.non_overlap()
-
-#        power = gen_time_dataframe(self.generators(), times)
-
-#        pfx = ('' if scenario_prefix is None else scenario_prefix+'_') + 'power_'
-
-#        load = self.loads()[0]
-#        ld = str(load)
-
-#        if '{p}{d}({t})'.format(p=pfx, d=ld, t=times[0]) in sln.variable:
-#            load_power = Series([sln.variable[pfx+'{d}({t})'.format(d=ld, t=time)]['Value'] for time in times], index=times.strings.index)
-#            shed = load.schedule.values[:len(load_power)] - load_power
-#        else:
-#            shed = Series(0, index=times.strings.index)
-
-#        for gen in self.generators():
-
-#            if gen == gen_with_obs:
-#                get_val = lambda time: gen.observed_values[time]
-#            elif gen.is_controllable:
-#                # yuck - parse the power out of the native pyomo solution object
-#                # trying to avoid loading the instance - because it is different from the mainline stochastic solution
-
-#                get_val = lambda time: sln.variable[pfx+'{g}({t})'.format(g=str(gen),t=str(time))]['Value']
-#            else:
-#                get_val = lambda time: gen.schedule[time]
-
-#            for time, tstr in times.strings.to_dict().items():
-#                power[str(gen)][time] = get_val(tstr)
-#        
-#        self.observed_generator_power = power
-#        self.load_shed_timeseries = shed
-#        return
-
-
 
 class Solution_ED(Solution):
     def info_lines(self,t): return []
@@ -601,7 +505,11 @@ class Solution_Stochastic(Solution):
         
         gen = self.power_system.get_generator_with_scenarios()
         
-        self.probability = gen.scenario_values[self.stage_date].probability
+        try: # single stage setup
+            self.probability = gen.scenario_values.probability
+        except AttributeError:  # staged setup 
+            self.probability = gen.scenario_values[self.stage_date].probability
+            
         self.probability.index = self.scenarios
         
         self._get_problem_info()
@@ -665,64 +573,38 @@ class Solution_Stochastic(Solution):
             if len(self.loads)>1: raise NotImplementedError
             self.load_shed_timeseries = self.generators_power.sum(axis=1) - \
                 self.loads[0].schedule.ix[self.times_non_overlap]
+            self.load_shed = self.load_shed_timeseries.sum()
             
         else: 
-            # instances = self.power_system._scenario_instances
-            # tree = self.power_system._scenario_tree
-            # root_node = tree._stages[0]._tree_nodes[0]
-            # self.expected_cost = root_node.computeExpectedNodeCost(instances)
-            # self.cost_per_scenario = stochastic.get_scenario_based_costs(tree, instances)
-        
             # get expected cost of non_overlap times
-            self.totalcost_generation = self._calc_expected_cost('cost')
-            self.fuelcost = self._calc_expected_cost('operatingcost')
+            self.expected_totalcost = self._calc_expected_cost('cost')
+            self.expected_fuelcost = self._calc_expected_cost('operatingcost')
                         
             # TODO calculate expected load shed
-            self.load_shed = None
+            self.expected_load_shed = None
 
     def _get_cost_error(self): pass
 
     def _get_prices(self): pass
 
     def info_cost(self):
-        return ["expected cost= {}".format(self.expected_cost),
-                "scenario costs: {}".format(self.cost_per_scenario)]
-    def info_generators(self,s):
-        out=['  name={}'.format(','.join(gen.name for gen in self.generators))]
-        for time in self.times:
-            out.extend(['  {} power={}'.format(str(time),self.generators_power[s][time]),
-                        '  {} status={}'.format(str(time),self.generators_status[s][time])])
-        return out
+        return ['expected cost= {}'.format(self.expected_totalcost.sum().sum())]
+        
     def show(self):
         '''Display the solution information to the terminal'''
         #self.problem.scenario_tree.pprintSolution()
         out=['']
         out.extend(['Solution information','-'*20])
         out.extend(self.info_cost())
-
-        for s in self.scenarios:
-                out.append('scenario {s}:'.format(s=s))
-                out.extend(self.info_generators(s))
         print '\n'.join(out)
 
 class Solution_Stochastic_UC(Solution_Stochastic):
     def saveCSV(self):
         '''generator power values and statuses for stochastic unit commitment'''
-        data=[]
-
-        fields=['generators','times','scenarios','power','status']
-
-        for g,gen in enumerate(self.generators):
-            for time in self.times:
-                for scenario in self.scenarios:
-                    row=[gen.name,
-                         time,
-                         scenario,
-                         self.generators_power[scenario][time][g],
-                         self.generators_status[scenario][time][g]
-                         ]
-                    data.append(row)
-        writeCSV(fields,data,filename=full_filename('commitment.csv'))
+        try: self.generators_power.to_csv(full_filename('commitment-power.csv'))
+        except AttributeError:
+            logging.warn('didnt resolve - no power values are available for csv format')
+        self.generators_status.to_csv(full_filename('commitment-status.csv'))
 
 
 class MultistageStandalone(Solution_UC_multistage):

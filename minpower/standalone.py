@@ -65,7 +65,7 @@ def store_state(power_system, times, sln=None):
         _add_tbl_val(storage, 'solve_time', stg, sln.solve_time)                
         
         if sln.is_stochastic or user_config.deterministic_solve:
-            storage['observed_cost'] = storage['observed_cost'].append(sln.totalcost_generation)
+            storage['observed_cost'] = storage['observed_cost'].append(sln.observed_totalcost)
             storage['expected_cost'] = storage['expected_cost'].append(sln.expected_totalcost)
         else:
             storage['expected_cost'] = storage['expected_cost'].append(sln.totalcost_generation)

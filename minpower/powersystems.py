@@ -371,15 +371,9 @@ class PowerSystem(OptimizationProblem):
         # re-store the generator outputs and costs
         sln._get_outputs(resolve=True)
         sln._get_costs(resolve=True)
-                                
-#        # avoid loading this instance - because it is different from the mainline stochastic solution
-#        
-#        stage_solution._calc_gen_power(sln=results.solution[0], scenario_prefix=s)
-#        stage_solution._get_observed_costs()
-    
+                                    
     def resolve_determinisitc_with_observed(self, instance, sln):
         # get deterministic solution (point forecast)
-        
         gen = self.get_generator_with_observed()
         
         power = instance.active_components(pyomo.Param)['power_{}'.format(str(gen))]

@@ -363,7 +363,7 @@ class PowerSystem(OptimizationProblem):
             logging.info('resolved stochastic instance of stage ' + \
                 'with observed values (in {}s)'.format(elapsed))
         else:
-            raise OptimizationResolveError('could not find a solution to the ',
+            raise OptimizationResolveError('could not find a solution to the '+\
                 'stage with observed wind and the stochastic commitment')
 
         resolve_instance.load(results)

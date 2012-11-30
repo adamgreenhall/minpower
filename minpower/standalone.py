@@ -95,6 +95,11 @@ def load_state():
             hoursinstatus=storage['hrsinstatus'][g][t])
     
     return power_system, times, scenario_tree
+
+def repack_storage():
+    '''do some clean-up compression on that ballooning storage'''
+    # http://stackoverflow.com/questions/13089359/mystery-when-storing-a-dataframe-containing-strings-in-hdf-with-pandas
+    os.system('ptrepack {f} -o {f}'.format(f=user_config.store_filename))
     
 def _add_tbl_val(storage, tablename, index, value):
     tbl = storage[tablename]

@@ -12,7 +12,7 @@ from optimization import OptimizationError, OptimizationResolveError
 import config, get_data, powersystems, stochastic, results
 from config import user_config
 from standalone import (store_state, load_state, store_times,
-    get_storage, wipe_storage)
+    get_storage, wipe_storage, repack_storage)
 from commonscripts import *
 
 def _get_store_filename():
@@ -47,8 +47,8 @@ def solve_multistage(power_system, times, scenario_tree):
                 pid='--pid {}'.format(os.getpid()) if user_config.output_prefix else ''), 
             shell=True, stdout=sys.stdout)
     
+    # repack_storage()
     storage = get_storage()
-    
     return storage, stage_times
 
 def standaloneUC():

@@ -25,6 +25,7 @@ def main():
             '-M argreen@uw.edu'
             ]
         # see https://sig.washington.edu/itsigs/Hyak_Job_Scheduler
+        # default walltime limit is only one hour - must set this
 
         # these get redirected by hyak anyway
         stdout = sys.stdout

@@ -285,8 +285,9 @@ class PowerSystem(OptimizationProblem):
         for line in self.lines: line.create_constraints(times,self.buses)
 
         # system reserve constraint
-        if not self.load_shedding_allowed and \
+        self._has_reserve = not self.load_shedding_allowed and \
             (self.reserve_fixed>0 or self.reserve_load_fraction>0):
+        if self._has_reserve:    
             for time in times:
                 required_generation_availability = self.reserve_fixed + (1.0 + self.reserve_load_fraction) * sum(load.power(time) for load in self.loads())
                 generation_availability = sum(gen.power_available(time) for gen in self.generators())
@@ -381,10 +382,18 @@ class PowerSystem(OptimizationProblem):
         # FIXME the resolve problem should be 
         # filtered to non_overlap times only
 
+        # set wind to observed power
         for time in sln.times:
             power[time] = gen.observed_values[time]        
         
+        # drop reserve constraints 
+        if self._has_reserve:
+            for time in sln.times:
+                instance._clear_attribute(self._t_id('reserve', time))
+            
+        # fix statuses
         self._fix_variables(instance)
+
         
         results, elapsed = self._solve_instance( instance )
         if not self.solved: 

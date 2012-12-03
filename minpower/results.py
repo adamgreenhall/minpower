@@ -572,7 +572,7 @@ class Solution_Stochastic(Solution):
             #calc observed load shed            
             if len(self.loads)>1: raise NotImplementedError
             self.load_shed_timeseries = self.generators_power.sum(axis=1) - \
-                self.loads[0].schedule.ix[self.times_non_overlap]
+                self.loads[0].schedule.ix[self.times_non_overlap].values
             self.load_shed = self.load_shed_timeseries.sum()
             
         else: 

@@ -215,7 +215,7 @@ class PowerSystem(OptimizationProblem):
         '''set system mode for load shedding'''
 
         self.load_shedding_allowed = is_allowed
-        
+
         for load in self.loads():
             load.shedding_allowed=is_allowed
             load.cost_shedding=self.cost_load_shedding
@@ -275,7 +275,7 @@ class PowerSystem(OptimizationProblem):
         for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
         logging.debug('... created power system vars... returning... {}'.format(show_clock()))
-        
+
     def cost_first_stage(self,scenario=None): return self.get_component('cost_first_stage',scenario=scenario)
     def cost_second_stage(self,scenario=None): return self.get_component('cost_second_stage',scenario=scenario)
     def create_objective(self,times):
@@ -286,8 +286,8 @@ class PowerSystem(OptimizationProblem):
 
         # system reserve constraint
         self._has_reserve = not self.load_shedding_allowed and \
-            (self.reserve_fixed>0 or self.reserve_load_fraction>0):
-        if self._has_reserve:    
+            (self.reserve_fixed>0 or self.reserve_load_fraction>0)
+        if self._has_reserve:
             for time in times:
                 required_generation_availability = self.reserve_fixed + (1.0 + self.reserve_load_fraction) * sum(load.power(time) for load in self.loads())
                 generation_availability = sum(gen.power_available(time) for gen in self.generators())
@@ -328,7 +328,7 @@ class PowerSystem(OptimizationProblem):
                     P =  sln.generators_power[g][tEnd],
                     u =  sln.generators_status[g][tEnd],
                     hoursinstatus = gen.gethrsinstatus(times.non_overlap(), stat))
-                
+
             else:
                 gen.finalstatus = gen.getstatus(tEndstr, times.non_overlap(), stat)
         return
@@ -343,24 +343,24 @@ class PowerSystem(OptimizationProblem):
                 del gen.finalstatus
         return
 
-        
+
     def resolve_stochastic_with_observed(self, instance, sln):
         gen = self.get_generator_with_scenarios()
         s = sln.scenarios[0]
-        
+
         resolve_instance = instance.active_components(pyomo.Block)[s]
         power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen))]
 
-        # FIXME - the whole resolve problem should be 
+        # FIXME - the whole resolve problem should be
         # filtered to non_overlap times only
-        
+
         for time in sln.times:
             power[time] = gen.observed_values[time]
-        
+
         self._fix_variables(resolve_instance)
         results, elapsed = self._solve_instance( resolve_instance )
 
-        if self.solved: 
+        if self.solved:
             logging.info('resolved stochastic instance of stage ' + \
                 'with observed values (in {}s)'.format(elapsed))
         else:
@@ -372,51 +372,48 @@ class PowerSystem(OptimizationProblem):
         # re-store the generator outputs and costs
         sln._get_outputs(resolve=True)
         sln._get_costs(resolve=True)
-                                    
+
     def resolve_determinisitc_with_observed(self, instance, sln):
         # get deterministic solution (point forecast)
         gen = self.get_generator_with_observed()
-        
+
         power = instance.active_components(pyomo.Param)['power_{}'.format(str(gen))]
-        
-        # FIXME the resolve problem should be 
+
+        # FIXME the resolve problem should be
         # filtered to non_overlap times only
 
         # set wind to observed power
         for time in sln.times:
-            power[time] = gen.observed_values[time]        
-        
-        # drop reserve constraints 
+            power[time] = gen.observed_values[time]
+
+        # drop reserve constraints
         if self._has_reserve:
             for time in sln.times:
                 instance._clear_attribute(self._t_id('reserve', time))
-            
         # fix statuses
         self._fix_variables(instance)
 
-        
+
         results, elapsed = self._solve_instance( instance )
-        if not self.solved: 
+        if not self.solved:
             # resolve_instance.write(joindir(user_config.directory, 'unsolved-resolve.lp'))
             raise OptimizationResolveError('couldnt find solution to deterministic fixed problem')
         else: logging.info('resolved deterministic instance of stage with observed values (in {}s)'.format(elapsed))
 
-        # store the useful expected value solution information        
+        # store the useful expected value solution information
         sln.expected_generators_power = sln.generators_power.copy()
-        
+
         sln.expected_fuelcost = sln.fuelcost.copy()
         sln.expected_totalcost = sln.totalcost_generation.copy()
         sln.expected_load_shed = float(sln.load_shed)
-        
+
         # load the observed resolve results into the instance
         instance.load(results)
 
         # re-store the generator outputs and costs
         sln._get_outputs()
         sln._get_costs()
-                
+
         sln.observed_fuelcost = sln.fuelcost
         sln.observed_totalcost = sln.totalcost_generation
-
-        # TODO - evaluate performance with perfect information
         return

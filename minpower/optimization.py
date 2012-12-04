@@ -179,6 +179,9 @@ class OptimizationObject(object):
         You probably want to override this one with a more descriptive string.
         '''
         return 'opt_obj{ind}'.format(ind=self.index)
+
+    
+    
     # def all_variables(self,times):
     #     '''return variables from object and children within times'''
     #     variables=self.variables
@@ -441,19 +444,33 @@ class OptimizationProblem(OptimizationObject):
         return results, elapsed
         
     def _fix_variables(self, instance):
-        ''' fix binary variables to their solved values to create an LP problem'''
-        active_vars= instance.active_components(pyomo.Var)
-        for var in active_vars.values():
-            if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(var.domain, pyomo.base.BooleanSet): 
-                if var.is_indexed(): 
-                    for key,ind_var in var.iteritems(): ind_var.fixed=True
-                else: var.fixed=True
-        if self.stochastic_formulation:
-            for scenario_block in filter(lambda blk: type(blk)!=pyomo.Piecewise, instance.active_components(pyomo.Block).values()):
-                self._fix_variables(scenario_block)
-        # need to preprocess after fixing
-        instance.preprocess()
+        _fix_variables(instance, self.stochastic_formulation)
 
+    def _fix_variables_model(self):
+        _fix_variables(self._model, self.stochastic_formulation)
+
+    def _remove_all_constraints(self):
+        for key in self._model.active_components(pyomo.Constraint).keys():
+            self._model._clear_attribute(key)
+            
+            
+def _fix_variables(instance, is_stochastic=False):
+    '''fix binary variables to their solved values to create an LP problem'''
+    active_vars= instance.active_components(pyomo.Var)
+    for var in active_vars.values():
+        if isinstance(var.domain, pyomo.base.IntegerSet) or \
+            isinstance(var.domain, pyomo.base.BooleanSet): 
+            if var.is_indexed(): 
+                for key,ind_var in var.iteritems(): ind_var.fixed=True
+            else: var.fixed=True
+    if is_stochastic:
+        for scenario_block in filter(
+            lambda blk: type(blk)!=pyomo.Piecewise,
+            instance.active_components(pyomo.Block).values()
+            ):
+            _fix_variables(scenario_block)
+    # need to preprocess after fixing
+    instance.preprocess()    
 
 def value(variable):
     '''

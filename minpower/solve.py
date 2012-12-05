@@ -19,18 +19,18 @@ def _get_store_filename():
     fnm = 'stage-store.hd5'
     if user_config.output_prefix:
         fnm = '{}-{}'.format(user_config._pid, fnm)
-    
+
     user_config.store_filename = joindir(user_config.directory, fnm)
 
 def solve_multistage(power_system, times, scenario_tree):
     # standalone
     _get_store_filename()
-        
+
     wipe_storage()
     stage_times=times.subdivide(user_config.hours_commitment, user_config.hours_overlap)
     buses=power_system.buses
     stage_solutions=[]
-    
+
     Nstages = len(stage_times)
 
     storage = store_state(power_system, stage_times, None)
@@ -41,12 +41,12 @@ def solve_multistage(power_system, times, scenario_tree):
         storage = store_times(t_stage, storage)
         storage.close()
         storage = None
-        subprocess.check_call( 
+        subprocess.check_call(
             'standalone_minpower {dir} {stg} {pid}'.format(
-                dir=user_config.directory, stg=stg, 
-                pid='--pid {}'.format(os.getpid()) if user_config.output_prefix else ''), 
+                dir=user_config.directory, stg=stg,
+                pid='--pid {}'.format(os.getpid()) if user_config.output_prefix else ''),
             shell=True, stdout=sys.stdout)
-    
+
     # repack_storage()
     storage = get_storage()
     return storage, stage_times
@@ -55,7 +55,7 @@ def standaloneUC():
     # standalone_minpower
     from config import user_config
     import argparse
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument('directory', type=str, help='the problem direcory')
     parser.add_argument('stg', type=int, help='the stage number')
@@ -65,21 +65,21 @@ def standaloneUC():
     args = parser.parse_args()
     stg = args.stg
     user_config.directory = args.directory
-    if args.pid: 
+    if args.pid:
         user_config.output_prefix = True
         user_config._pid = args.pid
-    
+
     _get_store_filename()
-    
+
     _setup_logging()
-    
+
     # load stage data
     power_system, times, scenario_tree = load_state()
 
-    try: 
-        stage_solution, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg) 
+    try:
+        stage_solution, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg)
     except OptimizationError:
-        #re-do stage, with load shedding allowed        
+        #re-do stage, with load shedding allowed
         logging.critical('stage infeasible, re-running with load shedding.')
         power_system.reset_model()
         power_system.set_load_shedding(True)
@@ -90,35 +90,35 @@ def standaloneUC():
         power_system.set_load_shedding(False)
 
     logging.debug('solved... get results... {}'.format(show_clock()))
-    
+
     if stage_solution.is_stochastic:
         # resolve with observed power and fixed status from stochastic solution
-        try: 
+        try:
             power_system.resolve_stochastic_with_observed(instance, stage_solution)
         except OptimizationResolveError:
             power_system.set_load_shedding(True)
             __, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg)
             power_system.resolve_stochastic_with_observed(instance, stage_solution)
-            
+
     elif user_config.deterministic_solve:
         # resolve with observed power and fixed status from determinisitic solution
         logging.info('resolving with observed values')
-        try: 
+        try:
             power_system.resolve_determinisitc_with_observed(instance, stage_solution)
         except OptimizationResolveError:
-            power_system.set_load_shedding(True)         
+            power_system.set_load_shedding(True)
             __, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg)
             power_system.resolve_determinisitc_with_observed(instance, stage_solution)
             logging.debug('shed {}MW in non-overlap period'.format(
                 stage_solution.load_shed_timeseries.sum()))
- 
+
     power_system.get_finalconditions(stage_solution)
 
     power_system.set_load_shedding(False)
     stage_solution.stage_number = stg
     store = store_state(power_system, times, stage_solution)
     store.flush()
-    
+
     return
 
 def solve_problem(datadir='.',
@@ -160,7 +160,7 @@ def solve_problem(datadir='.',
         stage_solutions, stage_times = solve_multistage(power_system, times, scenario_tree)
         solution = results.make_multistage_solution(power_system, stage_times, stage_solutions)
 
-    if shell: 
+    if shell:
         if user_config.output_prefix:
             stdout = sys.stdout
             sys.stdout = StreamToLogger()
@@ -174,7 +174,7 @@ def solve_problem(datadir='.',
     return solution
 
 def create_solve_problem(power_system, times, scenario_tree=None,
-    multistage=False, stage_number=None, rerun=False): 
+    multistage=False, stage_number=None, rerun=False):
 
     if user_config.problemfile:
         user_config.problemfile = joindir(directory, 'problem-formulation.lp')
@@ -187,8 +187,8 @@ def create_solve_problem(power_system, times, scenario_tree=None,
     solution=results.make_solution(power_system,times,datadir=user_config.directory)
 
     return solution, instance
-    
-def create_problem(power_system, times, scenario_tree=None, 
+
+def create_problem(power_system, times, scenario_tree=None,
     multistage=False, stage_number=None, rerun=False):
     """
     Create an optimization problem.
@@ -206,13 +206,13 @@ def create_problem(power_system, times, scenario_tree=None,
     logging.debug('created objective {}'.format(show_clock()))
     power_system.create_constraints(times)
     logging.debug('created constraints {}'.format(show_clock()))
-    
+
     stochastic_formulation = False
     if scenario_tree is not None and not rerun:
         if multistage: # multiple time stages
             gen = power_system.get_generator_with_scenarios()
-            tree = stochastic.construct_simple_scenario_tree( 
-                gen.scenario_values[times.startdate]['probability'].values.tolist(), 
+            tree = stochastic.construct_simple_scenario_tree(
+                gen.scenario_values[times.startdate]['probability'].values.tolist(),
                 time_stage=stage_number)
             logging.debug('constructed tree for stage %i'%stage_number)
         else: tree = scenario_tree
@@ -220,7 +220,7 @@ def create_problem(power_system, times, scenario_tree=None,
         stochastic.define_stage_variables(tree,power_system,times)
         # ipython_shell()
         # %prun from minpower import stochastic; stochastic.create_problem_with_scenarios(power_system,times, tree, 24, 12, stage_number=0)
-        power_system = stochastic.create_problem_with_scenarios(power_system,times, tree, user_config.hours_commitment, user_config.hours_overlap, stage_number=stage_number)    
+        power_system = stochastic.create_problem_with_scenarios(power_system,times, tree, user_config.hours_commitment, user_config.hours_overlap, stage_number=stage_number)
     return
 
 
@@ -245,21 +245,21 @@ def create_problem(power_system, times, scenario_tree=None,
 
 #    """
 
-#    stage_times=times.subdivide(user_config.hours_commitment, 
+#    stage_times=times.subdivide(user_config.hours_commitment,
 #        overlap_hrs=user_config.hours_overlap )
 #    buses=power_system.buses
 #    stage_solutions=[]
-#    
+#
 #    Nstages = len(stage_times)
 
 #    for stg,t_stage in enumerate(stage_times):
 #        logging.info('Stage starting at {}, {}'.format(t_stage.Start, show_clock(user_config.show_clock)))
-#        
-#        
+#
+#
 #        power_system.set_initialconditions(t_stage.initialTime, stg, stage_solutions)
 
-#        try: 
-#            stage_solution, instance = create_solve_problem(power_system, t_stage, scenario_tree, multistage=True, stage_number=stg) 
+#        try:
+#            stage_solution, instance = create_solve_problem(power_system, t_stage, scenario_tree, multistage=True, stage_number=stg)
 #        except OptimizationError:
 #            #re-do stage, with load shedding allowed
 #            logging.critical('stage infeasible, re-running with load shedding.')
@@ -273,21 +273,21 @@ def create_problem(power_system, times, scenario_tree=None,
 #            power_system.set_load_shedding(False)
 
 #        logging.debug('solved... get results... {}'.format(show_clock(user_config.show_clock)))
-#        
+#
 #        if stage_solution.is_stochastic:
 #            # resolve with observed power and fixed status from stochastic solution
 #            power_system.resolve_stochastic_with_observed(instance, stage_solution)
 #        elif user_config.deterministic_solve:
 #            # resolve with observed power and fixed status from determinisitic solution
 #            power_system.resolve_determinisitc_with_observed(instance, stage_solution)
-#        
+#
 #        power_system.get_finalconditions(stage_solution)
 #        stage_solutions.append(stage_solution)
 
-#        if stg < (Nstages-1): # if not the last stage 
+#        if stg < (Nstages-1): # if not the last stage
 #            power_system.reset_model()
 #            #commonscripts.show_memory_growth()
-#            
+#
 #    return stage_solutions, stage_times
 
 
@@ -296,7 +296,7 @@ def _setup_logging():
     kwds = dict(level = user_config.logging_level, format='%(levelname)s: %(message)s')
     if user_config.logging_filename:
         kwds['filename']=user_config.logging_filename
-    if user_config.output_prefix: 
+    if user_config.output_prefix:
         kwds['filename'] = joindir(user_config.directory, '{}.pylog'.format(user_config._pid))
     logging.basicConfig(**kwds)
 
@@ -311,42 +311,42 @@ def main():
     parser = argparse.ArgumentParser(description='Minpower command line interface')
     parser.add_argument('directory', type=str,
                        help='the direcory of the problem you want to solve (or name of minpower demo case)')
-    parser.add_argument('--solver','-s',  type=str, 
+    parser.add_argument('--solver','-s',  type=str,
                     default=user_config.solver,
                     help='the solver name used to solve the problem (e.g. cplex, gurobi, glpk)')
-    parser.add_argument('--visualization','-v',action="store_true", 
+    parser.add_argument('--visualization','-v',action="store_true",
                     default=user_config.show_visualization,
                     help='save a visualization of the solution')
-    parser.add_argument('--breakpoints','-b',  type=int, 
+    parser.add_argument('--breakpoints','-b',  type=int,
                     default=user_config.breakpoints,
                     help='number of breakpoints to use in piece-wise linearization of polynomial costs')
-    parser.add_argument('--hours_commitment','-c', type=int, 
+    parser.add_argument('--hours_commitment','-c', type=int,
                     default=user_config.hours_commitment,
                     help='number hours per commitment in a rolling UC (exclusive of overlap)')
-    parser.add_argument('--hours_overlap','-o', type=int, 
+    parser.add_argument('--hours_overlap','-o', type=int,
                     default=user_config.hours_overlap,
                     help='number hours to overlap commitments in a rolling UC')
-                    
-    parser.add_argument('--reserve_fixed', type=float, 
+
+    parser.add_argument('--reserve_fixed', type=float,
                     default=user_config.reserve_fixed,
                     help='The static amount of reserve required at all times (in MW)')
-    parser.add_argument('--reserve_load_fraction', type=float, 
+    parser.add_argument('--reserve_load_fraction', type=float,
                     default=user_config.reserve_load_fraction,
                     help='The fraction of the total system load which is required as reserve')
-                    
-    parser.add_argument('--problemfile',action="store_true", 
+
+    parser.add_argument('--problemfile',action="store_true",
                     default=user_config.problem_filename,
                     help='flag to write the problem formulation to a problem-formulation.lp file -- useful for debugging')
-    parser.add_argument('--duals','-d',action="store_true", 
+    parser.add_argument('--duals','-d',action="store_true",
                     default=user_config.duals,
                     help='flag to get the duals, or prices, of the optimization problem')
-    parser.add_argument('--dispatch_decommit_allowed', action="store_true", 
+    parser.add_argument('--dispatch_decommit_allowed', action="store_true",
                     default=user_config.dispatch_decommit_allowed,
                     help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
     parser.add_argument('--logfile','-l',type=str,
                     default=user_config.logging_filename,
                     help='log file, default is to log to terminal')
-    parser.add_argument('--scenarios',type=int, 
+    parser.add_argument('--scenarios',type=int,
                     default=user_config.scenarios,
                     help='limit the number of scenarios to N')
 
@@ -356,15 +356,15 @@ def main():
     parser.add_argument('--scenarios_directory', type=str,
                     default=user_config.scenarios_directory,
                     help='override scenarios directory for stochastic problem')
-                    
-                    
+
+
     # parser.add_argument('--solution_file',type=str,default=False,
     #                    help='save solution file to disk')
-    
-    parser.add_argument('--output_prefix','-p', action="store_true", 
+
+    parser.add_argument('--output_prefix','-p', action="store_true",
                     default=user_config.output_prefix,
                     help = 'Prefix all results files with the process id (for a record of simulataneous solves)')
-    
+
     parser.add_argument('--profile',action="store_true",
                     default=False,
                     help='run cProfile and output to minpower.profile')
@@ -383,10 +383,10 @@ def main():
     if not os.path.isdir(directory):
         msg='There is no folder named "{}".'.format(directory)
         raise OSError(msg)
-    
+
     user_config.update(vars(args))
     if user_config.output_prefix: user_config._pid = os.getpid()
-    
+
     if args.profile:
         print 'run profile'
         import cProfile
@@ -402,6 +402,6 @@ def main():
                 print 'There was an error:'
                 traceback.print_exc(file=sys.stdout)
             else: raise
-            
+
 # for use in dev
 if __name__=='__main__': main()

@@ -39,19 +39,30 @@ class Bid(OptimizationObject):
         if not fixed_input: self.build_model()
     def build_model(self): 
         if self.bid_points is None:
+            
             self.is_pwl = False
+            self.constant_term = self.polynomial[0]
+            
             if self.is_linear: return
-
-            self.add_variable('cost',index=self.times.set,low=0)
-            def pw_rule(model,time,input_var): return polynomial_value(self.polynomial,input_var)
+            
+            polynomial = list(self.polynomial)
+            # use constant term in place of the 0th order term
+            polynomial[0] = 0 
+            
+            self.add_variable('cost', index=self.times.set, low=0)
+            def pw_rule(model,time,input_var): 
+                return polynomial_value(polynomial, input_var)
             self.discrete_input_points=discretize_range(self.num_breakpoints,self.min_input,self.max_input)
             in_pts=dict((t,self.discrete_input_points) for t in self.times.set)
-            pw_representation=Piecewise(self.times.set,self.output(),self.input_variable(),
-                                           f_rule=pw_rule,
-                                           pw_pts=in_pts,
-                                           pw_constr_type='LB',
-                                           warn_domain_coverage = False, # gen lower power bounds are set to zero (status trick) and Piecewise complains if Pmin>0
-                                           )
+            pw_representation = Piecewise(
+                self.times.set,
+                self.get_variable('cost',time=None,indexed=True),
+                self.input_variable(),
+                f_rule=pw_rule,
+                pw_pts=in_pts,
+                pw_constr_type='LB',
+                warn_domain_coverage = False, # gen lower power bounds are set to zero (status trick) and Piecewise complains if Pmin>0
+               )
             
         else:
             # custom bid points
@@ -68,37 +79,36 @@ class Bid(OptimizationObject):
                 return mapping[input_var]
                 
             pw_representation=Piecewise(self.times.set,
-                                          self.get_variable('cost',time=None,indexed=True),
-                                          self.input_variable(),
-                                          pw_pts=in_pts,
-                                          pw_constr_type='LB',
-                                          pw_repn='DCC', # the disagregated convex combination method 
-                                          f_rule=pw_rule,
-                                          warn_domain_coverage = False
-                                          )
+                self.get_variable('cost',time=None,indexed=True),
+                self.input_variable(),
+                pw_pts=in_pts,
+                pw_constr_type='LB',
+                pw_repn='DCC', # the disagregated convex combination method 
+                f_rule=pw_rule,
+                warn_domain_coverage=False)
 
         pw_representation.name=self.iden()
+        self.max_output = pw_rule(None,None, self.max_input)
         self._parent_problem().add_component_to_problem(pw_representation)
             
                 
             
     def output(self, time=None, scenario=None, evaluate=False):
+        status = self.status_variable(time, scenario)
+        power = self.input_variable(time, scenario)        
+        if evaluate: 
+            status = value(status)
+            power = value(power)
+
         if self.is_linear: 
-            status = self.status_variable(time, scenario)
-            power = self.input_variable(time, scenario)        
-            if evaluate: 
-                status = value(status)
-                power = value(power)
-            out = self.polynomial[0]*status + self.polynomial[1]*power
+            out = self.polynomial[1]*power
         else: 
             out = self.get_variable('cost', 
                 time=time, scenario=scenario, indexed=True)
             if evaluate: out = value(out)
         
-        if self.is_pwl and self.constant_term!=0:
-            status = self.status_variable(time, scenario)
-            if evaluate: status=value(status) 
-            out += status*self.constant_term
+        if self.constant_term != 0:
+            out += status * self.constant_term
             
         return out
 

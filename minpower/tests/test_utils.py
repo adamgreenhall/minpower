@@ -9,6 +9,9 @@ singletime=schedule.just_one_time()
 
 gen_costs = dict(cheap=10,mid=20,expensive=30)
 
+def assertAlmostEqual(x,y):
+    assert(round(x-y, 5)==0)
+
 
 #def make_single_bus(generators,loads):
     #singlebus=powersystems.Bus()
@@ -47,8 +50,6 @@ def solve_problem(generators,loads=None,times=None, gen_init=None, lines=None):
             gen.index=g
             if gen_init is None: gen.set_initial_condition(times.initialTime)
             else:                gen.set_initial_condition(times.initialTime, **gen_init[g])
-            
-    
     
     power_system=powersystems.PowerSystem(generators,loads,lines)
     solve.create_problem(power_system,times)

@@ -55,7 +55,6 @@ def store_state(power_system, times, sln=None):
         stg = sln.stage_number
         storage['power'] = storage['power'].append(sln.generators_power)
         storage['status'] = storage['status'].append(sln.generators_status)
-            
         storage['load_shed'] = storage['load_shed'].append(sln.load_shed_timeseries)
         
         tEnd = times.last_non_overlap()

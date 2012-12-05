@@ -8,7 +8,8 @@ from minpower import optimization,powersystems,schedule,solve,config
 from minpower.powersystems import Generator
 from minpower.optimization import value
 
-from test_utils import solve_problem,make_loads_times,singletime,make_cheap_gen,make_mid_gen,make_expensive_gen
+from test_utils import *
+
 
 generation = Tests()
 test_new = Tests()
@@ -76,8 +77,8 @@ def ramp_down():
         ]
     initial = [{'P':250},{'P':250}]
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[550,450]))
-    ramp_rate = generators[1].power(times[1]) - generators[1].power(times[0])
-    assert ramp_rate == ramp_limit
+    ramp_rate = value(generators[1].power(times[1])) - value(generators[1].power(times[0]))
+    assertAlmostEqual(ramp_rate, ramp_limit)
 
 @generation.test
 def ramp_up_initial():

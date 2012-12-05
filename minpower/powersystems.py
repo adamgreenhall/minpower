@@ -9,7 +9,7 @@ optimization framework from :class:`~optimization.OptimizationObject`.
 
 from coopr import pyomo
 from optimization import (value, dual, OptimizationObject, OptimizationProblem,
-    OptimizationResolveError)
+    OptimizationResolveError, OptimizationError)
 from generators import *
 from commonscripts import *
 import config
@@ -377,7 +377,7 @@ class PowerSystem(OptimizationProblem):
         # the resolve problem only involves the non-overlap times
         times = sln.times_non_overlap
         if len(times) < len(sln.times):
-            # reset the constraints 
+            # reset the constraints
             self._remove_all_constraints()
             # dont create reserve constraints
             self.reserve_fixed = 0
@@ -385,7 +385,8 @@ class PowerSystem(OptimizationProblem):
             # recreate constraints only for the non-overlap times
             self.create_constraints(times)
 
-        # expected_full = sln.gen_time_df('power', False)
+        # expectP = sln.gen_time_df('power', False)
+        # expectU = sln.gen_time_df('status', False).astype(int)
 
         # set wind to observed power
         gen = self.get_generator_with_observed()
@@ -393,21 +394,21 @@ class PowerSystem(OptimizationProblem):
             'power_{}'.format(str(gen))]
         for time in times:
             power[time] = gen.observed_values[time]
-        
+
         # fix statuses
         self._fix_variables_model()
 
         full_sln_time = self.solution_time
-        instance = self.solve()
-        
-        if not self.solved:
-            # resolve_instance.write(joindir(user_config.directory, 'unsolved-resolve.lp'))
+        try:
+            self.solve()
+        except OptimizationError:
             raise OptimizationResolveError('couldnt find solution to deterministic fixed problem')
-        else: logging.info('resolved deterministic instance of stage with observed values (in {}s)'.format(self.solution_time))
+
+        logging.info('resolved deterministic instance of stage with observed values (in {}s)'.format(self.solution_time))
 
         self.resolve_solution_time = self.solution_time
         self.solution_time = full_sln_time
-        
+
         # store the useful expected value solution information
         sln.expected_generators_power = sln.generators_power.copy()
 
@@ -421,5 +422,17 @@ class PowerSystem(OptimizationProblem):
 
         sln.observed_fuelcost = sln.fuelcost
         sln.observed_totalcost = sln.totalcost_generation
-
+        
+        invalid_gen = ((sln.generators_status*sln.generators_power) - \
+            sln.generators_power).sum().sum()
+        if invalid_gen != 0:
+            logging.error('invalid generation (status=0, P>0) of {}MW'.format(
+                invalid_gen))
+        invalid_cost = (sln.totalcost_generation - \
+            (sln.totalcost_generation * sln.gen_time_df('status'))).sum().sum()
+        if invalid_cost != 0:
+            logging.error('invalid cost (status=0, C>0) of ${}'.format(
+                invalid_cost))
+            set_trace()
+            
         return

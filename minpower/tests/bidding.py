@@ -8,7 +8,7 @@ from minpower import optimization,powersystems,schedule,solve,config,bidding
 from minpower.powersystems import Generator
 from minpower.optimization import value
 
-from test_utils import solve_problem,make_loads_times
+from test_utils import *
 
 bidding = Tests()
 
@@ -24,8 +24,8 @@ def linear():
     Pd=221
     generators=[ Generator(costcurvestring='{}+{}P'.format(a,b)) ]
     _,times=solve_problem(generators,**make_loads_times(Pd))
-    cost = Assert(generators[0].bids.output(times[0]))
-    assert cost == a+b*Pd
+    cost = Assert(generators[0].bids.output(times[0], evaluate=True))
+    assert cost == a + b*Pd
 
 @bidding.test
 def cubic_convex():
@@ -40,7 +40,7 @@ def cubic_convex():
     d=.1
     generators=[ Generator(costcurvestring='{}+{}P+{}P^2+{}P^3'.format(a,b,c,d)) ]
     _,times=solve_problem(generators,**make_loads_times(Pd))#,problem_filename='bidproblem.lp')
-    cost = Assert(value(generators[0].bids.output(times[0])))
+    cost = Assert(value(generators[0].bids.output(times[0], evaluate=True)))
     actual_cost = a+ b*Pd+ c*Pd**2 + d*Pd**3
     assert actual_cost <= cost and cost <= 1.05*actual_cost
 
@@ -61,5 +61,34 @@ def cubic_non_convex():
     cost = Assert(generators[0].bids.output(times[0],evaluate=True))
     actual_cost = a+ b*Pd+ c*Pd**2 + -1*d*Pd**3
     assert actual_cost <= cost <= 1.05*actual_cost
+
+@bidding.test
+def fixed_costs_when_off():
+    '''
+    ensure that generator with fixed cost 
+    only charges fixed cost when on
+    '''
+    a = 5
+    b = 30
+    c = 0.2
+    
+    generators=[
+        make_cheap_gen(Pmax=80),
+        make_mid_gen(Pmax=20),
+        make_expensive_gen(
+            costcurvestring='{}+{}P+{}P^2'.format(a,b,c),
+            mindowntime=1,
+            Pmax=50
+            )
+    ]
+
+    Pdt = [80, 90, 130]
+
+    power_system, times = solve_problem(
+        generators, 
+        gen_init=[{'P':80}, {'P':0}, {'u':False, 'hoursinstatus':0}],
+        **make_loads_times(Pdt=Pdt))
+    
+    assert(generators[2].cost(times[0], evaluate=True) == 0)
 
 if __name__ == "__main__": bidding.run()

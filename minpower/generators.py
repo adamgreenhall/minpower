@@ -160,7 +160,9 @@ class Generator(OptimizationObject):
                 self.cost_coeffs=[self.fuelcost*mult for mult in bidding.parse_polynomial(self.heatratestring)]
             else:
                 self.cost_coeffs=bidding.parse_polynomial(self.costcurvestring)
+
             bid_params['polynomial'] = self.cost_coeffs
+            bid_params['constant_term'] = self.cost_coeffs[0]            
             bid_params['num_breakpoints'] = self.cost_breakpoints
             if self.noloadcost!=0: raise ValueError('no load cost should be defined as part of the polynomial.')
 
@@ -201,7 +203,7 @@ class Generator(OptimizationObject):
             if self.startupcost>0:  self.add_variable('startupcost',index=times.set, low=0,high=self.startupcost)
             if self.shutdowncost>0: self.add_variable('shutdowncost',index=times.set, low=0,high=self.shutdowncost)
 
-        self.bids=bidding.Bid(times=times, **self.bid_params)
+        self.bids = bidding.Bid(times=times, **self.bid_params)
         return
 
     def create_objective(self,times):
@@ -253,7 +255,7 @@ class Generator(OptimizationObject):
             if self.Pmin>0: self.add_constraint('min gen power', time, self.power(time)>=self.status(time)*self.Pmin)
 
             self.add_constraint('max gen power', time, self.power_available(time)<=self.status(time)*self.Pmax)
-
+            
             if len(times)==1: continue #if ED or OPF problem
 
             self.add_constraint('max gen power avail', time, self.power(time) <= self.power_available(time) )

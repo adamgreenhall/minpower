@@ -425,14 +425,13 @@ class PowerSystem(OptimizationProblem):
         
         invalid_gen = ((sln.generators_status*sln.generators_power) - \
             sln.generators_power).sum().sum()
-        if invalid_gen != 0:
+        if invalid_gen > 0.01:
             logging.error('invalid generation (status=0, P>0) of {}MW'.format(
                 invalid_gen))
         invalid_cost = (sln.totalcost_generation - \
             (sln.totalcost_generation * sln.gen_time_df('status'))).sum().sum()
-        if invalid_cost != 0:
+        if invalid_cost > 0.01:
             logging.error('invalid cost (status=0, C>0) of ${}'.format(
                 invalid_cost))
-            set_trace()
             
         return

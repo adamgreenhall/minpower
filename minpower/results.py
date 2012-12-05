@@ -124,7 +124,10 @@ class Solution(object):
         
     def _get_outputs(self):
         self.generators_power = self.gen_time_df('power')
-        self.generators_status = self.gen_time_df('status').astype(int)
+        self.generators_status = self.gen_time_df('status')
+        # correct for strange solver values returned on resolve
+        self.generators_status[self.generators_status > 0.99] = 1
+        self.generators_status = self.generators_status.astype(int)
 
     def _get_costs(self):
         self.totalcost_generation = self.gen_time_df('cost', evaluate=True)

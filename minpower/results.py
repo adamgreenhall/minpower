@@ -124,11 +124,8 @@ class Solution(object):
         
     def _get_outputs(self):
         self.generators_power = self.gen_time_df('power')
-        self.generators_status = self.gen_time_df('status')
-        # correct for strange solver values returned on resolve
-        self.generators_status[self.generators_status > 0.99] = 1
-        self.generators_status = self.generators_status.astype(int)
-
+        self.generators_status = _correct_status(self.gen_time_df('status'))
+        
     def _get_costs(self):
         self.totalcost_generation = self.gen_time_df('cost', evaluate=True)
         self.fuelcost = self.gen_time_df('operatingcost', evaluate=True)            
@@ -546,12 +543,26 @@ class Solution_Stochastic(Solution):
     def _get_outputs(self, resolve=False):
         if resolve:
             # observed generator power
-            self.generators_power = self.gen_time_df('power', self.scenarios[0])
+            # resolved on the first scenario instance
+            # -- no more scenario labeling is needed            
+            self.expected_status = self.generators_status.copy()
+            self.generators_power = self.gen_time_df('power', None)
+            self.generators_status = self.gen_time_df('status', None)
+            
         else:
             self.generators_power_scenarios = self.stg_panel('power')
-            self.generators_status_scenarios = self.stg_panel('status').astype(int)
-            self.generators_status = self.generators_status_scenarios[self.scenarios[0]]
+            self.generators_status_scenarios = \
+                _correct_status(self.stg_panel('status'))
+            self.generators_status = \
+                self.generators_status_scenarios[self.scenarios[0]]
+            self.expected_power = self._calc_expected(
+                self.generators_power_scenarios)
         return
+    
+    def _calc_expected(self, panel):
+        out = panel.copy()
+        for s, pr in self.probability.iteritems(): out[s] *= pr
+        return out.sum(axis=0)
         
     def _calc_expected_cost(self, method):
         '''
@@ -559,14 +570,13 @@ class Solution_Stochastic(Solution):
         multiplying each scenario cost by its probability, 
         and summing over the scenarios
         '''
-        cost = self.stg_panel(method, evaluate=True)
-        for s, pr in self.probability.iteritems(): cost[s] *= pr
-        return cost.sum(axis=0)
+        return self._calc_expected(self.stg_panel(method, evaluate=True))
         
     def _get_costs(self, resolve=False):
         if resolve: 
-            # resolved on the first scenario
-            s = self.scenarios[0]
+            # resolved on the first scenario instance
+            # -- no more scenario labeling is needed
+            s = None 
             self.observed_totalcost = self.totalcost_generation = \
                 self.gen_time_df('cost', s, evaluate=True)
             self.observed_fuelcost =  self.fuelcost = \
@@ -574,8 +584,10 @@ class Solution_Stochastic(Solution):
             
             #calc observed load shed            
             if len(self.loads)>1: raise NotImplementedError
-            self.load_shed_timeseries = self.generators_power.sum(axis=1) - \
-                self.loads[0].schedule.ix[self.times_non_overlap].values
+            self.load_shed_timeseries = \
+                self.loads[0].schedule.ix[self.times_non_overlap].values - \
+                self.generators_power.sum(axis=1)
+                
             self.load_shed = self.load_shed_timeseries.sum()
             
         else: 
@@ -639,6 +651,12 @@ class MultistageStandalone(Solution_UC_multistage):
 
         return out
 
+
+
+def _correct_status(status):
+    # correct for strange solver values returned on resolve
+    status[status > 0.99] = 1
+    return status.astype(int)
 
 
 

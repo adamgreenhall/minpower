@@ -77,46 +77,36 @@ def standaloneUC():
     power_system, times, scenario_tree = load_state()
 
     try:
-        stage_solution, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg)
+        sln, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg)
     except OptimizationError:
         #re-do stage, with load shedding allowed
         logging.critical('stage infeasible, re-running with load shedding.')
         power_system.reset_model()
         power_system.set_load_shedding(True)
         try:
-            stage_solution, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg, rerun=True)
+            sln, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg, rerun=True)
         except OptimizationError:
             raise OptimizationError('failed to solve, even with load shedding.')
         power_system.set_load_shedding(False)
 
     logging.debug('solved... get results... {}'.format(show_clock()))
 
-    if stage_solution.is_stochastic:
-        # resolve with observed power and fixed status from stochastic solution
-        try:
-            power_system.resolve_stochastic_with_observed(instance, stage_solution)
-        except OptimizationResolveError:
-            power_system.set_load_shedding(True)
-            __, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg)
-            power_system.resolve_stochastic_with_observed(instance, stage_solution)
-
+    # resolve with observed power and fixed status 
+    if sln.is_stochastic:        
+        power_system.resolve_stochastic_with_observed(instance, sln)
     elif user_config.deterministic_solve:
-        # resolve with observed power and fixed status from determinisitic solution
-        logging.info('resolving with observed values')
-        try:
-            power_system.resolve_determinisitc_with_observed(instance, stage_solution)
-        except OptimizationResolveError:
-            power_system.set_load_shedding(True)
-            __, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg)
-            power_system.resolve_determinisitc_with_observed(instance, stage_solution)
-            logging.debug('shed {}MW in non-overlap period'.format(
-                stage_solution.load_shed_timeseries.sum()))
+        power_system.resolve_determinisitc_with_observed(sln)
 
-    power_system.get_finalconditions(stage_solution)
+    if sln.load_shed_timeseries.sum() > 0.01:
+        logging.debug('shed {}MW in resolve of stage'.format(
+            sln.load_shed_timeseries.sum()))
+    
+
+    power_system.get_finalconditions(sln)
 
     power_system.set_load_shedding(False)
-    stage_solution.stage_number = stg
-    store = store_state(power_system, times, stage_solution)
+    sln.stage_number = stg
+    store = store_state(power_system, times, sln)
     store.flush()
 
     return

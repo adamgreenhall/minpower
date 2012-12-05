@@ -180,31 +180,11 @@ class OptimizationObject(object):
         '''
         return 'opt_obj{ind}'.format(ind=self.index)
 
-    
-    
-    # def all_variables(self,times):
-    #     '''return variables from object and children within times'''
-    #     variables=self.variables
-    #     for child in self.children.values(): 
-    #         try: variables.update(child.all_variables(times))
-    #         except AttributeError:
-    #             [variables.update(c.all_variables(times)) for c in child]
-    #     return variables
-    # def all_constraints(self,times): 
-    #     '''return constraints from object and children within times'''
-    #     constraints=self.constraints
-    #     for child in self.children.values(): 
-    #         try: constraints.update(child.all_constraints(times))
-    #         except AttributeError:
-    #             [constraints.update(c.all_constraints(times)) for c in child]
-    #     return constraints
-    # def clear_constraints(self):
-    #     self.constraints={}
-    #     for child in self.children.values(): 
-    #         try: child.clear_constraints()
-    #         except AttributeError:
-    #             #child is a list of objects
-    #             for c in child: c.clear_constraints()
+
+    def _remove_component(self, name, time, indexed=False):
+        if indexed: raise NotImplementedError
+        key = self._t_id(name, time)
+        self._parent_problem()._model._clear_attribute(key)
 
 
 class OptimizationProblem(OptimizationObject):
@@ -382,7 +362,8 @@ class OptimizationProblem(OptimizationObject):
             self.write_model('unsolved-problem-formulation.lp')
             raise OptimizationError('problem not solved')
         
-        instance.load(results)
+        instance.load(results, 
+            allow_consistent_values_for_fixed_vars=True)
 #        instance._load_solution(results.solution(0), ignore_invalid_labels=True )
         logging.debug('... solution loaded ... {t}'.format(t=show_clock()))
         
@@ -446,23 +427,26 @@ class OptimizationProblem(OptimizationObject):
     def _fix_variables(self, instance):
         _fix_variables(instance, self.stochastic_formulation)
 
-    def _fix_variables_model(self):
-        _fix_variables(self._model, self.stochastic_formulation)
-
+    def _fix_variables_model(self, fix_offs=True):
+        _fix_variables(self._model, self.stochastic_formulation, fix_offs)
+            
     def _remove_all_constraints(self):
         for key in self._model.active_components(pyomo.Constraint).keys():
             self._model._clear_attribute(key)
             
             
-def _fix_variables(instance, is_stochastic=False):
+def _fix_variables(instance, is_stochastic=False, fix_offs=True):
     '''fix binary variables to their solved values to create an LP problem'''
     active_vars= instance.active_components(pyomo.Var)
     for var in active_vars.values():
         if isinstance(var.domain, pyomo.base.IntegerSet) or \
             isinstance(var.domain, pyomo.base.BooleanSet): 
             if var.is_indexed(): 
-                for key,ind_var in var.iteritems(): ind_var.fixed=True
-            else: var.fixed=True
+                for key,ind_var in var.iteritems(): 
+                    if fix_offs or ind_var.value==1: ind_var.fixed=True
+            else: 
+                if fix_offs or var.value==1: 
+                    var.fixed=True
     if is_stochastic:
         for scenario_block in filter(
             lambda blk: type(blk)!=pyomo.Piecewise,

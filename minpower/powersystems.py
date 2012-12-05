@@ -153,9 +153,10 @@ class Bus(OptimizationObject):
     def cost_second_stage(self,times):
         return sum(gen.cost_second_stage(times) for gen in self.generators) + \
             sum(load.cost_second_stage(times) for load in self.loads)
-    def create_constraints(self,times,Bmatrix,buses):
-        for gen in self.generators: gen.create_constraints(times)
-        for load in self.loads: load.create_constraints(times)
+    def create_constraints(self, times, Bmatrix, buses, include_children=True):
+        if include_children:
+            for gen in self.generators: gen.create_constraints(times)
+            for load in self.loads: load.create_constraints(times)
         nBus=len(buses)
         for time in times:
             self.add_constraint('power balance',time, self.power_balance(time,Bmatrix,buses)==0) #power balance must be zero
@@ -280,9 +281,12 @@ class PowerSystem(OptimizationProblem):
     def cost_second_stage(self,scenario=None): return self.get_component('cost_second_stage',scenario=scenario)
     def create_objective(self,times):
         self.add_objective(self.cost_first_stage()+self.cost_second_stage())
-    def create_constraints(self,times):
-        for bus in self.buses: bus.create_constraints(times,self.Bmatrix,self.buses)
-        for line in self.lines: line.create_constraints(times,self.buses)
+    def create_constraints(self, times, include_children=True):
+        if include_children:
+            for bus in self.buses: 
+                bus.create_constraints(times, self.Bmatrix, self.buses)
+            for line in self.lines: 
+                line.create_constraints(times, self.buses)
 
         # system reserve constraint
         self._has_reserve = not self.load_shedding_allowed and \
@@ -345,49 +349,82 @@ class PowerSystem(OptimizationProblem):
 
 
     def resolve_stochastic_with_observed(self, instance, sln):
-        gen = self.get_generator_with_scenarios()
-        s = sln.scenarios[0]
-
-        resolve_instance = instance.active_components(pyomo.Block)[s]
-        power = resolve_instance.active_components(pyomo.Param)['power_{}'.format(str(gen))]
-
-        # FIXME - the whole resolve problem should be
-        # filtered to non_overlap times only
-
-        for time in sln.times:
-            power[time] = gen.observed_values[time]
-
-        self._fix_variables(resolve_instance)
-        results, elapsed = self._solve_instance( resolve_instance )
-
-        if self.solved:
-            logging.info('resolved stochastic instance of stage ' + \
-                'with observed values (in {}s)'.format(elapsed))
-        else:
-            raise OptimizationResolveError('could not find a solution to the '+\
-                'stage with observed wind and the stochastic commitment')
-
-        resolve_instance.load(results)
-
+        s = sln.scenarios[0]        
+        self._model = instance.active_components(pyomo.Block)[s]
+        self.is_stochastic = False
+        self.stochastic_formulation = False
+        
+        self._resolve_problem(sln)
+        
         # re-store the generator outputs and costs
         sln._get_outputs(resolve=True)
         sln._get_costs(resolve=True)
 
-    def resolve_determinisitc_with_observed(self, instance, sln):
-        # the resolve problem only involves the non-overlap times
-        times = sln.times_non_overlap
-        if len(times) < len(sln.times):
-            # reset the constraints
-            self._remove_all_constraints()
-            # dont create reserve constraints
-            self.reserve_fixed = 0
-            self.reserve_load_fraction = 0
-            # recreate constraints only for the non-overlap times
-            self.create_constraints(times)
+        self.is_stochastic = True
+        return
 
+    def resolve_determinisitc_with_observed(self, sln):
         # expectP = sln.gen_time_df('power', False)
         # expectU = sln.gen_time_df('status', False).astype(int)
+        self._resolve_problem(sln)
 
+        # store the useful expected value solution information
+        sln.expected_status = sln.generators_status.copy()
+        sln.expected_power = sln.generators_power.copy()
+        sln.expected_fuelcost = sln.fuelcost.copy()
+        sln.expected_totalcost = sln.totalcost_generation.copy()
+        sln.expected_load_shed = float(sln.load_shed)
+
+        # re-calc the generator outputs and costs
+        sln._get_outputs()
+        sln._get_costs()
+
+        sln.observed_fuelcost = sln.fuelcost
+        sln.observed_totalcost = sln.totalcost_generation
+        return
+
+    def _allow_shed_resolve(self, sln):
+        self.set_load_shedding(True)
+        
+        # make load power into a variable instead of a param
+        for load in self.loads():
+            load.create_variables(sln.times)  # need all for the .set attrib
+            load.create_constraints(sln.times_non_overlap)
+        
+        # recalc the power balance constraint
+        for bus in self.buses:
+            for time in sln.times:
+                bus._remove_component('power balance', time)
+            bus.create_constraints(sln.times_non_overlap, 
+                self.Bmatrix, self.buses, include_children=False)
+        
+        # reset objective
+        self._model.objective = None
+        self.create_objective(sln.times_non_overlap)
+        # re-create system cost constraints 
+        self.create_constraints(sln.times_non_overlap, include_children=False)
+
+# recreating all constraints would be simpler, but would take a bit longer
+#        # reset objective
+#        self._model.objective = None
+#        self.create_objective(sln.times_non_overlap)
+#        # re-create constraints 
+#        self.create_constraints(sln.times_non_overlap)
+            
+    def _resolve_problem(self, sln):
+        times = sln.times_non_overlap
+
+        # reset the constraints
+        self._remove_all_constraints()
+        # dont create reserve constraints
+        self.reserve_fixed = 0
+        self.reserve_load_fraction = 0
+        # recreate constraints only for the non-overlap times
+        self.create_constraints(times)
+        # reset objective to only the non-overlap times
+        self._model.objective = None
+        self.create_objective(times)
+        
         # set wind to observed power
         gen = self.get_generator_with_observed()
         power = self._model.active_components(pyomo.Param)[
@@ -395,43 +432,22 @@ class PowerSystem(OptimizationProblem):
         for time in times:
             power[time] = gen.observed_values[time]
 
-        # fix statuses
-        self._fix_variables_model()
-
-        full_sln_time = self.solution_time
+        # fix statuses - only for ON commitments (allow startups)
+        self._fix_variables_model(fix_offs=False)
+        
+        # store original problem solve time
+        self.full_sln_time = self.solution_time
+        
+        logging.info('resolving with observed values')
         try:
             self.solve()
         except OptimizationError:
-            raise OptimizationResolveError('couldnt find solution to deterministic fixed problem')
-
-        logging.info('resolved deterministic instance of stage with observed values (in {}s)'.format(self.solution_time))
-
-        self.resolve_solution_time = self.solution_time
-        self.solution_time = full_sln_time
-
-        # store the useful expected value solution information
-        sln.expected_generators_power = sln.generators_power.copy()
-
-        sln.expected_fuelcost = sln.fuelcost.copy()
-        sln.expected_totalcost = sln.totalcost_generation.copy()
-        sln.expected_load_shed = float(sln.load_shed)
-
-        # re-store the generator outputs and costs
-        sln._get_outputs()
-        sln._get_costs()
-
-        sln.observed_fuelcost = sln.fuelcost
-        sln.observed_totalcost = sln.totalcost_generation
+            self._allow_shed_resolve(sln)
+            try: self.solve()        
+            except:
+                set_trace()
         
-        invalid_gen = ((sln.generators_status*sln.generators_power) - \
-            sln.generators_power).sum().sum()
-        if invalid_gen > 0.01:
-            logging.error('invalid generation (status=0, P>0) of {}MW'.format(
-                invalid_gen))
-        invalid_cost = (sln.totalcost_generation - \
-            (sln.totalcost_generation * sln.gen_time_df('status'))).sum().sum()
-        if invalid_cost > 0.01:
-            logging.error('invalid cost (status=0, C>0) of ${}'.format(
-                invalid_cost))
-            
-        return
+        self.resolve_solution_time = self.solution_time
+        self.solution_time = self.full_sln_time
+        logging.info('resolved instance with observed values (in {}s)'.format(
+            self.resolve_solution_time))

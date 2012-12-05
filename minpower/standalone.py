@@ -35,13 +35,14 @@ def store_state(power_system, times, sln=None):
             values = [[gen.initial_power for gen in generators]])
         storage['status'] = gen_time_dataframe(generators, t, 
             values = [[gen.initial_status for gen in generators]])
-        storage['load_shed'] = Series( [0], index=t)
-
         storage['hrsinstatus'] = gen_time_dataframe(generators, t, 
             values = [[gen.initial_status_hours for gen in generators]])
 
+        storage['load_shed'] = Series()
         storage['expected_cost'] = DataFrame()
         storage['observed_cost'] = DataFrame()
+        storage['expected_status'] = DataFrame()
+        storage['expected_power'] = DataFrame()
         
         # per-stage results 
         storage['solve_time'] = Series(index=range(stages))
@@ -66,6 +67,9 @@ def store_state(power_system, times, sln=None):
         if sln.is_stochastic or user_config.deterministic_solve:
             storage['observed_cost'] = storage['observed_cost'].append(sln.observed_totalcost)
             storage['expected_cost'] = storage['expected_cost'].append(sln.expected_totalcost)
+            storage['expected_power'] = storage['expected_power'].append(sln.expected_power)
+            storage['expected_status'] = storage['expected_status'].append(sln.expected_status)
+            
         else:
             storage['expected_cost'] = storage['expected_cost'].append(sln.totalcost_generation)
     return storage

@@ -443,9 +443,7 @@ class PowerSystem(OptimizationProblem):
             self.solve()
         except OptimizationError:
             self._allow_shed_resolve(sln)
-            try: self.solve()        
-            except:
-                set_trace()
+            self.solve()        
         
         self.resolve_solution_time = self.solution_time
         self.solution_time = self.full_sln_time

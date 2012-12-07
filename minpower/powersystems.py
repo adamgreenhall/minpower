@@ -432,18 +432,29 @@ class PowerSystem(OptimizationProblem):
         for time in times:
             power[time] = gen.observed_values[time]
 
-        # fix statuses - only for ON commitments (allow startups)
-        self._fix_variables_model(fix_offs=False)
+        # fix statuses (no startups allowed)
+        self._fix_variables_model()
         
         # store original problem solve time
         self.full_sln_time = self.solution_time
         
         logging.info('resolving with observed values')
-        try:
-            self.solve()
+        try: self.solve()
         except OptimizationError:
-            self._allow_shed_resolve(sln)
-            self.solve()        
+            # unfix statuses
+            self._unfix_variables_model()
+            # fix only non-faststart and ON statuses            
+            for gen in filter(lambda gen: not gen.faststart, self.generators()):
+                for time in sln.times:
+                    status = gen.status(time)
+                    if value(status) != 0 and not type(status)==bool:
+                        gen.status(time).fixed = True
+            
+            try: self.solve()
+            except OptimizationError:
+                self._allow_shed_resolve(sln)
+                self.solve()
+            
         
         self.resolve_solution_time = self.solution_time
         self.solution_time = self.full_sln_time

@@ -40,6 +40,7 @@ class Generator(OptimizationObject):
         bid_points=None,
         noloadcost=0,
         startupcost=0,shutdowncost=0,
+        faststart=False,
         mustrun=False,
         name='',index=None,bus=None,
         dispatch_decommit_allowed=False):
@@ -308,6 +309,7 @@ class Generator_nonControllable(Generator):
                  fuelcost=1,costcurvestring='0',
                  bid_points=None, noloadcost=0,
                  mustrun=False,
+                 faststart=False,
                  Pmin=0,Pmax=None,
                  name='',index=None,bus=None,kind='wind',**kwargs):
         update_attributes(self,locals(),exclude=['power']) #load in inputs
@@ -363,6 +365,7 @@ class Generator_Stochastic(Generator_nonControllable):
                  fuelcost=1,costcurvestring='0',
                  bid_points=None, noloadcost=0,
                  mustrun=False,
+                 faststart=False,
                  Pmin=0,Pmax=None,
                  name='',index=None,bus=None,kind='wind',**kwargs):
         update_attributes(self,locals()) #load in inputs

@@ -1,6 +1,6 @@
-import config
+import logging
 from config import user_config
-from commonscripts import *
+from commonscripts import update_attributes, bool_to_int
 
 from optimization import value,OptimizationObject
 from schedule import is_init
@@ -311,8 +311,8 @@ class Generator_nonControllable(Generator):
                  Pmin=0,Pmax=None,
                  name='',index=None,bus=None,kind='wind',**kwargs):
         update_attributes(self,locals(),exclude=['power']) #load in inputs
-        if power is not None and schedule is None:
-            self.schedule = FixedSchedule(P=power)
+#        if power is not None and schedule is None:
+#            self.schedule = FixedSchedule(P=power)
 
         if Pmax is None: self.Pmax = self.schedule.max()
         self.is_controllable=False

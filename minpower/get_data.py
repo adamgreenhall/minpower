@@ -1,6 +1,6 @@
 """
 Get data from spreadsheet files and parse it into 
-:class:`~powersystems.Generator`, :class:`~powersystems.Load`,
+:class:`~Generator`, :class:`~powersystems.Load`,
 :class:`~powersystems.Bus`, and :class:`~powersystems.Line` objects.
 Also extract the time information and create a :class:`~schedule.Timelist`
 object.
@@ -10,10 +10,14 @@ import powersystems
 from schedule import *
 from commonscripts import *
 from stochastic import construct_simple_scenario_tree
+
 from powersystems import PowerSystem
+from generators import (Generator, 
+    Generator_Stochastic, Generator_nonControllable)
 from config import user_config
 
-import os,sys,logging
+
+import os, logging
 
 fields_lines={'name':'name','to':'To','from':'From','reactance':'X','pmax':'Pmax'}
 fields_gens={
@@ -78,7 +82,7 @@ def parse_standalone(
     #add loads
     loads = build_class_list(loads_data, powersystems.Load)
     #add generators
-    generators = build_class_list(generators_data, powersystems.Generator)
+    generators = build_class_list(generators_data, Generator)
     #add lines
     lines = build_class_list(lines_data, powersystems.Line)    
         
@@ -121,7 +125,7 @@ def parsedir(
         (not required for ED,OPF problems. Defaults will be used
         for UC problems if not specified.)
     
-    :return generators:, list of :class:`~powersystems.Generator` objects 
+    :return generators:, list of :class:`~Generator` objects 
     :return loads:, list of :class:`~Load` objects
     :return lines:, list of :class:`~powersystems.Line` objects
     :return times:, list of :class:`~schedule.Timelist` object
@@ -146,7 +150,7 @@ def parsedir(
     #add loads
     loads = build_class_list(loads_data, powersystems.Load, times, timeseries)
     #add generators
-    generators = build_class_list(generators_data, powersystems.Generator, times, timeseries)
+    generators = build_class_list(generators_data, Generator, times, timeseries)
     #add lines
     lines = build_class_list(lines_data, powersystems.Line)    
     #add initial conditions    
@@ -169,7 +173,7 @@ def parsedir(
 def setup_initialcond(data,generators,times):
     '''
     Take a list of initial conditions parameters and
-    add information to each :class:`~powersystems.Generator` 
+    add information to each :class:`~Generator` 
     object.
     '''
     if len(times)<=1: return #for UC,ED no need to set initial status
@@ -206,7 +210,7 @@ def build_class_list(data, model, times=None, timeseries=None):
     :returns: a list of class objects
     """
     datadir = user_config.directory
-    is_generator = (model == powersystems.Generator)
+    is_generator = (model == Generator)
     
     all_models=[]
     index=0
@@ -239,13 +243,13 @@ def build_class_list(data, model, times=None, timeseries=None):
         elif (sched_col is not None) or (schedulefilename is not None):
             row['schedule'] = _tsorfile(schedulefilename, datadir, timeseries, sched_col)  
         elif is_generator and ((scenariosdirectory is not None) or (scenariosfilename is not None)):
-            row_model = powersystems.Generator_Stochastic
+            row_model = Generator_Stochastic
         
         if is_generator and row.get('schedule') is not None:
-            row_model = powersystems.Generator_nonControllable
+            row_model = Generator_nonControllable
         
         if is_generator and user_config.deterministic_solve and (forecastfilename is not None): 
-            row_model = powersystems.Generator_nonControllable
+            row_model = Generator_nonControllable
             row['schedule'] = _tsorfile(forecastfilename, datadir, timeseries, forecast_col)            
         
         # load a custom bid points filename with {power, cost} columns 

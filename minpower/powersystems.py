@@ -7,15 +7,14 @@ in the :module:`~generators`. Each of these objects inherits an
 optimization framework from :class:`~optimization.OptimizationObject`.
 """
 
+import logging
 from coopr import pyomo
-from optimization import (value, dual, OptimizationObject, OptimizationProblem,
-    OptimizationResolveError, OptimizationError)
-from generators import *
-from commonscripts import *
-import config
+import numpy as np
+from optimization import (value, dual, OptimizationObject, 
+    OptimizationProblem, OptimizationError)
+from commonscripts import (update_attributes, getattrL,
+    unique, flatten, show_clock)
 from config import user_config
-
-
 
 class Load(OptimizationObject):
     """
@@ -427,13 +426,12 @@ class PowerSystem(OptimizationProblem):
         
         # set wind to observed power
         gen = self.get_generator_with_observed()
-        power = self._model.active_components(pyomo.Param)[
-            'power_{}'.format(str(gen))]
+        wind_power = gen.power(time=None)
         for time in times:
-            power[time] = gen.observed_values[time]
+            wind_power[time] = gen.observed_values[time]
 
-        # fix statuses - only for ON commitments (allow startups)
-        self._fix_variables_model(fix_offs=False)
+        # fix statuses for all units
+        self.fix_binary_variables()
         
         # store original problem solve time
         self.full_sln_time = self.solution_time

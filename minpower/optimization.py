@@ -370,7 +370,7 @@ class OptimizationProblem(OptimizationObject):
         if get_duals: 
             # resolve with fixed variables
             logging.info('resolving fixed-integer LP for duals')
-            self._fix_variables(instance)
+            self._fix_binary_variables(instance)
             
             results,elapsed = self._solve_instance(instance, get_duals=get_duals)
             self.solution_time+=elapsed
@@ -423,19 +423,16 @@ class OptimizationProblem(OptimizationObject):
         except: pass
         
         return results, elapsed
-        
-    def _fix_variables(self, instance):
-        _fix_variables(instance, self.stochastic_formulation)
-
-    def _fix_variables_model(self, fix_offs=True):
-        _fix_variables(self._model, self.stochastic_formulation, fix_offs)
+    
+    def fix_binary_variables(self, fix_offs=True):
+        _fix_binary_variables(self._model, self.stochastic_formulation, fix_offs)
             
     def _remove_all_constraints(self):
         for key in self._model.active_components(pyomo.Constraint).keys():
             self._model._clear_attribute(key)
             
             
-def _fix_variables(instance, is_stochastic=False, fix_offs=True):
+def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
     '''fix binary variables to their solved values to create an LP problem'''
     active_vars= instance.active_components(pyomo.Var)
     for var in active_vars.values():
@@ -452,7 +449,7 @@ def _fix_variables(instance, is_stochastic=False, fix_offs=True):
             lambda blk: type(blk)!=pyomo.Piecewise,
             instance.active_components(pyomo.Block).values()
             ):
-            _fix_variables(scenario_block)
+            _fix_binary_variables(scenario_block)
     # need to preprocess after fixing
     instance.preprocess()    
 

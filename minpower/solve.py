@@ -5,7 +5,7 @@ module contains the top-level commands for creating
 problems and solving them.
 """
 
-import logging
+import sys, os, logging
 import time as timer
 
 from optimization import OptimizationError
@@ -13,7 +13,7 @@ import get_data, powersystems, stochastic, results
 from config import user_config
 from standalone import (store_state, load_state, store_times,
     get_storage, wipe_storage, repack_storage)
-from commonscripts import *
+from commonscripts import joindir, subprocess, StreamToLogger
 
 def _get_store_filename():
     fnm = 'stage-store.hd5'
@@ -162,7 +162,8 @@ def create_solve_problem(power_system, times, scenario_tree=None,
     multistage=False, stage_number=None, rerun=False):
 
     if user_config.problemfile:
-        user_config.problemfile = joindir(directory, 'problem-formulation.lp')
+        user_config.problemfile = joindir(
+            user_config.directory, 'problem-formulation.lp')
 
     create_problem(power_system, times, scenario_tree,
         multistage, stage_number, rerun)
@@ -192,7 +193,6 @@ def create_problem(power_system, times, scenario_tree=None,
     power_system.create_constraints(times)
     logging.debug('created constraints')
 
-    stochastic_formulation = False
     if scenario_tree is not None and not rerun:
         if multistage: # multiple time stages
             gen = power_system.get_generator_with_scenarios()
@@ -201,11 +201,14 @@ def create_problem(power_system, times, scenario_tree=None,
                 time_stage=stage_number)
             logging.debug('constructed tree for stage %i'%stage_number)
         else: tree = scenario_tree
-        stochastic_formulation = True
         stochastic.define_stage_variables(tree,power_system,times)
         # ipython_shell()
         # %prun from minpower import stochastic; stochastic.create_problem_with_scenarios(power_system,times, tree, 24, 12, stage_number=0)
-        power_system = stochastic.create_problem_with_scenarios(power_system,times, tree, user_config.hours_commitment, user_config.hours_overlap, stage_number=stage_number)
+        power_system = stochastic.create_problem_with_scenarios(
+            power_system, times, tree, 
+            user_config.hours_commitment, 
+            user_config.hours_overlap, 
+            stage_number=stage_number)
     return
 
 def _setup_logging():
@@ -234,70 +237,70 @@ def main():
 
     parser = argparse.ArgumentParser(description='Minpower command line interface')
     parser.add_argument('directory', type=str,
-                       help='the direcory of the problem you want to solve (or name of minpower demo case)')
+        help='the direcory of the problem you want to solve')
     parser.add_argument('--solver','-s',  type=str,
-                    default=user_config.solver,
-                    help='the solver name used to solve the problem (e.g. cplex, gurobi, glpk)')
+        default=user_config.solver,
+        help='the solver name (e.g. cplex, gurobi, glpk)')
     parser.add_argument('--visualization','-v',action="store_true",
-                    default=user_config.show_visualization,
-                    help='save a visualization of the solution')
+        default=user_config.show_visualization,
+        help='save a visualization of the solution')
     parser.add_argument('--breakpoints','-b',  type=int,
-                    default=user_config.breakpoints,
-                    help='number of breakpoints to use in piece-wise linearization of polynomial costs')
+        default=user_config.breakpoints,
+        help='number of breakpoints to use in piecewise linearization of polynomial costs')
     parser.add_argument('--hours_commitment','-c', type=int,
-                    default=user_config.hours_commitment,
-                    help='number hours per commitment in a rolling UC (exclusive of overlap)')
+        default=user_config.hours_commitment,
+        help='number hours per commitment in a rolling UC (exclusive of overlap)')
     parser.add_argument('--hours_overlap','-o', type=int,
-                    default=user_config.hours_overlap,
-                    help='number hours to overlap commitments in a rolling UC')
+        default=user_config.hours_overlap,
+        help='number hours to overlap commitments in a rolling UC')
 
     parser.add_argument('--reserve_fixed', type=float,
-                    default=user_config.reserve_fixed,
-                    help='The static amount of reserve required at all times (in MW)')
+        default=user_config.reserve_fixed,
+        help='The static amount of reserve required at all times (in MW)')
     parser.add_argument('--reserve_load_fraction', type=float,
-                    default=user_config.reserve_load_fraction,
-                    help='The fraction of the total system load which is required as reserve')
+        default=user_config.reserve_load_fraction,
+        help='fraction of the total system load which is required as reserve')
 
     parser.add_argument('--problemfile',action="store_true",
-                    default=user_config.problem_filename,
-                    help='flag to write the problem formulation to a problem-formulation.lp file -- useful for debugging')
+        default=user_config.problem_filename,
+        help='flag to write the problem formulation to a problem-formulation.lp file -- useful for debugging')
     parser.add_argument('--duals','-d',action="store_true",
-                    default=user_config.duals,
-                    help='flag to get the duals, or prices, of the optimization problem')
+        default=user_config.duals,
+        help='flag to get the duals, or prices, of the optimization problem')
     parser.add_argument('--dispatch_decommit_allowed', action="store_true",
-                    default=user_config.dispatch_decommit_allowed,
-                    help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
+        default=user_config.dispatch_decommit_allowed,
+        help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
     parser.add_argument('--logfile','-l',type=str,
-                    default=user_config.logging_filename,
-                    help='log file, default is to log to terminal')
+        default=user_config.logging_filename,
+        help='log file, default is to log to terminal')
     parser.add_argument('--scenarios',type=int,
-                    default=user_config.scenarios,
-                    help='limit the number of scenarios to N')
+        default=user_config.scenarios,
+        help='limit the number of scenarios to N')
 
     parser.add_argument('--deterministic_solve', action='store_true',
-                    default=user_config.deterministic_solve,
-                    help='solve a stochastic problem deterministically using the forecast_filename paramter')
+        default=user_config.deterministic_solve,
+        help='solve a stochastic problem deterministically using the forecast_filename paramter')
     parser.add_argument('--scenarios_directory', type=str,
-                    default=user_config.scenarios_directory,
-                    help='override scenarios directory for stochastic problem')
+        default=user_config.scenarios_directory,
+        help='override scenarios directory for stochastic problem')
     parser.add_argument('--faststart_resolve', action='store_true',
-                    default=False,
-                    help="""allow faststart units which are off to be 
-                            started up during resolve""")
+        default=False,
+        help="""allow faststart units which are off to be 
+                started up during resolve""")
 
     parser.add_argument('--output_prefix','-p', action="store_true",
-                    default=user_config.output_prefix,
-                    help = 'Prefix all results files with the process id (for a record of simulataneous solves)')
+        default=user_config.output_prefix,
+        help = 'Prefix all results files with the process id (for a record of simulataneous solves)')
 
     parser.add_argument('--profile',action="store_true",
-                    default=False,
-                    help='run cProfile and output to minpower.profile')
+        default=False,
+        help='run cProfile and output to minpower.profile')
     parser.add_argument('--error','-e',action="store_true",
-                    default=False,
-                    help='redirect error messages to the standard output (useful for debugging on remote machines)')
+        default=False,
+        help='redirect error messages to the standard output (useful for debugging on remote machines)')
     parser.add_argument('--debugger',action="store_true",
-                    default=False,
-                    help='use pudb when an error is raised')
+        default=False,
+        help='use pudb when an error is raised')
 
     #figure out the command line arguments
     args = parser.parse_args()

@@ -1,8 +1,28 @@
-from minpower.commonscripts import *
+from pandas import Series
 from minpower import optimization,powersystems,schedule,solve,config
-from minpower.powersystems import Generator
+from minpower.generators import Generator
+from minpower.config import user_config
 
-user_config_defaults = config.user_config.copy()
+
+import nose
+from nose.tools import istest, with_setup, eq_, raises, set_trace
+
+
+import logging
+logging.basicConfig(
+    level=logging.CRITICAL, 
+    format='%(levelname)s: %(message)s')
+
+
+
+user_config_defaults = user_config.copy()
+
+def get_duals():
+    user_config.duals = True
+#def reset_config():
+    # sadly this does not work
+#   user_config = user_config_defaults.copy()
+
 
 singletime=schedule.just_one_time()
 
@@ -33,7 +53,6 @@ def make_loads_times(Pd=200,Pdt=None,**kwargs):
         loads=[powersystems.Load(schedule=sched, **kwargs)]
     else: 
         times = schedule.make_times_basic(N=len(Pdt))
-        #logging.critical([unicode(t) for t in times])
         sched = Series(Pdt, index=times)
         loads=[powersystems.Load(schedule=sched,**kwargs)]
     

@@ -36,7 +36,7 @@ setup(
         'PyYAML>=3.10',
     ],
     tests_require=[
-        'Attest>=0.5.3',
+        'nose',
         'objgraph'
         ],
 

@@ -168,7 +168,7 @@ def create_solve_problem(power_system, times, scenario_tree=None,
     create_problem(power_system, times, scenario_tree,
         multistage, stage_number, rerun)
 
-    instance = power_system.solve(user_config)
+    instance = power_system.solve()
 
     solution=results.make_solution(power_system,times,datadir=user_config.directory)
 

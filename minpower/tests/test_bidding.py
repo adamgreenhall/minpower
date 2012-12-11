@@ -1,19 +1,11 @@
 '''Test the constraint behavior of the bids'''
-
-from attest import Tests,Assert
-import logging
-logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s')
-
-from minpower import optimization,powersystems,schedule,solve,config,bidding
-from minpower.powersystems import Generator
+from minpower.generators import Generator
 from minpower.optimization import value
 
 from test_utils import *
 
-bidding = Tests()
 
-
-@bidding.test
+@istest
 def linear():
     '''
     Create a linear bid curve for one generators.
@@ -24,10 +16,10 @@ def linear():
     Pd=221
     generators=[ Generator(costcurvestring='{}+{}P'.format(a,b)) ]
     _,times=solve_problem(generators,**make_loads_times(Pd))
-    cost = Assert(generators[0].bids.output(times[0], evaluate=True))
+    cost = generators[0].bids.output(times[0], evaluate=True)
     assert cost == a + b*Pd
 
-@bidding.test
+@istest
 def cubic_convex():
     '''
     Create a cubic, convex bid curve for one generators.
@@ -40,11 +32,12 @@ def cubic_convex():
     d=.1
     generators=[ Generator(costcurvestring='{}+{}P+{}P^2+{}P^3'.format(a,b,c,d)) ]
     _,times=solve_problem(generators,**make_loads_times(Pd))#,problem_filename='bidproblem.lp')
-    cost = Assert(value(generators[0].bids.output(times[0], evaluate=True)))
+    cost = value(generators[0].bids.output(times[0], evaluate=True))
     actual_cost = a+ b*Pd+ c*Pd**2 + d*Pd**3
     assert actual_cost <= cost and cost <= 1.05*actual_cost
 
-@bidding.test
+
+@istest
 def cubic_non_convex():
     '''
     Create a cubic, but non-convex (negative cubic term) bid curve for one generators.
@@ -58,11 +51,12 @@ def cubic_non_convex():
     generators=[ Generator(costcurvestring='{}+{}P+{}P^2 - {}P^3'.format(a,b,c,d)) ]
     power_system,times=solve_problem(generators,**make_loads_times(Pd))
 
-    cost = Assert(generators[0].bids.output(times[0],evaluate=True))
+    cost = generators[0].bids.output(times[0],evaluate=True) 
     actual_cost = a+ b*Pd+ c*Pd**2 + -1*d*Pd**3
     assert actual_cost <= cost <= 1.05*actual_cost
 
-@bidding.test
+
+@istest
 def fixed_costs_when_off():
     '''
     ensure that generator with fixed cost 
@@ -90,5 +84,7 @@ def fixed_costs_when_off():
         **make_loads_times(Pdt=Pdt))
     
     assert(generators[2].cost(times[0], evaluate=True) == 0)
-
-if __name__ == "__main__": bidding.run()
+    
+if __name__ == '__main__':
+    nose.runmodule(argv=[__file__,'-vvs','-x','--pdb', '--pdb-failure'],
+                   exit=False)

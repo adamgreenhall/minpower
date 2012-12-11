@@ -1,7 +1,6 @@
 '''Test for memory leaks'''
-from attest import Tests
-from minpower import optimization,powersystems,schedule,solve,config
-from test_utils import solve_problem,make_loads_times,make_cheap_gen,make_mid_gen,make_expensive_gen,gen_costs
+from minpower import powersystems, solve
+from test_utils import solve_problem, make_loads_times
 from coopr import pyomo
 
 
@@ -38,9 +37,6 @@ def get_counts(prefix=''):
                 )
     return test_counts    
 
-mem = Tests()
-
-@mem.test
 def leak_on_reset():
     # create a problem
     loads_times = make_loads_times(Pdt=[20,30,40,50])
@@ -57,7 +53,6 @@ def leak_on_reset():
     test_counts = get_counts('uc')    
     assert sum(test_counts.values()) == 0
 
-@mem.test
 def leak_on_stochastic_reset():
 
     solve.solve_problem(datadir='./uc-stochastic',
@@ -74,4 +69,4 @@ def leak_on_stochastic_reset():
 
 
 if __name__ == "__main__": 
-    mem.run()
+    leak_on_reset()

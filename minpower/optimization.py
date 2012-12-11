@@ -369,7 +369,7 @@ class OptimizationProblem(OptimizationObject):
         if get_duals: 
             # resolve with fixed variables
             logging.info('resolving fixed-integer LP for duals')
-            self._fix_binary_variables(instance)
+            _fix_binary_variables(instance)
             
             results,elapsed = self._solve_instance(instance, get_duals=get_duals)
             self.solution_time+=elapsed

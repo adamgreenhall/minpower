@@ -23,7 +23,6 @@ def _get_store_filename():
     user_config.store_filename = joindir(user_config.directory, fnm)
 
 def solve_multistage(power_system, times, scenario_tree):
-    # standalone
     _get_store_filename()
 
     wipe_storage()
@@ -32,7 +31,7 @@ def solve_multistage(power_system, times, scenario_tree):
     storage = store_state(power_system, stage_times, None)
 
     for stg,t_stage in enumerate(stage_times):
-        logging.info('Stage starting at {}, {}'.format(t_stage.Start.date(), show_clock()))
+        logging.info('Stage starting at {}'.format(t_stage.Start.date()))
         # store current stage times
         storage = store_times(t_stage, storage)
         storage.close()
@@ -85,7 +84,7 @@ def standaloneUC():
             raise OptimizationError('failed to solve, even with load shedding.')
         power_system.set_load_shedding(False)
 
-    logging.debug('solved... get results... {}'.format(show_clock()))
+    logging.debug('solved... get results')
 
     # resolve with observed power and fixed status 
     if sln.is_stochastic:        
@@ -134,12 +133,12 @@ def solve_problem(datadir='.',
     _setup_logging()
     user_config.directory = datadir
     start_time = timer.time()
-    logging.debug('Minpower reading {} {}'.format(datadir, show_clock()))
+    logging.debug('Minpower reading {}'.format(datadir))
     generators,loads,lines,times,scenario_tree=get_data.parsedir()
-    logging.debug('data read {}'.format(show_clock()))
+    logging.debug('data read')
     power_system=powersystems.PowerSystem(generators,loads,lines)
 
-    logging.debug('power system set up {}'.format(show_clock()))
+    logging.debug('power system initialized')
     if times.spanhrs <= user_config.hours_commitment + user_config.hours_overlap:
         solution, instance = create_solve_problem(power_system, times, scenario_tree)
     else: #split into multiple stages and solve
@@ -185,13 +184,13 @@ def create_problem(power_system, times, scenario_tree=None,
     :returns: :class:`~optimization.Problem` object
     """
 
-    logging.debug('initialized problem {}'.format(show_clock()))
+    logging.debug('initialized problem')
     power_system.create_variables(times)
-    logging.debug('created variables {}'.format(show_clock()))
+    logging.debug('created variables')
     power_system.create_objective(times)
-    logging.debug('created objective {}'.format(show_clock()))
+    logging.debug('created objective')
     power_system.create_constraints(times)
-    logging.debug('created constraints {}'.format(show_clock()))
+    logging.debug('created constraints')
 
     stochastic_formulation = False
     if scenario_tree is not None and not rerun:
@@ -211,11 +210,18 @@ def create_problem(power_system, times, scenario_tree=None,
 
 def _setup_logging():
     ''' set up the logging to report on the status'''
-    kwds = dict(level = user_config.logging_level, format='%(levelname)s: %(message)s')
+    kwds = dict(
+        level=user_config.logging_level, 
+        datefmt='%Y-%m-%d %H:%M:%S',
+        format='%(asctime)s %(levelname)s: %(message)s')
     if user_config.logging_filename:
-        kwds['filename']=user_config.logging_filename
+        kwds['filename'] = user_config.logging_filename
     if user_config.output_prefix:
-        kwds['filename'] = joindir(user_config.directory, '{}.pylog'.format(user_config._pid))
+        kwds['filename'] = joindir(user_config.directory, 
+            '{}.pylog'.format(user_config._pid))
+    if (user_config.logging_level > 10) and (not 'filename' in kwds):
+        # don't log the time if debugging isn't turned on
+        kwds['format'] = '%(levelname)s: %(message)s'
     logging.basicConfig(**kwds)
 
 

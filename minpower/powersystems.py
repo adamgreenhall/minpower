@@ -13,7 +13,7 @@ import numpy as np
 from optimization import (value, dual, OptimizationObject, 
     OptimizationProblem, OptimizationError)
 from commonscripts import (update_attributes, getattrL,
-    unique, flatten, show_clock)
+    unique, flatten)
 from config import user_config
 
 class Load(OptimizationObject):
@@ -128,7 +128,7 @@ class Bus(OptimizationObject):
     def create_variables(self,times):
         self.add_children(self.generators,'generators')
         self.add_children(self.loads,'loads')
-        logging.debug('added bus {} components - generators and loads {}'.format(self.name,show_clock()))
+        logging.debug('added bus {} components - generators and loads'.format(self.name))
 #        if len(self.generators)<50:
         for gen in self.generators: gen.create_variables(times)
 #        else:
@@ -139,11 +139,11 @@ class Bus(OptimizationObject):
 #                    if th is threading.current_thread(): continue
 #                    else: th.join()
 
-        logging.debug('created generator variables {}'.format(show_clock()))
+        logging.debug('created generator variables')
         for load in self.loads: load.create_variables(times)
-        logging.debug('created load variables {}'.format(show_clock()))
+        logging.debug('created load variables')
         self.add_variable('angle',index=times.set)
-        logging.debug('created bus variables ... returning {}'.format(show_clock()))
+        logging.debug('created bus variables ... returning')
         return
     def create_objective(self,times): return self.cost_first_stage(times) + self.cost_second_stage(times)
     def cost_first_stage(self,times):
@@ -274,7 +274,7 @@ class PowerSystem(OptimizationProblem):
         times.set=self._model.times
         for bus in self.buses:  bus.create_variables(times)
         for line in self.lines: line.create_variables(times)
-        logging.debug('... created power system vars... returning... {}'.format(show_clock()))
+        logging.debug('... created power system vars... returning')
 
     def cost_first_stage(self,scenario=None): return self.get_component('cost_first_stage',scenario=scenario)
     def cost_second_stage(self,scenario=None): return self.get_component('cost_second_stage',scenario=scenario)

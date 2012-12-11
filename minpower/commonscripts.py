@@ -269,8 +269,6 @@ def getTimeFormat(str):
 def hours(t): 
     try:  return t.days*24.0 + t.seconds/3600.0 #t is a datetime object
     except AttributeError: return datetime.timedelta(hours=t) #t is a number
-def show_clock(show=True):
-    return 'clock time={}'.format(datetime.datetime.now().strftime('%H:%M:%S')) if show else ''
 
 ####################### class stuff #######################
 def getattrL(L,attribute='name'):

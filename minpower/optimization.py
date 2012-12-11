@@ -11,7 +11,7 @@ variable_kinds = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyom
 import logging,time,weakref
 
 from config import user_config
-from commonscripts import * # update_attributes,show_clock
+from commonscripts import update_attributes
 
 class OptimizationObject(object):
     '''
@@ -323,7 +323,7 @@ class OptimizationProblem(OptimizationObject):
                 else: raise
                 
             
-    def solve(self, user_config=user_config):
+    def solve(self):
         '''
         Solve the optimization problem.
         
@@ -335,25 +335,24 @@ class OptimizationProblem(OptimizationObject):
         solver = user_config.solver
         get_duals = user_config.duals
         
-        logging.info('Solving with {s} ... {t}'.format(s=solver,t=show_clock()))
+        logging.info('Solving with {s}'.format(s=solver))
         
         # create instance
         if self.stochastic_formulation:
             instance=self._stochastic_instance
         else: 
             instance=self._model.create()
-            logging.debug('... model created ... {t}'.format(t=show_clock()))     
+            logging.debug('... model created')
         
         results, elapsed = self._solve_instance(instance, solver)
         
         if self.solved:
             self.solution_time =elapsed #results.Solver[0]['Wallclock time']
             logging.info('Problem solved in {}s.'.format(self.solution_time))
-            logging.debug('... {t}'.format(t=show_clock()))
         
         if user_config.problem_filename:
             logging.getLogger().setLevel(logging.CRITICAL) #disable coopr's funny loggings when writing lp files.  
-            self.write_model(problem_filename)
+            self.write_model(user_config.problem_filename)
             logging.getLogger().setLevel(user_config.logging_level)
                 
         if not self.solved:
@@ -365,7 +364,7 @@ class OptimizationProblem(OptimizationObject):
         instance.load(results, 
             allow_consistent_values_for_fixed_vars=True)
 #        instance._load_solution(results.solution(0), ignore_invalid_labels=True )
-        logging.debug('... solution loaded ... {t}'.format(t=show_clock()))
+        logging.debug('... solution loaded')
         
         if get_duals: 
             # resolve with fixed variables
@@ -376,7 +375,7 @@ class OptimizationProblem(OptimizationObject):
             self.solution_time+=elapsed
             
             instance.load(results)
-            logging.debug('... LP problem solved ... {t}'.format(t=show_clock()))    
+            logging.debug('... LP problem solved')    
         
         if self.stochastic_formulation:
             self._scenario_tree.snapshotSolutionFromInstances(self._scenario_instances)

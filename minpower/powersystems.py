@@ -437,13 +437,32 @@ class PowerSystem(OptimizationProblem):
         self.full_sln_time = self.solution_time
         
         logging.info('resolving with observed values')
-        try:
-            self.solve()
+        try: self.solve()
         except OptimizationError:
-            self._allow_shed_resolve(sln)
-            self.solve()        
+            if user_config.faststart_resolve:
+                # allow faststart units to be started up to meet the load
+                self._unfix_variables()
+                self._fix_non_faststarts(sln.times)
+                try: self.solve()
+                except OptimizationError:
+                    self._allow_shed_resolve(sln)
+                    self.solve()
+            else:
+                # just shed the un-meetable load and calculate cost later
+                self._allow_shed_resolve(sln)
+                self.solve()
+            
         
         self.resolve_solution_time = self.solution_time
         self.solution_time = self.full_sln_time
         logging.info('resolved instance with observed values (in {}s)'.format(
             self.resolve_solution_time))
+            
+    def _fix_non_faststarts(self, times):
+        # fix only non-faststart and ON statuses            
+        for gen in filter(lambda gen: not gen.faststart, self.generators()):
+            for time in times:
+                status = gen.status(time)
+                if value(status) != 0 and not type(status)==bool:
+                    gen.status(time).fixed = True
+    

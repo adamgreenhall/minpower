@@ -106,6 +106,8 @@ user_config = DotDict(dict(
     reserve_fixed = 0,
     reserve_load_fraction = 0.0,
 
+    faststart_resolve = False,
+
     visualization = False,
     show_clock = False,
     logging_level = logging.DEBUG,

@@ -28,10 +28,6 @@ def solve_multistage(power_system, times, scenario_tree):
 
     wipe_storage()
     stage_times=times.subdivide(user_config.hours_commitment, user_config.hours_overlap)
-    buses=power_system.buses
-    stage_solutions=[]
-
-    Nstages = len(stage_times)
 
     storage = store_state(power_system, stage_times, None)
 
@@ -278,10 +274,10 @@ def main():
     parser.add_argument('--scenarios_directory', type=str,
                     default=user_config.scenarios_directory,
                     help='override scenarios directory for stochastic problem')
-
-
-    # parser.add_argument('--solution_file',type=str,default=False,
-    #                    help='save solution file to disk')
+    parser.add_argument('--faststart_resolve', action='store_true',
+                    default=False,
+                    help="""allow faststart units which are off to be 
+                            started up during resolve""")
 
     parser.add_argument('--output_prefix','-p', action="store_true",
                     default=user_config.output_prefix,

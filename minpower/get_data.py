@@ -25,11 +25,13 @@ fields_gens={
     'minuptime':'minuptime','uptimemin':'minuptime',
     'mindowntime':'mindowntime','downtimemin':'mindowntime',
     'costcurvepointsfilename':'costcurvepointsfilename',
-    'noloadcost':'noloadcost', #for a bid points defined gen, this replaces the constant polynomial in the cost coefficient
+    #for a bid points defined gen, noloadcost replaces the constant polynomial
+    'noloadcost':'noloadcost', 
     'costcurveequation':'costcurvestring','cost':'costcurvestring',
     'heatrateequation':'heatratestring',
     'fuelcost':'fuelcost',
     'startupcost':'startupcost','shutdowncost':'shutdowncost',
+    'faststart':'faststart',
     'schedulefilename':'schedulefilename','mustrun':'mustrun',
     'scenariosfilename':'scenariosfilename',
     'scenariosdirectory':'scenariosdirectory',

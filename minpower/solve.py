@@ -8,8 +8,8 @@ problems and solving them.
 import logging
 import time as timer
 
-from optimization import OptimizationError, OptimizationResolveError
-import config, get_data, powersystems, stochastic, results
+from optimization import OptimizationError
+import get_data, powersystems, stochastic, results
 from config import user_config
 from standalone import (store_state, load_state, store_times,
     get_storage, wipe_storage, repack_storage)
@@ -47,7 +47,7 @@ def solve_multistage(power_system, times, scenario_tree):
                 pid='--pid {}'.format(os.getpid()) if user_config.output_prefix else ''),
             shell=True, stdout=sys.stdout)
 
-    # repack_storage()
+    repack_storage()
     storage = get_storage()
     return storage, stage_times
 
@@ -212,74 +212,6 @@ def create_problem(power_system, times, scenario_tree=None,
         # %prun from minpower import stochastic; stochastic.create_problem_with_scenarios(power_system,times, tree, 24, 12, stage_number=0)
         power_system = stochastic.create_problem_with_scenarios(power_system,times, tree, user_config.hours_commitment, user_config.hours_overlap, stage_number=stage_number)
     return
-
-
-#def solve_multistage(power_system, times, scenario_tree):
-#    """
-#    Solve a rolling or multi-stage power systems optimization problem.
-#    Each stage will be one optimization run. A stage's final
-#    conditions will be the next stage's initial condition.
-
-#    :param power_system: :class:`~powersystems.PowerSystem` object
-#    :param datadir: directory of spreadsheets
-#    :param times: :class:`~schedule.Timelist` object. Will be split up into stages
-#    :param interval_hours: number of hours per interval
-#    :param stage_hours: number of hours per stage (e.g. run one commitment every stage_hours)
-#    :param overlap_hours: number of hours that stages overlap (e.g. run a 36hr commitment every 24hrs)
-#    :param writeproblem: save the formulation of each stage to a file
-#    :param get_duals: get the duals, or prices, of the optimization problem
-#    :param showclock: show the current system time at the start of each stage
-
-#    :returns: a list of :class:`~results.Solution_UC` objects (one per stage)
-#    :returns: a list of :class:`~schedule.Timelist` objects (one per stage)
-
-#    """
-
-#    stage_times=times.subdivide(user_config.hours_commitment,
-#        overlap_hrs=user_config.hours_overlap )
-#    buses=power_system.buses
-#    stage_solutions=[]
-#
-#    Nstages = len(stage_times)
-
-#    for stg,t_stage in enumerate(stage_times):
-#        logging.info('Stage starting at {}, {}'.format(t_stage.Start, show_clock(user_config.show_clock)))
-#
-#
-#        power_system.set_initialconditions(t_stage.initialTime, stg, stage_solutions)
-
-#        try:
-#            stage_solution, instance = create_solve_problem(power_system, t_stage, scenario_tree, multistage=True, stage_number=stg)
-#        except OptimizationError:
-#            #re-do stage, with load shedding allowed
-#            logging.critical('stage infeasible, re-running with load shedding.')
-#            power_system.reset_model()
-#            power_system.set_load_shedding(True)
-#            try:
-#                stage_solution, instance = create_solve_problem(power_system, t_stage, scenario_tree, multistage=True, stage_number=stg, rerun=True)
-#            except OptimizationError:
-#                if stage_solutions: stage_solutions[-1].saveCSV(joindir(datadir,'last-stage-solved-commitment.csv'), save_final_status=True)
-#                raise OptimizationError('failed to solve, even with load shedding.')
-#            power_system.set_load_shedding(False)
-
-#        logging.debug('solved... get results... {}'.format(show_clock(user_config.show_clock)))
-#
-#        if stage_solution.is_stochastic:
-#            # resolve with observed power and fixed status from stochastic solution
-#            power_system.resolve_stochastic_with_observed(instance, stage_solution)
-#        elif user_config.deterministic_solve:
-#            # resolve with observed power and fixed status from determinisitic solution
-#            power_system.resolve_determinisitc_with_observed(instance, stage_solution)
-#
-#        power_system.get_finalconditions(stage_solution)
-#        stage_solutions.append(stage_solution)
-
-#        if stg < (Nstages-1): # if not the last stage
-#            power_system.reset_model()
-#            #commonscripts.show_memory_growth()
-#
-#    return stage_solutions, stage_times
-
 
 def _setup_logging():
     ''' set up the logging to report on the status'''

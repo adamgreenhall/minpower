@@ -1,4 +1,7 @@
-from commonscripts import *
+import os
+import pandas as pd
+from pandas import Series, DataFrame
+from commonscripts import gen_time_dataframe
 from config import user_config
 
 from schedule import TimeIndex
@@ -54,24 +57,25 @@ def store_state(power_system, times, sln=None):
         storage['configuration'] = Series(user_config)        
     else:
         stg = sln.stage_number
-        storage['power'] = storage['power'].append(sln.generators_power)
-        storage['status'] = storage['status'].append(sln.generators_status)
-        storage['load_shed'] = storage['load_shed'].append(sln.load_shed_timeseries)
+        table_append(storage, 'power', sln.generators_power)
+        table_append(storage, 'status', sln.generators_status)
+        table_append(storage, 'load_shed', sln.load_shed_timeseries)
         
         tEnd = times.last_non_overlap()
         storage['hrsinstatus'] = gen_time_dataframe(generators, [tEnd], 
-            values = [[gen.finalstatus['hoursinstatus'] for gen in generators]])
+            values = [
+                [gen.finalstatus['hoursinstatus'] for gen in generators]
+            ])
         
         _add_tbl_val(storage, 'solve_time', stg, sln.solve_time)                
         
         if sln.is_stochastic or user_config.deterministic_solve:
-            storage['observed_cost'] = storage['observed_cost'].append(sln.observed_totalcost)
-            storage['expected_cost'] = storage['expected_cost'].append(sln.expected_totalcost)
-            storage['expected_power'] = storage['expected_power'].append(sln.expected_power)
-            storage['expected_status'] = storage['expected_status'].append(sln.expected_status)
-            
+            table_append(storage, 'observed_cost', sln.observed_totalcost)
+            table_append(storage, 'expected_cost', sln.expected_totalcost)
+            table_append(storage, 'expected_power', sln.expected_power)
+            table_append(storage, 'expected_status', sln.expected_status)
         else:
-            storage['expected_cost'] = storage['expected_cost'].append(sln.totalcost_generation)
+            table_append(storage, 'expected_cost', sln.totalcost_generation)
     return storage
     
 def load_state():
@@ -102,9 +106,14 @@ def load_state():
 def repack_storage():
     '''do some clean-up compression on that ballooning storage'''
     # http://stackoverflow.com/questions/13089359/mystery-when-storing-a-dataframe-containing-strings-in-hdf-with-pandas
-    os.system('ptrepack {f} copy{f}; mv copy{f} {f};'.format(f=user_config.store_filename))
+    os.system('ptrepack {f} copy{f}; mv copy{f} {f};'.format(
+        f=user_config.store_filename))
     
 def _add_tbl_val(storage, tablename, index, value):
     tbl = storage[tablename]
     tbl[index] = value
     storage[tablename] = tbl
+    
+def table_append(store, name, newvals):
+    store[name] = store[name].append(newvals)
+    return

@@ -9,7 +9,7 @@ from collections import OrderedDict
 
 from commonscripts import (update_attributes, gen_time_dataframe, joindir,
     replace_all, getattrL, elementwiseAdd, writeCSV, transpose, within,
-    flatten)
+    flatten, set_trace)
 from schedule import TimeIndex
 from optimization import value
 from config import user_config
@@ -84,6 +84,7 @@ class Solution(object):
     '''
     def __init__(self,power_system,times,datadir='.', is_stochastic=False):
         update_attributes(self,locals())
+        self._resolved = False
         self._setup_powersystem()
         
         self._get_problem_info()
@@ -413,6 +414,9 @@ class Solution_UC_multistage(Solution_UC):
     '''
     def __init__(self,power_system, stage_times, stage_solutions):
         update_attributes(self,locals(),exclude=['stage_solutions','stage_times'])
+        self._resolved = self.is_stochastic \
+            or user_config.deterministic_solve \
+            or user_config.perfect_solve
 
         self.is_stochastic = any(sln.is_stochastic for sln in stage_solutions)
         times = pd.concat([times.non_overlap().strings for times in stage_times]).index
@@ -624,19 +628,19 @@ class MultistageStandalone(Solution_UC_multistage):
     def __init__(self, power_system, stage_times, store):
         self.power_system = power_system
         self.is_stochastic = power_system.is_stochastic
-        self._resolved = self.is_stochastic or user_config.deterministic_solve
+        self._resolved = self.is_stochastic \
+            or user_config.deterministic_solve \
+            or user_config.perfect_solve
         times = pd.concat([times.non_overlap().strings for times in stage_times]).index
         self.times=TimeIndex(times)
         self.times.set_initial(stage_times[0].initialTime)
 
-        self.expected_cost = store['expected_cost'].sum().sum()
+        self.expected_cost = self.totalcost_generation = store['expected_cost']
         if self._resolved:
-            self.observed_cost = store['observed_cost'].sum().sum()
+            self.observed_cost = self.totalcost_generation = \
+                store['observed_cost']
         self.generators_power = store['power']
         self.generators_status = store['status']
-
-        self.totalcost_generation = store[
-            'totalcost_generation' if self._resolved else 'expected_cost']
         self.load_shed_timeseries = store['load_shed']
 
         self.load_shed = store['load_shed'].sum()
@@ -647,9 +651,9 @@ class MultistageStandalone(Solution_UC_multistage):
         expected = 'expected ' if resolved else ''
         observed = 'observed ' if resolved else ''
 
-        out = ['total {}generation cost={}'.format(expected, self.expected_cost)]
+        out = ['total {}generation cost={}'.format(expected, self.expected_cost.sum().sum())]
         if resolved: out.append(
-            'total {}generation cost={}'.format(observed, self.observed_cost))
+            'total {}generation cost={}'.format(observed, self.observed_cost.sum().sum()))
 
         return out
 

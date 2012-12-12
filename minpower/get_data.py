@@ -7,9 +7,11 @@ object.
 """
 
 from pandas import Series, read_csv, Timestamp
+from glob import glob
+from collections import OrderedDict
 import powersystems
 from schedule import (just_one_time, datetime, get_schedule, TimeIndex)
-from commonscripts import (joindir, csv2dicts, ts_from_csv, glob, OrderedDict)
+from commonscripts import (joindir, csv2dicts, ts_from_csv)
 from stochastic import construct_simple_scenario_tree
 
 from powersystems import PowerSystem
@@ -255,7 +257,7 @@ def build_class_list(data, model, times=None, timeseries=None):
             if user_config.deterministic_solve and (forecastfilename is not None): 
                 row_model = Generator_nonControllable
                 row['schedule'] = _tsorfile(forecastfilename, datadir, timeseries, forecast_col)
-            elif user_config.perfect_solve:
+            elif user_config.perfect_solve and (observedfilename is not None):
                 # for a perfect information solve forecast = observed
                 row['schedule'] = _tsorfile(observedfilename, datadir, timeseries, observed_col)
                 
@@ -272,7 +274,7 @@ def build_class_list(data, model, times=None, timeseries=None):
             raise
 
         if is_generator:
-            if user_config.deterministic_solve or user_config.perfect_solve:
+            if observedfilename and (user_config.deterministic_solve or user_config.perfect_solve):
                 obj.observed_values = _tsorfile(observedfilename, datadir, timeseries, observed_col)
             elif scenariosdirectory is not None: 
                 obj.scenarios_directory = joindir(datadir, scenariosdirectory)

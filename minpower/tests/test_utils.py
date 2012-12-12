@@ -2,7 +2,7 @@ from pandas import Series
 from minpower import optimization,powersystems,schedule,solve,config
 from minpower.generators import Generator
 from minpower.config import user_config
-
+from minpower.optimization import value
 
 import nose
 from nose.tools import istest, with_setup, eq_, raises, set_trace

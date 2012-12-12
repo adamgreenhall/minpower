@@ -3,14 +3,15 @@
     optimization problems. Matplotlib and networkx are used for
     visualization.
 """
-import yaml
-import logging
+import logging, os
+import pandas as pd
 from collections import OrderedDict
 
-from commonscripts import *
+from commonscripts import (update_attributes, gen_time_dataframe, joindir,
+    replace_all, getattrL, elementwiseAdd, writeCSV, transpose, within,
+    flatten)
 from schedule import TimeIndex
-from optimization import value,dual
-import config,stochastic
+from optimization import value
 from config import user_config
 
 for_publication=True
@@ -32,9 +33,6 @@ except ImportError:
     logging.warning("Can't import matplotlib -- skipping plotting.")
     do_plotting=False
 
-import pandas
-
-
 def full_filename(filename):
     if user_config.output_prefix:
         filename = '{}-{}'.format(os.getpid(), filename)
@@ -55,7 +53,7 @@ def classify_problem(times,power_system):
     if any(getattr(g,'is_stochastic',False) for g in power_system.generators()): kind='stochastic_'+kind
     return kind
 
-def make_solution(power_system,times,**kwargs):
+def make_solution(power_system, times, **kwargs):
     '''
     Create a :class:`solution.Solution` object for a power system over times.
 
@@ -133,7 +131,7 @@ class Solution(object):
         self.incremental_cost = self.gen_time_df('incrementalcost')
                 
         times=self.times_non_overlap
-        self.load_shed_timeseries = Series(
+        self.load_shed_timeseries = pd.Series(
             [sum(self.get_values(self.loads, 'shed', t, evaluate=True)) for t in times],
             index = times.strings.index)
         self.load_shed = self.load_shed_timeseries.sum()
@@ -674,13 +672,11 @@ def stack_plot_UC(solution,generators,times,prices,
     figWidth=.85; figLeft=(1-figWidth)/2
     yLabel_pos={'x':-0.12,'y':0.5}
 
-    fig=plot.figure(figsize=(10, 4), dpi=180)
+    plot.figure(figsize=(10, 4), dpi=180)
     ax=plot.axes([figLeft,.1,figWidth,.6])
     ax.set_ylabel('energy [MWh]',ha='center',**font_big)
     ax.yaxis.set_label_coords(**yLabel_pos)
     prettify_axes(ax)
-
-    alpha_initialTime=0.2
 
     gens_plotted,legend_labels=[],[]
 
@@ -726,7 +722,7 @@ def stack_plot_UC(solution,generators,times,prices,
 
     #show prices
     if withPrices:
-        prices=replace_all(prices, config.cost_load_shedding, None)
+        prices = replace_all(prices, user_config.cost_load_shedding, None)
         prices_wo_none=[p for p in prices if p is not None]
         if prices_wo_none:
             axes_price = plot.axes([figLeft,.75,figWidth,.2],sharex=ax)

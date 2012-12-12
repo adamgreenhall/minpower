@@ -38,6 +38,8 @@ def unflatten(flatlist,levels):
             for d in flatlist: yield d        
     return nestgenerator(flatlist,levels).next()
 def unique(seq): 
+    """ Order preserving unique function. 
+    """
     # order preserving, <http://bit.ly/pyUnique>
     U = []
     [U.append(i) for i in seq if not U.count(i)]

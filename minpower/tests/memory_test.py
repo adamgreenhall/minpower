@@ -6,6 +6,25 @@ from coopr import pyomo
 
 import objgraph, inspect
 
+def show_memory_backrefs(name):    
+    objgraph.show_backrefs(
+        objgraph.by_type(name),
+        filename='backrefs-{}.png'.format(name))
+
+
+def show_memory_refs(name):
+    try: obj=objgraph.by_type(name)[0]
+    except IndexError:
+        print 'no object of type',name  
+        return
+    objgraph.show_chain(
+        objgraph.find_backref_chain(obj, inspect.ismodule),
+        filename='chain-{}.png'.format(name))
+
+
+def show_memory_growth():
+    objgraph.show_growth()
+
 def get_counts(prefix=''):
     test_types = [
         'Var', 

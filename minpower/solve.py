@@ -5,7 +5,7 @@ module contains the top-level commands for creating
 problems and solving them.
 """
 
-import sys, os, logging
+import sys, os, logging, subprocess
 import time as timer
 
 from optimization import OptimizationError
@@ -13,7 +13,7 @@ import get_data, powersystems, stochastic, results
 from config import user_config
 from standalone import (store_state, load_state, store_times,
     get_storage, wipe_storage, repack_storage)
-from commonscripts import joindir, subprocess, StreamToLogger
+from commonscripts import joindir, StreamToLogger
 
 def _get_store_filename():
     fnm = 'stage-store.hd5'
@@ -36,11 +36,13 @@ def solve_multistage(power_system, times, scenario_tree):
         storage = store_times(t_stage, storage)
         storage.close()
         storage = None
-        subprocess.check_call(
-            'standalone_minpower {dir} {stg} {pid}'.format(
+        command = 'standalone_minpower {dir} {stg} {pid}'.format(
                 dir=user_config.directory, stg=stg,
-                pid='--pid {}'.format(os.getpid()) if user_config.output_prefix else ''),
-            shell=True, stdout=sys.stdout)
+                pid='--pid {}'.format(os.getpid()) if user_config.output_prefix else '')
+        try: subprocess.check_call(command, shell=True, stdout=sys.stdout)
+        except AttributeError:
+            # HACk - avoid error when nose hijacks sys.stdout
+            subprocess.check_call(command, shell=True)
 
     repack_storage()
     storage = get_storage()

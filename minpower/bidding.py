@@ -1,4 +1,4 @@
-from commonscripts import * # update_attributes,frange,pairwise
+from commonscripts import * # update_attributes, pairwise
 from optimization import value,OptimizationObject
 from config import user_config
 import re,weakref
@@ -69,13 +69,13 @@ class Bid(OptimizationObject):
             self.is_linear = False
             self.is_pwl = True
             self.add_variable('cost',index=self.times.set,low=0)            
-            # pw_rule = dict( [ (i, lambda x: get_line_value(pA, pB, x)) for i,(pA,pB) in enumerate(pairwise(self.bid_points))] )
 
             self.discrete_input_points=[ bp[0] for bp in self.bid_points ]
             in_pts=dict((t,self.discrete_input_points) for t in self.times.set)
             mapping = dict(self.bid_points)
             def pw_rule(model,time,input_var): 
-                # just the input->output points mapping in this case  - see coopr/examples/pyomo/piecewise/example3.py
+                # just the input->output points mapping in this case
+                # see coopr/examples/pyomo/piecewise/example3.py
                 return mapping[input_var]
                 
             pw_representation=Piecewise(self.times.set,
@@ -142,8 +142,9 @@ class Bid(OptimizationObject):
             for A,B in pairwise(self.bid_points):
                 output_range.append( get_line_slope(A,B) )
         else:
-            input_range=[x for x in frange(self.min_input,self.max_input+1)]
-            output_range=[polynomial_incremental_value(self.polynomial,x) for x in input_range]
+            input_range = np.arange(self.min_input, self.max_input, 1.0)
+            output_range = [polynomial_incremental_value(self.polynomial,x) 
+                for x in input_range]
         return input_range,output_range
     def __str__(self): return 'bid_{}'.format(self.owner_id)
     def iden(self,*a,**k): return 'bid_{}'.format(self.owner_id)

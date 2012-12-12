@@ -10,10 +10,10 @@ optimization framework from :class:`~optimization.OptimizationObject`.
 import logging
 from coopr import pyomo
 import numpy as np
+import pandas as pd
 from optimization import (value, dual, OptimizationObject, 
     OptimizationProblem, OptimizationError)
-from commonscripts import (update_attributes, getattrL,
-    unique, flatten)
+from commonscripts import (update_attributes, getattrL, flatten)
 from config import user_config
 
 class Load(OptimizationObject):
@@ -234,7 +234,7 @@ class PowerSystem(OptimizationProblem):
         busNameL=[]
         busNameL.extend(getattrL(generators,'bus'))
         busNameL.extend(getattrL(loads,'bus'))
-        busNameL=unique(busNameL)
+        busNameL=list(pd.unique(busNameL))
         buses=[]
         swingHasBeenSet=False
         for b,busNm in enumerate(busNameL):

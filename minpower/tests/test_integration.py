@@ -11,13 +11,17 @@ from minpower.solve import solve_problem as solve_dir
 from pandas.util.testing import assert_frame_equal
 
 def basic_checks(sln):    
+    cost = sln.totalcost_generation
+    power = sln.generators_power.ix[cost.index]
+    status = sln.generators_status.ix[cost.index]
+    
     # make sure that if status = 0 then power also = 0
-    Pcheck = sln.generators_power * sln.generators_status
-    assert_frame_equal(Pcheck, sln.generators_power)
+    Pcheck = power * status
+    assert_frame_equal(Pcheck, power)
     
     # make sure that if status = 0 then cost also = 0
-    Ccheck = sln.totalcost_generation * sln.generators_status
-    assert_frame_equal(Ccheck, sln.totalcost_generation)
+    Ccheck = cost * status
+    assert_frame_equal(Ccheck, cost)
     
     # make sure that generation meets load (plus any shed)
     shed = sln.load_shed_timeseries
@@ -25,7 +29,7 @@ def basic_checks(sln):
     scheduled.index = shed.index
     assert_frame_equal(
         pd.DataFrame(scheduled + shed), 
-        pd.DataFrame(sln.generators_power.sum(axis=1)))
+        pd.DataFrame(power.sum(axis=1)))
     
     
     # set_trace()

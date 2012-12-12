@@ -622,7 +622,7 @@ class Solution_Stochastic_UC(Solution_Stochastic):
 
 class MultistageStandalone(Solution_UC_multistage):
     def __init__(self, power_system, stage_times, store):
-
+        self.power_system = power_system
         self.is_stochastic = power_system.is_stochastic
         self._resolved = self.is_stochastic or user_config.deterministic_solve
         times = pd.concat([times.non_overlap().strings for times in stage_times]).index
@@ -634,6 +634,10 @@ class MultistageStandalone(Solution_UC_multistage):
             self.observed_cost = store['observed_cost'].sum().sum()
         self.generators_power = store['power']
         self.generators_status = store['status']
+
+        self.totalcost_generation = store[
+            'totalcost_generation' if self._resolved else 'expected_cost']
+        self.load_shed_timeseries = store['load_shed']
 
         self.load_shed = store['load_shed'].sum()
         self.solve_time = store['solve_time'].sum()

@@ -94,28 +94,29 @@ available_solvers = ['gurobi','glpk']
 
 
 user_config = DotDict(dict(
-    duals = False,
-    breakpoints = 11,
-    hours_commitment = 24,
-    hours_overlap = 0,
-    cost_load_shedding = 10000, #$/MWh
-    load_shedding_allowed = False,
-    dispatch_decommit_allowed = False,
-    solver = 'cplex',
+    duals=False,
+    breakpoints=11,
+    hours_commitment=24,
+    hours_overlap=0,
+    cost_load_shedding=10000, #$/MWh
+    load_shedding_allowed=False,
+    dispatch_decommit_allowed=False,
+    solver='cplex',
 
-    reserve_fixed = 0,
-    reserve_load_fraction = 0.0,
+    reserve_fixed=0,
+    reserve_load_fraction=0.0,
 
-    faststart_resolve = False,
+    faststart_resolve=False,
 
-    visualization = False,
-    logging_level = logging.DEBUG,
-    logging_filename = False,
-    problem_filename = False,
-    output_prefix = False,
+    visualization=False,
+    logging_level=logging.DEBUG,
+    logging_filename=False,
+    problem_filename=False,
+    output_prefix=False,
 
-    scenarios = None,
-    deterministic_solve = False,
-    scenarios_directory = None,
+    scenarios=None,
+    deterministic_solve=False,
+    perfect_solve=False,
+    scenarios_directory=None,
 
     ))

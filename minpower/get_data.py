@@ -6,9 +6,10 @@ Also extract the time information and create a :class:`~schedule.Timelist`
 object.
 """
 
+from pandas import Series, read_csv, Timestamp
 import powersystems
-from schedule import *
-from commonscripts import *
+from schedule import (just_one_time, datetime, get_schedule, TimeIndex)
+from commonscripts import (joindir, csv2dicts, ts_from_csv, glob, OrderedDict)
 from stochastic import construct_simple_scenario_tree
 
 from powersystems import PowerSystem
@@ -98,7 +99,7 @@ def parse_standalone(
         obj.observed_values.index = times.strings.values
         
     #setup scenario tree (if applicable)
-    if user_config.deterministic_solve: 
+    if user_config.deterministic_solve or user_config.perfect_solve: 
         scenario_tree = None
     else: 
         scenario_tree = setup_scenarios(generators, times, only_stage=True)
@@ -165,7 +166,7 @@ def parsedir(
 
     
     #setup scenario tree (if applicable)
-    if user_config.deterministic_solve: 
+    if user_config.deterministic_solve or user_config.perfect_solve: 
         scenario_tree = None
     else: 
         scenario_tree = setup_scenarios(generators, times)
@@ -247,18 +248,22 @@ def build_class_list(data, model, times=None, timeseries=None):
         elif is_generator and ((scenariosdirectory is not None) or (scenariosfilename is not None)):
             row_model = Generator_Stochastic
         
-        if is_generator and row.get('schedule') is not None:
-            row_model = Generator_nonControllable
-        
-        if is_generator and user_config.deterministic_solve and (forecastfilename is not None): 
-            row_model = Generator_nonControllable
-            row['schedule'] = _tsorfile(forecastfilename, datadir, timeseries, forecast_col)            
-        
-        # load a custom bid points filename with {power, cost} columns 
-        if is_generator and (bid_points_filename is not None): 
-            bid_points = csv2dicts( joindir(datadir, bid_points_filename) ) 
-            row['bid_points'] = [ (bp['power'], bp['cost']) for bp in bid_points]
-            row['costcurvestring'] = None
+        if is_generator:
+            if row.get('schedule') is not None:
+                row_model = Generator_nonControllable
+
+            if user_config.deterministic_solve and (forecastfilename is not None): 
+                row_model = Generator_nonControllable
+                row['schedule'] = _tsorfile(forecastfilename, datadir, timeseries, forecast_col)
+            elif user_config.perfect_solve:
+                # for a perfect information solve forecast = observed
+                row['schedule'] = _tsorfile(observedfilename, datadir, timeseries, observed_col)
+                
+                # load a custom bid points filename with {power, cost} columns 
+            if bid_points_filename is not None: 
+                bid_points = csv2dicts( joindir(datadir, bid_points_filename) ) 
+                row['bid_points'] = [ (bp['power'], bp['cost']) for bp in bid_points]
+                row['costcurvestring'] = None
         
         try: obj=row_model(index=index, **row)
         except TypeError:
@@ -267,7 +272,7 @@ def build_class_list(data, model, times=None, timeseries=None):
             raise
 
         if is_generator:
-            if user_config.deterministic_solve and (observedfilename is not None):
+            if user_config.deterministic_solve or user_config.perfect_solve:
                 obj.observed_values = _tsorfile(observedfilename, datadir, timeseries, observed_col)
             elif scenariosdirectory is not None: 
                 obj.scenarios_directory = joindir(datadir, scenariosdirectory)
@@ -345,7 +350,7 @@ def setup_times(generators_data, loads_data, filename_timeseries):
 
 def _parse_scenario_day(filename):
     logging.debug('reading scenarios from %s', filename)
-    data = dataframe_from_csv(filename, parse_dates=True, index_col=0)
+    data = read_csv(filename, parse_dates=True, index_col=0)
     Nscenarios = user_config.scenarios
     
     if Nscenarios is not None:
@@ -376,7 +381,7 @@ def setup_scenarios(generators, times, only_stage=False):
         
         gen.has_scenarios_multistage = False
         fnm = joindir(user_config.directory, gen.scenarios_filename)
-        gen.scenario_values = dataframe_from_csv(fnm)
+        gen.scenario_values = read_csv(fnm)
         
         probabilities = gen.scenario_values['probability'].values.tolist()
         
@@ -400,7 +405,7 @@ def setup_scenarios(generators, times, only_stage=False):
         for i,f in enumerate(filenames):
             data = _parse_scenario_day(f)
             day_idx = 1 if data.columns[0]=='probability' else 0
-            day = parse_time(data.columns[day_idx]).date() 
+            day = Timestamp(data.columns[day_idx]).date() 
             gen.scenario_values[day] = data
         
         # defer construction until actual time stage starts

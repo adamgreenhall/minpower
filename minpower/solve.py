@@ -282,6 +282,9 @@ def main():
     parser.add_argument('--deterministic_solve', action='store_true',
         default=user_config.deterministic_solve,
         help='solve a stochastic problem deterministically using the forecast_filename paramter')
+    parser.add_argument('--perfect_solve', action='store_true',
+        default=user_config.perfect_solve,  #False
+        help='solve a stochastic problem with perfect information')
     parser.add_argument('--scenarios_directory', type=str,
         default=user_config.scenarios_directory,
         help='override scenarios directory for stochastic problem')

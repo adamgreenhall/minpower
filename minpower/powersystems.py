@@ -303,6 +303,11 @@ class PowerSystem(OptimizationProblem):
         if time is not None: name+='_'+str(time)
         return name
 
+    
+    def total_scheduled_load(self):
+        return sum([load.schedule for load in self.loads()]) 
+    
+    
     def get_generators_without_scenarios(self):
         return filter(lambda gen: getattr(gen,'has_scenarios',False)==False, self.generators())
 

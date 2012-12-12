@@ -106,7 +106,7 @@ def load_state():
 def repack_storage():
     '''do some clean-up compression on that ballooning storage'''
     # http://stackoverflow.com/questions/13089359/mystery-when-storing-a-dataframe-containing-strings-in-hdf-with-pandas
-    os.system('ptrepack {f} copy{f}; mv copy{f} {f};'.format(
+    os.system('ptrepack {f} {f}.copy; mv {f}.copy {f};'.format(
         f=user_config.store_filename))
     
 def _add_tbl_val(storage, tablename, index, value):
@@ -117,3 +117,24 @@ def _add_tbl_val(storage, tablename, index, value):
 def table_append(store, name, newvals):
     store[name] = store[name].append(newvals)
     return
+    
+import tables as tb
+import atexit
+
+# make pytables quiet down
+# http://www.pytables.org/moin/UserDocuments/AtexitHooks
+def quiet_table_close(verbose=False):
+    open_files = tb.file._open_files
+    are_open_files = len(open_files) > 0
+    if verbose and are_open_files:
+        print >> sys.stderr, "Closing remaining open files:",
+    for fileh in open_files.keys():
+        if verbose:
+            print >> sys.stderr, "%s..." % (open_files[fileh].filename,),
+        open_files[fileh].close()
+        if verbose:
+            print >> sys.stderr, "done",
+    if verbose and are_open_files:
+        print >> sys.stderr
+        
+atexit.register(quiet_table_close)

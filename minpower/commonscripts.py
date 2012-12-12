@@ -22,9 +22,6 @@ import pandas as pd
 from pandas import DataFrame, Series, date_range
 from pandas.io.parsers import read_csv as dataframe_from_csv
 
-import tables as tb
-import atexit
-
 from pprint import pprint
 try: # for development
     from ipdb import set_trace #pudb
@@ -325,22 +322,3 @@ def show_memory_refs(name):
 def show_memory_growth():
     import objgraph
     objgraph.show_growth()
-    
-
-# make pytables quiet down
-# http://www.pytables.org/moin/UserDocuments/AtexitHooks
-def my_close_open_files(verbose):
-    open_files = tb.file._open_files
-    are_open_files = len(open_files) > 0
-    if verbose and are_open_files:
-        print >> sys.stderr, "Closing remaining open files:",
-    for fileh in open_files.keys():
-        if verbose:
-            print >> sys.stderr, "%s..." % (open_files[fileh].filename,),
-        open_files[fileh].close()
-        if verbose:
-            print >> sys.stderr, "done",
-    if verbose and are_open_files:
-        print >> sys.stderr
-        
-atexit.register(my_close_open_files, False)

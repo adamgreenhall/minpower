@@ -31,7 +31,7 @@ try:
         plot.rc("font",family="serif")
 except ImportError:
     logging.warning("Can't import matplotlib -- skipping plotting.")
-    do_plotting=False
+    do_plotting = False
 
 def full_filename(filename):
     if user_config.output_prefix:

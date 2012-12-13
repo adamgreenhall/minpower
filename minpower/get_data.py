@@ -5,20 +5,19 @@ Get data from spreadsheet files and parse it into
 Also extract the time information and create all
     :class:`~schedule.Timelist` objects.
 """
-
-from pandas import Series, read_csv, Timestamp
+import pandas as pd
+from pandas import Series, DataFrame, Timestamp, read_csv
 from glob import glob
 from collections import OrderedDict
 import powersystems
 from schedule import (just_one_time, datetime, get_schedule, TimeIndex)
-from commonscripts import (joindir, csv2dicts, ts_from_csv)
+from commonscripts import (joindir, drop_case_spaces, ts_from_csv, set_trace)
 from stochastic import construct_simple_scenario_tree
 
 from powersystems import PowerSystem
 from generators import (Generator, 
     Generator_Stochastic, Generator_nonControllable)
 from config import user_config
-
 
 import os, logging
 
@@ -125,17 +124,28 @@ def parsedir(
     
     datadir = user_config.directory
     
-    if not os.path.isdir(datadir): raise OSError('data directory "{d}" does not exist'.format(d=datadir) )
-    [file_gens,file_loads,file_lines,file_init, file_timeseries]=[joindir(datadir,filename) for filename in (file_gens,file_loads,file_lines,file_init, file_timeseries)]
+    if not os.path.isdir(datadir):
+        raise OSError('data directory "{d}" does not exist'.format(d=datadir))
+    [file_gens, file_loads, file_lines, file_init, file_timeseries] = \
+        [joindir(datadir,filename) for filename in 
+            (file_gens,file_loads,file_lines,file_init, file_timeseries)]
     
+    def nice_names(df):
+        return df.rename(columns=
+            dict([(col, drop_case_spaces(col)) for col in df.columns]))
     
+    generators_data = nice_names(read_csv(file_gens))
+    loads_data = nice_names(read_csv(file_loads))
     
-    generators_data=csv2dicts(file_gens,field_map=fields_gens)
-    loads_data=csv2dicts(file_loads,field_map=fields_loads)
-    try: lines_data=csv2dicts(file_lines,field_map=fields_lines)
-    except IOError: lines_data=[]
-    try: init_data=csv2dicts(file_init,field_map=fields_initial)
-    except IOError: init_data=[]
+    try: 
+        lines_data = nice_names(read_csv(file_lines))
+    except IOError: 
+        lines_data = DataFrame()
+
+    try: 
+        init_data = nice_names(read_csv(file_init))
+    except IOError: 
+        init_data = DataFrame()
     
     #create times
     timeseries, times = setup_times(generators_data, loads_data, file_timeseries)
@@ -196,10 +206,10 @@ def build_class_list(data, model, times=None, timeseries=None):
     is_generator = (model == Generator)
     
     all_models=[]
-    index=0
-    for row in data:      
+    
+    for i, row in data.iterrows():
         row_model = model
-
+        set_trace()
         power = row.pop('power', None)
         sched_col = row.pop('schedulename',None)
         schedulefilename = row.pop('schedulefilename',None)
@@ -265,7 +275,7 @@ def build_class_list(data, model, times=None, timeseries=None):
                     
 
         all_models.append( obj )
-        index+=1
+        
     return all_models
 
 def _tsorfile(filename, datadir, timeseries, col):
@@ -285,7 +295,8 @@ def setup_times(generators_data, loads_data, filename_timeseries):
     """
     try: 
         timeseries = ts_from_csv(filename_timeseries, is_df=True)
-        if timeseries.index[1] - timeseries.index[0] == datetime.timedelta(0,3600):
+        if timeseries.index[1] - timeseries.index[0] == \
+            datetime.timedelta(0, 3600):
             timeseries = timeseries.asfreq('1h')
         
         times = TimeIndex(timeseries.index)
@@ -295,12 +306,11 @@ def setup_times(generators_data, loads_data, filename_timeseries):
         pass
         # the old way...
     
-    field_sched = 'schedulefilename'
-
-    valid_sched = lambda obj: obj.get(field_sched, None) is not None
-    
-    scheduled_components = filter(valid_sched, loads_data+generators_data)
-    
+    col = 'schedulefilename'
+    sched_files = pd.concat([
+        loads_data[loads_data[col].notnull()], 
+        generators_data[col].dropna()])
+        
     if len(scheduled_components)==0:
         #this is a ED or OPF problem - only one time
         return None, just_one_time()

@@ -15,8 +15,8 @@ from setuptools.command.test import test as TestCommand
 
 setup(
     name = "minpower",
-    version = "3.3.0", # dont forget to increment __init__.py
-    download_url = "https://github.com/adamgreenhall/minpower/zipball/v3.2.2",
+    version = "4.0.0", # dont forget to increment __init__.py
+    download_url = "https://github.com/adamgreenhall/minpower/zipball/v4.0.0",
 
     entry_points="""
     [console_scripts]
@@ -30,7 +30,7 @@ setup(
         'coopr.core>=1.0',
         'pyutilib>=4.0',
         'numpy>=1.6.1',
-        'pandas>=0.9',  #pip install --upgrade git+git://github.com/pydata/pandas.git#egg=pandas
+        'pandas>=0.9.1',  #pip install --upgrade git+git://github.com/pydata/pandas.git#egg=pandas
         'python-dateutil>=1.4.1',
         'ordereddict>=1.1',
         'PyYAML>=3.10',

@@ -5,7 +5,11 @@ import os
 from ipdb import set_trace
 
 def main():
-
+    '''
+    a wrapper to make the minpower script work with cluster schedulers
+    or with an ssh call that you start on your laptop and then close the
+    connection.
+    '''
     minpower_args = ['minpower']+clint.args.all
 
     if not '-p' in minpower_args:

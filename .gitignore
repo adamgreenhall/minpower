@@ -13,11 +13,12 @@ doc/Makefile
 minpower.egg-info/
 doc/_build/*
 addons/*.py
-*commitment.csv
+*commitment*.csv
 *dispatch.csv
 *powerflow-*.csv
 *stage*.csv
 *solution*.csv
+*.hd5
 
 # Compiled source #
 ###################

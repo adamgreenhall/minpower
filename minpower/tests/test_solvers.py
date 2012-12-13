@@ -1,9 +1,8 @@
 '''Test the all of the solver links'''
 
-from attest import Tests,assert_hook
 from minpower import optimization, config
+from test_utils import *
 from coopr import pyomo
-import logging
 
 mem_tracking=False
 if mem_tracking:
@@ -13,9 +12,6 @@ if mem_tracking:
     tracker=ClassTracker()
     for cls in [pyomo.ConcreteModel,pyomo.Var,pyomo.base.var._VarElement,pyomo.Constraint,optimization.OptimizationProblem]:
         tracker.track_class(cls)
-
-solvers = Tests()
-logging.basicConfig( level=logging.INFO, format='%(levelname)s: %(message)s')
 
 def simple_problem():
     prob=optimization.OptimizationProblem()
@@ -30,10 +26,13 @@ def simple_problem():
     return prob 
 
 
-
-def test_one_solver(solver_name):
+def run_one_solver(solver_name):
     prob=simple_problem()
-    prob.solve(solver=solver_name,get_duals=False)
+    orig_solver = config.user_config.solver
+    config.user_config.duals = False
+    config.user_config.solver = solver_name 
+    
+    prob.solve()
     if mem_tracking: tracker.create_snapshot('prob. solved')
     status=prob.solved
     del prob
@@ -42,26 +41,29 @@ def test_one_solver(solver_name):
         tracker.stats.print_summary()
         #HtmlStats(tracker=tracker).create_html('profile-simple-problem.html')
         models_left=objgraph.by_type('ConcreteModel')
-        logging.critical( models_left )
+        print models_left
         objgraph.show_backrefs(models_left,filename='backrefs-simple-problem.png')
+    
+    config.user_config.duals = True
+    config.user_config.solver = orig_solver
     return status
 
-@solvers.test
+@istest
 def cplex():
     '''Test each available solver on a simple problem'''
     if 'cplex' in config.available_solvers:
-        assert test_one_solver('cplex')
+        assert run_one_solver('cplex')
 
-@solvers.test
+
+@istest
 def glpk():
     '''Test the glpk solver on a simple problem'''
     if 'glpk' in config.available_solvers:
-        assert test_one_solver('glpk')
+        assert run_one_solver('glpk')
 
-@solvers.test
+
+@istest
 def gurobi():
     '''Test the gurobi solver on a simple problem'''
     if 'gurobi' in config.available_solvers:
-        assert test_one_solver('gurobi')
-        
-if __name__ == "__main__": solvers.run()
+        assert run_one_solver('gurobi')        

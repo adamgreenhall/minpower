@@ -1,17 +1,15 @@
 '''Test the constraint behavior of an OPF'''
-
-from attest import Tests,Assert,assert_hook
-import logging
-logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s')
-
-from minpower import optimization,powersystems,schedule,solve,config
+from minpower import powersystems
 from minpower.optimization import value
+from minpower.commonscripts import Series
 
-from test_utils import solve_problem,make_loads_times,make_cheap_gen,make_mid_gen,make_expensive_gen,singletime
+from test_utils import *
 
-opf = Tests()
-
-@opf.test
+def test_config():
+    assert(user_config.duals == False)
+    
+@istest
+@with_setup(get_duals)
 def line_limit_high():
     '''
     Create a two bus system
@@ -28,13 +26,14 @@ def line_limit_high():
         make_expensive_gen(bus='B')
     ]    
     lines=[powersystems.Line(Pmax=Pmax, From='A',To='B')]
-    power_system,times=solve_problem(generators,lines=lines,get_duals=True,**make_loads_times(Pd=225,bus='B'))
+    power_system,times=solve_problem(generators, lines=lines, **make_loads_times(Pd=225,bus='B'))
     Pline = lines[0].power(times[0])
     lmps=[b.price(times[0]) for b in power_system.buses]
     congestion_price = lines[0].price(times[0])
     assert Pline==Pmax and congestion_price == (lmps[1] - lmps[0])
-    
-@opf.test
+
+@istest
+@with_setup(get_duals)
 def line_limit_low():
     '''
     Create a two bus system
@@ -45,20 +44,21 @@ def line_limit_low():
         - the line is at its limit 
         - the congestion price is equal to the diff. in LMPs
     '''
-    Pmin=-100
+    Pmin = -100
     generators=[
         make_cheap_gen(bus='A'),
         make_expensive_gen(bus='B')
     ]    
     lines=[powersystems.Line(Pmin=Pmin, From='B',To='A')]
-    power_system,times=solve_problem(generators,lines=lines,get_duals=True,**make_loads_times(Pd=225,bus='B'))
+    power_system,times=solve_problem(generators,lines=lines, **make_loads_times(Pd=225,bus='B'))
     Pline = lines[0].power(times[0])
     lmps=[b.price(times[0]) for b in power_system.buses]
     congestion_price = lines[0].price(times[0])
     assert Pline==Pmin and congestion_price == -1*(lmps[1] - lmps[0])
 
 
-@opf.test
+@istest
+@with_setup(get_duals)
 def three_buses():
     '''
     Create a three bus system
@@ -79,20 +79,21 @@ def three_buses():
         make_expensive_gen(bus='C'),
         ]    
     loads=[
-        powersystems.makeLoad(P=Pd[0],bus='A'),
-        powersystems.makeLoad(P=Pd[1],bus='B'),
-        powersystems.makeLoad(P=Pd[2],bus='C')
+        powersystems.Load(schedule=Series(Pd[0],singletime), bus='A'),
+        powersystems.Load(schedule=Series(Pd[1],singletime),bus='B'),
+        powersystems.Load(schedule=Series(Pd[2],singletime),bus='C')
         ]
     lines=[
         powersystems.Line(From='A',To='B'),
         powersystems.Line(From='A',To='C', Pmax=Pmax),
         powersystems.Line(From='B',To='C', Pmax=Pmax),
         ]
-    power_system,times=solve_problem(generators,times=singletime,loads=loads,lines=lines,get_duals=True)
+    power_system,times=solve_problem(generators,times=singletime,loads=loads,lines=lines)
     num_lmps=len(set(b.price(times[0]) for b in power_system.buses))
     total_load = value(sum(b.Pload(times[0]) for b in power_system.buses))
     assert total_load==sum(Pd) and num_lmps>1
 
+    user_config.duals = False
 
-if __name__ == "__main__": 
-    opf.run()
+def test_config_cleared():
+    assert(user_config.duals == False)

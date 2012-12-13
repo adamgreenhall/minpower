@@ -1,21 +1,13 @@
-from commonscripts import * # update_attributes,frange,pairwise
+from commonscripts import * # update_attributes, pairwise
 from optimization import value,OptimizationObject
-from config import default_num_breakpoints
+from config import user_config
 import re,weakref
 from coopr.pyomo import Piecewise
 
 
 class Bid(OptimizationObject):
     """
-    Descibes a bid as modeled by :attr:model. Bids contain variables
-    which are dependent on time while :class:`~bidding.PWLmodel` objects
-    do not store time dependent information.
-    
-    :param model: model for the bid, either :class:`~bidding.PWLmodel`,
-        :class:`~bidding.convexPWLmodel`, or :class:`~bidding.LinearModel`  
-    :param times: the times the bids take place over 
-    :param input_variable: input variable method for owner
-    :param status_variable: status variable method for owner
+    A bid modeled by a polynomial or a set of piecewise points.
     """
     def __init__(self,
             polynomial='10P',
@@ -26,7 +18,7 @@ class Bid(OptimizationObject):
             input_variable=0,
             min_input=0,
             max_input=1000,
-            num_breakpoints=default_num_breakpoints,
+            num_breakpoints=user_config.breakpoints,
             status_variable=True,
             fixed_input=False):
         update_attributes(self,locals(),exclude=['owner'])
@@ -34,76 +26,103 @@ class Bid(OptimizationObject):
         self.owner_id=str(owner)
         
         self.is_pwl = (self.bid_points is not None)
+        self.is_linear = is_linear(self.polynomial)
         
         if not fixed_input: self.build_model()
     def build_model(self): 
         if self.bid_points is None:
-            self.is_linear=is_linear(self.polynomial)
+            
             self.is_pwl = False
+            self.constant_term = self.polynomial[0]
+            
             if self.is_linear: return
-
-            self.add_variable('cost',index=self.times.set,low=0)
-            def pw_rule(model,time,input_var): return polynomial_value(self.polynomial,input_var)
+            
+            polynomial = list(self.polynomial)
+            # use constant term in place of the 0th order term
+            polynomial[0] = 0 
+            
+            self.add_variable('cost', index=self.times.set, low=0)
+            def pw_rule(model,time,input_var): 
+                return polynomial_value(polynomial, input_var)
             self.discrete_input_points=discretize_range(self.num_breakpoints,self.min_input,self.max_input)
             in_pts=dict((t,self.discrete_input_points) for t in self.times.set)
-            pw_representation=Piecewise(self.times.set,self.output(),self.input_variable(),
-                                           f_rule=pw_rule,
-                                           pw_pts=in_pts,
-                                           pw_constr_type='LB',
-                                           warn_domain_coverage=False, # dont complain - power is generally lower bounded by zero, not Pmin
-                                           )
+
+            pw_representation = Piecewise(
+                self.times.set,
+                self.get_variable('cost', time=None, indexed=True),
+                self.input_variable(),
+                f_rule=pw_rule,
+                pw_pts=in_pts,
+                pw_constr_type='LB',
+                warn_domain_coverage = False, 
+                # unless warn_domain_coverage is set, pyomo will complain
+                # gen lower power bounds are set to zero (status trick) 
+                # and Piecewise complains if Pmin>0,
+               )
             
         else:
             # custom bid points
             self.is_linear = False
             self.is_pwl = True
             self.add_variable('cost',index=self.times.set,low=0)            
-            # pw_rule = dict( [ (i, lambda x: get_line_value(pA, pB, x)) for i,(pA,pB) in enumerate(pairwise(self.bid_points))] )
 
             self.discrete_input_points=[ bp[0] for bp in self.bid_points ]
             in_pts=dict((t,self.discrete_input_points) for t in self.times.set)
             mapping = dict(self.bid_points)
             def pw_rule(model,time,input_var): 
-                # just the input->output points mapping in this case  - see coopr/examples/pyomo/piecewise/example3.py
+                # just the input->output points mapping in this case
+                # see coopr/examples/pyomo/piecewise/example3.py
                 return mapping[input_var]
                 
             pw_representation=Piecewise(self.times.set,
-                                          self.get_variable('cost',time=None,indexed=True),
-                                          self.input_variable(),
-                                          pw_pts=in_pts,
-                                          pw_constr_type='LB',
-                                          pw_repn='DCC', # the disagregated convex combination method 
-                                          f_rule=pw_rule)
+                self.get_variable('cost',time=None,indexed=True),
+                self.input_variable(),
+                pw_pts=in_pts,
+                pw_constr_type='LB',
+                pw_repn='DCC', # the disagregated convex combination method 
+                f_rule=pw_rule,
+                warn_domain_coverage=False)
 
         pw_representation.name=self.iden()
+        self.max_output = pw_rule(None,None, self.max_input)
         self._parent_problem().add_component_to_problem(pw_representation)
             
                 
             
-    def output(self,time=None,evaluate=False):
+    def output(self, time=None, scenario=None, evaluate=False):
+        status = self.status_variable(time, scenario)
+        power = self.input_variable(time, scenario)        
+        if evaluate: 
+            status = value(status)
+            power = value(power)
+
         if self.is_linear: 
-            if evaluate: 
-                out = value(self.status_variable(time))*self.polynomial[0]+self.polynomial[1]*value(self.input_variable(time))
-            else:
-                out = self.status_variable(time)*self.polynomial[0]+self.polynomial[1]*self.input_variable(time)
+            out = self.polynomial[1]*power
         else: 
-            out = self.get_variable('cost',time=time,indexed=True)
+            out = self.get_variable('cost', 
+                time=time, scenario=scenario, indexed=True)
             if evaluate: out = value(out)
         
-        if self.is_pwl and self.constant_term!=0:
-            status = self.status_variable(time)
-            if evaluate: status=value(status) 
-            out += status*self.constant_term
+        if self.constant_term != 0:
+            out += status * self.constant_term
             
         return out
-    def output_true(self,input_var): 
+
+    def output_true(self, input_var, force_linear=False): 
         '''true output value of bid'''
         input_val = value(input_var)
-        if self.is_pwl:
+        
+        if (self.is_pwl or force_linear) and not self.is_linear:
+            if not self.is_pwl and self.bid_points is None:
+                # construct the bid points
+                bid_pt_outputs = map(lambda pt: polynomial_value(self.polynomial, pt), self.discrete_input_points)
+                self.bid_points = zip(self.discrete_input_points, bid_pt_outputs)
+            
             for A,B in pairwise(self.bid_points):
                 if A[0]<=input_val<=B[0]: return get_line_value(A, B, input_val) + self.constant_term
         else: 
             return polynomial_value(self.polynomial, input_val)
+
     def output_incremental(self,input_var):
         input_val = value(input_var)
         if self.is_pwl:
@@ -111,6 +130,7 @@ class Bid(OptimizationObject):
                 if A[0]<=input_val<=B[0]: return get_line_slope(A,B)
         else:
             return polynomial_incremental_value(self.polynomial,value(input_var))
+
     def output_incremental_range(self):
         if self.is_pwl: 
             input_range = self.discrete_input_points
@@ -118,15 +138,16 @@ class Bid(OptimizationObject):
             for A,B in pairwise(self.bid_points):
                 output_range.append( get_line_slope(A,B) )
         else:
-            input_range=[x for x in frange(self.min_input,self.max_input+1)]
-            output_range=[polynomial_incremental_value(self.polynomial,x) for x in input_range]
+            input_range = np.arange(self.min_input, self.max_input, 1.0)
+            output_range = [polynomial_incremental_value(self.polynomial,x) 
+                for x in input_range]
         return input_range,output_range
     def __str__(self): return 'bid_{}'.format(self.owner_id)
     def iden(self,*a,**k): return 'bid_{}'.format(self.owner_id)
 
-def is_linear(multipliers):
-    if len(multipliers)<2: return True
-    elif all(m==0 for m in multipliers[2:]): return True
+def is_linear(coefs):
+    if len(coefs)<2: return True
+    elif all(m==0 for m in coefs[2:]): return True
     else: return False
 
 def discretize_range(num_breakpoints,minimum,maximum):
@@ -203,10 +224,14 @@ def get_line_slope(A,B):
     xA,yA = A
     xB,yB = B
     return (yB-yA)*1.0/(xB-xA)
+
+
 def get_line_value(A,B,x):
-    # take a pair of points and make a linear function
-    # get the value of the function at x
-    # see http://bit.ly/Pd4z4l
+    '''
+    take a pair of points and make a linear function
+    get the value of the function at x
+    see http://bit.ly/Pd4z4l
+    '''
     xA,yA = A
     slope = get_line_slope(A,B)
     return slope*(value(x) - xA) + yA

@@ -1,19 +1,14 @@
 '''Test the constraint behavior of the generators'''
 
-from attest import Tests,Assert,assert_hook
 import logging
 logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s')
 
-from minpower import optimization,powersystems,schedule,solve,config
-from minpower.powersystems import Generator
 from minpower.optimization import value
 
-from test_utils import solve_problem,make_loads_times,singletime,make_cheap_gen,make_mid_gen,make_expensive_gen
+from test_utils import *
 
-generation = Tests()
-test_new = Tests()
 
-@generation.test
+@istest
 def power_maximum():
     '''
     Create two generators, one cheap and one expensive. 
@@ -29,7 +24,7 @@ def power_maximum():
     power_system,times=solve_problem(generators,**make_loads_times(Pd))
     assert generators[0].power(times[0]) == Pmax
     
-@generation.test
+@istest
 def power_minimum():
     '''
     Create two generators, one cheap and one expensive, status on for both.
@@ -45,7 +40,7 @@ def power_minimum():
     power_system,times=solve_problem(generators,**make_loads_times(Pd))
     assert generators[1].power(times[0]) == Pmin
 
-@generation.test
+@istest
 def ramp_up():
     '''
     Create 2 gen, cheaper one with ramp up limit. 
@@ -62,7 +57,7 @@ def ramp_up():
     print generators[1]._parent_problem()
     assert generators[0].power(times[1]) - generators[0].power(times[0]) == ramp_limit
     
-@generation.test
+@istest
 def ramp_down():
     '''
     Create 2 gen, expensive one with ramp down limit. 
@@ -76,10 +71,10 @@ def ramp_down():
         ]
     initial = [{'P':250},{'P':250}]
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[550,450]))
-    ramp_rate = generators[1].power(times[1]) - generators[1].power(times[0])
-    assert ramp_rate == ramp_limit
+    ramp_rate = value(generators[1].power(times[1])) - value(generators[1].power(times[0]))
+    assertAlmostEqual(ramp_rate, ramp_limit)
 
-@generation.test
+@istest
 def ramp_up_initial():
     '''
     Create 2 gen, cheaper one with ramp up limit. 
@@ -98,7 +93,7 @@ def ramp_up_initial():
     assert ramp_rate == ramp_limit
 
 
-@generation.test
+@istest
 def ramp_down_initial():
     '''
     Create 2 gen, expensive one with ramp down limit. 
@@ -117,7 +112,7 @@ def ramp_down_initial():
 
 
 
-@generation.test
+@istest
 def min_up_time():
     '''
     Create two generators: cheap with max power limit, exp. with min up time and min power limits.
@@ -136,7 +131,7 @@ def min_up_time():
 
 
 
-@generation.test
+@istest
 def min_down_time():
     '''
     Create three generators: 
@@ -155,13 +150,14 @@ def min_down_time():
         dict(P= 100, u=True),
         dict(P=40, u=True,hoursinstatus=0),
         dict(u=False)]
-    _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[150,10,140,140]))
-    limgen_status=Assert([generators[1].status(t) for t in times])
+
+    _, times = solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[150,10,140,140]))
+    limgen_status = [generators[1].status(t) for t in times]
     expensive_status_t2 = generators[2].status(times[2])
     assert limgen_status==[1,0,0,1] and expensive_status_t2==1
 
 
-@generation.test
+@istest
 def start_up_cost():
     '''
     Create two generators:
@@ -180,7 +176,8 @@ def start_up_cost():
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[80,120]))
     assert generators[1].cost_startup(times[1])==startupcost
 
-@generation.test
+
+@istest
 def shut_down_cost():
     '''
     Create two generators, both on:
@@ -199,7 +196,8 @@ def shut_down_cost():
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[150,10]))
     assert generators[1].cost_shutdown(times[1])==shutdowncost
 
-@generation.test
+
+@istest
 def min_up_time_longer():
     '''
     Create two generators: cheap with max power limit, exp. with min up time and min power limits.
@@ -218,7 +216,3 @@ def min_up_time_longer():
     #logging.critical([(generators[1].startup(t),generators[1].shutdown(t)) for t in times])
     #logging.critical(problem.constraints['minuptime_g1t01'])
     assert limgen_status == [0,1,1,1,1,1,1,1,1,0] or limgen_status == [1,1,1,1,1,1,1,1,0,0]
-
-    
-if __name__ == "__main__": 
-    generation.run()

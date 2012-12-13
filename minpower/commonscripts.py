@@ -4,55 +4,90 @@ Many of them are one liners.
 """
 
 import os
+import sys
 import csv
-import itertools,operator
+import logging
+import itertools
+import operator
 import datetime
-from dateutil import parser
+import numpy as np
+import pandas as pd
+from pandas import DataFrame, Series, date_range
 
+from pprint import pprint
 try: # for development
-    from pdb import set_trace as debug #pudb
-except: pass 
+    from ipdb import set_trace #pudb
+    import IPython
+    from IPython.frontend.terminal.embed import InteractiveShellEmbed
+#    from IPython.config.loader import Config
+#    
+#    cfg = Config()
+#    cfg.InteractiveShellEmbed.prompt_in1="myprompt [\\#]> "
+#    cfg.InteractiveShellEmbed.prompt_out="myprompt [\\#]: "
+#    cfg.InteractiveShellEmbed.profile=ipythonprofile
+    ipython_shell = InteractiveShellEmbed() #config=cfg, user_ns=namespace, banner2=banner)
+except: 
+    from pdb import set_trace
+
+class StreamToLogger(object):
+   """
+   Fake file-like stream object that redirects writes to a logger instance.
+   """
+   def __init__(self, logger=logging, log_level=logging.INFO):
+      self.logger = logger
+      self.log_level = log_level
+      self.linebuf = ''
+ 
+   def write(self, buf):
+      for line in buf.rstrip().splitlines():
+         self.logger.log(self.log_level, line.rstrip())
+
+
+def gen_time_dataframe(generators, times, values=()):
+    kwargs = dict(columns = [str(g) for g in generators])
+    try: kwargs['index'] = times.strings.index
+    except AttributeError: kwargs['index'] = times
+        
+    if values:
+        values = np.array(values)
+        if values.shape != (len(times),len(generators)):
+            values = values.T
+        df = DataFrame(values, **kwargs)
+    else: 
+        df = DataFrame(**kwargs)
+        
+    df.index.name = 'time'
+    return df
+    
+def ts_from_csv(filename,index_col=0, squeeze=True, timezone=None, is_df=True, **kwargs):
+    kwargs['header']=0 if is_df else None
+    
+    df = pd.read_csv(filename, index_col=index_col, squeeze=squeeze, **kwargs)
+    df.index = pd.DatetimeIndex(df.index)
+    if timezone is not None: 
+        # pandas seems to convert any stamps to UTC in the DatetimeIndex call
+        df.index = df.index.tz_localize('UTC').tz_convert(timezone)
+    return df
 
 def bool_to_int(x): return 1 if x else 0
 
+class DotDict(dict):
+    '''a dict with dot notation access'''
+    def __getattr__(self, attr):
+        return self.get(attr)
+    def copy(self): return DotDict(dict(self))
+    
+    __setattr__= dict.__setitem__
+    __delattr__= dict.__delitem__
+
 ###### matrix stuff #######
-def getColumn(matrix,colNum): return [row[colNum] for row in matrix]#equiv to matrix(:,j)
-def elementwiseMultiply(La,Lb): return map(operator.mul, La,Lb)
 def elementwiseAdd(La,Lb): return map(operator.add, La,Lb)
 def transpose(listoflists): return map(None,*listoflists)
 def flatten(listoflists):
     '''Flatten one level of nesting'''
     return list(itertools.chain.from_iterable(listoflists))
-def unflatten(flatlist,levels):
-    '''Turn a flat list into a nested list, with a specified number of lists per nesting level.
-    Excess elements are silently ignored.
-        
-    >>> unflatten(range(12),[2,2,3])
-    [[[0, 1, 2], [3, 4, 5]], [[6, 7, 8], [9, 10, 11]]]
-    '''
-    def nestgenerator(flatlist,levels):
-        if levels:
-            it = nestgenerator(flatlist,levels[1:])
-            while 1: yield list(itertools.islice(it,levels[0]))
-        else:
-            for d in flatlist: yield d        
-    return nestgenerator(flatlist,levels).next()
-def unique(seq): 
-    # order preserving, <http://bit.ly/pyUnique>
-    U = []
-    [U.append(i) for i in seq if not U.count(i)]
-    return U
 def within(x, val=0, eps=1e-3): return (val-eps) <= x <= (val+eps)
 
-def frange(start, stop, step=1.0):
-    """Like range(), but returns list of floats instead
-    All numbers are generated on-demand using generators
-    """
-
-    cur = float(start)
-    while cur < stop:
-        yield cur
-        cur += step
 
 def replace_all(seq, obj, replacement):
     def with_index(seq):
@@ -69,14 +104,7 @@ def pairwise(iterable):
     return itertools.izip(a, b)
 
 ##### csv stuff #####
-def csvColumn(filenm,fieldNm):
-    '''get a single column of csv data'''
-    data,fields=readCSV(filenm)
-    try: num=fields.index(fieldNm) #column number to return
-    except ValueError or IndexError: num=indexCaseSpaceInsensitive(fields,fieldNm) #try again with case and space insensitive        
-    return getColumn(data,num)
-
-def readCSV(filenm,validFields='all'):
+def readCSV(filenm, validFields='all'):
     """
     Read data from a csv into a list of lists. 
     Does parsing of each cell with :func:`csvDataConvert`.
@@ -166,12 +194,14 @@ def convert_str2num(s):
 def indexCaseSpaceInsensitive(L,s): return map(drop_case_spaces,L).index( drop_case_spaces(s) )
 def drop_case_spaces(s): 
     '''get rid of spaces in a string and make lower case. will also work with list of strings'''
-    try: return s.lower().replace(' ','')
+    try: return s.lower().replace(' ','').replace('_','')
     except AttributeError: 
         if s is None: return None
         elif isinstance(s, list): return map(drop_case_spaces,s)
 
-def toPercent(val,digits=0): return '{p:.{d}%}'.format(p=val,d=digits)            
+def to_percent(val, digits=0): return '{p:.{d}%}'.format(p=val,d=digits)
+
+
 ##################### file stuff ###########################
 def splitFilename(fullPathFilenm):
     '''split a filename into its directory, filename, and extension'''
@@ -181,34 +211,14 @@ def splitFilename(fullPathFilenm):
 def joindir(dir,file): return os.path.join(dir, file)
             
 ################### time stuff ###########################
-def parseTime(str,formatter=None): 
-    if formatter is None: return parser.parse(str)
-    else: return parser.parse(str,**formatter)
-def getTimeFormat(str):
-    formatter=dict()
-    t=parseTime(str)
-    if t == parseTime(str,dict(dayfirst=True)): formatter['dayfirst']=True
-    if t == parseTime(str,dict(yearfirst=True)): formatter['yearfirst']=True
-    return formatter
 def hours(t): 
     try:  return t.days*24.0 + t.seconds/3600.0 #t is a datetime object
     except AttributeError: return datetime.timedelta(hours=t) #t is a number
-def show_clock(show=True):
-    return 'clock time={}'.format(datetime.datetime.now().strftime('%H:%M:%S')) if show else ''
 
 ####################### class stuff #######################
 def getattrL(L,attribute='name'):
     '''get the attribute of each class instance in a list'''
     return [getattr(item,attribute) for item in L]
-def getclass_inlist(L,values,attribute='name'):
-    if isinstance(values,str): values=[values]
-    attrL=getattrL(L,attribute)
-    try: indL=[attrL.index(value) for value in values]
-    except ValueError:
-        print attrL
-        raise
-    if len(indL)==1: return L[indL[0]]
-    else: return [L[ind] for ind in indL]
 
 def update_attributes(instance, variables, exclude=['self'],include=None):
     """Update instance attributes
@@ -224,30 +234,3 @@ def update_attributes(instance, variables, exclude=['self'],include=None):
     else:
         if 'self' not in exclude: exclude.append('self')
         [setattr(instance, k, v) for k, v in variables.items() if k not in exclude]
- 
-####################### dict stuff ########################
-def subset(D, subsetL):
-    '''subset of dictionary'''
-    subsetLcopy=subsetL
-    for k,key in enumerate(subsetL): #ensure that subset doesn't contain any keys not in D already
-        if key not in D: subsetLcopy.pop(k)
-    return dict(zip(subsetL, map(D.get, subsetLcopy)))
-def subsetexcept(D,exceptL):
-    '''dictionary without exceptions list'''
-    for e in exceptL: D.pop(e)
-    return D
-
-
-def show_memory_backrefs(name):
-    import objgraph
-    objgraph.show_backrefs(objgraph.by_type(name),filename='backrefs-{}.png'.format(name))
-def show_memory_refs(name):
-    import objgraph,inspect
-    try: obj=objgraph.by_type(name)[0]
-    except IndexError:
-        print 'no object of type',name  
-        return
-    objgraph.show_chain(objgraph.find_backref_chain( obj , inspect.ismodule),filename='chain-{}.png'.format(name))
-def show_memory_growth():
-    import objgraph
-    objgraph.show_growth()

@@ -1,8 +1,8 @@
 """
-Provide the defaults and data for other modules.
-Specifically, the :class:`~powersystems.Generator` defaults
-are provided by :data:`generator_defaults`.
+Provide the defaults and configuration for other modules.
+`user_config` is treated as a global in minpower.
 """
+
 import logging
 from commonscripts import DotDict
 

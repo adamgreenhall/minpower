@@ -1,14 +1,18 @@
 """
 An optimization command library for Minpower.
+Basically a wrapper around Coopr's `pyomo.ConcreteModel` class.
 """
+import logging, time, weakref
 import coopr.pyomo as pyomo
 from coopr.opt.base import solvers as cooprsolver
 
+# make pyomo recognize that True == 1
 pyomo.base.numvalue.KnownConstants[True]=pyomo.base.numvalue.NumericConstant(None, None, 1.0)
 
-variable_kinds = dict(Continuous=pyomo.Reals, Binary=pyomo.Boolean, Boolean=pyomo.Boolean)
-
-import logging,time,weakref
+variable_kinds = dict(
+    Continuous=pyomo.Reals, 
+    Binary=pyomo.Boolean, 
+    Boolean=pyomo.Boolean)
 
 from config import user_config
 from commonscripts import update_attributes
@@ -16,27 +20,32 @@ from commonscripts import update_attributes
 class OptimizationObject(object):
     '''
     A base class for an optimization object. 
-    This also serves as a template for how :class:`~OptimizationObject`s are structured.
+    This also serves as a template for
+    how :class:`~OptimizationObject`s are structured.
     '''
     def __init__(self,*args,**kwargs):
         '''
         Individual class defined.
         Initialize the object. Often this just means assigning 
         all of the keyword arguments to self.
-        The :meth:`~OptimizationObject.init_optimization` method should be called in __init__.
+        The :meth:`~OptimizationObject.init_optimization` method 
+        should be called in __init__.
         '''
         update_attributes(self,locals()) #load in inputs
         self.init_optimization()
         
+
     def init_optimization(self):
         '''
         Initialize optimization components: add a container for children.
-        If the index is not defined, make it a hash of the object to ensure the index is unique.
+        If the index is not defined, make it a hash of the object
+        to ensure the index is unique.
         '''
         self.children=dict()
         if getattr(self,'index',None) is None: self.index=hash(self)
         if getattr(self,'name',None)=='': self.name = self.index+1 #1 and up naming
         
+
     def create_variables(self, times,*args,**kwargs):
         ''' 
         Individual class defined.
@@ -47,6 +56,8 @@ class OptimizationObject(object):
         a shortcut methods, like :meth:`~powersystems.Generator.power`).
         '''
         return #self.all_variables(times)
+
+
     def create_objective(self,times):
         '''
         Individual class defined.
@@ -54,6 +65,8 @@ class OptimizationObject(object):
         :returns: an expression, the default is 0
         '''
         return 0
+
+
     def create_constraints(self, times,*args,**kwargs):
         ''' 
         Individual class defined.
@@ -65,10 +78,19 @@ class OptimizationObject(object):
         '''
         return #self.all_constraints(times)
  
-    def _t_id(self,name,time): return name.replace(' ','_')+'_'+self.iden(time)
-    def _id(self,name): return name.replace(' ','_')+'_'+str(self)
+
+    def _t_id(self,name,time):
+        return name.replace(' ','_')+'_'+self.iden(time)
+
+
+    def _id(self,name):
+        return name.replace(' ','_')+'_'+str(self)
     
-    def add_variable(self,name,time=None,fixed_value=None,index=None,**kwargs):
+
+    def add_variable(self, name, time=None,
+        fixed_value=None,
+        index=None,
+        **kwargs):
         '''
         Create a new variable and add it to the object's variables and the model's variables.
         :param name: name of optimization variable.
@@ -84,7 +106,7 @@ class OptimizationObject(object):
         if index is None:
             name=self._t_id(name,time)
             if fixed_value is None:
-                var=pyomo.Var(name=name, **map_args(**kwargs)) #new_variable(name=short_name,**kwargs)
+                var=pyomo.Var(name=name, **map_args(**kwargs))
                 self._parent_problem().add_component_to_problem(var)
             else:
                 var=pyomo.Param(name=name,default=fixed_value)
@@ -118,7 +140,7 @@ class OptimizationObject(object):
     def add_constraint(self,name,time,expression): 
         '''Create a new constraint and add it to the object's constraints and the model's constraints.'''
         name=self._t_id(name,time)
-        self._parent_problem().add_component_to_problem(new_constraint(name,expression))
+        self._parent_problem().add_component_to_problem(pyomo.Constraint(name=name, rule=expression))
         
     def get_variable(self,name,time=None,indexed=False,scenario=None):
         if indexed: 
@@ -156,7 +178,10 @@ class OptimizationObject(object):
         
         
     def get_child(self,name,time=None): 
-        '''Get a child :class:`~optimization.OptimizationObject` dependent on time from this object.'''
+        '''
+        Get a child :class:`~optimization.OptimizationObject` 
+        dependent on time from this object.
+        '''
         try: 
             if time is None: return self.children[name]
             else: return self.children[name][time] 
@@ -167,10 +192,13 @@ class OptimizationObject(object):
     def iden(self,time):
         '''
         Individual class defined.
-        Identifing string for the object, depending on time. Used to name variables and constraints for the object.  
+        Identifing string for the object, depending on time. 
+        Used to name variables and constraints for the object.  
         '''
-        msg='the iden() method must be overwritten for a child of the OptimizationObject class. this one is '+str(type(self))
-        raise NotImplementedError(msg)
+        raise NotImplementedError('''
+            the iden() method must be overwritten 
+            for a child of the OptimizationObject class. 
+            this one is ''' + str(type(self)))
         return 'some unique identifying string'
     def __str__(self): 
         '''
@@ -224,7 +252,8 @@ class OptimizationProblem(OptimizationObject):
         self._model._add_component(name,var)
     def add_constraint(self,name,expression, time=None):
         if time is not None: name=self._t_id(name,time)
-        self._model._add_component(name,new_constraint(name,expression))
+        self._model._add_component(name, 
+            pyomo.Constraint(name=name, rule=expression))
     def get_component(self,name,scenario=None): 
         '''Get an optimization component'''
         if scenario is None:
@@ -325,11 +354,7 @@ class OptimizationProblem(OptimizationObject):
             
     def solve(self):
         '''
-        Solve the optimization problem.
-        
-        :param solver: name of solver (lowercase string).
-        :param problem_filename: write MIP problem formulation to a file, if a file name is specified
-        :param get_duals: get the duals, or prices, of the optimization problem
+        Send the optimization problem off to the solver.
         '''        
         
         solver = user_config.solver
@@ -418,13 +443,17 @@ class OptimizationProblem(OptimizationObject):
         if not keepFiles: logger.setLevel(current_log_level)
         self.solved = detect_status(results, self._opt_solver.name)
         
-        try: logging.debug('solution gap={}'.format(results.Solution[0]['Gap']))
+        try: logging.debug('solution gap={}'.format(
+            results.Solution[0]['Gap']))
         except: pass
         
         return results, elapsed
     
     def fix_binary_variables(self, fix_offs=True):
-        _fix_binary_variables(self._model, self.stochastic_formulation, fix_offs)
+        _fix_binary_variables(
+            self._model, 
+            self.stochastic_formulation, 
+            fix_offs)
             
         
     def _unfix_variables(self):
@@ -477,19 +506,6 @@ def dual(constraint,index=None):
     '''Dual of optimization constraint, after the problem is solved.'''
     return constraint[index].dual
 
-def new_variable(name='',kind='Continuous',low=None,high=None):
-    '''
-    Create an optimization variable.
-    :param name: name of optimization variable.
-    :param kind: type of variable, specified by string. {Continuous or Binary/Boolean}
-    :param low: low limit of variable
-    :param high: high limit of variable
-    '''
-    return pyomo.Var(name=name,bounds=(low,high),domain=variable_kinds[kind])
-def new_constraint(name,expression): 
-    '''Create an optimization constraint.'''
-    return pyomo.Constraint(name=name,rule=expression)
-
 def detect_status(results, solver):
     '''decide between a solver success or failure'''
     status_text = str(results.solver[0]['Termination condition'])
@@ -520,15 +536,23 @@ class OptimizationError(Exception):
         Exception.__init__( self, self.value)
     def __str__(self): return self.value
     
+
 class OptimizationResolveError(OptimizationError):
     '''Error that occurs when re-solving an optimization problem.'''
     pass
 
+
 class NotInModelError(Exception):
-    '''Error that occurs when trying to find a component in the optimization model.'''
+    '''
+    Error that occurs when trying to find
+    a component in the optimization model.
+    '''
     def __init__(self, ivalue):
-        if ivalue: self.value=ivalue
-        else: self.value="Not in Model Error: the component you are looking for wasn't found in the model"
+        if ivalue: 
+            self.value = ivalue
+        else: 
+            self.value = '''the component you are looking 
+                for wasn't found in the model'''
         Exception.__init__( self, self.value)
 
     def __str__(self): return self.value

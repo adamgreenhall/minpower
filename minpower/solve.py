@@ -7,7 +7,7 @@ problems and solving them.
 
 import sys, os, logging, subprocess
 import time as timer
-
+import argparse
 from optimization import OptimizationError
 import get_data, powersystems, stochastic, results
 from config import user_config
@@ -49,9 +49,7 @@ def solve_multistage(power_system, times, scenario_tree):
     return storage, stage_times
 
 def standaloneUC():
-    # standalone_minpower
-    from config import user_config
-    import argparse
+    '''the hook for the ``standalone_minpower`` script'''
 
     parser = argparse.ArgumentParser()
     parser.add_argument('directory', type=str, help='the problem direcory')
@@ -117,19 +115,7 @@ def solve_problem(datadir='.',
     Solve a optimization problem specified by spreadsheets in a directory.
     Read in data, create and solve the problem, and return solution.
     The problem type is determined by the data.
-
-    :param datadir: directory of data files, see :mod:`get_data`
-    :param shell: output solution information to the command line
-    :param problemfile: write the problem formulation to a problem-formulation.lp file
-    :param visualization: create a visualization of the solution and save it to a file
-    :param csv: create a spreadsheet of the solution
-    :param solver: choice of solver, a lowercase string
-    :param num_breakpoints: number of break points to use in linearization of bid (or cost) polynomials (equal to number of segments + 1)
-    :param hours_commitment: maximum length of a single unit commitment, times beyond this will be divided into multiple problems and solved in a rolling commitment
-    :param hours_overlap: overlap of commitments for rolling commitments
-    :param get_duals: get the duals, or prices, of the optimization problem
-    :param dispatch_decommit_allowed: allow de-commitment of units in an ED -- useful for getting initial conditions for UCs
-    :returns: :class:`~results.Solution` object
+    All options are set within `user_config`.
     """
 
     _setup_logging()
@@ -162,6 +148,7 @@ def solve_problem(datadir='.',
 
 def create_solve_problem(power_system, times, scenario_tree=None,
     multistage=False, stage_number=None, rerun=False):
+    '''create and solve an optimization problem.'''
 
     if user_config.problemfile:
         user_config.problemfile = joindir(
@@ -178,14 +165,7 @@ def create_solve_problem(power_system, times, scenario_tree=None,
 
 def create_problem(power_system, times, scenario_tree=None,
     multistage=False, stage_number=None, rerun=False):
-    """
-    Create an optimization problem.
-
-    :param power_system: a :class:`~powersystems.PowerSystem` object
-    :param times: :class:`~schedule.Timelist` object
-
-    :returns: :class:`~optimization.Problem` object
-    """
+    """Create an optimization problem."""
 
     logging.debug('initialized problem')
     power_system.create_variables(times)
@@ -232,10 +212,10 @@ def _setup_logging():
 
 def main():
     '''
-    The command line interface for minpower. Described by:
-    minpower --help
+    The command line interface for minpower. For more info use:
+    ``minpower --help``
     '''
-    import argparse,os,traceback,sys
+    import os,traceback,sys
 
     parser = argparse.ArgumentParser(description='Minpower command line interface')
     parser.add_argument('directory', type=str,

@@ -104,14 +104,7 @@ def pairwise(iterable):
     return itertools.izip(a, b)
 
 ##### csv stuff #####
-def csvColumn(filenm,fieldNm):
-    '''get a single column of csv data'''
-    data,fields=readCSV(filenm)
-    try: num=fields.index(fieldNm) #column number to return
-    except ValueError or IndexError: num=indexCaseSpaceInsensitive(fields,fieldNm) #try again with case and space insensitive        
-    return getColumn(data,num)
-
-def readCSV(filenm,validFields='all'):
+def readCSV(filenm, validFields='all'):
     """
     Read data from a csv into a list of lists. 
     Does parsing of each cell with :func:`csvDataConvert`.

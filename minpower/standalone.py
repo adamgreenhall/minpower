@@ -1,3 +1,9 @@
+"""
+A module to workaround a memory leak in coopr by saving the results 
+of each day of a rolling unit commitment to disk (in HDF format)
+and reloading them to run the next day as a memory independent subprocess.
+"""
+
 import os
 import pandas as pd
 from pandas import Series, DataFrame

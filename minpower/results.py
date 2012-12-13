@@ -41,24 +41,24 @@ def full_filename(filename):
 def classify_problem(times,power_system):
     '''
     Classify the type of problem: ED, OPF, UC, or SCUC.
-
-    :param times: a :class:`~schedule.Timelist` object
-    :param power_system: a :class:`~powersystems.PowerSystem` object
+    and if it is stochastic or not.
     '''
-    if not power_system.lines and len(times)==1: kind='ED'
-    elif len(times)==1: kind='OPF'
-    elif not power_system.lines: kind='UC'
-    else: kind='SCUC'
+    if not power_system.lines and len(times)==1: 
+        kind='ED'
+    elif len(times)==1: 
+        kind='OPF'
+    elif not power_system.lines: 
+        kind='UC'
+    else: 
+        kind='SCUC'
 
-    if any(getattr(g,'is_stochastic',False) for g in power_system.generators()): kind='stochastic_'+kind
+    if power_system.is_stochastic:
+        kind='stochastic_'+kind
     return kind
 
 def make_solution(power_system, times, **kwargs):
     '''
     Create a :class:`solution.Solution` object for a power system over times.
-
-    :param times: a :class:`~schedule.Timelist` object
-    :param power_system: a :class:`~powersystems.PowerSystem` object
     '''
     problem_type=dict(
         ED=Solution_ED,
@@ -71,7 +71,7 @@ def make_solution(power_system, times, **kwargs):
     return problem_type[kind](power_system,times,**kwargs)
 
 def make_multistage_solution(power_system, stage_times, stage_solutions):
-    '''Create a multi stage solution object.'''
+    '''Create a multi stage solution'''
     if power_system.lines: logging.warning('no visualization for multistage SCUC yet')
     klass = MultistageStandalone if getattr(stage_solutions, 'path', False) else Solution_UC_multistage
     return klass(power_system, stage_times, stage_solutions)
@@ -178,19 +178,10 @@ class Solution(object):
                 
         out.extend(self.info_cost())
         print '\n'.join([str(o) for o in out])
-    def info_status(self): return ['solved in {time:0.4f} sec'.format(time=self.solve_time)]
-    def info_price(self,t): return ['price={}'.format(self.lmps[str(t)])]
-
-#    def info_generators(self,t):
-#        generators = self.generators
-#        out=['generator info:']
-#        if len(self.buses)>1: out.append('bus={}'.format(self.get_values(generators,'bus')))
-#        out.extend(['name={}'.format(self.get_values(generators,'name')),
-#                    'u={}'.format(self.get_values(generators,'status',t)),
-#                    'P={}'.format(self.get_values(generators,'power',t)),
-#                    # 'Pavail={}'.format(self.get_values('generators','power_available',t)),
-#                    'IC={}'.format(self.get_values(generators,'incrementalcost',t))])
-#        return out
+    def info_status(self): 
+        return ['solved in {time:0.4f} sec'.format(time=self.solve_time)]
+    def info_price(self,t): 
+        return ['price={}'.format(self.lmps[str(t)])]
 
     def info_loads(self,t):
         out = ['load info:']
@@ -289,9 +280,11 @@ class Solution_ED(Solution):
                     plotted_loads.append( load.bid(t).plot(P=value(load.power(t)),linestyle=':') )
                     names_loads.append(load.name)
             plot.xlabel('P [MWh]')
-            if plotted_loads:     plot.ylabel('Cost-Benifit [$/h]')
-            else:                plot.ylabel('Cost [$/h]')
-            legendGens=plot.legend(plotted_gens, names_gens, fancybox=True,title='Generators:',loc='best')
+            if plotted_loads:     
+                plot.ylabel('Cost-Benifit [$/h]')
+            else:
+                plot.ylabel('Cost [$/h]')
+            legendGens = plot.legend(plotted_gens, names_gens, fancybox=True,title='Generators:',loc='best')
             if plotted_loads:
                 plot.legend(plotted_loads, names_loads, fancybox=True,title='Loads:',loc='best')
                 plot.gca().add_artist(legendGens) #add first legend to the axes manually bcs multiple legends get overwritten
@@ -526,7 +519,8 @@ class Solution_Stochastic(Solution):
         else:
             getval = lambda s,gen,t: value(getattr(gen,method)(t, s))
         return pd.Panel(
-            [[[getval(s,gen,t) for gen in self.generators] for t in times] for s in self.scenarios],
+            [[[getval(s,gen,t) for gen in self.generators] 
+                for t in times] for s in self.scenarios],
             items = [s for s in self.scenarios],
             major_axis = times.strings.index,
             minor_axis = [str(g) for g in self.generators])
@@ -617,10 +611,11 @@ class Solution_Stochastic(Solution):
 
 class Solution_Stochastic_UC(Solution_Stochastic):
     def saveCSV(self):
-        '''generator power values and statuses for stochastic unit commitment'''
+        '''generator power and status values for stochastic unit commitment'''
         try: self.generators_power.to_csv(full_filename('commitment-power.csv'))
         except AttributeError:
-            logging.warn('didnt resolve - no power values are available for csv format')
+            logging.warn('''didnt resolve - no power
+                 values are available for csv format''')
         self.generators_status.to_csv(full_filename('commitment-status.csv'))
 
 

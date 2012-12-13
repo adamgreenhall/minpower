@@ -300,8 +300,7 @@ class Generator(OptimizationObject):
 
 class Generator_nonControllable(Generator):
     """
-    Describes a generator with a fixed schedule.
-    The scedule is defined by a :class:`~schedule.Schedule` object.
+    A generator with a fixed schedule.
     """
     def __init__(self,
                  schedule=None,
@@ -358,7 +357,7 @@ class Generator_nonControllable(Generator):
 
 class Generator_Stochastic(Generator_nonControllable):
     """
-    Describes a generator with a stochastic power output.
+    A generator with a stochastic power output.
     """
     def __init__(self,
                  scenario_values=None,
@@ -411,56 +410,3 @@ class Generator_Stochastic(Generator_nonControllable):
         return
     def cost_startup(self, time, scenario=None): return 0
     def cost_shutdown(self, time, scenario=None): return 0
-
-
-#def makeGenerator(kind='generic',**kwargs):
-#    """
-#    Create a :class:`~powersystems.Generator` object
-#    (or a :class:`~powersystems.Generator_nonControllable`
-#    object depending on the kind). Set defaults
-#    depending on the kind (default values come from :mod:`config`).
-
-#    :param kind: define the kind of generator (all
-#        kinds are defined in :data:`config.generator_kinds`)
-
-#    Other parameters are detailed in :class:`~powersystems.Generator`.
-
-#    :returns: a :class:`~powersystems.Generator` object
-#    """
-
-#    def parse_args(kind,**inputs):
-#        '''check kind pull defaults from the config file'''
-#        kind=drop_case_spaces(kind)
-#        if kind not in config.generator_kinds:
-#            logging.info('"{k}" is an unknown kind of generator, using generic defaults.'.format(k=kind))
-#            kind='generic'
-
-#        ignore_names=['power','is_controllable','costcurvestring']
-
-#        #get defaults from config file
-#        defaults=dict()
-#        for name,val in config.generator_defaults.iteritems():
-#            try: defaults[name]=val[kind]
-#            except KeyError:
-#                if inputs.get(name,None) in ['',None] and name not in ignore_names: logging.debug('no {d} default found for kind "{k}", using default from generic.'.format(d=name,k=kind))
-#                defaults[name]=val['generic']
-#            except TypeError:
-#                defaults[name]=val #no kind-distincted defaults
-
-#        #use the values that are defined in the inputs
-#        outputs=defaults
-#        outputs.update(inputs)
-#        return kind,outputs
-
-
-#    kind,kwargs=parse_args(kind,**kwargs)
-
-#    if _has_valid_attr(kwargs,'schedule'):
-#       classname=Generator_nonControllable
-#    else:
-#        classname=Generator
-#        kwargs.pop('power')
-
-#    kwargs.pop('is_controllable')
-#    try: return classname(kind=kind,**kwargs)
-#    except: set_trace()

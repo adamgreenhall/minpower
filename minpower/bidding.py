@@ -7,15 +7,7 @@ from coopr.pyomo import Piecewise
 
 class Bid(OptimizationObject):
     """
-    Descibes a bid as modeled by :attr:model. Bids contain variables
-    which are dependent on time while :class:`~bidding.PWLmodel` objects
-    do not store time dependent information.
-    
-    :param model: model for the bid, either :class:`~bidding.PWLmodel`,
-        :class:`~bidding.convexPWLmodel`, or :class:`~bidding.LinearModel`  
-    :param times: the times the bids take place over 
-    :param input_variable: input variable method for owner
-    :param status_variable: status variable method for owner
+    A bid modeled by a polynomial or a set of piecewise points.
     """
     def __init__(self,
             polynomial='10P',
@@ -149,9 +141,9 @@ class Bid(OptimizationObject):
     def __str__(self): return 'bid_{}'.format(self.owner_id)
     def iden(self,*a,**k): return 'bid_{}'.format(self.owner_id)
 
-def is_linear(multipliers):
-    if len(multipliers)<2: return True
-    elif all(m==0 for m in multipliers[2:]): return True
+def is_linear(coefs):
+    if len(coefs)<2: return True
+    elif all(m==0 for m in coefs[2:]): return True
     else: return False
 
 def discretize_range(num_breakpoints,minimum,maximum):
@@ -228,10 +220,14 @@ def get_line_slope(A,B):
     xA,yA = A
     xB,yB = B
     return (yB-yA)*1.0/(xB-xA)
+
+
 def get_line_value(A,B,x):
-    # take a pair of points and make a linear function
-    # get the value of the function at x
-    # see http://bit.ly/Pd4z4l
+    '''
+    take a pair of points and make a linear function
+    get the value of the function at x
+    see http://bit.ly/Pd4z4l
+    '''
     xA,yA = A
     slope = get_line_slope(A,B)
     return slope*(value(x) - xA) + yA

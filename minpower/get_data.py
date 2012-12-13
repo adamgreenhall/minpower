@@ -2,8 +2,8 @@
 Get data from spreadsheet files and parse it into 
 :class:`~Generator`, :class:`~powersystems.Load`,
 :class:`~powersystems.Bus`, and :class:`~powersystems.Line` objects.
-Also extract the time information and create a :class:`~schedule.Timelist`
-object.
+Also extract the time information and create all
+    :class:`~schedule.Timelist` objects.
 """
 
 from pandas import Series, read_csv, Timestamp
@@ -121,19 +121,6 @@ def parsedir(
     """
     Import data from spreadsheets and build lists of
     :mod:`powersystems` classes.
-
-    :param datadir:      directory of data
-    :param file_gens:    spreadsheet of generator data
-    :param file_loads:   spreadsheet of load data
-    :param file_lines:   spreadsheet of line data (not required for ED,UC problems)
-    :param file_init:    spreadsheet of initial time generator data
-        (not required for ED,OPF problems. Defaults will be used
-        for UC problems if not specified.)
-    
-    :return generators:, list of :class:`~Generator` objects 
-    :return loads:, list of :class:`~Load` objects
-    :return lines:, list of :class:`~powersystems.Line` objects
-    :return times:, list of :class:`~schedule.Timelist` object
     """
     
     datadir = user_config.directory
@@ -178,8 +165,7 @@ def parsedir(
 def setup_initialcond(data,generators,times):
     '''
     Take a list of initial conditions parameters and
-    add information to each :class:`~Generator` 
-    object.
+    add information to each :class:`~Generator` object.
     '''
     if len(times)<=1: return #for UC,ED no need to set initial status
     
@@ -205,14 +191,6 @@ def setup_initialcond(data,generators,times):
 def build_class_list(data, model, times=None, timeseries=None):
     """
     Create list of class instances from data in a spreadsheet.
-    
-    :param data: a list of dictionaries describing the parameters
-    :param model: the :mod:`powersystems` class to map the data to
-    :param datadir: the directory where the data (and schedule files are)
-    :param times: for :mod:`powersystems` classes which have schedule file information,
-        a master:class:`~schedule.Timelist` list to pass to :class:`~schedule.Schedule`
-    
-    :returns: a list of class objects
     """
     datadir = user_config.directory
     is_generator = (model == Generator)
@@ -301,16 +279,9 @@ def _tsorfile(filename, datadir, timeseries, col):
 
 def setup_times(generators_data, loads_data, filename_timeseries):
     """ 
-    Create list of :class:`~schedule.Time` objects 
+    Create a :class:`~schedule.TimeIndex` object
     from the schedule files. If there are no schedule
-    files (as in ED,OPF), create just a single
-    :class:`~schedule.Time` instance.
-    
-    :param generators_data: list of dictionaries each describing a generator
-    :param loads_data:   list of dictionaries each describing a load
-    :param datadir:      the directory containing the data
-    
-    :returns: a :class:`~schedule.Timelist` object
+    files (as in ED,OPF), create an index with just a single time.
     """
     try: 
         timeseries = ts_from_csv(filename_timeseries, is_df=True)

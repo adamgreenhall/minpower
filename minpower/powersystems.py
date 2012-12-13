@@ -20,14 +20,10 @@ class Load(OptimizationObject):
     """
     Describes a power system load (demand).
     Currently only real power is considered.
-
-    :param bus: name of bus that load is on
-      (not required if ED/OPF problem)
-    :param schedule: :class:`~schedule.Schedule` object
-      (generally created automatically from file
-      by :meth:`get_data.build_class_list`)
-    :param shedding_allowed: if this load is allowed to be turned off
-    :param cost_shedding: the price of shedding 1MWh of this load
+    For OPF problems, the name of the bus can.
+    For UC problems, schedules (pandas.Series objects) are used.
+    By setting `shedding_allowed`, the amount of power can become a variable,
+        (bounded to be at most the scheduled amount).
     """
     def __init__(self,kind='varying',name='',index=None,bus=None,schedule=None,
                  shedding_allowed=False,
@@ -65,15 +61,8 @@ class Load(OptimizationObject):
 
 class Line(OptimizationObject):
     """
-    Describes a tranmission line. Currently the model
+    A tranmission line. Currently the model
     only considers real power flow under normal conditions.
-
-    :param From: name of bus line originates at
-    :param To:   name of bus line connects to
-    :param X:    line reactance (p.u.)
-    :param Pmax: maximum (positive direction) power flow over line
-    :param Pmin: maximum (negative direction) power flow over line.
-      Defaults to -:attr:`Pmax` if not specified.
     """
     def __init__(self,name='',index=None,From=None,To=None,X=0.05,Pmax=9999,Pmin=None,**kwargs):
         update_attributes(self,locals()) #load in inputs
@@ -102,7 +91,7 @@ class Line(OptimizationObject):
 
 class Bus(OptimizationObject):
     """
-    Describes a bus (usually a substation where one or more
+    A transmission bus bus (usually a substation where one or more
     tranmission lines start/end).
 
     :param isSwing: flag if the bus is the swing bus
@@ -220,7 +209,7 @@ class PowerSystem(OptimizationProblem):
             load.shedding_allowed=is_allowed
             load.cost_shedding=self.cost_load_shedding
 
-    def make_buses_list(self,loads,generators):
+    def make_buses_list(self, loads, generators):
         """
         Create list of :class:`powersystems.Bus` objects
         from the load and generator bus names. Otherwise
@@ -246,7 +235,7 @@ class PowerSystem(OptimizationProblem):
                 if ld.bus==newBus.name: newBus.loads.append(ld)
             buses.append(newBus)
         return buses
-    def create_admittance_matrix(self,buses,lines):
+    def create_admittance_matrix(self, buses, lines):
         """
         Creates the admittance matrix (B),
         with elements = total admittance of line from bus i to j.

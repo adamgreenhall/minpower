@@ -34,6 +34,7 @@ setup(
         'python-dateutil>=1.4.1',
         'ordereddict>=1.1',
         'PyYAML>=3.10',
+        'tables>=2.4',
     ],
     tests_require=[
         'nose',
@@ -47,17 +48,17 @@ setup(
 
     packages = find_packages(),
     keywords = ["power systems","optimization"],
-    
-    classifiers = [    
+
+    classifiers = [
         "Development Status :: 4 - Beta",
         "Environment :: Other Environment",
-        "Intended Audience :: Science/Research",      
+        "Intended Audience :: Science/Research",
         "Intended Audience :: Education",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3",    
+        "Programming Language :: Python :: 3",
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Mathematics",
         ],
@@ -66,8 +67,8 @@ power systems tools made beautiful
 -----------------------------------------
 
 * Solves ED, OPF, and UC problems.
-* Problems can be defined in simple spreadsheets. 
-* Visualizations are created for the answers. 
+* Problems can be defined in simple spreadsheets.
+* Visualizations are created for the answers.
 * Many solvers are supported.
 
 

@@ -34,7 +34,7 @@ setup(
         'python-dateutil>=1.4.1',
         'ordereddict>=1.1',
         'PyYAML>=3.10',
-        'numexpr>=1.4.1',
+        'numexpr',
         'tables>=2.4',
     ],
     tests_require=[

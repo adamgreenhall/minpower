@@ -1,3 +1,4 @@
+import pandas as pd
 import logging
 from config import user_config
 from commonscripts import update_attributes, bool_to_int, set_trace
@@ -138,7 +139,8 @@ class Generator(OptimizationObject):
         power=None, status=True, hoursinstatus=100):
         if power is None: 
             #set default power as mean output
-            power = (self.pmax - self.pmin) / 2 
+            power = (self.pmax - self.pmin) / 2
+        if pd.isnull(power): raise ValueError('inital power cannot be null') 
         self.initial_status = bool_to_int(status)
         self.initial_power =  power * self.initial_status #note: this eliminates ambiguity of off status with power non-zero output
         self.initial_status_hours = hoursinstatus
@@ -268,7 +270,8 @@ class Generator(OptimizationObject):
 
             #ramping power
             if self.rampratemax is not None:
-                self.add_constraint('ramp lim high', time, self.power_available(time) <= self.power(times[t-1]) + self.rampratemax*self.status(times[t-1]) )
+                try: self.add_constraint('ramp lim high', time, self.power_available(time) <= self.power(times[t-1]) + self.rampratemax*self.status(times[t-1]) )
+                except: set_trace()
 
             if self.rampratemin is not None:
                 self.add_constraint('ramp lim low', time,  self.rampratemin <= self.power_change(t,times) )

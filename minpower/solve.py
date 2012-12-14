@@ -12,8 +12,8 @@ import pdb
 from optimization import OptimizationError
 import get_data, powersystems, stochastic, results
 from config import user_config
-from standalone import (store_state, load_state, store_times,
-    get_storage, wipe_storage, repack_storage)
+from standalone import (store_state, load_state, store_times, init_store,
+    get_storage, repack_storage)
 from commonscripts import joindir, StreamToLogger
 
 def _get_store_filename():
@@ -23,13 +23,13 @@ def _get_store_filename():
 
     user_config.store_filename = joindir(user_config.directory, fnm)
 
-def solve_multistage(power_system, times, scenario_tree):
+def solve_multistage(power_system, times, scenario_tree, data):
     _get_store_filename()
 
-    wipe_storage()
-    stage_times=times.subdivide(user_config.hours_commitment, user_config.hours_overlap)
+    stage_times = times.subdivide(
+        user_config.hours_commitment, user_config.hours_overlap)
 
-    storage = store_state(power_system, stage_times, None)
+    storage = init_store(power_system, stage_times, data)
 
     for stg,t_stage in enumerate(stage_times):
         logging.info('Stage starting at {}'.format(t_stage.Start.date()))
@@ -123,16 +123,18 @@ def solve_problem(datadir='.',
     user_config.directory = datadir
     start_time = timer.time()
     logging.debug('Minpower reading {}'.format(datadir))
-    generators,loads,lines,times,scenario_tree=get_data.parsedir()
+    generators, loads, lines, times, scenario_tree, data = get_data.parsedir()
     logging.debug('data read')
-    power_system=powersystems.PowerSystem(generators,loads,lines)
+    power_system = powersystems.PowerSystem(generators,loads,lines)
 
     logging.debug('power system initialized')
     if times.spanhrs <= user_config.hours_commitment + user_config.hours_overlap:
         solution, instance = create_solve_problem(power_system, times, scenario_tree)
     else: #split into multiple stages and solve
-        stage_solutions, stage_times = solve_multistage(power_system, times, scenario_tree)
-        solution = results.make_multistage_solution(power_system, stage_times, stage_solutions)
+        stage_solutions, stage_times = solve_multistage(
+            power_system, times, scenario_tree, data)
+        solution = results.make_multistage_solution(
+            power_system, stage_times, stage_solutions)
 
     if shell:
         if user_config.output_prefix:

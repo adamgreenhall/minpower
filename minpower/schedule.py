@@ -58,7 +58,7 @@ class TimeIndex(object):
             if self.interval.freqstr=='H':
                 self.intervalhrs = self.interval.n
             else:
-                self.intervalhrs = None # TODO
+                self.intervalhrs = self.interval.nanos / 1.0e9 / 3600.0
         else:            
             self.interval = self.times[1] - self.times[0]
             self.intervalhrs = self.interval.total_seconds() / 3600.0

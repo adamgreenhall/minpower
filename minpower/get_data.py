@@ -72,45 +72,29 @@ def nice_names(df):
     return df.rename(columns=
         dict([(col, drop_case_spaces(col)) for col in df.columns]))
     
-def parse_standalone(
-        times,
-        file_gens='generators.csv',
-        file_loads='loads.csv',
-        file_lines='lines.csv'):
-    datadir = user_config.directory
+def parse_standalone(storage, times):
+    '''load problem info from a pandas.HDFStore'''
     
-    if not os.path.isdir(datadir): 
-        raise OSError('data directory "{d}" does not exist'.format(d=datadir))
-    [file_gens,file_loads,file_lines]=[joindir(datadir,fnm) for fnm in (file_gens,file_loads,file_lines)]
-    
-    generators_data=csv2dicts(file_gens,field_map=fields_gens)
-    loads_data=csv2dicts(file_loads,field_map=fields_loads)
-    try: lines_data=csv2dicts(file_lines,field_map=fields_lines)
-    except IOError: lines_data=[]
+    # filter timeseries data to only this stage
+    timeseries = storage['data_timeseries'].ix[times.strings.values]
     
     #add loads
-    loads = build_class_list(loads_data, powersystems.Load)
+    loads = build_class_list(storage['data_loads'], powersystems.Load, 
+        times, timeseries)
     #add generators
-    generators = build_class_list(generators_data, Generator)
+    generators = build_class_list(storage['data_generators'], Generator,
+        times, timeseries)
     #add lines
-    lines = build_class_list(lines_data, powersystems.Line)    
-        
-    # remove times not in stage
-    for obj in filter(lambda obj: _has_valid_attr(obj, 'schedule'), loads+generators):
-        obj.schedule = obj.schedule[times.strings.index]
-        obj.schedule.index = times.strings.values
-
-    for obj in filter(lambda obj: _has_valid_attr(obj, 'observed_values'), generators):
-        obj.observed_values = obj.observed_values[times.strings.index]
-        obj.observed_values.index = times.strings.values
-        
+    lines = build_class_list(storage['data_lines'], powersystems.Line,
+        times, timeseries)    
+            
     #setup scenario tree (if applicable)
     if user_config.deterministic_solve or user_config.perfect_solve: 
         scenario_tree = None
     else: 
         scenario_tree = setup_scenarios(generators, times, only_stage=True)
     
-    power_system = PowerSystem(generators,loads,lines)
+    power_system = PowerSystem(generators, loads, lines)
     
     return power_system,times,scenario_tree
 
@@ -165,7 +149,16 @@ def parsedir(
     else: 
         scenario_tree = setup_scenarios(generators, times)
     
-    return generators,loads,lines,times,scenario_tree
+    # also return the raw DataFrame objects 
+    data = dict(
+        generators=generators_data,
+        loads=loads_data,
+        lines=lines_data,
+        init=init_data,
+        timeseries=timeseries,
+        )
+    
+    return generators, loads, lines, times, scenario_tree, data
 
 
 def setup_initialcond(data, generators, times):
@@ -192,6 +185,9 @@ def setup_initialcond(data, generators, times):
     if not 'name' in data.columns:
         # assume they are in order
         data['name'] = names
+    
+    if 'power' not in data.columns: 
+        raise KeyError('initial conditions file should contain "power".')
     
     # add initial conditions for generators 
     # which are specified in the initial file

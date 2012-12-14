@@ -514,7 +514,7 @@ def value(variable):
     try: return variable.value
     except AttributeError: return variable #just a number
 
-def dual(constraint,index=None):
+def dual(constraint, index=None):
     '''Dual of optimization constraint, after the problem is solved.'''
     return constraint[index].dual
 

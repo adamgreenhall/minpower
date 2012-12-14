@@ -67,10 +67,10 @@ class Line(OptimizationObject):
     only considers real power flow under normal conditions.
     """
     def __init__(self, name='', index=None, frombus=None, tobus=None,
-        reactance=0.05, Pmin=None, Pmax=9999, **kwargs):
+        reactance=0.05, pmin=None, pmax=9999, **kwargs):
         update_attributes(self,locals()) #load in inputs
-        if self.Pmin is None: 
-            self.Pmin=-1*self.Pmax   # default is -1*Pmax
+        if self.pmin is None: 
+            self.pmin=-1*self.pmax   # default is -1*pmax
         self.init_optimization()
     def power(self,time): return self.get_variable('power',time,indexed=True)
     def price(self,time):
@@ -86,8 +86,8 @@ class Line(OptimizationObject):
             line_flow_ij = self.power(t) == \
                 1/self.reactance * (buses[iFrom].angle(t) - buses[iTo].angle(t))
             self.add_constraint('line flow',t,line_flow_ij)
-            self.add_constraint('line limit high',t,self.power(t)<=self.Pmax)
-            self.add_constraint('line limit low',t,self.Pmin<=self.power(t))
+            self.add_constraint('line limit high',t,self.power(t)<=self.pmax)
+            self.add_constraint('line limit low',t,self.pmin<=self.power(t))
         return
     def __str__(self): return 'k{ind}'.format(ind=self.index)
     def __int__(self): return self.index
@@ -108,7 +108,8 @@ class Bus(OptimizationObject):
         self.init_optimization()
 
     def angle(self,time): return self.get_variable('angle',time,indexed=True)
-    def price(self,time): return dual(self.get_constraint('power balance',time))
+    def price(self,time): 
+        return dual(self.get_constraint('power balance', time))
     def Pgen(self,t,evaluate=False):
         if evaluate: return sum(value(gen.power(t)) for gen in self.generators)
         else: return sum(gen.power(t) for gen in self.generators)
@@ -236,8 +237,8 @@ class PowerSystem(OptimizationProblem):
         buses = []
         swingHasBeenSet = False
 
-        for b,busNm in enumerate(busNameL):
-            newBus=Bus(name=busNm,index=b)
+        for b, busNm in enumerate(busNameL):
+            newBus = Bus(name=busNm, index=b)
             for gen in generators:
                 if gen.bus == newBus.name: 
                     newBus.generators.append(gen)

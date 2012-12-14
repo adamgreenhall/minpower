@@ -383,27 +383,19 @@ class Generator_Stochastic(Generator_nonControllable):
         self.startupcost = 0
         self.shutdowncost = 0
 
-    def power(self,time,scenario=None): return self.get_variable('power',time=time,scenario=scenario,indexed=True)
+    def power(self,time,scenario=None): 
+        return self.get_variable('power', time=time, 
+            scenario=scenario, indexed=True)
 
-    def _get_scenario_values(self,times,s=0):
-        if self.has_scenarios_multistage:        
-            scenarios = self.scenario_values[times.startdate]
-        else:
-            scenarios = self.scenario_values
-    
-        try:   
-            values = scenarios.ix[s].values.tolist()
-        except: 
-            raise KeyError('{} is not an available scenario number'.format(s))
-
-        if scenarios.columns[0]=='probability':
-            return values[1:(1+len(times))]
-        else: #assume probability is at the end
-            return values[:len(times)] # dont include the probability
+    def _get_scenario_values(self,times,s=0):   
+        # scenario values are structured as a pd.Panel
+        # with axes: day, scenario, {prob, [hours]}
+        return self.scenario_values[times.Start][
+            range(len(times))].ix[s].values.tolist()
 
     def create_variables(self,times):
         self.add_parameter('power', index=times.set, nochecking=True)
-        power=self.power(time=None)
+        power = self.power(time=None)
 
         #initialize to first scenario value
         scenario_one = self._get_scenario_values(times, s=0)

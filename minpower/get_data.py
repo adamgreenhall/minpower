@@ -87,16 +87,18 @@ def parse_standalone(storage, times):
     #add lines
     lines = build_class_list(storage['data_lines'], powersystems.Line,
         times, timeseries)    
-            
-    #setup scenario tree (if applicable)
-    if user_config.deterministic_solve or user_config.perfect_solve: 
-        scenario_tree = None
-    else: 
-        scenario_tree = setup_scenarios(generators, times, only_stage=True)
-    
+                
     power_system = PowerSystem(generators, loads, lines)
     
-    return power_system,times,scenario_tree
+    gen = power_system.get_generator_with_scenarios()
+    if gen:
+        # TODO - maybe only extract current day's values here
+        scenario_values = storage['data_scenario_values']
+        gen.scenario_values = scenario_values
+    else: 
+        scenario_values = pd.Panel()
+    
+    return power_system, times, scenario_values
 
     
 def parsedir(
@@ -143,11 +145,8 @@ def parsedir(
     #add initial conditions    
     setup_initialcond(init_data, generators, times)
     
-    #setup scenario tree (if applicable)
-    if user_config.deterministic_solve or user_config.perfect_solve: 
-        scenario_tree = None
-    else: 
-        scenario_tree = setup_scenarios(generators, times)
+    #get scenario values (if applicable)
+    scenario_values = setup_scenarios(generators_data, generators, times)
     
     # also return the raw DataFrame objects 
     data = dict(
@@ -156,9 +155,10 @@ def parsedir(
         lines=lines_data,
         init=init_data,
         timeseries=timeseries,
+        scenario_values=scenario_values,
         )
     
-    return generators, loads, lines, times, scenario_tree, data
+    return generators, loads, lines, times, scenario_values, data
 
 
 def setup_initialcond(data, generators, times):
@@ -333,20 +333,40 @@ def setup_times(generators_data, loads_data, filename_timeseries):
     
     timeseries = {}
     
-    for i, load in loads_data[loads_data[fcol].notnull()].iterrows():
+    def filter_notnull(df, col):
+        return df[df[col].notnull()]
+    
+    for i, load in filter_notnull(loads_data, fcol).iterrows():
         name = 'd{}'.format(i)
         loads_data.ix[i, ncol] = name
         timeseries[name] = get_schedule(joindir(datadir, load[fcol]))
     
-    for i, gen in generators_data[generators_data[fcol].notnull()].iterrows():
+    for i, gen in filter_notnull(generators_data, fcol).iterrows():
         name = 'g{}'.format(i)
         generators_data.ix[i, ncol] = name
         timeseries[name] = get_schedule(joindir(datadir, gen[fcol]))
 
-    # FIXME - handle observed and forecast power
-    #observedfilename = row.pop('observedfilename',None)
-    #forecastfilename = row.pop('forecastfilename',None)
+    # handle observed and forecast power
+    fobscol = 'observedfilename'
+    obscol = 'observedname'
+    ffcstcol = 'forecastfilename'
+    fcstcol = 'forecastname'
 
+    if fobscol in generators_data:
+        generators_data[obscol] = None
+        for i, gen in filter_notnull(generators_data, fobscol).iterrows():
+            name = 'g{}_observations'.format(i)
+            generators_data.ix[i, obscol] = name
+            timeseries[name] = get_schedule(joindir(datadir, gen[fobscol]))
+        generators_data = generators_data.drop(fobscol, axis=1)
+            
+    if ffcstcol in generators_data:
+        generators_data[fcstcol] = None
+        for i, gen in filter_notnull(generators_data, ffcstcol).iterrows():
+            name = 'g{}_forecast'.format(i)
+            generators_data.ix[i, fcstcol] = name
+            timeseries[name] = get_schedule(joindir(datadir, gen[ffcstcol]))
+        generators_data = generators_data.drop(ffcstcol, axis=1)
 
     generators_data = generators_data.drop(fcol, axis=1)
     loads_data = loads_data.drop(fcol, axis=1)
@@ -358,6 +378,7 @@ def setup_times(generators_data, loads_data, filename_timeseries):
     timeseries = DataFrame(timeseries)        
     times = TimeIndex(timeseries.index)
     timeseries.index = times.strings.values
+    
     return timeseries, times
 
 
@@ -373,57 +394,66 @@ def _parse_scenario_day(filename):
     return data  
 
 
-def setup_scenarios(generators, times, only_stage=False):
-    if user_config.deterministic_solve: return None
+def setup_scenarios(gen_data, generators, times):
+
+    col = 'scenariosdirectory'
+    scenario_values = pd.Panel()
+    if user_config.deterministic_solve or user_config.perfect_solve or \
+        (not col in gen_data.columns):
+        # a deterministic problem
+        return scenario_values
     
-    has_scenarios=[]
-    for gen in generators:
-        if (getattr(gen,'scenarios_filename',None) is not None) or (getattr(gen, 'scenarios_directory', None) is not None): 
-            has_scenarios.append(gen.index)
-            
-    if len(has_scenarios)==0: #deterministic model
-        return None
-    elif len(has_scenarios)>1:
-        raise NotImplementedError('more than one generator with scenarios. have not coded this case yet.')
-        
-    #select the one gen with scenarios
-    gen=generators[has_scenarios[0]]
-    gen.has_scenarios=True
-    gen.scenario_values=[]
+    gen_params = gen_data[gen_data[col].notnull()]
+    if len(gen_params)>1:
+        raise NotImplementedError('more than one generator with scenarios.')
+
+    gen = generators[gen_params.index[0]]
+    gen.has_scenarios = True
     
-    if getattr(gen,'scenarios_filename',None) is not None:
+    # directory of scenario values where each file is one day
+    scenarios_directory = gen_params['scenariosdirectory'].values[0]
+    searchstr = "*.csv"
+    
+    filenames = sorted(glob(joindir(user_config.directory, 
+        joindir(scenarios_directory, searchstr))))
+    if not filenames: 
+        raise IOError('no scenario files in "{}"'.format(scenarios_directory))
+    
+    alldata = OrderedDict()
+    for i,f in enumerate(filenames):
+        data = _parse_scenario_day(f)
+        day_idx = 1 if data.columns[0]=='probability' else 0
+        day = Timestamp(data.columns[day_idx])
+        alldata[day] = data
+
+    # TODO - assumes one hour intervals!!
+    hrs = user_config.hours_commitment + user_config.hours_overlap
+    
+    # make scenarios into a pd.Panel with axes: day, scenario, {prob, [hours]}
+    scenario_values = pd.Panel(
+        items=alldata.keys(), 
+        major_axis=range(len(data)),
+        minor_axis=['probability'] + range(hrs)
+        )
+
+    for day, scenarios in alldata.iteritems():
+        if 'probability' == scenarios.columns[-1]:
+            # reoder so that probability is the first column
+            scenarios = scenarios[
+                ['probability'] + scenarios.columns[:-1]]
+        # rename the times into just hour offsets
+        scenarios = scenarios.rename(columns=
+            dict(zip(scenarios.columns, 
+            ['probability'] + range(len(scenarios.columns) - 1))))
         
-        gen.has_scenarios_multistage = False
-        fnm = joindir(user_config.directory, gen.scenarios_filename)
-        gen.scenario_values = read_csv(fnm)
+        # and take the number of hours needed
+        scenarios = scenarios[scenarios.columns[:1+hrs]]
         
-        probabilities = gen.scenario_values['probability'].values.tolist()
+        scenario_values[day] = scenarios
         
-        return construct_simple_scenario_tree( probabilities )
-        
-    elif getattr(gen, 'scenarios_directory', None) is not None: # directory of scenarios grouped by days
-        # key scenarios by day (initialization)
-        scenario_trees = OrderedDict()
-        gen.scenario_values = OrderedDict()
-        
-        gen.has_scenarios_multistage = True        
-        if only_stage:
-            stage_date = times.strings.index[0].date()
-            searchstr = "*{}.csv".format(stage_date)
-        else: 
-            searchstr = "*.csv"
-        
-        filenames = sorted(glob(joindir(gen.scenarios_directory, searchstr)))
-        if not filenames: raise IOError('no scenario files in "{}"'.format(gen.scenarios_directory))
-        
-        for i,f in enumerate(filenames):
-            data = _parse_scenario_day(f)
-            day_idx = 1 if data.columns[0]=='probability' else 0
-            day = Timestamp(data.columns[day_idx]).date() 
-            gen.scenario_values[day] = data
-        
-        # defer construction until actual time stage starts
-        return scenario_trees
+    gen.scenario_values = scenario_values
+    # defer scenario tree construction until actual time stage starts
+    return scenario_values
 
 
 def _has_valid_attr(obj, name):

@@ -14,7 +14,7 @@ import get_data, powersystems, stochastic, results
 from config import user_config
 from standalone import (store_state, load_state, store_times, init_store,
     get_storage, repack_storage)
-from commonscripts import joindir, StreamToLogger
+from commonscripts import joindir, StreamToLogger, set_trace
 
 def _get_store_filename():
     fnm = 'stage-store.hd5'
@@ -182,13 +182,11 @@ def create_problem(power_system, times, scenario_tree=None,
         if multistage: # multiple time stages
             gen = power_system.get_generator_with_scenarios()
             tree = stochastic.construct_simple_scenario_tree(
-                gen.scenario_values[times.startdate]['probability'].values.tolist(),
+                gen.scenario_values[times.Start]['probability'].values.tolist(),
                 time_stage=stage_number)
             logging.debug('constructed tree for stage %i'%stage_number)
         else: tree = scenario_tree
-        stochastic.define_stage_variables(tree,power_system,times)
-        # ipython_shell()
-        # %prun from minpower import stochastic; stochastic.create_problem_with_scenarios(power_system,times, tree, 24, 12, stage_number=0)
+        stochastic.define_stage_variables(tree, power_system, times)
         power_system = stochastic.create_problem_with_scenarios(
             power_system, times, tree, 
             user_config.hours_commitment, 

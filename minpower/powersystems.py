@@ -312,11 +312,11 @@ class PowerSystem(OptimizationProblem):
     
     
     def get_generators_without_scenarios(self):
-        return filter(lambda gen: getattr(gen,'has_scenarios',False)==False, self.generators())
+        return filter(lambda gen: getattr(gen,'is_stochastic',False)==False, self.generators())
 
 
     def get_generator_with_scenarios(self):
-        gens = filter(lambda gen: getattr(gen,'has_scenarios',False), self.generators())
+        gens = filter(lambda gen: getattr(gen,'is_stochastic',False), self.generators())
         if len(gens)>1: raise NotImplementedError('Dont handle the case of multiple stochastic generators')
         elif len(gens)==0: return []
         else: return gens[0]

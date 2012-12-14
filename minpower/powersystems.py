@@ -229,8 +229,13 @@ class PowerSystem(OptimizationProblem):
         busNameL.extend(getattrL(generators,'bus'))
         busNameL.extend(getattrL(loads,'bus'))
         busNameL = pd.Series(pd.unique(busNameL)).dropna().tolist()
+
+        if len(busNameL) == 0:
+            busNameL = [None]
+            
         buses = []
         swingHasBeenSet = False
+
         for b,busNm in enumerate(busNameL):
             newBus=Bus(name=busNm,index=b)
             for gen in generators:

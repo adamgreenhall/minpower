@@ -398,11 +398,7 @@ class OptimizationProblem(OptimizationObject):
                 self._stochastic_instance.pprint('unsolved-stochastic-instance.txt')
             self.write_model('unsolved-problem-formulation.lp')
             raise OptimizationError('problem not solved')
-        
-        instance.load(results, 
-            allow_consistent_values_for_fixed_vars=True)
-        logging.debug('... solution loaded')
-        
+                
         if get_duals: 
             # resolve with fixed variables
             logging.info('resolving fixed-integer LP for duals')
@@ -411,9 +407,12 @@ class OptimizationProblem(OptimizationObject):
             results, elapsed = self._solve_instance(instance, get_duals=get_duals)
             self.solution_time += elapsed
             
-            instance.load(results)
-            logging.debug('... LP problem solved')    
+            logging.debug('... LP problem solved')
         
+        instance.load(results, 
+            allow_consistent_values_for_fixed_vars=True)
+        logging.debug('... solution loaded')
+                
         if self.stochastic_formulation:
             self._scenario_tree.snapshotSolutionFromInstances(self._scenario_instances)
         

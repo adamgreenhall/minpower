@@ -20,17 +20,17 @@ def line_limit_high():
         - the line is at its limit 
         - the congestion price is equal to the diff. in LMPs
     '''
-    Pmax=100
+    pmax=100
     generators=[
         make_cheap_gen(bus='A'),
         make_expensive_gen(bus='B')
     ]    
-    lines=[powersystems.Line(Pmax=Pmax, From='A',To='B')]
+    lines=[powersystems.Line(pmax=pmax, frombus='A', tobus='B')]
     power_system,times=solve_problem(generators, lines=lines, **make_loads_times(Pd=225,bus='B'))
-    Pline = lines[0].power(times[0])
-    lmps=[b.price(times[0]) for b in power_system.buses]
+    Pline = value(lines[0].power(times[0]))
+    lmps = [b.price(times[0]) for b in power_system.buses]
     congestion_price = lines[0].price(times[0])
-    assert Pline==Pmax and congestion_price == (lmps[1] - lmps[0])
+    assert Pline == pmax and congestion_price == (lmps[1] - lmps[0])
 
 @istest
 @with_setup(get_duals)
@@ -44,17 +44,17 @@ def line_limit_low():
         - the line is at its limit 
         - the congestion price is equal to the diff. in LMPs
     '''
-    Pmin = -100
+    pmin = -100
     generators=[
         make_cheap_gen(bus='A'),
         make_expensive_gen(bus='B')
     ]    
-    lines=[powersystems.Line(Pmin=Pmin, From='B',To='A')]
+    lines=[powersystems.Line(pmin=pmin, frombus='B', tobus='A')]
     power_system,times=solve_problem(generators,lines=lines, **make_loads_times(Pd=225,bus='B'))
     Pline = lines[0].power(times[0])
     lmps=[b.price(times[0]) for b in power_system.buses]
     congestion_price = lines[0].price(times[0])
-    assert Pline==Pmin and congestion_price == -1*(lmps[1] - lmps[0])
+    assert Pline==pmin and congestion_price == -1*(lmps[1] - lmps[0])
 
 
 @istest
@@ -71,7 +71,7 @@ def three_buses():
         - the total load is met
         - the lmps are different
     '''
-    Pmax=50
+    pmax=50
     Pd=[105,225,302]
     generators=[
         make_cheap_gen(bus='A'),
@@ -80,13 +80,13 @@ def three_buses():
         ]    
     loads=[
         powersystems.Load(schedule=Series(Pd[0],singletime), bus='A'),
-        powersystems.Load(schedule=Series(Pd[1],singletime),bus='B'),
-        powersystems.Load(schedule=Series(Pd[2],singletime),bus='C')
+        powersystems.Load(schedule=Series(Pd[1],singletime), bus='B'),
+        powersystems.Load(schedule=Series(Pd[2],singletime), bus='C')
         ]
     lines=[
-        powersystems.Line(From='A',To='B'),
-        powersystems.Line(From='A',To='C', Pmax=Pmax),
-        powersystems.Line(From='B',To='C', Pmax=Pmax),
+        powersystems.Line(frombus='A', tobus='B'),
+        powersystems.Line(frombus='A', tobus='C', pmax=pmax),
+        powersystems.Line(frombus='B', tobus='C', pmax=pmax),
         ]
     power_system,times=solve_problem(generators,times=singletime,loads=loads,lines=lines)
     num_lmps=len(set(b.price(times[0]) for b in power_system.buses))

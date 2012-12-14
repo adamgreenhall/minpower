@@ -13,8 +13,8 @@ def prices():
     Ensure that the correct LMPs are returned for all times.
     '''
     generators=[
-        make_cheap_gen(Pmax=100),
-        make_mid_gen(Pmax=20),
+        make_cheap_gen(pmax=100),
+        make_mid_gen(pmax=20),
         make_expensive_gen()
     ]
 
@@ -48,12 +48,12 @@ def load_shedding():
     Create a load that exceeds that limit at t1.
     Ensure that:
     * Pdt1=Pgmax
-    * Pshedt1 = Pdt1 - Pmax
+    * Pshedt1 = Pdt1 - pmax
     * pricet1 = cost of load shedding
     '''
-    Pmax=100
+    pmax=100
     Pdt1=211
-    generators=[make_cheap_gen(Pmax=Pmax)]
+    generators=[make_cheap_gen(pmax=pmax)]
     Pdt=[110,Pdt1,110]
     
     user_config.load_shedding_allowed = True
@@ -64,8 +64,8 @@ def load_shedding():
     load_t1=load.power(times[1],evaluate=True)
     load_t1_shed=load.shed(times[1],evaluate=True)
     price_t1 = power_system.buses[0].price(times[1])
-    assert load_t1==Pmax 
-    assert load_t1_shed==Pdt1-Pmax
+    assert load_t1==pmax 
+    assert load_t1_shed==Pdt1-pmax
     assert price_t1==config.user_config.cost_load_shedding
     
     user_config.load_shedding_allowed = False
@@ -74,20 +74,20 @@ def load_shedding():
 def reserve_fixed():
     '''
     Create two generators, the cheaper one with a limit near the load.
-    Require 50MW of reserve (which exceeds Pmax of cheap)
+    Require 50MW of reserve (which exceeds pmax of cheap)
     Ensure that: g2 is turned on to meet reserve req.
 
     Pg1+Pg2 = load
     Pavail1 + Pavail2 = load + reserve
     '''
     
-    Pmax=100
+    pmax=100
     Pdt1=90
     reserve_req = 30
     
     generators=[
-        make_cheap_gen(Pmax=Pmax), 
-        make_expensive_gen(Pmin=0, costcurveequation='5000+30P')]
+        make_cheap_gen(pmax=pmax), 
+        make_expensive_gen(pmin=0, costcurveequation='5000+30P')]
     Pdt=[80,Pdt1]    
     
     user_config.reserve_fixed = reserve_req

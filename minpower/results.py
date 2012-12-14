@@ -203,7 +203,7 @@ class Solution(object):
     def info_lines(self,t):
         lines=self.lines
         return ['line info:',
-             'connecting={}'.format(zip(getattrL(lines,'From'),getattrL(lines,'To'))),
+             'connecting={}'.format(zip(getattrL(lines,'frombus'),getattrL(lines,'tobus'))),
              'Pk={}'.format(self.get_values(lines,'power',t)),
              'price={}'.format(self.line_prices[str(t)])]
              
@@ -365,8 +365,8 @@ class Solution_OPF(Solution):
         writeCSV(fields,transpose(data),filename=full_filename('powerflow-generators.csv'))
 
         fields,data=[],[]
-        fields.append('from');  data.append(self.get_values(lines,'From'))
-        fields.append('to');  data.append(self.get_values(lines,'To'))
+        fields.append('from');  data.append(self.get_values(lines,'frombus'))
+        fields.append('to');  data.append(self.get_values(lines,'tobus'))
         fields.append('power'); data.append(self.get_values(lines,'power',t))
         fields.append('congestion shadow price'); data.append(self.line_prices[str(t)])
 

@@ -5,6 +5,7 @@ Basically a wrapper around Coopr's `pyomo.ConcreteModel` class.
 import logging, time, weakref
 import coopr.pyomo as pyomo
 from coopr.opt.base import solvers as cooprsolver
+import pandas as pd
 
 # make pyomo recognize that True == 1
 pyomo.base.numvalue.KnownConstants[True]=pyomo.base.numvalue.NumericConstant(None, None, 1.0)
@@ -34,6 +35,14 @@ class OptimizationObject(object):
         update_attributes(self,locals()) #load in inputs
         self.init_optimization()
         
+
+#    def get(self, attr):
+#        '''
+#        convinience method for getting attributes an object may not have
+#        without throwing errors
+#        '''
+#        return getattr(self, attr, None)
+
 
     def init_optimization(self):
         '''
@@ -131,11 +140,15 @@ class OptimizationObject(object):
 
 
     def add_parameter(self, name, index=None, values=None, mutable=True, default=None, **kwargs):
-        name=self._id(name)
-        self._parent_problem().add_component_to_problem(pyomo.Param(index,name=name,default=default, mutable=mutable, **kwargs))
+        name = self._id(name)
+        self._parent_problem().add_component_to_problem(
+            pyomo.Param(index, name=name, 
+                default=default, mutable=mutable, **kwargs))
         if values is not None:
-            var=self._parent_problem().get_component(name)
-            for i in index: var[i]=values[i]
+            if pd.Series(values).count() != len(values):
+                raise ValueError('a parameter value cannot be NaN')
+            var = self._parent_problem().get_component(name)
+            for i in index: var[i] = values[i]
         
     def add_constraint(self,name,time,expression): 
         '''Create a new constraint and add it to the object's constraints and the model's constraints.'''
@@ -388,7 +401,6 @@ class OptimizationProblem(OptimizationObject):
         
         instance.load(results, 
             allow_consistent_values_for_fixed_vars=True)
-#        instance._load_solution(results.solution(0), ignore_invalid_labels=True )
         logging.debug('... solution loaded')
         
         if get_duals: 
@@ -396,8 +408,8 @@ class OptimizationProblem(OptimizationObject):
             logging.info('resolving fixed-integer LP for duals')
             _fix_binary_variables(instance)
             
-            results,elapsed = self._solve_instance(instance, get_duals=get_duals)
-            self.solution_time+=elapsed
+            results, elapsed = self._solve_instance(instance, get_duals=get_duals)
+            self.solution_time += elapsed
             
             instance.load(results)
             logging.debug('... LP problem solved')    
@@ -516,7 +528,7 @@ def detect_status(results, solver):
         success = False
     elif status_text == 'unknown':
         # this is an edge case encountered in resolves
-        success = len(results.Solution[0].Variable.keys()) > 0
+        success = len(results.Solution.Variable.keys()) > 0
     else:
         success = False
         

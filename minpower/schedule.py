@@ -18,6 +18,10 @@ def just_one_time():
     '''make a TimeIndex with just one time in it'''
     return make_times_basic(1)
 
+def make_constant_schedule(times, power=0):
+    return Series(power, times.strings.values)
+
+
 class TimeIndex(object):
     '''a list of times (underlying model is pandas.Index)'''
     def __init__(self, index, str_start=0):

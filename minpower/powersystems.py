@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 from optimization import (value, dual, OptimizationObject, 
     OptimizationProblem, OptimizationError)
-from commonscripts import (update_attributes, getattrL, flatten)
+from commonscripts import (update_attributes, getattrL, flatten, set_trace)
 from config import user_config
 
 class Load(OptimizationObject):
@@ -25,20 +25,22 @@ class Load(OptimizationObject):
     By setting `shedding_allowed`, the amount of power can become a variable,
         (bounded to be at most the scheduled amount).
     """
-    def __init__(self,kind='varying',name='',index=None,bus=None,schedule=None,
+    def __init__(self,
+        name='', index=None, bus=None, schedule=None,
                  shedding_allowed=False,
                  cost_shedding=user_config.cost_load_shedding
                  ):
         update_attributes(self,locals()) #load in inputs
         self.init_optimization()
-    def power(self,time,evaluate=False):
+    def power(self, time, evaluate=False):
         if self.shedding_allowed:
-            power=self.get_variable('power',time,indexed=True)
-            if evaluate: power=value(power)
+            power = self.get_variable('power', time, indexed=True)
+            if evaluate: power = value(power)
             return power
         else:
             return self.get_scheduled_ouput(time)
-    def shed(self,time,evaluate=False): return self.get_scheduled_ouput(time) - self.power(time,evaluate)
+    def shed(self, time, evaluate=False): 
+        return self.get_scheduled_ouput(time) - self.power(time,evaluate)
     def cost(self,time): return self.cost_shedding*self.shed(time)
     def cost_first_stage(self,times): return 0
     def cost_second_stage(self,times): return sum(self.cost(time) for time in times)
@@ -64,9 +66,11 @@ class Line(OptimizationObject):
     A tranmission line. Currently the model
     only considers real power flow under normal conditions.
     """
-    def __init__(self,name='',index=None,From=None,To=None,X=0.05,Pmax=9999,Pmin=None,**kwargs):
+    def __init__(self, name='', index=None, frombus=None, tobus=None,
+        reactance=0.05, Pmin=None, Pmax=9999, **kwargs):
         update_attributes(self,locals()) #load in inputs
-        if self.Pmin is None: self.Pmin=-1*self.Pmax #reset default to be -Pmax
+        if self.Pmin is None: 
+            self.Pmin=-1*self.Pmax   # default is -1*Pmax
         self.init_optimization()
     def power(self,time): return self.get_variable('power',time,indexed=True)
     def price(self,time):
@@ -77,9 +81,10 @@ class Line(OptimizationObject):
     def create_constraints(self,times,buses):
         '''create the constraints for a line over all times'''
         busNames=getattrL(buses,'name')
-        iFrom,iTo=busNames.index(self.From),busNames.index(self.To)
+        iFrom,iTo=busNames.index(self.frombus),busNames.index(self.tobus)
         for t in times:
-            line_flow_ij=self.power(t) == (1/self.X) * (buses[iFrom].angle(t) - buses[iTo].angle(t))
+            line_flow_ij = self.power(t) == \
+                1/self.reactance * (buses[iFrom].angle(t) - buses[iTo].angle(t))
             self.add_constraint('line flow',t,line_flow_ij)
             self.add_constraint('line limit high',t,self.power(t)<=self.Pmax)
             self.add_constraint('line limit low',t,self.Pmin<=self.power(t))
@@ -223,16 +228,19 @@ class PowerSystem(OptimizationProblem):
         busNameL=[]
         busNameL.extend(getattrL(generators,'bus'))
         busNameL.extend(getattrL(loads,'bus'))
-        busNameL=list(pd.unique(busNameL))
-        buses=[]
-        swingHasBeenSet=False
+        busNameL = pd.Series(pd.unique(busNameL)).dropna().tolist()
+        buses = []
+        swingHasBeenSet = False
         for b,busNm in enumerate(busNameL):
             newBus=Bus(name=busNm,index=b)
             for gen in generators:
-                if gen.bus==newBus.name: newBus.generators.append(gen)
-                if not swingHasBeenSet: newBus.isSwing=swingHasBeenSet=True
+                if gen.bus == newBus.name: 
+                    newBus.generators.append(gen)
+                if not swingHasBeenSet: 
+                    newBus.isSwing = swingHasBeenSet = True
             for ld in loads:
-                if ld.bus==newBus.name: newBus.loads.append(ld)
+                if ld.bus == newBus.name:
+                    newBus.loads.append(ld)
             buses.append(newBus)
         return buses
     def create_admittance_matrix(self, buses, lines):
@@ -248,10 +256,10 @@ class PowerSystem(OptimizationProblem):
         self.Bmatrix=np.zeros((nB,nB))
         namesL=[bus.name for bus in buses]
         for line in lines:
-            busFrom=buses[namesL.index(line.From)]
-            busTo=buses[namesL.index(line.To)]
-            self.Bmatrix[busFrom.index,busTo.index]+=-1/line.X
-            self.Bmatrix[busTo.index,busFrom.index]+=-1/line.X
+            busFrom = buses[namesL.index(line.frombus)]
+            busTo = buses[namesL.index(line.tobus)]
+            self.Bmatrix[busFrom.index,busTo.index] += -1/line.reactance
+            self.Bmatrix[busTo.index,busFrom.index] += -1/line.reactance
         for i in range(0,nB):
             self.Bmatrix[i,i]=-1*sum(self.Bmatrix[i,:])
     def loads(self): return flatten(bus.loads for bus in self.buses)
@@ -322,12 +330,13 @@ class PowerSystem(OptimizationProblem):
             stat = status[g]
             if sln.is_stochastic:
                 gen.finalstatus = dict(
-                    P =  sln.generators_power[g][tEnd],
-                    u =  sln.generators_status[g][tEnd],
-                    hoursinstatus = gen.gethrsinstatus(times.non_overlap(), stat))
-
+                    power=sln.generators_power[g][tEnd],
+                    status=sln.generators_status[g][tEnd],
+                    hoursinstatus=gen.gethrsinstatus(times.non_overlap(), stat)
+                    )
             else:
-                gen.finalstatus = gen.getstatus(tEndstr, times.non_overlap(), stat)
+                gen.finalstatus = gen.getstatus(tEndstr, 
+                    times.non_overlap(), stat)
         return
 
     def set_initialconditions(self, initTime, stage_number, stage_solutions):

@@ -14,7 +14,7 @@ def linear():
     a=5
     b=30
     Pd=221
-    generators=[ Generator(costcurvestring='{}+{}P'.format(a,b)) ]
+    generators=[ Generator(costcurveequation='{}+{}P'.format(a,b)) ]
     _,times=solve_problem(generators,**make_loads_times(Pd))
     cost = generators[0].bids.output(times[0], evaluate=True)
     assert cost == a + b*Pd
@@ -30,7 +30,7 @@ def cubic_convex():
     b=30
     c=.2
     d=.1
-    generators=[ Generator(costcurvestring='{}+{}P+{}P^2+{}P^3'.format(a,b,c,d)) ]
+    generators=[ Generator(costcurveequation='{}+{}P+{}P^2+{}P^3'.format(a,b,c,d)) ]
     _,times=solve_problem(generators,**make_loads_times(Pd))#,problem_filename='bidproblem.lp')
     cost = value(generators[0].bids.output(times[0], evaluate=True))
     actual_cost = a+ b*Pd+ c*Pd**2 + d*Pd**3
@@ -48,7 +48,7 @@ def cubic_non_convex():
     b=30
     c=.2
     d=.0001
-    generators=[ Generator(costcurvestring='{}+{}P+{}P^2 - {}P^3'.format(a,b,c,d)) ]
+    generators=[ Generator(costcurveequation='{}+{}P+{}P^2 - {}P^3'.format(a,b,c,d)) ]
     power_system,times=solve_problem(generators,**make_loads_times(Pd))
 
     cost = generators[0].bids.output(times[0],evaluate=True) 
@@ -68,7 +68,7 @@ def coverage():
     Pmin = 10
     Pmax = 559
     generators=[ Generator(
-        costcurvestring='{}+{}P+{}P^2+{}P^3'.format(a,b,c,d), 
+        costcurveequation='{}+{}P+{}P^2+{}P^3'.format(a,b,c,d), 
         Pmin=Pmin, 
         Pmax=Pmax) ]
     _,times=solve_problem(generators,**make_loads_times(Pd))
@@ -90,7 +90,7 @@ def fixed_costs_when_off():
         make_cheap_gen(Pmax=80),
         make_mid_gen(Pmax=20),
         make_expensive_gen(
-            costcurvestring='{}+{}P+{}P^2'.format(a,b,c),
+            costcurveequation='{}+{}P+{}P^2'.format(a,b,c),
             mindowntime=1,
             Pmax=50
             )

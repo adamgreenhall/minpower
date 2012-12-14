@@ -33,7 +33,7 @@ def rolling():
     Run a basic unit commitment over 72hrs
     Ensure that the generation meets the load for each time.
     '''
-    generators=[Generator(costcurvestring='10P+.01P^2')]
+    generators=[Generator(costcurveequation='10P+.01P^2')]
     Pdt=[random.randrange(0, 200) for i in range(0,72)]
     power_system,times=solve_problem(generators,**make_loads_times(Pdt=Pdt))
     load=power_system.loads()[0]
@@ -87,7 +87,7 @@ def reserve_fixed():
     
     generators=[
         make_cheap_gen(Pmax=Pmax), 
-        make_expensive_gen(Pmin=0, costcurvestring='5000+30P')]
+        make_expensive_gen(Pmin=0, costcurveequation='5000+30P')]
     Pdt=[80,Pdt1]    
     
     user_config.reserve_fixed = reserve_req

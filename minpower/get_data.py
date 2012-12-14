@@ -10,7 +10,8 @@ from pandas import Series, DataFrame, Timestamp, read_csv
 from glob import glob
 from collections import OrderedDict
 import powersystems
-from schedule import (just_one_time, datetime, get_schedule, TimeIndex)
+from schedule import (just_one_time, datetime, 
+    get_schedule, TimeIndex, make_constant_schedule)
 from commonscripts import (joindir, drop_case_spaces, ts_from_csv, set_trace)
 from stochastic import construct_simple_scenario_tree
 
@@ -21,52 +22,56 @@ from config import user_config
 
 import os, logging
 
-fields_lines={'name':'name','to':'To','from':'From','reactance':'X','pmax':'Pmax'}
-fields_gens={
-    'name':'name','type':'kind','kind':'kind','bus':'bus',
-    'pmin':'Pmin','pmax':'Pmax','powermin':'Pmin','powermax':'Pmax',
-    'p':'power','pg':'power','power':'power', #for a non-controllable gen in an ED
-    'rampratemin':'rampratemin','rampratemax':'rampratemax',
-    'rampmin':'rampratemin','rampmax':'rampratemax',
-    'minuptime':'minuptime','uptimemin':'minuptime',
-    'mindowntime':'mindowntime','downtimemin':'mindowntime',
-    'costcurvepointsfilename':'costcurvepointsfilename',
-    #for a bid points defined gen, noloadcost replaces the constant polynomial
-    'noloadcost':'noloadcost', 
-    'costcurveequation':'costcurvestring','cost':'costcurvestring',
-    'heatrateequation':'heatratestring',
-    'fuelcost':'fuelcost',
-    'startupcost':'startupcost','shutdowncost':'shutdowncost',
-    'faststart':'faststart',
-    'schedulefilename':'schedulefilename','mustrun':'mustrun',
-    'scenariosfilename':'scenariosfilename',
-    'scenariosdirectory':'scenariosdirectory',
-    # observed filename is the observed wind and will evaluate the cost of a stochastic solution
-    'observedfilename':'observedfilename',
-     # forecast filename is a deterministic (point) wind forecast and will be evaluated against observed wind
-    'forecastfilename':'forecastfilename',
-    
-    'schedulename':'schedulename',
-    'forecastname':'forecastname',
-    'observedname':'observedname',
-    
-    }
-    
-fields_loads={'name':'name','bus':'bus','type':'kind','kind':'kind',
-            'p':'power','pd':'power', 'power':'power',
-            'pmin':'Pmin','pmax':'Pmax',
-            'schedulefilename':'schedulefilename','model':'model',
-            'bidequation':'costcurvestring','costcurveequation':'costcurvestring',
-            
-            'schedulename':'schedulename',
-            }
-fields_initial={
-    'name':'name','generatorname':'name',
-    'status':'u','u':'u',
-    'p':'P','pg':'P','power':'P',
-    'hoursinstatus':'hoursinstatus',
-    'ic':None}
+fields = dict(
+    Line=[
+    'name',
+    'tobus',
+    'frombus',
+    'reactance',
+    'pmax'
+    ],
 
+    Generator=[
+    'name',
+    'kind',
+    'bus',
+    'pmin', 'pmax',
+    'power',  # for a non-controllable gen in an ED
+    'rampratemin', 'rampratemax',
+    'minuptime', 'mindowntime',
+    #for a bid points defined gen, noloadcost replaces the constant polynomial
+    'costcurvepointsfilename',
+    'noloadcost', 
+    'costcurveequation', 'heatrateequation',
+    'fuelcost',
+    'startupcost', 'shutdowncost',
+    'faststart',
+    'mustrun', 
+    # schedules components
+    #'schedulefilename',
+    #'scenariosfilename',
+    #'scenariosdirectory',
+    # observed values (for evaluation of the cost of a stochastic solution)
+    #'observedfilename',
+    # deterministic (point) forecast vaues
+    #'forecastfilename',
+    # timeseries in one file names
+    #'schedulename', 'forecastname', 'observedname'
+    ],
+
+    Load = ['name', 'bus'],
+)
+
+fields_initial = [
+    'status',
+    'power',
+    'hoursinstatus']
+    
+def nice_names(df):
+    '''drop the case and spaces from all column names'''
+    return df.rename(columns=
+        dict([(col, drop_case_spaces(col)) for col in df.columns]))
+    
 def parse_standalone(
         times,
         file_gens='generators.csv',
@@ -129,11 +134,7 @@ def parsedir(
     [file_gens, file_loads, file_lines, file_init, file_timeseries] = \
         [joindir(datadir,filename) for filename in 
             (file_gens,file_loads,file_lines,file_init, file_timeseries)]
-    
-    def nice_names(df):
-        return df.rename(columns=
-            dict([(col, drop_case_spaces(col)) for col in df.columns]))
-    
+        
     generators_data = nice_names(read_csv(file_gens))
     loads_data = nice_names(read_csv(file_loads))
     
@@ -157,12 +158,6 @@ def parsedir(
     lines = build_class_list(lines_data, powersystems.Line)    
     #add initial conditions    
     setup_initialcond(init_data, generators, times)
-
-    for obj in filter(lambda obj: _has_valid_attr(obj, 'schedule'), loads+generators):
-        #reindex the schedules by the strings (like "t05")
-        obj.schedule.index = times.strings.values
-        
-
     
     #setup scenario tree (if applicable)
     if user_config.deterministic_solve or user_config.perfect_solve: 
@@ -172,126 +167,147 @@ def parsedir(
     
     return generators,loads,lines,times,scenario_tree
 
-def setup_initialcond(data,generators,times):
+
+def setup_initialcond(data, generators, times):
     '''
     Take a list of initial conditions parameters and
     add information to each :class:`~Generator` object.
     '''
-    if len(times)<=1: return #for UC,ED no need to set initial status
+    if len(times) <= 1: return #for UC,ED no need to set initial status
     
     t_init = times.initialTime
-    if not data:
-        logging.warning('No generation initial conditions file found. Setting to defaults.')
-        for gen in generators: gen.set_initial_condition(time=t_init)
+    if len(data) == 0:
+        logging.warning('''No generation initial conditions file found. 
+            Setting to defaults.''')
+        for gen in generators: 
+            gen.set_initial_condition(time=t_init)
         return
         
     #begin by setting initial condition for all generators to off
-    for g in generators: g.set_initial_condition(t_init, u=False, P=0)
+    for g in generators: 
+        g.set_initial_condition(t_init, status=False, power=0)
 
-    names=[g.name for g in generators]
-    try_in_order= len(data)==len(generators)
-
-    #overwrite initial condition for generators which are specified in the initial file
-    for g,row in enumerate(data):
-        name=row.pop('name',names[g] if try_in_order else None)
-        g=names.index(name)
-        generators[g].set_initial_condition(time=t_init,**row)        
+    names = [g.name for g in generators]
+    
+    if not 'name' in data.columns:
+        # assume they are in order
+        data['name'] = names
+    
+    # add initial conditions for generators 
+    # which are specified in the initial file
+    for i, row in data.iterrows():
+        g = names.index(row['name'])
+        kwds = row[fields_initial].to_dict()
+        generators[g].set_initial_condition(time=t_init, **kwds)
     return
+
 
 def build_class_list(data, model, times=None, timeseries=None):
     """
-    Create list of class instances from data in a spreadsheet.
+    Create list of class instances from the row of a DataFrame.
     """
     datadir = user_config.directory
     is_generator = (model == Generator)
     
-    all_models=[]
+    all_models = []
+    
+    if 'schedulename' in data.columns:
+        data['schedule'] = None
     
     for i, row in data.iterrows():
         row_model = model
-        set_trace()
-        power = row.pop('power', None)
-        sched_col = row.pop('schedulename',None)
-        schedulefilename = row.pop('schedulefilename',None)
-
+        row = row.dropna()
+        
+        power = row.get('power')
+        schedulename = row.get('schedulename')
+        
         if is_generator:
-            observed_col = row.pop('observedname', None)
-            forecast_col = row.pop('forecastname',None)
+            # get all those extra things which need to be parsed
+            observed_name = row.get('observedname')
+            forecast_name = row.get('forecastname')
                         
-            observedfilename = row.pop('observedfilename',None)
-            forecastfilename = row.pop('forecastfilename',None)
-
-            scenariosfilename = row.pop('scenariosfilename',None)
-            scenariosdirectory = row.pop('scenariosdirectory',None)
+            scenariosfilename = row.get('scenariosfilename')
+            scenariosdirectory = row.get('scenariosdirectory')
             
             if scenariosdirectory and user_config.scenarios_directory:
+                # override the scenarios directory with the one \
+                # specified in the commandline options
                 scenariosdirectory = user_config.scenarios_directory
             
-            bid_points_filename = row.pop('costcurvepointsfilename', None)
+            bid_points_filename = row.get('costcurvepointsfilename')
 
-        
-        if power is not None: 
-            # a fixed power for all times
-            row['schedule'] = Series(power, times.strings.index)
-        elif (sched_col is not None) or (schedulefilename is not None):
-            row['schedule'] = _tsorfile(schedulefilename, datadir, timeseries, sched_col)  
-        elif is_generator and ((scenariosdirectory is not None) or (scenariosfilename is not None)):
-            row_model = Generator_Stochastic
         
         if is_generator:
-            if row.get('schedule') is not None:
+            if forecast_name and user_config.deterministic_solve:
                 row_model = Generator_nonControllable
-
-            if user_config.deterministic_solve and (forecastfilename is not None): 
+            if scenariosdirectory or scenariosfilename:
+                row_model = Generator_Stochastic
+            elif schedulename:
                 row_model = Generator_nonControllable
-                row['schedule'] = _tsorfile(forecastfilename, datadir, timeseries, forecast_col)
-            elif user_config.perfect_solve and (observedfilename is not None):
+        
+        kwds = row[row.index.isin(fields[model.__name__])].to_dict()
+        
+        # add in any schedules
+        if schedulename:
+            kwds['schedule'] = timeseries[schedulename]
+        elif pd.notnull(power):
+            # a constant power schedule
+            kwds['schedule'] = make_constant_schedule(times, power)
+            
+        if is_generator:
+            if observed_name:
+                kwds['observed_values'] = timeseries[observed_name]
+                            
+            if user_config.perfect_solve and observed_name:
                 # for a perfect information solve forecast = observed
-                row['schedule'] = _tsorfile(observedfilename, datadir, timeseries, observed_col)
-                
-                # load a custom bid points filename with {power, cost} columns 
-            if bid_points_filename is not None: 
-                bid_points = csv2dicts( joindir(datadir, bid_points_filename) ) 
-                row['bid_points'] = [ (bp['power'], bp['cost']) for bp in bid_points]
-                row['costcurvestring'] = None
-        
-        try: obj=row_model(index=index, **row)
-        except TypeError:
-            msg='{} model got unexpected parameter'.format(model)
-            print msg
-            raise
-
-        if is_generator:
-            if observedfilename and (user_config.deterministic_solve or user_config.perfect_solve):
-                obj.observed_values = _tsorfile(observedfilename, datadir, timeseries, observed_col)
-            elif scenariosdirectory is not None: 
-                obj.scenarios_directory = joindir(datadir, scenariosdirectory)
+                kwds['schedule'] = timeseries[observed_name]
+            elif forecast_name:
+                kwds['schedule'] = timeseries[forecast_name] 
+                              
+            if scenariosdirectory: 
+                kwds['scenarios_directory'] = \
+                    joindir(datadir, scenariosdirectory)
                 try:
-                    obj.observed_values = _tsorfile(observedfilename, datadir, timeseries, observed_col)
+                    kwds['observed_values'] = timeseries[observed_name]
                 except:
-                    raise IOError('you must provide a observed filename for a rolling stochastic UC')
+                    raise IOError('''you must provide an
+                        observed filename for a rolling stochastic UC''')
+                
             elif scenariosfilename is not None:
-                obj.scenarios_filename = scenariosfilename
-                    
+                kwds['scenarios_filename'] = scenariosfilename
+            
+            # add a custom bid points file with {power, cost} columns 
+            if bid_points_filename: 
+                kwds['bid_points'] = read_bid_points(
+                    joindir(datadir, bid_points_filename))
+                row.costcurveequation = None
+        
+        try: 
+            obj = row_model(index=i, **kwds)
+        except TypeError:
+            print '{} model got unexpected parameter'.format(model)
+            raise                    
 
         all_models.append( obj )
         
-    return all_models
+    return all_models  
 
-def _tsorfile(filename, datadir, timeseries, col):
-    if timeseries is not None:
-        sched = timeseries[col]
-    else:
-        sched = get_schedule(joindir(datadir, filename))
-    return sched
-    
+
+def read_bid_points(filename):
+    bid_points = read_csv(filename)
+    # return a tuple of bidpoints
+    return [ (bp['power'], bp['cost']) for bp in bid_points.iterrows()]
     
 
 def setup_times(generators_data, loads_data, filename_timeseries):
     """ 
     Create a :class:`~schedule.TimeIndex` object
-    from the schedule files. If there are no schedule
-    files (as in ED,OPF), create an index with just a single time.
+    from the schedule files.
+    
+    Also create a unified DataFrame of all the schedules, `timeseries`.
+    
+    If there are no schedule files (as in ED,OPF), 
+    create an index with just a single time.
     """
     try: 
         timeseries = ts_from_csv(filename_timeseries, is_df=True)
@@ -306,30 +322,48 @@ def setup_times(generators_data, loads_data, filename_timeseries):
         pass
         # the old way...
     
-    col = 'schedulefilename'
-    sched_files = pd.concat([
-        loads_data[loads_data[col].notnull()], 
-        generators_data[col].dropna()])
-        
-    if len(scheduled_components)==0:
-        #this is a ED or OPF problem - only one time
-        return None, just_one_time()
+    fcol = 'schedulefilename'
+    ncol = 'schedulename'
+            
+    loads_data[ncol] = None
+    generators_data[ncol] = None
+    
+    if fcol not in loads_data.columns:
+        loads_data[fcol] = None
+    if fcol not in generators_data.columns:
+        generators_data[fcol] = None
     
     datadir = user_config.directory
-    for obj in scheduled_components:
-        fnm = obj.pop(field_sched)
-        obj['schedule'] = get_schedule(joindir(datadir,fnm) )
     
-    lengths = [len(obj['schedule']) for obj in scheduled_components]
-    if not all(ln==lengths[0] for ln in lengths):
-        raise ValueError('not all schedules the same length')
+    timeseries = {}
     
-    times = TimeIndex(scheduled_components[0]['schedule'].index)
+    for i, load in loads_data[loads_data[fcol].notnull()].iterrows():
+        name = 'd{}'.format(i)
+        loads_data.ix[i, ncol] = name
+        timeseries[name] = get_schedule(joindir(datadir, load[fcol]))
+    
+    for i, gen in generators_data[generators_data[fcol].notnull()].iterrows():
+        name = 'g{}'.format(i)
+        generators_data.ix[i, ncol] = name
+        timeseries[name] = get_schedule(joindir(datadir, gen[fcol]))
 
-    for obj in scheduled_components:
-        obj['schedule'].index = times.strings.values
+    # FIXME - handle observed and forecast power
+    #observedfilename = row.pop('observedfilename',None)
+    #forecastfilename = row.pop('forecastfilename',None)
 
-    return None, times
+
+    generators_data = generators_data.drop(fcol, axis=1)
+    loads_data = loads_data.drop(fcol, axis=1)
+        
+    if len(timeseries) == 0:
+        #this is a ED or OPF problem - only one time
+        return DataFrame(), just_one_time()
+    
+    timeseries = DataFrame(timeseries)        
+    times = TimeIndex(timeseries.index)
+    timeseries.index = times.strings.values
+    return timeseries, times
+
 
 def _parse_scenario_day(filename):
     logging.debug('reading scenarios from %s', filename)
@@ -341,6 +375,7 @@ def _parse_scenario_day(filename):
         data['probability'] = data['probability']/sum( data['probability'] )
         
     return data  
+
 
 def setup_scenarios(generators, times, only_stage=False):
     if user_config.deterministic_solve: return None
@@ -393,6 +428,7 @@ def setup_scenarios(generators, times, only_stage=False):
         
         # defer construction until actual time stage starts
         return scenario_trees
+
 
 def _has_valid_attr(obj, name):
     return getattr(obj, name, None) is not None

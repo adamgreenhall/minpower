@@ -8,6 +8,7 @@ problems and solving them.
 import sys, os, logging, subprocess
 import time as timer
 import argparse
+import pdb
 from optimization import OptimizationError
 import get_data, powersystems, stochastic, results
 from config import user_config
@@ -310,9 +311,10 @@ def main():
         #solve the problem with those arguments
         try: solve_problem(directory)
         except:
-            if args.error:
-                print 'There was an error:'
-                traceback.print_exc(file=sys.stdout)
+            if args.debugger:
+                __, __, tb = sys.exc_info()
+                traceback.print_exc()
+                pdb.post_mortem(tb)
             else: raise
 
 # for use in dev

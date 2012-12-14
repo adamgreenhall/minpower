@@ -40,11 +40,11 @@ def assertAlmostEqual(x,y):
     #return [singlebus]    
 
 def make_cheap_gen(**kwargs):
-    return Generator(name='cheap gen', costcurvestring='{}P'.format(gen_costs['cheap']), **kwargs)
+    return Generator(name='cheap gen', costcurveequation='{}P'.format(gen_costs['cheap']), **kwargs)
 def make_mid_gen(**kwargs):
-    return Generator(name='middle-range gen', costcurvestring='{}P'.format(gen_costs['mid']), **kwargs)    
+    return Generator(name='middle-range gen', costcurveequation='{}P'.format(gen_costs['mid']), **kwargs)    
 def make_expensive_gen(**kwargs):
-    if 'costcurvestring' not in kwargs: kwargs['costcurvestring']='{}P'.format(gen_costs['expensive'])
+    if 'costcurveequation' not in kwargs: kwargs['costcurveequation']='{}P'.format(gen_costs['expensive'])
     return Generator(name='expensive gen', **kwargs)    
 def make_loads_times(Pd=200,Pdt=None,**kwargs):
     if Pdt is None:

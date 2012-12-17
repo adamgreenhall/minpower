@@ -60,8 +60,8 @@ def leak_on_reset():
     # create a problem
     loads_times = make_loads_times(Pdt=[20,30,40,50])
     generators = [
-        powersystems.Generator(name='expensive', costcurvestring='30P+0.01P^2'),
-        powersystems.Generator(name='cheap', costcurvestring='20P+0.005P^2')
+        powersystems.Generator(name='expensive', costcurveequation='30P+0.01P^2'),
+        powersystems.Generator(name='cheap', costcurveequation='20P+0.005P^2')
         ]
     
     # solve it

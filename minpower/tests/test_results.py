@@ -8,8 +8,8 @@ def check_power_status():
     match with the optimization values returned.
     '''
     generators=[
-        make_cheap_gen(Pmax=100),
-        make_mid_gen(Pmax=20),
+        make_cheap_gen(pmax=100),
+        make_mid_gen(pmax=20),
         make_expensive_gen()
     ]
 

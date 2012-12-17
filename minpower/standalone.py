@@ -7,12 +7,11 @@ and reloading them to run the next day as a memory independent subprocess.
 import os
 import pandas as pd
 from pandas import Series, DataFrame
-from commonscripts import gen_time_dataframe
+from commonscripts import gen_time_dataframe, set_trace
 from config import user_config
 
 from schedule import TimeIndex
 from get_data import parse_standalone
-
 
 def wipe_storage():
     try: 
@@ -30,58 +29,69 @@ def store_times(tstage, storage=None):
         storage = get_storage()
     storage['times'] = tstage.strings
     return storage
-        
+
+def init_store(power_system, times, data):
+    '''create the store before the first stage'''
+    wipe_storage()
+    storage = get_storage()
+    generators = power_system.generators()
+    
+    # store the problem info read from the spreadsheets
+    for key, df in data.iteritems():
+        key = 'data_' + key
+        storage[key] = df
+    
+    stages = len(times) #stage_times
+    t = [times[0].initialTime]
+    
+    # store first stage initial state
+    storage['power'] = gen_time_dataframe(generators, t, 
+        values = [[gen.initial_power for gen in generators]])
+    storage['status'] = gen_time_dataframe(generators, t, 
+        values = [[gen.initial_status for gen in generators]])
+    storage['hrsinstatus'] = gen_time_dataframe(generators, t, 
+        values = [[gen.initial_status_hours for gen in generators]])
+
+    # setup empty containers for variables
+    storage['load_shed'] = Series()
+    storage['expected_cost'] = DataFrame()
+    storage['observed_cost'] = DataFrame()
+    storage['expected_status'] = DataFrame()
+    storage['expected_power'] = DataFrame()
+    
+    # setup one-per-stage results
+    storage['solve_time'] = Series(index=range(stages))
+    
+    # store configuration
+    user_config._int_overlap = times[0]._int_overlap
+    user_config._int_division = times[0]._int_division
+    storage['configuration'] = Series(user_config)        
+    return storage
+    
 def store_state(power_system, times, sln=None):
     storage = get_storage()
     generators = power_system.generators()
    
-    if sln is None: 
-        # pre-first stage
-        stages = len(times) #stage_times
-        t = [times[0].initialTime]
-        
-        storage['power'] = gen_time_dataframe(generators, t, 
-            values = [[gen.initial_power for gen in generators]])
-        storage['status'] = gen_time_dataframe(generators, t, 
-            values = [[gen.initial_status for gen in generators]])
-        storage['hrsinstatus'] = gen_time_dataframe(generators, t, 
-            values = [[gen.initial_status_hours for gen in generators]])
-
-        storage['load_shed'] = Series()
-        storage['expected_cost'] = DataFrame()
-        storage['observed_cost'] = DataFrame()
-        storage['expected_status'] = DataFrame()
-        storage['expected_power'] = DataFrame()
-        
-        # per-stage results 
-        storage['solve_time'] = Series(index=range(stages))
-        
-        # store configuration
-        # store stage initial state
-        user_config._int_overlap = times[0]._int_overlap
-        user_config._int_division = times[0]._int_division
-        storage['configuration'] = Series(user_config)        
+    stg = sln.stage_number
+    table_append(storage, 'power', sln.generators_power)
+    table_append(storage, 'status', sln.generators_status)
+    table_append(storage, 'load_shed', sln.load_shed_timeseries)
+    
+    tEnd = times.last_non_overlap()
+    storage['hrsinstatus'] = gen_time_dataframe(generators, [tEnd], 
+        values = [
+            [gen.finalstatus['hoursinstatus'] for gen in generators]
+        ])
+    
+    _add_tbl_val(storage, 'solve_time', stg, sln.solve_time)                
+    
+    if sln.is_stochastic or user_config.deterministic_solve:
+        table_append(storage, 'observed_cost', sln.observed_totalcost)
+        table_append(storage, 'expected_cost', sln.expected_totalcost)
+        table_append(storage, 'expected_power', sln.expected_power)
+        table_append(storage, 'expected_status', sln.expected_status)
     else:
-        stg = sln.stage_number
-        table_append(storage, 'power', sln.generators_power)
-        table_append(storage, 'status', sln.generators_status)
-        table_append(storage, 'load_shed', sln.load_shed_timeseries)
-        
-        tEnd = times.last_non_overlap()
-        storage['hrsinstatus'] = gen_time_dataframe(generators, [tEnd], 
-            values = [
-                [gen.finalstatus['hoursinstatus'] for gen in generators]
-            ])
-        
-        _add_tbl_val(storage, 'solve_time', stg, sln.solve_time)                
-        
-        if sln.is_stochastic or user_config.deterministic_solve:
-            table_append(storage, 'observed_cost', sln.observed_totalcost)
-            table_append(storage, 'expected_cost', sln.expected_totalcost)
-            table_append(storage, 'expected_power', sln.expected_power)
-            table_append(storage, 'expected_status', sln.expected_status)
-        else:
-            table_append(storage, 'expected_cost', sln.totalcost_generation)
+        table_append(storage, 'expected_cost', sln.totalcost_generation)
     return storage
     
 def load_state():
@@ -93,7 +103,7 @@ def load_state():
     times._int_overlap = user_config._int_overlap
     times._int_division = user_config._int_division
     # create power_system
-    power_system, times, scenario_tree = parse_standalone(times)
+    power_system, times, scenario_tree = parse_standalone(storage, times)
     generators = power_system.generators()
     
     # set up initial state
@@ -103,8 +113,8 @@ def load_state():
     for gen in generators: 
         g = str(gen)
         gen.set_initial_condition(t, 
-            P=storage['power'][g][t],
-            u=storage['status'][g][t],
+            power=storage['power'][g][t],
+            status=storage['status'][g][t],
             hoursinstatus=storage['hrsinstatus'][g][t])
     
     return power_system, times, scenario_tree

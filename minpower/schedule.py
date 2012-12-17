@@ -18,6 +18,10 @@ def just_one_time():
     '''make a TimeIndex with just one time in it'''
     return make_times_basic(1)
 
+def make_constant_schedule(times, power=0):
+    return Series(power, times.strings.values)
+
+
 class TimeIndex(object):
     '''a list of times (underlying model is pandas.Index)'''
     def __init__(self, index, str_start=0):
@@ -54,7 +58,7 @@ class TimeIndex(object):
             if self.interval.freqstr=='H':
                 self.intervalhrs = self.interval.n
             else:
-                self.intervalhrs = None # TODO
+                self.intervalhrs = self.interval.nanos / 1.0e9 / 3600.0
         else:            
             self.interval = self.times[1] - self.times[0]
             self.intervalhrs = self.interval.total_seconds() / 3600.0

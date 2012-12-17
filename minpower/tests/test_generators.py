@@ -15,14 +15,14 @@ def power_maximum():
     Give the cheap one a maximum power limit lower than the load.
     Ensure that the cheaper unit is at its limit.
     '''
-    Pmax=100
+    pmax=100
     Pd=221
     generators=[
-        make_cheap_gen(Pmax=Pmax),
+        make_cheap_gen(pmax=pmax),
         make_expensive_gen()
         ]
     power_system,times=solve_problem(generators,**make_loads_times(Pd))
-    assert generators[0].power(times[0]) == Pmax
+    assert generators[0].power(times[0]) == pmax
     
 @istest
 def power_minimum():
@@ -31,14 +31,14 @@ def power_minimum():
     Give the expensive one a min power limit.
     Ensure that the exp. unit is at its limit.
     '''
-    Pmin=10
+    pmin=10
     Pd=221
     generators=[
         make_cheap_gen(),
-        make_expensive_gen(Pmin=Pmin)
+        make_expensive_gen(pmin=pmin)
         ]
     power_system,times=solve_problem(generators,**make_loads_times(Pd))
-    assert generators[1].power(times[0]) == Pmin
+    assert generators[1].power(times[0]) == pmin
 
 @istest
 def ramp_up():
@@ -52,7 +52,7 @@ def ramp_up():
         make_cheap_gen(rampratemax=ramp_limit),
         make_expensive_gen()
         ]
-    initial = [{'P':250},{'P':250}]
+    initial = [{'power':250},{'power':250}]
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[250,350]))
     print generators[1]._parent_problem()
     assert generators[0].power(times[1]) - generators[0].power(times[0]) == ramp_limit
@@ -69,7 +69,7 @@ def ramp_down():
         make_cheap_gen(),
         make_expensive_gen(rampratemin=ramp_limit)
         ]
-    initial = [{'P':250},{'P':250}]
+    initial = [{'power':250},{'power':250}]
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[550,450]))
     ramp_rate = value(generators[1].power(times[1])) - value(generators[1].power(times[0]))
     assertAlmostEqual(ramp_rate, ramp_limit)
@@ -86,7 +86,7 @@ def ramp_up_initial():
         make_cheap_gen(rampratemax=ramp_limit),
         make_expensive_gen()
         ]
-    initial = [{'P':250},{'P':250}]
+    initial = [{'power':250},{'power':250}]
     
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[350,350]))
     ramp_rate = generators[0].power(times[0]) - generators[0].initial_power
@@ -104,7 +104,7 @@ def ramp_down_initial():
     generators=[
         make_cheap_gen(),
         make_expensive_gen(rampratemin=ramp_limit)  ]
-    initial = [{'P':250},{'P':250}]
+    initial = [{'power':250},{'power':250}]
     
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[300,300]))
     ramp_rate = generators[1].power(times[0]) - generators[1].initial_power
@@ -120,11 +120,11 @@ def min_up_time():
     Ensure that the expensive generator is on at t1 and t2, then turns off. 
     '''
     generators=[
-        make_cheap_gen(Pmax=100),
-        make_expensive_gen(minuptime=2,Pmin=5)   ]
+        make_cheap_gen(pmax=100),
+        make_expensive_gen(minuptime=2,pmin=5)   ]
     initial = [
-        dict(P= 80, u=True),
-        dict(u=False)]
+        dict(power=80, status=True),
+        dict(status=False)]
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[85,120,80,80]))
     limgen_status=[generators[1].status(t) for t in times]
     assert limgen_status == [0,1,1,0] or limgen_status == [1,1,0,0]
@@ -143,13 +143,13 @@ def min_down_time():
     Ensure that the hi generator is ON for t2 to make up the difference.
     '''
     generators=[
-        make_cheap_gen(Pmax=100),
-        make_mid_gen(mindowntime=2,Pmin=40),
+        make_cheap_gen(pmax=100),
+        make_mid_gen(mindowntime=2,pmin=40),
         make_expensive_gen()]
     initial = [
-        dict(P= 100, u=True),
-        dict(P=40, u=True,hoursinstatus=0),
-        dict(u=False)]
+        dict(power=100, status=True),
+        dict(power=40, status=True,hoursinstatus=0),
+        dict(status=False)]
 
     _, times = solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[150,10,140,140]))
     limgen_status = [generators[1].status(t) for t in times]
@@ -168,11 +168,11 @@ def start_up_cost():
     '''
     startupcost=9000
     generators=[
-        make_cheap_gen(Pmax=100),
+        make_cheap_gen(pmax=100),
         make_expensive_gen(startupcost=startupcost)   ]
     initial = [
-        dict(P= 80, u=True),
-        dict(u=False)]
+        dict(power=80, status=True),
+        dict(status=False)]
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[80,120]))
     assert generators[1].cost_startup(times[1])==startupcost
 
@@ -188,11 +188,11 @@ def shut_down_cost():
     '''
     shutdowncost=200
     generators=[
-        make_cheap_gen(Pmax=100),
-        make_expensive_gen(shutdowncost=shutdowncost, Pmin=20)   ]
+        make_cheap_gen(pmax=100),
+        make_expensive_gen(shutdowncost=shutdowncost, pmin=20)   ]
     initial = [
-        dict(P= 80, u=True),
-        dict(P=20,u=True)]
+        dict(power=80, status=True),
+        dict(power=20, status=True)]
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[150,10]))
     assert generators[1].cost_shutdown(times[1])==shutdowncost
 
@@ -205,11 +205,11 @@ def min_up_time_longer():
     Ensure that the expensive generator is on at t1 and t2, then turns off. 
     '''
     generators=[
-        make_cheap_gen(Pmax=100),
-        make_expensive_gen(minuptime=8,Pmin=5)   ]
+        make_cheap_gen(pmax=100),
+        make_expensive_gen(minuptime=8,pmin=5)   ]
     initial = [
-        dict(P= 80, u=True,hoursinstatus=1),
-        dict(u=False,hoursinstatus=0)]
+        dict(power=80, status=True, hoursinstatus=1),
+        dict(status=False, hoursinstatus=0)]
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[85,120,80,80,70,70,70,70,80,80]))
     limgen_status=[generators[1].status(t) for t in times]
     #logging.critical(limgen_status)

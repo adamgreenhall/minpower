@@ -22,6 +22,8 @@ def _get_store_filename():
     user_config.store_filename = joindir(user_config.directory, fnm)
 
 def solve_multistage_standalone(power_system, times, scenario_tree, data):
+    from standalone import store_times, init_store, get_storage, repack_storage
+    
     _get_store_filename()
 
     stage_times = times.subdivide(
@@ -49,6 +51,7 @@ def solve_multistage_standalone(power_system, times, scenario_tree, data):
 
 def standaloneUC():
     '''the hook for the ``standalone_minpower`` script'''
+    from standalone import store_state, load_state
 
     parser = argparse.ArgumentParser()
     parser.add_argument('directory', type=str, help='the problem direcory')
@@ -70,36 +73,8 @@ def standaloneUC():
     # load stage data
     power_system, times, scenario_tree = load_state()
 
-    try:
-        sln, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg)
-    except OptimizationError:
-        #re-do stage, with load shedding allowed
-        logging.critical('stage infeasible, re-running with load shedding.')
-        power_system.reset_model()
-        power_system.set_load_shedding(True)
-        try:
-            sln, instance = create_solve_problem(power_system, times, scenario_tree, multistage=True, stage_number=stg, rerun=True)
-        except OptimizationError:
-            raise OptimizationError('failed to solve, even with load shedding.')
-        power_system.set_load_shedding(False)
+    sln = create_solve_problem(power_system, times, scenario_tree, stage_number=stg)
 
-    logging.debug('solved... get results')
-
-    # resolve with observed power and fixed status
-    if sln.is_stochastic:
-        power_system.resolve_stochastic_with_observed(instance, sln)
-    elif user_config.deterministic_solve:
-        power_system.resolve_determinisitc_with_observed(sln)
-
-    if sln.load_shed_timeseries.sum() > 0.01:
-        logging.debug('shed {}MW in resolve of stage'.format(
-            sln.load_shed_timeseries.sum()))
-
-
-    power_system.get_finalconditions(sln)
-
-    power_system.set_load_shedding(False)
-    sln.stage_number = stg
     store = store_state(power_system, times, sln)
     store.flush()
 
@@ -127,12 +102,9 @@ def solve_problem(datadir='.',
 
     logging.debug('power system initialized')
     if times.spanhrs <= user_config.hours_commitment + user_config.hours_overlap:
-        solution, instance = create_solve_problem(power_system, times, scenario_tree)
+        solution = create_solve_problem(power_system, times, scenario_tree)
     else: #split into multiple stages and solve
         if user_config.standalone:
-            from standalone import (store_state, load_state, store_times,
-                init_store, get_storage, repack_storage)
-
             stage_solutions, stage_times = solve_multistage_standalone(
                 power_system, times, scenario_tree, data)
         else:
@@ -161,18 +133,24 @@ def solve_multistage(power_system, times, scenario_tree=None, data=None):
 
     stage_solutions = []
 
-    for stg,t_stage in enumerate(stage_times):
+    for stg, t_stage in enumerate(stage_times):
         logging.info('Stage starting at {}'.format(t_stage.Start.date()))
-        # set initial state
         # solve
-        # set final state
+        solution = create_solve_problem(
+            power_system, t_stage, scenario_tree, stg)
         # add to stage solutions
+        stage_solutions.append(solution)
+        # reset model
+        power_system.reset_model()
+        # set inital state for next stage
+        if stg < len(stage_times)-1:
+            power_system.set_initialconditions(stage_times[stg+1].initialTime)
 
     return stage_solutions, stage_times
 
 
 def create_solve_problem(power_system, times, scenario_tree=None,
-    multistage=False, stage_number=None, rerun=False):
+    stage_number=None, rerun=False):
     '''create and solve an optimization problem.'''
 
     if user_config.problemfile:
@@ -180,16 +158,47 @@ def create_solve_problem(power_system, times, scenario_tree=None,
             user_config.directory, 'problem-formulation.lp')
 
     create_problem(power_system, times, scenario_tree,
-        multistage, stage_number, rerun)
+        stage_number, rerun)
 
-    instance = power_system.solve()
+    try: 
+        instance = power_system.solve()
+    except OptimizationError:
 
-    solution=results.make_solution(power_system,times,datadir=user_config.directory)
+        #re-do stage, with load shedding allowed
+        logging.critical('stage infeasible, re-running with load shedding.')
+        power_system.reset_model()
+        power_system.set_load_shedding(True)
+        create_problem(power_system, times, scenario_tree, stage_number)
+        try:
+            instance = power_system.solve()
+        except OptimizationError:
+            raise OptimizationError('failed to solve, even with load shedding.')
+        power_system.set_load_shedding(False)
 
-    return solution, instance
+    logging.debug('solved... get results')
+
+    sln = results.make_solution(power_system, times)
+
+    # resolve with observed power and fixed status
+    if sln.is_stochastic:
+        power_system.resolve_stochastic_with_observed(instance, sln)
+    elif user_config.deterministic_solve:
+        power_system.resolve_determinisitc_with_observed(sln)
+
+    if sln.load_shed_timeseries.sum() > 0.01:
+        logging.debug('shed {}MW in resolve of stage'.format(
+            sln.load_shed_timeseries.sum()))
+
+
+    power_system.get_finalconditions(sln)
+
+    power_system.set_load_shedding(False)
+    sln.stage_number = stage_number
+    
+    return sln
 
 def create_problem(power_system, times, scenario_tree=None,
-    multistage=False, stage_number=None, rerun=False):
+    stage_number=None, rerun=False):
     """Create an optimization problem."""
 
     logging.debug('initialized problem')

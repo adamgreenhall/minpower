@@ -405,15 +405,15 @@ class Solution_UC_multistage(Solution_UC):
     Each element of the list :param:stage_solutions is a :class:`~results.Solution_UC` object.
 
     '''
-    def __init__(self,power_system, stage_times, stage_solutions):
+    def __init__(self, power_system, stage_times, stage_solutions):
         update_attributes(self,locals(),exclude=['stage_solutions','stage_times'])
-        self._resolved = self.is_stochastic \
+        self._resolved = power_system.is_stochastic \
             or user_config.deterministic_solve \
             or user_config.perfect_solve
 
         self.is_stochastic = any(sln.is_stochastic for sln in stage_solutions)
         times = pd.concat([times.non_overlap().strings for times in stage_times]).index
-        self.times=TimeIndex(times)
+        self.times = TimeIndex(times)
         self.times.set_initial(stage_times[0].initialTime)
 
         self.objective = self._sum_over('objective',stage_solutions)
@@ -427,29 +427,25 @@ class Solution_UC_multistage(Solution_UC):
     def _sum_over(self,attrib,stage_solutions):
         return sum(getattr(sln, attrib) for sln in stage_solutions)
 
-    def _get_outputs(self,stage_solutions):
+    def _concat(self, attrib, slns):
+        return pd.concat([getattr(sln, attrib) for sln in slns])
+
+    def _get_outputs(self, slns):
         '''the outputs under observed wind'''
         if self.is_stochastic or user_config.deterministic_solve:
-            self.generators_power = pd.concat([stage.observed_generator_power for stage in stage_solutions])
-            self.generators_status = pd.concat([stage.stage_generators_status for stage in stage_solutions])
+            self.generators_power = self._concat('observed_generator_power', slns)
+            self.generators_status = self._concat('stage_generators_status', slns)
         else:
-            self.generators_power  = pd.concat([stage.generators_power for stage in stage_solutions])
-            self.generators_status = pd.concat([stage.generators_status for stage in stage_solutions])
+            self.generators_power  = self._concat('generators_power', slns)
+            self.generators_status = self._concat('generators_status', slns)
 
-    def _get_costs(self,stage_solutions):
-        self.fuelcost_generation=self._sum_over('fuelcost_generation',stage_solutions)
-        self.totalcost_generation=self._sum_over('totalcost_generation',stage_solutions)
-        self.load_shed = self._sum_over('load_shed',stage_solutions)
+    def _get_costs(self, slns):
+        self.totalcost_generation=self._concat('totalcost_generation', slns)
+        self.load_shed_timeseries = self._concat('load_shed_timeseries', slns)
+        self.load_shed = self.load_shed_timeseries.sum()
 
         if user_config.deterministic_solve:
-            self.expected_fuelcost_generation = self._sum_over('expected_fuelcost_generation',stage_solutions)
-            self.expected_totalcost_generation = self._sum_over('expected_totalcost_generation',stage_solutions)
-            self.expected_load_shed = self._sum_over('expected_load_shed',stage_solutions)
-
-        if not self.is_stochastic:
-            self.fuelcost_true=self._sum_over('fuelcost_true',stage_solutions)
-            self._get_cost_error()
-
+            self.expected_totalcost_generation = self._concat('expected_totalcost_generation', slns)
 
 
     def info_cost(self):
@@ -459,17 +455,13 @@ class Solution_UC_multistage(Solution_UC):
 
         out = [
         '{}objective cost={}'.format(expected, self.objective),
-        'total {}generation costs={}'.format(observed, self.totalcost_generation),
-        'linearized {}fuel cost of generation={}'.format(observed, self.fuelcost_generation),
+        'total {}generation costs={}'.format(observed, 
+            self.totalcost_generation.sum().sum()),
         ]
         if user_config.deterministic_solve:
             out.extend([
-                'total expected generation cost = {}'.format(self.expected_totalcost_generation)
-            ])
-        if not resolved:
-            out.extend([
-                ' non-linearized cost of generation={}'.format(self.fuelcost_true),
-                'percentage difference\t\t={diff:.2%}'.format(diff=self.costerror),
+                'total expected generation cost = {}'.format(
+                    self.expected_totalcost_generation.sum().sum())
             ])
         return out
 
@@ -487,7 +479,8 @@ class Solution_UC_multistage(Solution_UC):
     def info_status(self):
         return ['solved multistage problem in a total solver time of {time:0.4f} sec'.format(time=self.solve_time)]
     def info_shedding(self):
-        return ['total load shed={}MW'.format(self.load_shed) if self.load_shed>0 else '']
+        return ['total load shed={}MW'.format(self.load_shed) \
+            if self.load_shed > 0.01 else '']
 
 
 class Solution_Stochastic(Solution):

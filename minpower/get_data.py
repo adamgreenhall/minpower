@@ -126,12 +126,12 @@ def parsedir(
 
     try:
         lines_data = nice_names(read_csv(file_lines))
-    except IOError:
+    except Exception:
         lines_data = DataFrame()
 
     try:
         init_data = nice_names(read_csv(file_init))
-    except IOError:
+    except Exception:
         init_data = DataFrame()
 
     #create times

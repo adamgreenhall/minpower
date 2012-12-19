@@ -345,9 +345,7 @@ class PowerSystem(OptimizationProblem):
                     times.non_overlap(), stat)
         return
 
-    def set_initialconditions(self, initTime, stage_number, stage_solutions):
-        #first stage of problem already has initial time defined
-        if stage_number == 0: return
+    def set_initialconditions(self, initTime):
         for gen in self.generators():
             finalstatus = getattr(gen, 'finalstatus', {})
             if finalstatus:

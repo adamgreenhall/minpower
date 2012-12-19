@@ -117,8 +117,8 @@ class Generator(OptimizationObject):
     def cost_second_stage(self, times): return sum(self.operatingcost(time) for time in times)
     def getstatus(self, tend, times, status):
         return dict(
-            u=value(self.status(tend)),
-            P=value(self.power(tend)),
+            status=value(self.status(tend)),
+            power=value(self.power(tend)),
             hoursinstatus=self.gethrsinstatus(times, status))
     def gethrsinstatus(self, times, stat):
         if not self.is_controllable: return 0
@@ -342,7 +342,10 @@ class Generator_nonControllable(Generator):
 
 
     def getstatus(self, tend, times=None, status=None):
-        return dict(u=1,P=self.power(tend),hoursinstatus=0)
+        return dict(
+            status=1,
+            power=self.power(tend),
+            hoursinstatus=0)
     def create_variables(self,times):
         self.add_parameter('power', index=times.set, values=dict([(t, self.get_scheduled_ouput(t)) for t in times]) )
         self.bids=bidding.Bid(

@@ -4,9 +4,6 @@ python:
 before_install: 
     - sudo apt-get update
     - sudo apt-get install python-numpy glpk
-    - sudo apt-get install libhdf5-serial-dev
-    - pip install numexpr
-    - pip install tables
 install: pip install --use-mirrors .
 script:
     - pip install --use-mirrors nose objgraph

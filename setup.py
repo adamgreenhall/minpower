@@ -30,12 +30,10 @@ setup(
         'coopr.core>=1.0',
         'pyutilib>=4.0',
         'numpy>=1.6.1',
-        'pandas>=0.9.1',  #pip install --upgrade git+git://github.com/pydata/pandas.git#egg=pandas
+        'pandas>=0.10',
         'python-dateutil>=1.4.1',
         'ordereddict>=1.1',
         'PyYAML>=3.10',
-        'numexpr',
-        'tables>=2.4',
     ],
     tests_require=[
         'nose',

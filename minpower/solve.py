@@ -12,8 +12,6 @@ import pdb
 from optimization import OptimizationError
 import get_data, powersystems, stochastic, results
 from config import user_config
-from standalone import (store_state, load_state, store_times, init_store,
-    get_storage, repack_storage)
 from commonscripts import joindir, StreamToLogger, set_trace
 
 def _get_store_filename():
@@ -23,7 +21,7 @@ def _get_store_filename():
 
     user_config.store_filename = joindir(user_config.directory, fnm)
 
-def solve_multistage(power_system, times, scenario_tree, data):
+def solve_multistage_standalone(power_system, times, scenario_tree, data):
     _get_store_filename()
 
     stage_times = times.subdivide(
@@ -87,8 +85,8 @@ def standaloneUC():
 
     logging.debug('solved... get results')
 
-    # resolve with observed power and fixed status 
-    if sln.is_stochastic:        
+    # resolve with observed power and fixed status
+    if sln.is_stochastic:
         power_system.resolve_stochastic_with_observed(instance, sln)
     elif user_config.deterministic_solve:
         power_system.resolve_determinisitc_with_observed(sln)
@@ -96,7 +94,7 @@ def standaloneUC():
     if sln.load_shed_timeseries.sum() > 0.01:
         logging.debug('shed {}MW in resolve of stage'.format(
             sln.load_shed_timeseries.sum()))
-    
+
 
     power_system.get_finalconditions(sln)
 
@@ -131,8 +129,15 @@ def solve_problem(datadir='.',
     if times.spanhrs <= user_config.hours_commitment + user_config.hours_overlap:
         solution, instance = create_solve_problem(power_system, times, scenario_tree)
     else: #split into multiple stages and solve
-        stage_solutions, stage_times = solve_multistage(
-            power_system, times, scenario_tree, data)
+        if user_config.standalone:
+            from standalone import (store_state, load_state, store_times,
+                init_store, get_storage, repack_storage)
+
+            stage_solutions, stage_times = solve_multistage_standalone(
+                power_system, times, scenario_tree, data)
+        else:
+            stage_solutions, stage_times = solve_multistage(
+                power_system, times, scenario_tree, data)
         solution = results.make_multistage_solution(
             power_system, stage_times, stage_solutions)
 
@@ -148,6 +153,23 @@ def solve_problem(datadir='.',
     # if solution_file: solution.save(solution_file)
     logging.info('total time: {}s'.format(timer.time()-start_time))
     return solution
+
+
+def solve_multistage(power_system, times, scenario_tree=None, data=None):
+    stage_times = times.subdivide(
+        user_config.hours_commitment, user_config.hours_overlap)
+
+    stage_solutions = []
+
+    for stg,t_stage in enumerate(stage_times):
+        logging.info('Stage starting at {}'.format(t_stage.Start.date()))
+        # set initial state
+        # solve
+        # set final state
+        # add to stage solutions
+
+    return stage_solutions, stage_times
+
 
 def create_solve_problem(power_system, times, scenario_tree=None,
     multistage=False, stage_number=None, rerun=False):
@@ -178,32 +200,32 @@ def create_problem(power_system, times, scenario_tree=None,
     power_system.create_constraints(times)
     logging.debug('created constraints')
 
-    if scenario_tree is not None and not rerun:
-        if multistage: # multiple time stages
-            gen = power_system.get_generator_with_scenarios()
-            tree = stochastic.construct_simple_scenario_tree(
-                gen.scenario_values[times.Start]['probability'].values.tolist(),
-                time_stage=stage_number)
-            logging.debug('constructed tree for stage %i'%stage_number)
-        else: tree = scenario_tree
+    if scenario_tree is not None and sum(scenario_tree.shape)>0 and not rerun:
+        gen = power_system.get_generator_with_scenarios()
+        tree = stochastic.construct_simple_scenario_tree(
+            gen.scenario_values[times.Start]['probability'].values.tolist(),
+            time_stage=stage_number)
+
+        logging.debug('constructed tree for stage %i'%stage_number)
+
         stochastic.define_stage_variables(tree, power_system, times)
         power_system = stochastic.create_problem_with_scenarios(
-            power_system, times, tree, 
-            user_config.hours_commitment, 
-            user_config.hours_overlap, 
+            power_system, times, tree,
+            user_config.hours_commitment,
+            user_config.hours_overlap,
             stage_number=stage_number)
     return
 
 def _setup_logging():
     ''' set up the logging to report on the status'''
     kwds = dict(
-        level=user_config.logging_level, 
+        level=user_config.logging_level,
         datefmt='%Y-%m-%d %H:%M:%S',
         format='%(asctime)s %(levelname)s: %(message)s')
     if user_config.logging_filename:
         kwds['filename'] = user_config.logging_filename
     if user_config.output_prefix:
-        kwds['filename'] = joindir(user_config.directory, 
+        kwds['filename'] = joindir(user_config.directory,
             '{}.pylog'.format(user_config._pid))
     if (user_config.logging_level > 10) and (not 'filename' in kwds):
         # don't log the time if debugging isn't turned on
@@ -271,9 +293,11 @@ def main():
         help='override scenarios directory for stochastic problem')
     parser.add_argument('--faststart_resolve', action='store_true',
         default=False,
-        help="""allow faststart units which are off to be 
+        help="""allow faststart units which are off to be
                 started up during resolve""")
 
+    parser.add_argument('--standalone', '-m', action="store_true", default=False,
+        help='Make each multi-day commitment its own subprocess (helps with memory issues).')
     parser.add_argument('--output_prefix','-p', action="store_true",
         default=user_config.output_prefix,
         help = 'Prefix all results files with the process id (for a record of simulataneous solves)')

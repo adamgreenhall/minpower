@@ -2,9 +2,9 @@
 Provide the defaults and configuration for other modules.
 `user_config` is treated as a global in minpower.
 """
-
-import logging
-from commonscripts import DotDict
+import os
+from ConfigParser import SafeConfigParser
+from commonscripts import DotDict, joindir
 
 generator_kinds=[
     'generic',
@@ -90,33 +90,47 @@ generator_defaults=dict(
     )
 
 
-available_solvers = ['gurobi','glpk']
-
+parser = SafeConfigParser()
+parser.read([
+    # the minpower default set, from the minpower/configuration directory 
+    joindir(os.path.split(__file__)[0], 'configuration/minpower.cfg'), 
+    # the user's overrides, from the home directory
+    os.path.expanduser('~/.minpower.cfg')],
+    # add another override in the specific case directory??
+    )
 
 user_config = DotDict(dict(
-    duals=False,
-    breakpoints=11,
-    hours_commitment=24,
-    hours_overlap=0,
-    cost_load_shedding=10000, #$/MWh
-    load_shedding_allowed=False,
-    dispatch_decommit_allowed=False,
-    solver='gurobi',
+    duals = parser.getboolean('minpower', 'duals'),
+    breakpoints = parser.getint('minpower', 'breakpoints'),
+    hours_commitment = parser.getint('minpower', 'hours_commitment'),
+    hours_overlap = parser.getint('minpower', 'hours_overlap'),
+    
+    cost_load_shedding = parser.getfloat('minpower', 'cost_load_shedding'),
+    load_shedding_allowed = \
+        parser.getboolean('minpower', 'load_shedding_allowed'),
+    dispatch_decommit_allowed = \
+        parser.getboolean('minpower', 'dispatch_decommit_allowed'),
+    solver = parser.get('minpower', 'solver'),
 
-    reserve_fixed=0,
-    reserve_load_fraction=0.0,
+    reserve_fixed = parser.getfloat('minpower', 'reserve_fixed'),
+    reserve_load_fraction = \
+        parser.getfloat('minpower', 'reserve_load_fraction'),
 
-    faststart_resolve=False,
+    faststart_resolve = parser.getboolean('minpower', 'faststart_resolve'),
 
-    visualization=False,
-    logging_level=logging.DEBUG,
-    logging_filename=False,
-    problem_filename=False,
-    output_prefix=False,
+    visualization = parser.getboolean('minpower', 'visualization'),
+    logging_level = parser.getint('minpower', 'logging_level'),
+    logging_filename = parser.getboolean('minpower', 'logging_filename'),
+    problem_filename = parser.getboolean('minpower', 'problem_filename'),
+    output_prefix = parser.getboolean('minpower', 'output_prefix'),
 
-    scenarios=None,
-    deterministic_solve=False,
-    perfect_solve=False,
-    scenarios_directory=None,
-
+    scenarios = parser.getint('minpower', 'scenarios'),
+    deterministic_solve = parser.getboolean('minpower', 'deterministic_solve'),
+    perfect_solve = parser.getboolean('minpower', 'perfect_solve'),
+    scenarios_directory = parser.get('minpower', 'scenarios_directory'),
     ))
+
+available_solvers = []
+for solver in parser.options('available_solvers'):
+  if parser.getboolean('available_solvers', solver):
+      available_solvers.append(solver)

@@ -25,6 +25,8 @@ setup(
     hyak_minpower = minpower.experiments.minpower_hyak:main
     """,
 
+    data_files=[('configuration', 'configuration/minpower.cfg')],
+
     install_requires=[
         'Coopr>=3.2.6148', #3.1.5409
         'coopr.core>=1.0',
@@ -61,7 +63,7 @@ setup(
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Mathematics",
         ],
-    long_description = """\
+    long_description = """
 power systems tools made beautiful
 -----------------------------------------
 

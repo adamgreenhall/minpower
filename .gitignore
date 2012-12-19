@@ -1,4 +1,6 @@
+minpower/configuration/minpower.cfg
 error.txt
+out.txt
 results.txt
 *.lp
 *.png

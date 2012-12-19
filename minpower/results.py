@@ -453,9 +453,11 @@ class Solution_UC_multistage(Solution_UC):
         resolved = self._resolved
         expected = 'expected ' if resolved else ''
         observed = 'observed ' if resolved else ''
-        out = ['total {}generation cost = {}'.format(
-            expected, self.expected_cost.sum().sum())]
-        if resolved: out.append('total {}generation cost = {}'.format(
+        out = []
+        if resolved: 
+            out.append('total {}generation cost = {}'.format(
+                expected, self.expected_cost.sum().sum()))
+        out.append('total {}generation cost = {}'.format(
             observed, self.observed_cost.sum().sum()))
         return out
 

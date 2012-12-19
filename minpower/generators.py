@@ -319,6 +319,7 @@ class Generator_nonControllable(Generator):
         faststart=False,
         pmin=0, pmax=None,
         name='', index=None, bus=None, kind='wind',
+        observed_values=None,
         **kwargs):
 
         update_attributes(self,locals()) #load in inputs

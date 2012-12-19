@@ -148,7 +148,7 @@ def parsedir(
 
     #get scenario values (if applicable)
     scenario_values = setup_scenarios(generators_data, generators, times)
-
+    
     # also return the raw DataFrame objects
     data = dict(
         generators=generators_data,
@@ -235,13 +235,12 @@ def build_class_list(data, model, times=None, timeseries=None):
 
 
         if is_generator:
-            if forecast_name and user_config.deterministic_solve:
+            if schedulename or \
+                (forecast_name and user_config.deterministic_solve):
                 row_model = Generator_nonControllable
-            if scenariosdirectory or scenariosfilename:
+            elif scenariosdirectory or scenariosfilename:
                 row_model = Generator_Stochastic
-            elif schedulename:
-                row_model = Generator_nonControllable
-
+            
         kwds = row[row.index.isin(fields[model.__name__])].to_dict()
 
         # add in any schedules
@@ -269,8 +268,7 @@ def build_class_list(data, model, times=None, timeseries=None):
                 except:
                     raise IOError('''you must provide an
                         observed filename for a rolling stochastic UC''')
-
-            elif scenariosfilename is not None:
+            elif scenariosfilename:
                 kwds['scenarios_filename'] = scenariosfilename
 
             # add a custom bid points file with {power, cost} columns

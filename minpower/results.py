@@ -441,7 +441,7 @@ class Solution_UC_multistage(Solution_UC):
         self.load_shed = self.load_shed_timeseries.sum()
 
         if user_config.deterministic_solve:
-            self.expected_totalcost_generation = self._concat('expected_totalcost_generation', slns)
+            self.expected_totalcost_generation = self._concat('expected_totalcost', slns)
 
 
     def info_cost(self):
@@ -449,16 +449,14 @@ class Solution_UC_multistage(Solution_UC):
         expected = 'expected ' if resolved else ''
         observed = 'observed ' if resolved else ''
 
-        out = [
-        '{}objective cost={}'.format(expected, self.objective),
-        'total {}generation costs={}'.format(observed, 
-            self.totalcost_generation.sum().sum()),
-        ]
+        out = ['objective cost={}'.format(expected, self.objective)]
         if user_config.deterministic_solve:
-            out.extend([
-                'total expected generation cost = {}'.format(
-                    self.expected_totalcost_generation.sum().sum())
-            ])
+            out.append('total expected generation cost = {}'.format(
+                    self.expected_totalcost_generation.sum().sum()))
+
+        out.append('total {}generation cost = {}'.format(observed, 
+            self.totalcost_generation.sum().sum()))
+
         return out
 
     def _get_prices(self,stage_solutions):

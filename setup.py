@@ -25,7 +25,12 @@ setup(
     hyak_minpower = minpower.experiments.minpower_hyak:main
     """,
 
-    data_files=[('configuration', 'configuration/minpower.cfg')],
+    package_data={
+        'minpower.configuration': ['minpower.cfg'],
+        'minpower.tests': [
+            '*.csv', 
+            '*/*.csv',
+            '*/*/*.csv']},
 
     install_requires=[
         'Coopr>=3.2.6148', #3.1.5409

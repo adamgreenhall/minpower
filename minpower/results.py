@@ -432,12 +432,8 @@ class Solution_UC_multistage(Solution_UC):
 
     def _get_outputs(self, slns):
         '''the outputs under observed wind'''
-        if self.is_stochastic or user_config.deterministic_solve:
-            self.generators_power = self._concat('observed_generator_power', slns)
-            self.generators_status = self._concat('stage_generators_status', slns)
-        else:
-            self.generators_power  = self._concat('generators_power', slns)
-            self.generators_status = self._concat('generators_status', slns)
+        self.generators_power = self._concat('generators_power', slns)
+        self.generators_status = self._concat('generators_status', slns)
 
     def _get_costs(self, slns):
         self.totalcost_generation=self._concat('totalcost_generation', slns)
@@ -467,7 +463,13 @@ class Solution_UC_multistage(Solution_UC):
 
     def _get_prices(self,stage_solutions):
         self.lmps={}
-        for stage in stage_solutions: self.lmps.update(stage.lmps)
+        try: 
+            for stage in stage_solutions: self.lmps.update(stage.lmps)
+        except: 
+            # no lmps in stochastic solutions right now
+            pass
+    
+            
     def show(self):
         out=[]
         out.extend(self.info_status())

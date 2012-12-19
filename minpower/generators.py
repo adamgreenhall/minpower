@@ -348,7 +348,8 @@ class Generator_nonControllable(Generator):
             power=self.power(tend),
             hoursinstatus=0)
     def create_variables(self,times):
-        self.add_parameter('power', index=times.set, values=dict([(t, self.get_scheduled_ouput(t)) for t in times]) )
+        self.add_parameter('power', index=times.set, 
+            values=dict([(t, self.get_scheduled_ouput(t)) for t in times]) )
         self.bids=bidding.Bid(
             polynomial=self.cost_coeffs,
             owner=self,
@@ -383,9 +384,10 @@ class Generator_Stochastic(Generator_nonControllable):
                  schedule=None,
                  **kwargs):
         update_attributes(self,locals()) #load in inputs
-        self.is_controllable=False
+        self.is_controllable = False
 
-        self.is_stochastic=True
+        self.is_stochastic = not \
+            (user_config.perfect_solve or user_config.deterministic_solve)
         self.build_cost_model()
         self.init_optimization()
         self.startupcost = 0
@@ -402,12 +404,18 @@ class Generator_Stochastic(Generator_nonControllable):
             range(len(times))].ix[s].values.tolist()
 
     def create_variables(self,times):
-        self.add_parameter('power', index=times.set, nochecking=True)
-        power = self.power(time=None)
-
         #initialize to first scenario value
-        scenario_one = self._get_scenario_values(times, s=0)
-        for t,time in enumerate(times): power[str(time)] = scenario_one[t]
+        if self.is_stochastic:
+            self.add_parameter('power', index=times.set, nochecking=True)
+            power = self.power(time=None)
+            scenario_one = self._get_scenario_values(times, s=0)
+            for t,time in enumerate(times):
+                power[str(time)] = scenario_one[t]
+        else:
+            # set to forecast values
+            self.add_parameter('power', index=times.set, 
+                values=dict([(t, self.get_scheduled_ouput(t)) for t in times]))
+            
 
         self.bids=bidding.Bid(
             polynomial=self.cost_coeffs,

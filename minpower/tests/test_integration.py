@@ -26,16 +26,21 @@ def basic_checks(sln):
     # make sure that generation meets load (plus any shed)
     shed = sln.load_shed_timeseries
     scheduled = sln.power_system.total_scheduled_load()
-    scheduled.index = shed.index
-    assert_frame_equal(
-        pd.DataFrame(scheduled + shed),
-        pd.DataFrame(power.sum(axis=1)))
 
+    try: scheduled.index = shed.index
+    except AssertionError:
+        # not the same length due to overlap
+        scheduled = scheduled.ix[scheduled.index[:len(shed)]]
+        scheduled.index = shed.index
+        
+    assert_frame_equal(
+        pd.DataFrame(scheduled - shed),
+        pd.DataFrame(power.sum(axis=1)))
 
     # set_trace()
 
 def run_case(name):
-    user_config_default = user_config.copy()
+    # user_config_default = user_config.copy()
     user_config.logging_level = logging.ERROR
     user_config.breakpoints = 3
     basedir = os.path.dirname(__file__)
@@ -45,11 +50,11 @@ def run_case(name):
 
 @istest
 def run_uc():
-    sln = run_case('uc')
+    run_case('uc')
 
 @istest
 def run_uc_rolling():
-    sln = run_case('uc-rolling')
+    run_case('uc-rolling')
 
 @istest
 def run_ed():

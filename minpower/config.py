@@ -101,7 +101,7 @@ user_config = DotDict(dict(
     cost_load_shedding=10000, #$/MWh
     load_shedding_allowed=False,
     dispatch_decommit_allowed=False,
-    solver='cplex',
+    solver='gurobi',
 
     reserve_fixed=0,
     reserve_load_fraction=0.0,

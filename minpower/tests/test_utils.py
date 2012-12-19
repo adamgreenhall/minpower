@@ -5,7 +5,8 @@ from minpower.config import user_config
 from minpower.optimization import value
 
 import nose
-from nose.tools import istest, with_setup, eq_, raises, set_trace
+from nose.tools import istest, with_setup, raises, set_trace
+from nose.tools import eq_ as assert_equal
 
 
 import logging

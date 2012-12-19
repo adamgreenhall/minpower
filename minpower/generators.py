@@ -84,29 +84,29 @@ class Generator(OptimizationObject):
         if t>0: previous_power=self.power(times[t-1])
         else:   previous_power=self.initial_power
         return self.power(times[t])-previous_power
-        
+
     def cost(self, time, scenario=None, evaluate=False):
         '''total cost at time (operating + startup + shutdown)'''
         return self.operatingcost(time, scenario, evaluate) + \
             self.cost_startup(time, scenario, evaluate) + \
             self.cost_shutdown(time, scenario, evaluate)
-            
+
     def cost_startup(self, time, scenario=None, evaluate=False):
         if self.startupcost==0 or not self.commitment_problem: return 0
         else:
             c=self.get_variable('startupcost',time, scenario=scenario, indexed=True)
             return c if not evaluate else value(c)
-            
+
     def cost_shutdown(self, time, scenario=None, evaluate=False):
         if self.shutdowncost==0 or not self.commitment_problem: return 0
         else:
             c=self.get_variable('shutdowncost', time, scenario=scenario, indexed=True)
             return c if not evaluate else value(c)
-            
+
     def operatingcost(self, time=None, scenario=None, evaluate=False):
         '''cost of real power production at time (based on bid model approximation).'''
         return self.bids.output(time, scenario=scenario, evaluate=evaluate)
-        
+
     def truecost(self, time, scenario=None):
         '''exact cost of real power production at time (based on exact bid polynomial).'''
         return value(self.status(time, scenario)) * self.bids.output_true(self.power(time, scenario))
@@ -115,7 +115,7 @@ class Generator(OptimizationObject):
         return self.bids.output_incremental(self.power(time, scenario)) if value(self.status(time, scenario)) else None
     def cost_first_stage(self, times):  return sum(self.cost_startup(time)+self.cost_shutdown(time) for time in times)
     def cost_second_stage(self, times): return sum(self.operatingcost(time) for time in times)
-    def getstatus(self, tend, times, status): 
+    def getstatus(self, tend, times, status):
         return dict(
             u=value(self.status(tend)),
             P=value(self.power(tend)),
@@ -129,25 +129,25 @@ class Generator(OptimizationObject):
         if len(last_noneq)==0: return 0
         else:
             intervals = len(status[last_noneq.index[-1]+1:])
-        
+
         hrs = intervals * times.intervalhrs
         if self.initial_status == end_status:
             hrs += self.initial_status_hours
         return hrs
 
-    def set_initial_condition(self, time=None, 
+    def set_initial_condition(self, time=None,
         power=None, status=True, hoursinstatus=100):
-        if power is None: 
+        if power is None:
             #set default power as mean output
             power = (self.pmax - self.pmin) / 2
-        if pd.isnull(power): raise ValueError('inital power cannot be null') 
+        if pd.isnull(power): raise ValueError('inital power cannot be null')
         self.initial_status = bool_to_int(status)
         self.initial_power =  power * self.initial_status #note: this eliminates ambiguity of off status with power non-zero output
         self.initial_status_hours = hoursinstatus
 
     def build_cost_model(self):
         '''
-        parse the coefficients for the polynomial bid curve 
+        parse the coefficients for the polynomial bid curve
         or custom bid points definition
         '''
         bid_params = dict(
@@ -162,16 +162,16 @@ class Generator(OptimizationObject):
             # polynomial specification
             self.cost_breakpoints = user_config.breakpoints
             if getattr(self, 'heatrateequation', None):
-                self.cost_coeffs = [self.fuelcost * coef 
+                self.cost_coeffs = [self.fuelcost * coef
                     for coef in bidding.parse_polynomial(self.heatrateequation)]
             else:
                 self.cost_coeffs = bidding.parse_polynomial(
                     self.costcurveequation)
 
             bid_params['polynomial'] = self.cost_coeffs
-            bid_params['constant_term'] = self.cost_coeffs[0]            
+            bid_params['constant_term'] = self.cost_coeffs[0]
             bid_params['num_breakpoints'] = self.cost_breakpoints
-            if self.noloadcost != 0: 
+            if self.noloadcost != 0:
                 raise ValueError('no load cost should be defined as part of the polynomial.')
 
         else:
@@ -200,10 +200,10 @@ class Generator(OptimizationObject):
         '''
         self.commitment_problem = len(times)>1
         self.add_variable('power', index=times.set, low=0, high=self.pmax)
-        
+
         if self.commitment_problem or self.dispatch_decommit_allowed:
             self.add_variable('status', index=times.set, kind='Binary',fixed_value=1 if self.mustrun else None)
-        
+
         if self.commitment_problem:
             #power_available exists for easier reserve requirement
             self.add_variable('power_available',index=times.set, low=0,high=self.pmax)
@@ -262,7 +262,7 @@ class Generator(OptimizationObject):
             if self.pmin>0: self.add_constraint('min gen power', time, self.power(time)>=self.status(time)*self.pmin)
 
             self.add_constraint('max gen power', time, self.power_available(time)<=self.status(time)*self.pmax)
-            
+
             if len(times)==1: continue #if ED or OPF problem
 
             self.add_constraint('max gen power avail', time, self.power(time) <= self.power_available(time) )
@@ -320,7 +320,7 @@ class Generator_nonControllable(Generator):
         pmin=0, pmax=None,
         name='', index=None, bus=None, kind='wind',
         **kwargs):
-        
+
         update_attributes(self,locals()) #load in inputs
         self.is_controllable = False
         self.startupcost = 0
@@ -334,14 +334,14 @@ class Generator_nonControllable(Generator):
     def power_available(self, time=None, scenario=None):
         return self.power(time,scenario=scenario)
 
-    def set_initial_condition(self, time=None, 
+    def set_initial_condition(self, time=None,
         power=None, status=None, hoursinstatus=None):
         self.initial_power = 0
         self.initial_status = 1
         self.initial_status_hours = 0
 
 
-    def getstatus(self, tend, times=None, status=None): 
+    def getstatus(self, tend, times=None, status=None):
         return dict(u=1,P=self.power(tend),hoursinstatus=0)
     def create_variables(self,times):
         self.add_parameter('power', index=times.set, values=dict([(t, self.get_scheduled_ouput(t)) for t in times]) )
@@ -352,13 +352,13 @@ class Generator_nonControllable(Generator):
             fixed_input=True
             )
     def create_constraints(self,times): return {}
-    def cost(self, time, scenario=None, evaluate=False): 
+    def cost(self, time, scenario=None, evaluate=False):
         return self.operatingcost(time)
-    def operatingcost(self, time=None, scenario=None, evaluate=False): 
+    def operatingcost(self, time=None, scenario=None, evaluate=False):
         return self.bids.output_true( self.power(time) )
-    def truecost(self, time, scenario=None): 
+    def truecost(self, time, scenario=None):
         return self.cost(time)
-    def incrementalcost(self, time, scenario=None): 
+    def incrementalcost(self, time, scenario=None):
         return self.bids.output_incremental(self.power(time))
     def get_scheduled_ouput(self, time): return float(self.schedule.ix[time])
 
@@ -369,25 +369,29 @@ class Generator_Stochastic(Generator_nonControllable):
     def __init__(self,
                  scenario_values=None,
                  costcurveequation='0',
-                 fuelcost=1, 
+                 fuelcost=1,
                  bid_points=None, noloadcost=0,
                  mustrun=False,
                  faststart=False,
                  pmin=0, pmax=None,
-                 name='', index=None, bus=None, kind='wind', **kwargs):
+                 name='', index=None, bus=None, kind='wind',
+                 observed_values=None,
+                 schedule=None,
+                 **kwargs):
         update_attributes(self,locals()) #load in inputs
         self.is_controllable=False
+
         self.is_stochastic=True
         self.build_cost_model()
         self.init_optimization()
         self.startupcost = 0
         self.shutdowncost = 0
 
-    def power(self,time,scenario=None): 
-        return self.get_variable('power', time=time, 
+    def power(self,time,scenario=None):
+        return self.get_variable('power', time=time,
             scenario=scenario, indexed=True)
 
-    def _get_scenario_values(self,times,s=0):   
+    def _get_scenario_values(self,times,s=0):
         # scenario values are structured as a pd.Panel
         # with axes: day, scenario, {prob, [hours]}
         return self.scenario_values[times.Start][

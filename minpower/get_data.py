@@ -306,19 +306,6 @@ def setup_times(generators_data, loads_data, filename_timeseries):
     If there are no schedule files (as in ED,OPF),
     create an index with just a single time.
     """
-    try:
-        timeseries = ts_from_csv(filename_timeseries, is_df=True)
-        if timeseries.index[1] - timeseries.index[0] == \
-            datetime.timedelta(0, 3600):
-            timeseries = timeseries.asfreq('1h')
-
-        times = TimeIndex(timeseries.index)
-
-        return timeseries, times
-    except IOError:
-        pass
-        # the old way...
-
     fcol = 'schedulefilename'
     ncol = 'schedulename'
 
@@ -374,7 +361,7 @@ def setup_times(generators_data, loads_data, filename_timeseries):
 
     if len(timeseries) == 0:
         #this is a ED or OPF problem - only one time
-        return DataFrame(), just_one_time()
+        return DataFrame(), just_one_time(), generators_data, loads_data
 
     timeseries = DataFrame(timeseries)
     times = TimeIndex(timeseries.index)

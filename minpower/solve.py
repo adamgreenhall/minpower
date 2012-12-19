@@ -87,8 +87,8 @@ def standaloneUC():
 
     logging.debug('solved... get results')
 
-    # resolve with observed power and fixed status 
-    if sln.is_stochastic:        
+    # resolve with observed power and fixed status
+    if sln.is_stochastic:
         power_system.resolve_stochastic_with_observed(instance, sln)
     elif user_config.deterministic_solve:
         power_system.resolve_determinisitc_with_observed(sln)
@@ -96,7 +96,7 @@ def standaloneUC():
     if sln.load_shed_timeseries.sum() > 0.01:
         logging.debug('shed {}MW in resolve of stage'.format(
             sln.load_shed_timeseries.sum()))
-    
+
 
     power_system.get_finalconditions(sln)
 
@@ -178,7 +178,7 @@ def create_problem(power_system, times, scenario_tree=None,
     power_system.create_constraints(times)
     logging.debug('created constraints')
 
-    if scenario_tree is not None and not rerun:
+    if scenario_tree is not None and sum(scenario_tree.shape)>0 and not rerun:
         if multistage: # multiple time stages
             gen = power_system.get_generator_with_scenarios()
             tree = stochastic.construct_simple_scenario_tree(
@@ -188,22 +188,22 @@ def create_problem(power_system, times, scenario_tree=None,
         else: tree = scenario_tree
         stochastic.define_stage_variables(tree, power_system, times)
         power_system = stochastic.create_problem_with_scenarios(
-            power_system, times, tree, 
-            user_config.hours_commitment, 
-            user_config.hours_overlap, 
+            power_system, times, tree,
+            user_config.hours_commitment,
+            user_config.hours_overlap,
             stage_number=stage_number)
     return
 
 def _setup_logging():
     ''' set up the logging to report on the status'''
     kwds = dict(
-        level=user_config.logging_level, 
+        level=user_config.logging_level,
         datefmt='%Y-%m-%d %H:%M:%S',
         format='%(asctime)s %(levelname)s: %(message)s')
     if user_config.logging_filename:
         kwds['filename'] = user_config.logging_filename
     if user_config.output_prefix:
-        kwds['filename'] = joindir(user_config.directory, 
+        kwds['filename'] = joindir(user_config.directory,
             '{}.pylog'.format(user_config._pid))
     if (user_config.logging_level > 10) and (not 'filename' in kwds):
         # don't log the time if debugging isn't turned on
@@ -271,7 +271,7 @@ def main():
         help='override scenarios directory for stochastic problem')
     parser.add_argument('--faststart_resolve', action='store_true',
         default=False,
-        help="""allow faststart units which are off to be 
+        help="""allow faststart units which are off to be
                 started up during resolve""")
 
     parser.add_argument('--output_prefix','-p', action="store_true",

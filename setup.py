@@ -15,8 +15,8 @@ from setuptools.command.test import test as TestCommand
 
 setup(
     name = "minpower",
-    version = "4.1.0", # dont forget to increment __init__.py
-    download_url = "https://github.com/adamgreenhall/minpower/zipball/v4.1.0",
+    version = "4.2.0", # dont forget to increment __init__.py
+    download_url = "https://github.com/adamgreenhall/minpower/zipball/v4.2.0",
 
     entry_points="""
     [console_scripts]

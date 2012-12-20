@@ -3,7 +3,6 @@ A selection of integration tests. These are designed to find failures that
 the unit tests don't pick up.
 """
 import os
-from ipdb import set_trace
 from test_utils import *
 import pandas as pd
 from minpower.solve import solve_problem as solve_dir

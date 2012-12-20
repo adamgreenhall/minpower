@@ -2,7 +2,6 @@ import sys
 import clint
 import subprocess
 import os
-from ipdb import set_trace
 
 def main():
     '''

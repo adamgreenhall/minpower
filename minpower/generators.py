@@ -270,8 +270,7 @@ class Generator(OptimizationObject):
 
             #ramping power
             if self.rampratemax is not None:
-                try: self.add_constraint('ramp lim high', time, self.power_available(time) <= self.power(times[t-1]) + self.rampratemax*self.status(times[t-1]) )
-                except: set_trace()
+                self.add_constraint('ramp lim high', time, self.power_available(time) <= self.power(times[t-1]) + self.rampratemax*self.status(times[t-1]) )
 
             if self.rampratemin is not None:
                 self.add_constraint('ramp lim low', time,  self.rampratemin <= self.power_change(t,times) )

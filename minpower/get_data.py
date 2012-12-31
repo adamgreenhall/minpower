@@ -193,7 +193,7 @@ def setup_initialcond(data, generators, times):
     # which are specified in the initial file
     for i, row in data.iterrows():
         g = names.index(row['name'])
-        kwds = row[fields_initial].to_dict()
+        kwds = row[fields_initial].dropna().to_dict()
         generators[g].set_initial_condition(time=t_init, **kwds)
     return
 

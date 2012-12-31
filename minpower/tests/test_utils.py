@@ -1,5 +1,5 @@
-from pandas import Series
-from minpower import optimization,powersystems,schedule,solve,config
+from pandas import Series, DataFrame
+from minpower import optimization,powersystems,schedule,solve
 from minpower.generators import Generator
 from minpower.config import user_config
 from minpower.optimization import value
@@ -16,14 +16,22 @@ logging.basicConfig(
 
 
 
-user_config_defaults = user_config.copy()
+default_config = user_config.copy()
 
 def get_duals():
     user_config.duals = True
-#def reset_config():
-    # sadly this does not work
-#   user_config = user_config_defaults.copy()
-
+    
+def reset_config():
+    # note - can't set a new user_config, because it would be a local variable
+    #   instead, we update it with the defaults
+    #   this only works if we aren't adding anything extra to the user_config
+    user_config.update(default_config)
+    try: assert(user_config == default_config)
+    except:
+        print DataFrame(dict(
+            config=Series(user_config), 
+            default=Series(default_config) ))
+        raise
 
 singletime=schedule.just_one_time()
 
@@ -61,8 +69,6 @@ def make_loads_times(Pd=200,Pdt=None,**kwargs):
 
 def solve_problem(generators,loads=None,times=None, gen_init=None, lines=None):
     
-    
-    
     if lines is None: lines=[]
 
     if len(times)>0: 
@@ -75,7 +81,7 @@ def solve_problem(generators,loads=None,times=None, gen_init=None, lines=None):
     solve.create_problem(power_system,times)
     power_system.solve()
     
-    config.user_config = user_config_defaults
+    reset_config()
     
     if power_system.solved:
         power_system.update_variables()

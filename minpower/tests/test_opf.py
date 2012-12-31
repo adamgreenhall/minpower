@@ -93,7 +93,5 @@ def three_buses():
     total_load = value(sum(b.Pload(times[0]) for b in power_system.buses))
     assert total_load==sum(Pd) and num_lmps>1
 
-    user_config.duals = False
-
 def test_config_cleared():
     assert(user_config.duals == False)

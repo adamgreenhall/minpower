@@ -2,6 +2,7 @@ from test_utils import *
 from minpower.results import make_solution
 
 @istest
+@with_setup(teardown=reset_config)
 def check_power_status():
     '''
     Ensure that the solution generator_status and generator_power attributes

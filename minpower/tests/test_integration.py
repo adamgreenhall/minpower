@@ -3,11 +3,14 @@ A selection of integration tests. These are designed to find failures that
 the unit tests don't pick up.
 """
 import os
-from test_utils import *
 import pandas as pd
-from minpower.solve import solve_problem as solve_dir
-
+from nose.tools import istest
 from pandas.util.testing import assert_frame_equal
+
+from minpower.solve import solve_problem as solve_dir
+from minpower.config import user_config
+
+
 
 def basic_checks(sln):
     cost = sln.totalcost_generation
@@ -36,16 +39,25 @@ def basic_checks(sln):
         pd.DataFrame(scheduled - shed),
         pd.DataFrame(power.sum(axis=1)))
 
-    # set_trace()
 
-def run_case(name):
-    # user_config_default = user_config.copy()
-    user_config.logging_level = logging.ERROR
-    user_config.breakpoints = 3
-    basedir = os.path.dirname(__file__)
+this_directory = os.path.dirname(__file__)
+default_config = user_config.copy()
+
+def run_case(name, basedir=this_directory, **kwds):
+    '''
+    a programatic way to do (nearly) the same thing
+    as calling the minpower script
+    (nearly: because prepends basedir to the directory name you are solving)
+    '''
+    # reset user_config to defaults first
+    user_config.update(default_config)
+    assert(user_config == default_config)
+    user_config.breakpoints = 3 # for speedier testing
+    user_config.update(kwds)
     sln = solve_dir(os.path.join(basedir, name))
     basic_checks(sln)
     return sln
+
 
 @istest
 def run_uc():

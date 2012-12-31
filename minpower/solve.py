@@ -310,7 +310,11 @@ def main():
         help='Make each multi-day commitment its own subprocess (helps with memory issues).')
     parser.add_argument('--output_prefix','-p', action="store_true",
         default=user_config.output_prefix,
-        help = 'Prefix all results files with the process id (for a record of simulataneous solves)')
+        help='Prefix all results files with the process id (for a record of simulataneous solves)')
+
+    parser.add_argument('--load_shedding_allowed', action='store_true',
+        default=user_config.load_shedding_allowed,
+        )
 
     parser.add_argument('--profile',action="store_true",
         default=False,

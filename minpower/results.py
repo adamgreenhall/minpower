@@ -413,9 +413,6 @@ class Solution_UC_multistage(Solution_UC):
             or user_config.perfect_solve
 
         self.is_stochastic = any(sln.is_stochastic for sln in stage_solutions)
-        self._resolved = self.is_stochastic \
-            or user_config.deterministic_solve \
-            or user_config.perfect_solve
         
         times = pd.concat([times.non_overlap().strings for times in stage_times]).index
         self.times = TimeIndex(times)
@@ -445,8 +442,10 @@ class Solution_UC_multistage(Solution_UC):
         self.load_shed_timeseries = self._concat('load_shed_timeseries', slns)
         self.load_shed = self.load_shed_timeseries.sum()
 
-        if user_config.deterministic_solve:
+        if self._resolved and not user_config.perfect_solve:
             self.expected_cost = self._concat('expected_totalcost', slns)
+        elif user_config.perfect_solve:
+            self.expected_cost = self.observed_cost
 
 
     def info_cost(self):
@@ -515,14 +514,14 @@ class Solution_Stochastic(Solution):
         self._setup_powersystem()
         
         self.scenarios=sorted(self.power_system._scenario_instances.keys())
-        self.stage_date = times.strings.index[0].date()
+        self.stage_start = times.strings.index[0]
         
         gen = self.power_system.get_generator_with_scenarios()
         
         try: # single stage setup
             self.probability = gen.scenario_values.probability
         except AttributeError:  # staged setup 
-            self.probability = gen.scenario_values[self.stage_date].probability
+            self.probability = gen.scenario_values[self.stage_start].probability
             
         self.probability.index = self.scenarios
         

@@ -13,18 +13,16 @@ from optimization import OptimizationError
 import get_data, powersystems, stochastic, results
 from config import user_config
 from commonscripts import joindir, StreamToLogger, set_trace
+from standalone import store_times, init_store, get_storage, repack_storage
 
-def _get_store_filename():
+def _set_store_filename(pid=None):
     fnm = 'stage-store.hd5'
     if user_config.output_prefix:
-        fnm = '{}-{}'.format(user_config._pid, fnm)
+        fnm = '{}-{}'.format(pid, fnm)
 
     user_config.store_filename = joindir(user_config.directory, fnm)
 
 def solve_multistage_standalone(power_system, times, scenario_tree, data):
-    from standalone import store_times, init_store, get_storage, repack_storage
-    
-    _get_store_filename()
 
     stage_times = times.subdivide(
         user_config.hours_commitment, user_config.hours_overlap)
@@ -64,11 +62,10 @@ def standaloneUC():
     user_config.directory = args.directory
     if args.pid:
         user_config.output_prefix = True
-        user_config._pid = args.pid
+    
+    _set_store_filename(args.pid)
 
-    _get_store_filename()
-
-    _setup_logging()
+    _setup_logging(args.pid)
 
     # load stage data
     power_system, times, scenario_tree = load_state()
@@ -91,9 +88,12 @@ def solve_problem(datadir='.',
     The problem type is determined by the data.
     All options are set within `user_config`.
     """
-
-    _setup_logging()
     user_config.directory = datadir
+    
+    pid = os.getpid()
+    _set_store_filename(pid)
+    _setup_logging(pid)
+    
     start_time = timer.time()
     logging.debug('Minpower reading {}'.format(datadir))
     generators, loads, lines, times, scenario_tree, data = get_data.parsedir()
@@ -225,7 +225,7 @@ def create_problem(power_system, times, scenario_tree=None,
             stage_number=stage_number)
     return
 
-def _setup_logging():
+def _setup_logging(pid=None):
     ''' set up the logging to report on the status'''
     kwds = dict(
         level=user_config.logging_level,
@@ -235,7 +235,7 @@ def _setup_logging():
         kwds['filename'] = user_config.logging_filename
     if user_config.output_prefix:
         kwds['filename'] = joindir(user_config.directory,
-            '{}.pylog'.format(user_config._pid))
+            '{}.pylog'.format(pid))
     if (user_config.logging_level > 10) and (not 'filename' in kwds):
         # don't log the time if debugging isn't turned on
         kwds['format'] = '%(levelname)s: %(message)s'
@@ -339,8 +339,7 @@ def main():
         raise OSError(msg)
 
     user_config.update(vars(args))
-    if user_config.output_prefix: user_config._pid = os.getpid()
-
+    
     if args.profile:
         print 'run profile'
         import cProfile

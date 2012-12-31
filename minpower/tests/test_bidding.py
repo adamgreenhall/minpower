@@ -20,6 +20,7 @@ def linear():
     assert cost == a + b*Pd
 
 @istest
+@with_setup(teardown=reset_config)
 def cubic_convex():
     '''
     Create a cubic, convex bid curve for one generators.
@@ -30,6 +31,8 @@ def cubic_convex():
     b=30
     c=.2
     d=.1
+    user_config.breakpoints = 10
+    
     generators=[ Generator(costcurveequation='{}+{}P+{}P^2+{}P^3'.format(a,b,c,d)) ]
     _,times=solve_problem(generators,**make_loads_times(Pd))#,problem_filename='bidproblem.lp')
     cost = value(generators[0].bids.output(times[0], evaluate=True))

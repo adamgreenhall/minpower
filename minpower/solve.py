@@ -301,11 +301,12 @@ def main():
         default=user_config.scenarios_directory,
         help='override scenarios directory for stochastic problem')
     parser.add_argument('--faststart_resolve', action='store_true',
-        default=False,
+        default=user_config.faststart_resolve,
         help="""allow faststart units which are off to be
                 started up during resolve""")
 
-    parser.add_argument('--standalone', '-m', action="store_true", default=False,
+    parser.add_argument('--standalone', '-m', action="store_true", 
+        default=user_config.standalone,
         help='Make each multi-day commitment its own subprocess (helps with memory issues).')
     parser.add_argument('--output_prefix','-p', action="store_true",
         default=user_config.output_prefix,
@@ -315,11 +316,14 @@ def main():
         default=False,
         help='run cProfile and output to minpower.profile')
     parser.add_argument('--error','-e',action="store_true",
-        default=False,
+        default=user_config.error,
         help='redirect error messages to the standard output (useful for debugging on remote machines)')
     parser.add_argument('--debugger',action="store_true",
-        default=False,
-        help='use pudb when an error is raised')
+        default=user_config.debugger,
+        help='use pdb when an error is raised')
+        
+    # NOTE - don't let defaults creep into this defenition
+    # that makes resetting the defaults during testing very hard 
 
     #figure out the command line arguments
     args = parser.parse_args()

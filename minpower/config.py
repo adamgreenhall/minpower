@@ -123,11 +123,20 @@ user_config = DotDict(dict(
     logging_filename = parser.getboolean('minpower', 'logging_filename'),
     problem_filename = parser.getboolean('minpower', 'problem_filename'),
     output_prefix = parser.getboolean('minpower', 'output_prefix'),
+    error = parser.getboolean('minpower', 'error'),
+    debugger = parser.getboolean('minpower', 'debugger'),
+
 
     scenarios = parser.getint('minpower', 'scenarios'),
     deterministic_solve = parser.getboolean('minpower', 'deterministic_solve'),
     perfect_solve = parser.getboolean('minpower', 'perfect_solve'),
     scenarios_directory = parser.get('minpower', 'scenarios_directory'),
+    
+    standalone = parser.getboolean('minpower', 'standalone'),
+
+    # HACKs to help out resetting the config in testing
+    directory = parser.get('minpower', 'directory'),
+    store_filename = parser.get('minpower', 'store_filename'),
     ))
 
 available_solvers = []

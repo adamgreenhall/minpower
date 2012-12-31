@@ -4,7 +4,7 @@ of each day of a rolling unit commitment to disk (in HDF format)
 and reloading them to run the next day as a memory independent subprocess.
 """
 
-import os
+import os, logging
 import pandas as pd
 from pandas import Series, DataFrame
 from commonscripts import gen_time_dataframe, set_trace
@@ -135,23 +135,28 @@ def table_append(store, name, newvals):
     store[name] = store[name].append(newvals)
     return
     
-import tables as tb
-import atexit
+try: 
+    import tables as tb
+    import atexit
+    
+    # FIXME - not working
+    # make pytables quiet down
+    # http://www.pytables.org/moin/UserDocuments/AtexitHooks
+    def quiet_table_close(verbose=False):
+        open_files = tb.file._open_files
+        are_open_files = len(open_files) > 0
+        if verbose and are_open_files:
+            print >> sys.stderr, "Closing remaining open files:",
+        for fileh in open_files.keys():
+            if verbose:
+                print >> sys.stderr, "%s..." % (open_files[fileh].filename,),
+            open_files[fileh].close()
+            if verbose:
+                print >> sys.stderr, "done",
+        if verbose and are_open_files:
+            print >> sys.stderr
 
-# make pytables quiet down
-# http://www.pytables.org/moin/UserDocuments/AtexitHooks
-def quiet_table_close(verbose=False):
-    open_files = tb.file._open_files
-    are_open_files = len(open_files) > 0
-    if verbose and are_open_files:
-        print >> sys.stderr, "Closing remaining open files:",
-    for fileh in open_files.keys():
-        if verbose:
-            print >> sys.stderr, "%s..." % (open_files[fileh].filename,),
-        open_files[fileh].close()
-        if verbose:
-            print >> sys.stderr, "done",
-    if verbose and are_open_files:
-        print >> sys.stderr
-        
-atexit.register(quiet_table_close)
+    atexit.register(quiet_table_close)
+    
+except ImportError:
+    logging.debug('could not load pytables - cannot use standalone mode.')

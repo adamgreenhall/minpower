@@ -6,14 +6,13 @@ Also extract the time information and create all
     :class:`~schedule.Timelist` objects.
 """
 import pandas as pd
-from pandas import Series, DataFrame, Timestamp, read_csv
+from pandas import DataFrame, Timestamp, read_csv
 from glob import glob
 from collections import OrderedDict
 import powersystems
-from schedule import (just_one_time, datetime,
-    get_schedule, TimeIndex, make_constant_schedule)
-from commonscripts import (joindir, drop_case_spaces, ts_from_csv, set_trace)
-from stochastic import construct_simple_scenario_tree
+from schedule import (just_one_time, get_schedule, 
+    TimeIndex, make_constant_schedule)
+from commonscripts import (joindir, drop_case_spaces, set_trace)
 
 from powersystems import PowerSystem
 from generators import (Generator,
@@ -230,7 +229,8 @@ def build_class_list(data, model, times=None, timeseries=None):
                 # override the scenarios directory with the one \
                 # specified in the commandline options
                 scenariosdirectory = user_config.scenarios_directory
-
+                data.ix[i, 'scenariosdirectory'] = user_config.scenarios_directory
+            
             bid_points_filename = row.get('costcurvepointsfilename')
 
 
@@ -261,15 +261,11 @@ def build_class_list(data, model, times=None, timeseries=None):
                 kwds['schedule'] = timeseries[forecast_name]
 
             if scenariosdirectory:
-                kwds['scenarios_directory'] = \
-                    joindir(datadir, scenariosdirectory)
                 try:
                     kwds['observed_values'] = timeseries[observed_name]
                 except:
                     raise IOError('''you must provide an
                         observed filename for a rolling stochastic UC''')
-            elif scenariosfilename:
-                kwds['scenarios_filename'] = scenariosfilename
 
             # add a custom bid points file with {power, cost} columns
             if bid_points_filename:
@@ -375,7 +371,7 @@ def _parse_scenario_day(filename):
 
     # select subset of scenarios
     Nscenarios = user_config.scenarios
-    if Nscenarios is not None:
+    if Nscenarios:
         data = data[ data.index<Nscenarios ]
         data['probability'] = data['probability']/sum( data['probability'] )
 
@@ -400,6 +396,7 @@ def setup_scenarios(gen_data, generators, times):
 
     # directory of scenario values where each file is one day
     scenarios_directory = gen_params['scenariosdirectory'].values[0]
+        
     searchstr = "*.csv"
 
     filenames = sorted(glob(joindir(user_config.directory,
@@ -428,7 +425,7 @@ def setup_scenarios(gen_data, generators, times):
         if 'probability' == scenarios.columns[-1]:
             # reoder so that probability is the first column
             scenarios = scenarios[
-                ['probability'] + scenarios.columns[:-1]]
+                scenarios.columns[:-1].insert(0, 'probability')]
         # rename the times into just hour offsets
         scenarios = scenarios.rename(columns=
             dict(zip(scenarios.columns,

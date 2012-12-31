@@ -496,10 +496,11 @@ class MultistageStandalone(Solution_UC_multistage):
         self.times=TimeIndex(times)
         self.times.set_initial(stage_times[0].initialTime)
 
-        self.expected_cost = self.totalcost_generation = store['expected_cost']
+        self.observed_cost = self.totalcost_generation = \
+            store['observed_cost']
         if self._resolved:
-            self.observed_cost = self.totalcost_generation = \
-                store['observed_cost']
+            self.expected_cost = self.totalcost_generation = store['expected_cost']
+            
         self.generators_power = store['power']
         self.generators_status = store['status']
         self.load_shed_timeseries = store['load_shed']

@@ -63,8 +63,6 @@ def init_store(power_system, times, data):
     storage['solve_time'] = Series(index=range(stages))
     
     # store configuration
-    user_config._int_overlap = times[0]._int_overlap
-    user_config._int_division = times[0]._int_division
     storage['configuration'] = Series(user_config)        
     return storage
     
@@ -98,10 +96,13 @@ def load_state():
     storage = get_storage()
     user_config.update(storage['configuration'].to_dict())
     
+    # set up the times
     startidx = int(storage['times'][0].strip('t'))
     times = TimeIndex(storage['times'].index, startidx)
-    times._int_overlap = user_config._int_overlap
-    times._int_division = user_config._int_division
+    intervalhrs = (times.strings.index[1] - times.strings.index[0]).total_seconds() / 3600.0
+    times._int_overlap = user_config.hours_overlap / intervalhrs
+    times._int_division = user_config.hours_commitment / intervalhrs
+
     # create power_system
     power_system, times, scenario_tree = parse_standalone(storage, times)
     generators = power_system.generators()

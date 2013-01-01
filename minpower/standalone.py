@@ -4,7 +4,7 @@ of each day of a rolling unit commitment to disk (in HDF format)
 and reloading them to run the next day as a memory independent subprocess.
 """
 
-import os, logging
+import os, logging, sys
 import pandas as pd
 from pandas import Series, DataFrame
 from commonscripts import gen_time_dataframe, set_trace
@@ -12,6 +12,7 @@ from config import user_config
 
 from schedule import TimeIndex
 from get_data import parse_standalone
+import pkg_resources
 
 def wipe_storage():
     try: 
@@ -63,7 +64,11 @@ def init_store(power_system, times, data):
     storage['solve_time'] = Series(index=range(stages))
     
     # store configuration
-    storage['configuration'] = Series(user_config)        
+    storage['configuration'] = Series(user_config)
+    
+    
+    storage['version'] = Series({'minpower': 
+        pkg_resources.get_distribution('minpower').version})
     return storage
     
 def store_state(power_system, times, sln=None):
@@ -121,7 +126,7 @@ def load_state():
     return power_system, times, scenario_tree
 
 def repack_storage():
-    '''do some clean-up compression on that ballooning storage'''
+    '''compress that ballooning storage'''
     # http://stackoverflow.com/questions/13089359/mystery-when-storing-a-dataframe-containing-strings-in-hdf-with-pandas
     os.system('ptrepack {f} {f}.copy; mv {f}.copy {f};'.format(
         f=user_config.store_filename))

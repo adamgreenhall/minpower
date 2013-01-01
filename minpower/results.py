@@ -437,15 +437,18 @@ class Solution_UC_multistage(Solution_UC):
         self.generators_status = self._concat('generators_status', slns)
 
     def _get_costs(self, slns):
-        self.observed_cost = self.totalcost_generation = \
-            self._concat('totalcost_generation', slns)
+        resolved = self._resolved and not user_config.perfect_solve
+        self.expected_cost = self.totalcost_generation = \
+            self._concat('expected_totalcost' \
+                if resolved else 'totalcost_generation', slns)
         self.load_shed_timeseries = self._concat('load_shed_timeseries', slns)
         self.load_shed = self.load_shed_timeseries.sum()
 
-        if self._resolved and not user_config.perfect_solve:
-            self.expected_cost = self._concat('expected_totalcost', slns)
+        if resolved:
+            self.observed_cost = self.totalcost_generation = \
+                self._concat('observed_totalcost', slns)
         elif user_config.perfect_solve:
-            self.expected_cost = self.observed_cost
+            self.observed_cost = self.totalcost_generation = self.expected_cost
 
 
     def info_cost(self):
@@ -453,11 +456,12 @@ class Solution_UC_multistage(Solution_UC):
         expected = 'expected ' if resolved else ''
         observed = 'observed ' if resolved else ''
         out = []
+        out.append('total {}generation cost = {}'.format(
+            expected, self.expected_cost.sum().sum()))
         if resolved: 
             out.append('total {}generation cost = {}'.format(
-                expected, self.expected_cost.sum().sum()))
-        out.append('total {}generation cost = {}'.format(
-            observed, self.observed_cost.sum().sum()))
+                observed, self.observed_cost.sum().sum()))
+
         return out
 
     def _get_prices(self,stage_solutions):
@@ -496,10 +500,12 @@ class MultistageStandalone(Solution_UC_multistage):
         self.times=TimeIndex(times)
         self.times.set_initial(stage_times[0].initialTime)
 
-        self.observed_cost = self.totalcost_generation = \
-            store['observed_cost']
+        self.expected_cost = self.totalcost_generation = store['expected_cost']
+
         if self._resolved:
-            self.expected_cost = self.totalcost_generation = store['expected_cost']
+            self.observed_cost = self.totalcost_generation = \
+                store['observed_cost']
+            
             
         self.generators_power = store['power']
         self.generators_status = store['status']
@@ -641,6 +647,9 @@ class Solution_Stochastic_UC(Solution_Stochastic):
 def _correct_status(status):
     # correct for strange solver values returned on resolve
     status[status > 0.99] = 1
+    
+    test_status = status.to_frame() if hasattr(status, 'to_frame') else status    
+    assert(not ((test_status<=0.99) & (test_status>=0.01)).any().any() )
     return status.astype(int)
 
 

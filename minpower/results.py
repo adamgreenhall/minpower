@@ -478,7 +478,7 @@ class Solution_UC_multistage(Solution_UC):
     def info_generators(self): return []
     def info_loads(self): return []
     def info_status(self):
-        return ['solved multistage problem in a total solver time' + \
+        return ['solved multistage problem in a total solver time ' + \
             'of {time:0.4f} sec'.format(time=self.solve_time)]
     def info_shedding(self):
         return ['total load shed={}MW'.format(self.load_shed) \

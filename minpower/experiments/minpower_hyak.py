@@ -11,9 +11,11 @@ def main():
     '''
     minpower_args = ['minpower']+clint.args.all
 
+    # subprocess style
     if not '-p' in minpower_args:
-        # subprocess style
         minpower_args.append('-p')
+    if not '--standalone' in minpower_args:
+        minpower_args.append('--standalone')
 
     print minpower_args
 

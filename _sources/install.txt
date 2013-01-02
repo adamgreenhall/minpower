@@ -5,7 +5,7 @@ Installation
 
     Basic full installation:
 
-    #. `Anaconda Python <>`
+    #. `Anaconda Python <https://store.continuum.io/cshop/anaconda>`_
     #. ``pip install minpower``
     #. `GLPK <http://www.gnu.org/s/glpk>`_ (`Win <http://gnuwin32.sourceforge.net/packages/glpk.htm>`_, `Mac <http://www.arnab-deka.com/posts/2010/02/installing-glpk-on-a-mac/>`_)
 

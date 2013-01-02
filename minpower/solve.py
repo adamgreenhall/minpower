@@ -189,6 +189,14 @@ def create_solve_problem(power_system, times, scenario_tree=None,
         logging.debug('shed {}MW in resolve of stage'.format(
             sln.load_shed_timeseries.sum()))
 
+    # # check solution costs
+    # c = sln.totalcost_generation
+    # cc = c * sln.generators_status
+    # from pandas.util.testing import assert_frame_equal
+    # try: assert_frame_equal(c, cc)
+    # except AssertionError:
+    #     set_trace()
+    
 
     power_system.get_finalconditions(sln)
 

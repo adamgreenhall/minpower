@@ -27,14 +27,18 @@ def basic_checks(sln):
 
     # make sure that generation meets load (plus any shed)
     shed = sln.load_shed_timeseries
-    scheduled = sln.power_system.total_scheduled_load()
-
+    try: scheduled = sln.power_system.total_scheduled_load()
+    except AttributeError: 
+        # look up the scheduled load from the timeseries data
+        loads = [col for col in \
+            sln.store['data_timeseries'].columns if col.startswith('d')]
+        scheduled = sln.store['data_timeseries'][loads].sum(axis=1)
     try: scheduled.index = shed.index
     except AssertionError:
         # not the same length due to overlap
         scheduled = scheduled.ix[scheduled.index[:len(shed)]]
         scheduled.index = shed.index
-        
+
     assert_frame_equal(
         pd.DataFrame(scheduled - shed),
         pd.DataFrame(power.sum(axis=1)))

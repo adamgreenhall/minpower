@@ -1,3 +1,4 @@
+# pip install sphinx, sphinxcontrib-programoutput
 import sys, os
 
 sys.path.insert(0, os.path.abspath('../../minpower')) #code location
@@ -18,7 +19,7 @@ extensions = [
           # 'matplotlib.sphinxext.mathmpl',
           'matplotlib.sphinxext.only_directives',
           'matplotlib.sphinxext.plot_directive',
-
+          'sphinxcontrib.programoutput',
 
           #'ipython_console_highlighting',
           #'inheritance_diagram',

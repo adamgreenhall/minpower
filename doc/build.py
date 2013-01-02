@@ -49,8 +49,6 @@ if __name__ == "__main__":
             publish()
         elif command == 'css':
             css()
-        
-        
     else: 
         raise OSError('build takes 0 or 1 arguments')
 

@@ -2,4 +2,4 @@
 |name|load name| | |
 |power|load power (a single number for ED problems or base load)| |MW|
 |schedule filename|spreadsheet filename describing the predicted load power over time| | |
-|Bus|name of bus where load is connected|single bus| |
+|bus|name of bus where load is connected|single bus| |

@@ -48,7 +48,8 @@ Some recent talks and publications:
 
     basic-use
     creating-problems
-
+    configuration
+    
 .. toctree::
     
     students

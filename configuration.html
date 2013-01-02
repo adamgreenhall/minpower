@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Why Minpower &mdash; minpower</title>
+    <title>Configuration &mdash; minpower</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -27,8 +27,8 @@
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="minpower" href="index.html" />
-    <link rel="next" title="Installation" href="install.html" />
-    <link rel="prev" title="power systems tools made beautiful" href="index.html" />
+    <link rel="next" title="For Students" href="students.html" />
+    <link rel="prev" title="Creating a Problem" href="creating-problems.html" />
  
 <script type="text/javascript">
   var _gaq = _gaq || [];
@@ -45,32 +45,13 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="why-minpower">
-<h1>Why Minpower<a class="headerlink" href="#why-minpower" title="Permalink to this headline">¶</a></h1>
-<p><strong>Minpower</strong> is designed to make solving <a class="reference internal" href="economic-dispatch.html"><em>ED</em></a>, <a class="reference internal" href="optimal-power-flow.html"><em>OPF</em></a>, and <a class="reference internal" href="unit-commitment.html"><em>UC</em></a> problems simple and intuitive. Traditional approaches to solving these problems are limited by:</p>
-<blockquote>
-<div><ul class="simple">
-<li><abbr title="e.g. C++ or GMPL">low level</abbr> languages</li>
-<li><abbr title="e.g. CPLEX, GAMMS, AMPL, and AIMMS">expensive</abbr> software</li>
-<li>being <abbr title="e.g. only CPLEX or only GLPK">solver dependent</abbr></li>
-</ul>
-</div></blockquote>
-<div class="section" id="what-s-good">
-<h2>What&#8217;s good<a class="headerlink" href="#what-s-good" title="Permalink to this headline">¶</a></h2>
-<p><strong>Minpower</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li>is written in <a class="reference external" href="http://www.python.org/about/">Python</a></li>
-<li>is <a class="reference internal" href="about.html#license"><em>free</em></a> and <a class="reference internal" href="about.html#development"><em>open source</em></a></li>
-<li>can use many <a class="reference internal" href="solvers.html"><em>solvers</em></a></li>
-<li>has <abbr title="For large problems optimization takes most of the solution time. Minpower farms out its optimization to CPLEX with little overhead. Test results coming soon.">comparable solution times</abbr></li>
-</ul>
-</div></blockquote>
+  <div class="section" id="configuration">
+<h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
+<p>Minpower&#8217;s behavior is mostly configured by setting flags at runtime. For instance:</p>
+<div class="highlight-python"><pre>minpower unit_commitment_problem/ --solver cplex --breakpoints 5 --hours_overlap 12 --reserve_load_fraction 0.10</pre>
 </div>
-<div class="section" id="sounds-great">
-<h2>Sounds great<a class="headerlink" href="#sounds-great" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="install.html"><em>Install Minpower</em></a> and try it out.</p>
-</div>
+<p>solves the problem with the CPLEX solver, using 5 breakpoint bid curves, 12hrs of overlap between the commitments, and requires reserves equal to 10% of the load.</p>
+<p>If you find yourself always overriding certain defaults (like the default solver), you can also put configuration options in a .minpowerrc or minpower.cfg file in your home directory. These are standard .ini-style config files. The default is <a class="reference external" href="https://github.com/adamgreenhall/minpower/blob/master/minpower/configuration/minpower.cfg">here</a>.</p>
 </div>
 
 
@@ -81,17 +62,14 @@
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">minpower</a></h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="">Why Minpower</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#what-s-good">What&#8217;s good</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#sounds-great">Sounds great</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="why-minpower.html">Why Minpower</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 </ul>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="basic-use.html">Basic Use</a></li>
 <li class="toctree-l1"><a class="reference internal" href="creating-problems.html">Creating a Problem</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Configuration</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="students.html">For Students</a></li>

@@ -54,20 +54,22 @@
 <div class="halfwidth container">
 <a class="reference external" href="http://adamgreenhall.com">Adam Greenhall</a> started minpower
 in early 2011 because he needed a good tool for his PhD research
-on demand response and for teaching students at <a class="reference external" href="http://ee.washington.edu">U. of Washington</a>.</div>
+on stochastic unit commitment and for teaching students at <a class="reference external" href="http://ee.washington.edu">U. of Washington</a>.</div>
 </div>
 <div class="section" id="development">
 <span id="id1"></span><h2>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h2>
 <a class="reference external image-reference" href="http://github.com/adamgreenhall/minpower"><img alt="github logo" class="align-left" src="_images/github.jpg" style="width: 80px;" /></a>
 <div class="halfwidth container">
 <strong>Minpower</strong> is actively and openly developed on <a class="reference external" href="http://github.com/adamgreenhall/minpower">github</a>, a social code
-hosting site that allows for collaboration by many people and change tracking.</div>
+hosting site that allows for collaboration by many people, change tracking, and issue hosting.</div>
 <p>Development is simple:</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li>Get on github and <a class="reference external" href="http://github.com/adamgreenhall/minpower">fork minpower</a></li>
+<li>Clone Minpower from GitHub: <tt class="docutils literal"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">http://github.com/&lt;yourname&gt;/minpower</span></tt></li>
+<li><abbr title="pip's -e flag links you handy-to-find directory to the much more obscure site-packages directory where Python looks for its packages">install it locally</abbr>: <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">minpower</span></tt></li>
 <li>Make it better</li>
-<li>Test it out (use  <tt class="xref py py-mod docutils literal"><span class="pre">tests.testall</span></tt> and <tt class="xref py py-mod docutils literal"><span class="pre">tests.testall_integration</span></tt>)</li>
+<li>Test it out. Minpower uses <a class="reference external" href="http://nose.readthedocs.org/">Nose</a> and <a class="reference external" href="travis-ci.org/adamgreenhall/minpower">Travis</a> for testing. To run all of the tests use <tt class="docutils literal"><span class="pre">nosetests</span></tt> in your local minpower directory.</li>
 <li>Make a <a class="reference external" href="https://github.com/adamgreenhall/minpower/pulls">pull request</a> to get your version in</li>
 </ol>
 </div></blockquote>
@@ -113,8 +115,7 @@ hosting site that allows for collaboration by many people and change tracking.</
 <li class="toctree-l1"><a class="reference internal" href="optimal-power-flow.html">Optimal Power Flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="unit-commitment.html">Unit Commitment</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api/index.html">Documentation</a></li>
+<ul class="simple">
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>

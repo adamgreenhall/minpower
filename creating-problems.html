@@ -48,15 +48,15 @@
   <div class="section" id="creating-a-problem">
 <h1>Creating a Problem<a class="headerlink" href="#creating-a-problem" title="Permalink to this headline">¶</a></h1>
 <p>Minpower solves problems that are defined in spreadsheets. The most basic <abbr title="Economic Dispatch">ED</abbr> problem only has two files: <tt class="docutils literal"><span class="pre">generators.csv</span></tt> and <tt class="docutils literal"><span class="pre">loads.csv</span></tt>. If you are solving an <abbr title="Unit Commitment">UC</abbr> then you need to define the initial conditions for your generation in <tt class="docutils literal"><span class="pre">initial.csv</span></tt>. Scheduled or predicted energy amounts (e.g. predicted wind farm output or predicted load demand) over a series of times can be specified in a file defined by the <tt class="docutils literal"><span class="pre">schedule</span> <span class="pre">file</span> <span class="pre">name</span></tt> column of the component. If you are solving an <abbr title="Optimal Power Flow">OPF</abbr>, then you also need to define your transmission lines in <tt class="docutils literal"><span class="pre">lines.csv</span></tt>.</p>
-<p>The following tables give details on how to describe each component using spreadsheet columns. (Column order does not matter. Capitalization and spaces are ignored in the header row.) Examples spreadsheets are given after each table.</p>
+<p>The following tables give details on how to describe each component using spreadsheet columns. (Column order does not matter. Capitalization, underscores, and spaces are all ignored in the header row column names.) Examples spreadsheets are given after each table.</p>
 <div class="section" id="generators">
 <h2>Generators<a class="headerlink" href="#generators" title="Permalink to this headline">¶</a></h2>
 <table border="1" class="docutils">
 <colgroup>
-<col width="23%" />
-<col width="51%" />
-<col width="14%" />
-<col width="13%" />
+<col width="12%" />
+<col width="75%" />
+<col width="7%" />
+<col width="7%" />
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td>Column Name</td>
@@ -69,62 +69,72 @@
 <td>&nbsp;</td>
 <td>&nbsp;</td>
 </tr>
-<tr class="row-odd"><td>Power min</td>
-<td>&nbsp;</td>
+<tr class="row-odd"><td>P min</td>
+<td>min. power output</td>
 <td>0</td>
 <td>MW</td>
 </tr>
-<tr class="row-even"><td>Power max</td>
-<td>&nbsp;</td>
+<tr class="row-even"><td>P max</td>
+<td>max. power output</td>
 <td>500</td>
 <td>MW</td>
 </tr>
-<tr class="row-odd"><td>Cost curve equation</td>
-<td>fuel cost polynomial</td>
+<tr class="row-odd"><td>cost curve equation</td>
+<td>polynomial for the cost of fuel given a power output</td>
 <td>&nbsp;</td>
 <td>$/MWh</td>
 </tr>
-<tr class="row-even"><td>Heat rate equation</td>
+<tr class="row-even"><td>heat rate equation</td>
 <td>heat rate polynomial</td>
 <td>&nbsp;</td>
 <td>MMBtu/MWh</td>
 </tr>
-<tr class="row-odd"><td>Fuel cost</td>
-<td>&nbsp;</td>
+<tr class="row-odd"><td>fuel cost</td>
+<td>(if using a heat rate equation)</td>
 <td>1</td>
 <td>$/MMBtu</td>
 </tr>
-<tr class="row-even"><td>Start up cost</td>
+<tr class="row-even"><td>start up cost</td>
 <td>&nbsp;</td>
 <td>0</td>
 <td>$</td>
 </tr>
-<tr class="row-odd"><td>Shut down cost</td>
+<tr class="row-odd"><td>shut down cost</td>
 <td>&nbsp;</td>
 <td>0</td>
 <td>$</td>
 </tr>
-<tr class="row-even"><td>Ramp rate min</td>
+<tr class="row-even"><td>ramp rate min</td>
 <td>&nbsp;</td>
 <td>&nbsp;</td>
 <td>MW/h</td>
 </tr>
-<tr class="row-odd"><td>Ramp rate max</td>
+<tr class="row-odd"><td>ramp rate max</td>
 <td>&nbsp;</td>
 <td>&nbsp;</td>
 <td>MW/h</td>
 </tr>
-<tr class="row-even"><td>Must run</td>
-<td>gen. status must remain ON</td>
+<tr class="row-even"><td>min up time</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>hours</td>
+</tr>
+<tr class="row-odd"><td>min down time</td>
+<td>&nbsp;</td>
+<td>0</td>
+<td>hours</td>
+</tr>
+<tr class="row-even"><td>must run</td>
+<td>unit status must remain ON</td>
 <td>0</td>
 <td>&nbsp;</td>
 </tr>
-<tr class="row-odd"><td>Schedule filename</td>
-<td>filename of spreadsheet describing gen. schedule</td>
-<td>&nbsp;</td>
+<tr class="row-odd"><td>fast start</td>
+<td>unit has the ability to start up without having been committed if needed to avoid load shedding (when minpower is run using the faststart option)</td>
+<td>False</td>
 <td>&nbsp;</td>
 </tr>
-<tr class="row-even"><td>Bus</td>
+<tr class="row-even"><td>bus</td>
 <td>name of bus where gen. is connected</td>
 <td>single bus</td>
 <td>&nbsp;</td>
@@ -216,7 +226,7 @@
 <td>&nbsp;</td>
 <td>&nbsp;</td>
 </tr>
-<tr class="row-odd"><td>Bus</td>
+<tr class="row-odd"><td>bus</td>
 <td>name of bus where load is connected</td>
 <td>single bus</td>
 <td>&nbsp;</td>
@@ -270,11 +280,11 @@
 </tr>
 </tbody>
 </table>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">From</span><span class="p">,</span>    <span class="n">To</span><span class="p">,</span>      <span class="n">Pmax</span>
-<span class="n">Seattle</span><span class="p">,</span> <span class="n">Tacoma</span><span class="p">,</span>  <span class="mi">3</span>
-<span class="n">Olympia</span><span class="p">,</span> <span class="n">Tacoma</span><span class="p">,</span>  <span class="mi">10000</span>
-<span class="n">Olympia</span><span class="p">,</span> <span class="n">Seattle</span><span class="p">,</span> <span class="mi">10000</span>
-</pre></div>
+<div class="highlight-python"><pre>from bus,to bus,Pmax
+Seattle,Tacoma,3
+Olympia,Tacoma,10000
+Olympia,Seattle,10000
+</pre>
 </div>
 </div>
 <div class="section" id="schedules">
@@ -345,8 +355,7 @@
 <li class="toctree-l1"><a class="reference internal" href="optimal-power-flow.html">Optimal Power Flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="unit-commitment.html">Unit Commitment</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api/index.html">Documentation</a></li>
+<ul class="simple">
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>

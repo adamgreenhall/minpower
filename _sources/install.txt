@@ -5,7 +5,7 @@ Installation
 
     Basic full installation:
 
-    #. `ActivePython 2.7 <http://activestate.com/activepython/downloads>`_
+    #. `Anaconda Python <>`
     #. ``pip install minpower``
     #. `GLPK <http://www.gnu.org/s/glpk>`_ (`Win <http://gnuwin32.sourceforge.net/packages/glpk.htm>`_, `Mac <http://www.arnab-deka.com/posts/2010/02/installing-glpk-on-a-mac/>`_)
 
@@ -14,21 +14,14 @@ Installation
 
 New to Python
 ++++++++++++++++
-For new-to-Python folks, install `ActivePython 2.7 <http://activestate.com/activepython/downloads>`_. It makes the installation of a bunch of scientific :abbr:`packages (add-ons in Python terms)` very easy - the way it should be. Note that the 32-bit version is free for Windows, while for the 64-bit version only the Business Edition has a package manager. 
+For new-to-Python folks, install the free `Anaconda Python <https://store.continuum.io/cshop/anaconda>`_. It comes pre-loaded with all the  scientific :abbr:`packages (add-ons in Python parlance)` you'll need - just the way it should be. For more details see Anaconda's `install instruction <http://docs.continuum.io/anaconda/install.html>`_.
 
-For Windows users, add the following to the end of your PATH environment variable:: 
-
-  C:\Python27\;C:\Python27\Scripts\
-
-and create a new PYTHONPATH environment variable and set it to::
-  
-  C:\Python27
-
+Note for Mac/Linux folks: you should add the Anaconda directory to your path as instructed at the end of the install.
 
 Old Python User
 ++++++++++++++++
 
-For experienced Python users, ``pip install minpower`` should work just fine. If that command doesn't work, it is probably a failure to build scipy/numpy from source - try downloading the pre-built binary for your system from `SciPy <http://www.scipy.org/Download>`_.
+For experienced Python users, ``pip install minpower`` should work just fine. If that command doesn't work, it is probably a failure to build scipy/numpy from source. Try ``pip install numpy; pip install minpower`` or try downloading the pre-built binary for your system from `SciPy <http://www.scipy.org/Download>`_.
 
 2. Get Minpower
 -----------------

@@ -7,7 +7,7 @@ Mac
 -----
 
 * Use a text editor to open ``~/.bash_profile``
-* Add your solver's ``\bin`` directory to the path, e.g.::
+* Add your solver's ``/bin`` directory to the path, e.g.::
     
     export PATH=$PATH:/Library/gurobi452/mac64/bin/
 
@@ -26,7 +26,7 @@ Linux
 ---------
 
 * Use a text editor to open ``~/.bashrc``
-* Add your solver's ``\bin`` directory to the path, e.g.::
+* Add your solver's ``/bin`` directory to the path, e.g.::
     
     export PATH=$PATH:/opt/gurobi452/linux64/bin/
 

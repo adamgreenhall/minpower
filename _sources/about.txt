@@ -24,7 +24,7 @@ Authors and Collaborators
 
     `Adam Greenhall <http://adamgreenhall.com>`_ started minpower
     in early 2011 because he needed a good tool for his PhD research
-    on demand response and for teaching students at `U. of Washington <http://ee.washington.edu>`_.
+    on stochastic unit commitment and for teaching students at `U. of Washington <http://ee.washington.edu>`_.
 
 .. comment
     ..  image:: ./_static/sandia.gif
@@ -50,13 +50,16 @@ Development
 ..  container:: halfwidth
     
     **Minpower** is actively and openly developed on `github <http://github.com/adamgreenhall/minpower>`_, a social code 
-    hosting site that allows for collaboration by many people and change tracking. 
+    hosting site that allows for collaboration by many people, change tracking, and issue hosting. 
 
 Development is simple:
     
     #. Get on github and `fork minpower <http://github.com/adamgreenhall/minpower>`_
+    #. Clone Minpower from GitHub: ``git clone http://github.com/<yourname>/minpower``
+    #. :abbr:`install it locally (pip's -e flag links you handy-to-find directory to the much more obscure site-packages directory where Python looks for its packages)`: ``pip install -e minpower``
+        
     #. Make it better
-    #. Test it out (use  :mod:`tests.testall` and :mod:`tests.testall_integration`)
+    #. Test it out. Minpower uses `Nose <http://nose.readthedocs.org/>`_ and `Travis <travis-ci.org/adamgreenhall/minpower>`_ for testing. To run all of the tests use ``nosetests`` in your local minpower directory.
     #. Make a `pull request <https://github.com/adamgreenhall/minpower/pulls>`_ to get your version in
 
 .. _license:

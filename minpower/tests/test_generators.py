@@ -169,12 +169,14 @@ def start_up_cost():
     startupcost=9000
     generators=[
         make_cheap_gen(pmax=100),
-        make_expensive_gen(startupcost=startupcost)   ]
+        make_expensive_gen(pmin=10, startupcost=startupcost)   ]
     initial = [
         dict(power=80, status=True),
         dict(status=False)]
-    _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[80,120]))
-    assert generators[1].cost_startup(times[1])==startupcost
+    _, times = solve_problem(generators,
+        gen_init=initial,
+        **make_loads_times(Pdt=[80,120]))
+    assert generators[1].cost_startup(times[1]) == startupcost
 
 
 @istest

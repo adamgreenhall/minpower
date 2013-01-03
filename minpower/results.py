@@ -435,6 +435,9 @@ class Solution_UC_multistage(Solution_UC):
         '''the outputs under observed wind'''
         self.generators_power = self._concat('generators_power', slns)
         self.generators_status = self._concat('generators_status', slns)
+        if self._resolved and not user_config.perfect_solve:
+            self.expected_power = self._concat('expected_power', slns)
+            self.expected_status = self._concat('expected_status', slns)
 
     def _get_costs(self, slns):
         resolved = self._resolved and not user_config.perfect_solve
@@ -565,8 +568,7 @@ class Solution_Stochastic(Solution):
         if resolve:
             # observed generator power
             # resolved on the first scenario instance
-            # -- no more scenario labeling is needed            
-            self.expected_status = self.generators_status.copy()
+            # -- no more scenario labeling is needed
             self.generators_power = self.gen_time_df('power', None)
             self.generators_status = self.gen_time_df('status', None)
             
@@ -574,8 +576,9 @@ class Solution_Stochastic(Solution):
             self.generators_power_scenarios = self.stg_panel('power')
             self.generators_status_scenarios = \
                 _correct_status(self.stg_panel('status'))
-            self.generators_status = \
+            self.expected_status = \
                 self.generators_status_scenarios[self.scenarios[0]]
+            self.generators_status = self.expected_status.copy()
             self.expected_power = self._calc_expected(
                 self.generators_power_scenarios)
         return

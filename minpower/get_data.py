@@ -136,6 +136,7 @@ def parsedir(
     #create times
     timeseries, times, generators_data, loads_data = \
         setup_times(generators_data, loads_data, file_timeseries)
+
     #add loads
     loads = build_class_list(loads_data, powersystems.Load, times, timeseries)
     #add generators

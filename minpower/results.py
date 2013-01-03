@@ -409,8 +409,7 @@ class Solution_UC_multistage(Solution_UC):
         update_attributes(self, locals(),
             exclude=['stage_solutions', 'stage_times'])
         self._resolved = power_system.is_stochastic \
-            or user_config.deterministic_solve \
-            or user_config.perfect_solve
+            or user_config.deterministic_solve
 
         self.is_stochastic = any(sln.is_stochastic for sln in stage_solutions)
         
@@ -435,19 +434,21 @@ class Solution_UC_multistage(Solution_UC):
         '''the outputs under observed wind'''
         self.generators_power = self._concat('generators_power', slns)
         self.generators_status = self._concat('generators_status', slns)
-        if self._resolved and not user_config.perfect_solve:
+        if self._resolved:
             self.expected_power = self._concat('expected_power', slns)
             self.expected_status = self._concat('expected_status', slns)
+        elif user_config.perfect_solve:
+            self.expected_power = self.generators_power
+            self.expected_status = self.generators_status
 
     def _get_costs(self, slns):
-        resolved = self._resolved and not user_config.perfect_solve
         self.expected_cost = self.totalcost_generation = \
             self._concat('expected_totalcost' \
-                if resolved else 'totalcost_generation', slns)
+                if self._resolved else 'totalcost_generation', slns)
         self.load_shed_timeseries = self._concat('load_shed_timeseries', slns)
         self.load_shed = self.load_shed_timeseries.sum()
 
-        if resolved:
+        if self._resolved:
             self.observed_cost = self.totalcost_generation = \
                 self._concat('observed_totalcost', slns)
         elif user_config.perfect_solve:
@@ -496,16 +497,14 @@ class MultistageStandalone(Solution_UC_multistage):
     def __init__(self, power_system, stage_times, store):
         self.power_system = power_system
         self.is_stochastic = power_system.is_stochastic
-        self._resolved = self.is_stochastic \
-            or user_config.deterministic_solve \
-            or user_config.perfect_solve
+        self._resolved = self.is_stochastic or user_config.deterministic_solve
         times = pd.concat([times.non_overlap().strings for times in stage_times]).index
         self.times=TimeIndex(times)
         self.times.set_initial(stage_times[0].initialTime)
 
         self.expected_cost = self.totalcost_generation = store['expected_cost']
 
-        if self._resolved:
+        if self._resolved or user_config.perfect_solve:
             self.observed_cost = self.totalcost_generation = \
                 store['observed_cost']
             

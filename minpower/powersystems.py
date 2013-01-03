@@ -458,7 +458,6 @@ class PowerSystem(OptimizationProblem):
                 # just shed the un-meetable load and calculate cost later
                 self._allow_shed_resolve(sln)
                 self.solve()
-            
         
         self.resolve_solution_time = self.solution_time
         self.solution_time = self.full_sln_time
@@ -466,10 +465,11 @@ class PowerSystem(OptimizationProblem):
             self.resolve_solution_time))
             
     def _fix_non_faststarts(self, times):
-        # fix only non-faststart and ON statuses            
-        for gen in filter(lambda gen: not gen.faststart, self.generators()):
+        # fix non-faststart units - both power and status
+        #   fast-starts should only be contributing power for 
+        #   system security, not economics
+        for gen in filter(lambda gen: \
+            (not gen.faststart) and gen.is_controllable, self.generators()):
             for time in times:
-                status = gen.status(time)
-                if value(status) != 0 and not type(status)==bool:
-                    gen.status(time).fixed = True
-    
+                gen.status(time).fixed = True
+                gen.power(time).fixed = True    

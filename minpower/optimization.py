@@ -16,7 +16,7 @@ variable_kinds = dict(
     Boolean=pyomo.Boolean)
 
 from config import user_config
-from commonscripts import update_attributes
+from commonscripts import update_attributes, joindir
 
 class OptimizationObject(object):
     '''
@@ -389,14 +389,19 @@ class OptimizationProblem(OptimizationObject):
             logging.info('Problem solved in {}s.'.format(self.solution_time))
         
         if user_config.problem_filename:
-            logging.getLogger().setLevel(logging.CRITICAL) #disable coopr's funny loggings when writing lp files.  
+            # disable coopr's funny loggings when writing lp files.  
+            logging.getLogger().setLevel(logging.CRITICAL) 
             self.write_model(user_config.problem_filename)
             logging.getLogger().setLevel(user_config.logging_level)
                 
         if not self.solved:
-            if self.stochastic_formulation: 
-                self._stochastic_instance.pprint('unsolved-stochastic-instance.txt')
-            self.write_model('unsolved-problem-formulation.lp')
+            if user_config.problem_filename:
+                if self.stochastic_formulation: 
+                    self._stochastic_instance.pprint(joindir(
+                        user_config.directory,
+                        'unsolved-stochastic-instance.txt'))
+                self.write_model(joindir(user_config.directory,
+                    'unsolved-problem-formulation.lp'))
             raise OptimizationError('problem not solved')
         
         instance.load(results, 

@@ -236,12 +236,25 @@ def build_class_list(data, model, times=None, timeseries=None):
 
 
         if is_generator:
-            if schedulename or \
+            if schedulename or power or \
                 (forecast_name and user_config.deterministic_solve):
                 row_model = Generator_nonControllable
             elif scenariosdirectory or scenariosfilename:
                 row_model = Generator_Stochastic
-            
+        
+        # warn about fields not in model
+        valid_fields = pd.Index(fields[model.__name__] + ['schedulename'])
+        if is_generator:
+            valid_fields = valid_fields.union(pd.Index(
+                ['observedname', 'forecastname', 
+                'scenariosfilename', 'scenariosdirectory',
+                'costcurvepointsfilename']
+                ))
+        invalid_fields = row.index.diff(valid_fields)
+        if len(invalid_fields) > 0:
+            logging.warning('invalid fields in model:: {}'.format(
+                invalid_fields.tolist()))
+
         kwds = row[row.index.isin(fields[model.__name__])].to_dict()
 
         # add in any schedules

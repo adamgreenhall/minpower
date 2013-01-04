@@ -450,10 +450,18 @@ class PowerSystem(OptimizationProblem):
                 # allow faststart units to be started up to meet the load
                 self._unfix_variables()
                 self._fix_non_faststarts(sln.times)
+                logging.warning('allowing fast-starting units')
                 try: self.solve()
                 except OptimizationError:
-                    self._allow_shed_resolve(sln)
-                    self.solve()
+                    self._unfix_variables()
+                    self._fix_non_faststarts(sln.times, fix_power=False)
+                    logging.warning('''allowing non fast-starters
+                        to change power output''')
+                    try: self.solve()
+                    except OptimizationError:
+                        logging.warning('allowing load shedding')
+                        self._allow_shed_resolve(sln)
+                        self.solve()
             else:
                 # just shed the un-meetable load and calculate cost later
                 self._allow_shed_resolve(sln)
@@ -464,12 +472,15 @@ class PowerSystem(OptimizationProblem):
         logging.info('resolved instance with observed values (in {}s)'.format(
             self.resolve_solution_time))
             
-    def _fix_non_faststarts(self, times):
-        # fix non-faststart units - both power and status
-        #   fast-starts should only be contributing power for 
-        #   system security, not economics
+    def _fix_non_faststarts(self, times, fix_power=True):
+        '''
+        fix non-faststart units - both power and status
+        (unless this is infeasible, then only fix status)
+        the idea is that fast-starts should be contributing power
+        only for system security, not economics
+        '''
         for gen in filter(lambda gen: \
             (not gen.faststart) and gen.is_controllable, self.generators()):
             for time in times:
                 gen.status(time).fixed = True
-                gen.power(time).fixed = True    
+                if fix_power: gen.power(time).fixed = True

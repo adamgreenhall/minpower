@@ -1,14 +1,9 @@
 # minpower's setup script
 
-#build using:
-#python setup.py sdist
-
-#udpate pypi using:
-#python setup.py register
-#python setup.py sdist upload
-#git tag -a v2.0 -m 'version 2.0'; git push --tags
-#info: http://packages.python.org/distribute/setuptools.html#basic-use
-
+# make a new release by using 
+# seed release --dry-run
+# and then 
+# seed release
 
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
@@ -16,7 +11,7 @@ from setuptools.command.test import test as TestCommand
 setup(
     name = "minpower",
     version = "4.2.1", # dont forget to increment __init__.py
-    download_url = "https://github.com/adamgreenhall/minpower/zipball/v4.2.0",
+    download_url = "https://github.com/adamgreenhall/minpower/zipball/v4.2.1",
 
     entry_points="""
     [console_scripts]
@@ -44,8 +39,11 @@ setup(
     ],
     tests_require=[
         'nose',
+        'coverage',
         'objgraph'
         ],
+        
+    setup_requires=['seed >= 0.2.12'],
 
     description = "power systems optimization made beautiful",
     author = "Adam Greenhall",

@@ -6,8 +6,8 @@ before_install:
     - sudo apt-get install python-numpy glpk
 install: pip install --use-mirrors .
 script:
-    - pip install --use-mirrors nose objgraph
-    - nosetests .
+    - pip install --use-mirrors nose coverage objgraph
+    - nosetests --with-coverage --cover-package=minpower
     
 branches:
   only:

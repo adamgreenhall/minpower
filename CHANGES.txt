@@ -1,0 +1,9 @@
+----
+
+Version 4.2.2, Mon 07 Jan 2013
+===============================
+
+ef441c7529	cleanup how scenario files are handled - make more robust to probability column location (Adam Greenhall)
+3d3bdcd8b2	some pep8 cleanup (Adam Greenhall)
+a2d383a3a6	use coverage in testing. use seed for releasing (Adam Greenhall)
+

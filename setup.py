@@ -6,13 +6,14 @@
 # seed release
 
 from setuptools import setup, find_packages
-from setuptools.command.test import test as TestCommand
+
+version_number = open('minpower/__init__.py').read().split('"')[1].rstrip('"')
 
 setup(
     name = "minpower",
-    version = "4.2.1", # dont forget to increment __init__.py
-    download_url = "https://github.com/adamgreenhall/minpower/zipball/v4.2.1",
-
+    version = version_number,
+    download_url = "https://github.com/adamgreenhall/minpower" + \
+        "/zipball/v{v}".format(v=version_number),
     entry_points="""
     [console_scripts]
     minpower = minpower.solve:main
@@ -42,8 +43,10 @@ setup(
         'coverage',
         'objgraph'
         ],
-        
-    setup_requires=['seed >= 0.2.12'],
+    
+    # it helps to have seed if you are going to make releases
+    # but it is not required for setup
+    # setup_requires=['seed >= 0.2.12'],
 
     description = "power systems optimization made beautiful",
     author = "Adam Greenhall",

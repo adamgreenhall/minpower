@@ -299,6 +299,10 @@ def main():
         default=user_config.scenarios,
         help='limit the number of scenarios to N')
 
+    parser.add_argument('--wind_multiplier', type=float,
+        default=user_config.wind_multiplier,
+        help='scale the wind power by this factor')
+
     parser.add_argument('--deterministic_solve', action='store_true',
         default=user_config.deterministic_solve,
         help='solve a stochastic problem deterministically using the forecast_filename paramter')

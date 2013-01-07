@@ -46,20 +46,17 @@ fields = dict(
     'startupcost', 'shutdowncost',
     'faststart',
     'mustrun',
-    # schedules components
-    #'schedulefilename',
-    #'scenariosfilename',
-    #'scenariosdirectory',
-    # observed values (for evaluation of the cost of a stochastic solution)
-    #'observedfilename',
-    # deterministic (point) forecast vaues
-    #'forecastfilename',
-    # timeseries in one file names
-    #'schedulename', 'forecastname', 'observedname'
     ],
 
-    Load = ['name', 'bus'],
+    Load = ['name', 'bus', 'power'],
 )
+
+# extra fields for generator scheduling and bid specification
+# these fields require parsing of additional files
+# and result in additional objects being added
+# to the Generator after creation 
+gen_extra_fields = ['observedname', 'forecastname', 'scenariosfilename', 
+    'scenariosdirectory', 'costcurvepointsfilename']
 
 fields_initial = [
     'status',
@@ -245,15 +242,12 @@ def build_class_list(data, model, times=None, timeseries=None):
         # warn about fields not in model
         valid_fields = pd.Index(fields[model.__name__] + ['schedulename'])
         if is_generator:
-            valid_fields = valid_fields.union(pd.Index(
-                ['observedname', 'forecastname', 
-                'scenariosfilename', 'scenariosdirectory',
-                'costcurvepointsfilename']
-                ))
+            valid_fields = valid_fields.union(pd.Index(gen_extra_fields))
         invalid_fields = row.index.diff(valid_fields)
         if len(invalid_fields) > 0:
-            logging.warning('invalid fields in model:: {}'.format(
+            raise ValueError('invalid fields in model:: {}'.format(
                 invalid_fields.tolist()))
+            # logging.warning
 
         kwds = row[row.index.isin(fields[model.__name__])].to_dict()
 
@@ -263,6 +257,7 @@ def build_class_list(data, model, times=None, timeseries=None):
         elif pd.notnull(power):
             # a constant power schedule
             kwds['schedule'] = make_constant_schedule(times, power)
+            kwds.pop('power')
 
         if is_generator:
             if observed_name:
@@ -353,7 +348,8 @@ def setup_times(generators_data, loads_data, filename_timeseries):
         for i, gen in filter_notnull(generators_data, fobscol).iterrows():
             name = 'g{}_observations'.format(i)
             generators_data.ix[i, obscol] = name
-            timeseries[name] = get_schedule(joindir(datadir, gen[fobscol]))
+            timeseries[name] = get_schedule(joindir(datadir, gen[fobscol])) * \
+                user_config.wind_multiplier
         generators_data = generators_data.drop(fobscol, axis=1)
 
     if ffcstcol in generators_data:
@@ -361,7 +357,8 @@ def setup_times(generators_data, loads_data, filename_timeseries):
         for i, gen in filter_notnull(generators_data, ffcstcol).iterrows():
             name = 'g{}_forecast'.format(i)
             generators_data.ix[i, fcstcol] = name
-            timeseries[name] = get_schedule(joindir(datadir, gen[ffcstcol]))
+            timeseries[name] = get_schedule(joindir(datadir, gen[ffcstcol])) * \
+                user_config.wind_multiplier
         generators_data = generators_data.drop(ffcstcol, axis=1)
 
     generators_data = generators_data.drop(fcol, axis=1)
@@ -450,7 +447,12 @@ def setup_scenarios(gen_data, generators, times):
         scenarios = scenarios[scenarios.columns[:1+hrs]]
 
         scenario_values[day] = scenarios
-
+    
+    if user_config.wind_multiplier != 1.0:
+        scenario_values *= user_config.wind_multiplier
+        svt = scenario_values.transpose(2,1,0)
+        svt['probability'] *= 1 / user_config.wind_multiplier
+        scenario_values = svt.transpose(2,1,0)
 
     gen.scenario_values = scenario_values
     # defer scenario tree construction until actual time stage starts

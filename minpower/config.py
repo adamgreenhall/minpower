@@ -136,6 +136,8 @@ user_config = DotDict(dict(
     
     standalone = parser.getboolean('minpower', 'standalone'),
 
+    wind_multiplier = parser.getfloat('minpower', 'wind_multiplier'),
+
     # HACKs to help out resetting the config in testing
     directory = parser.get('minpower', 'directory'),
     store_filename = parser.get('minpower', 'store_filename'),

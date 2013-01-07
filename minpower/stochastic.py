@@ -1,14 +1,9 @@
 """
 Stochastic scenario models for schedules. 
 """
-from commonscripts import *
-from coopr.pyomo import *
-from coopr.pysp.phutils import *
-
+from coopr.pyomo import AbstractModel, Set, Param, Boolean, Var
 from coopr.pysp.scenariotree import ScenarioTree
 from coopr.pysp.ef import create_ef_instance
-
-from optimization import OptimizationProblem
 import gc, logging
 
 def construct_simple_scenario_tree(probabilities, time_stage=None):
@@ -42,29 +37,32 @@ def construct_simple_scenario_tree(probabilities, time_stage=None):
     # as do the values of the per scenario variables
     return tree
 
-def define_stage_variables(scenario_tree,power_system,times):
+def define_stage_variables(scenario_tree, power_system, times):
     # scenario_tree.Stages.pprint()
     # scenario_tree.StageVariables.pprint()
 
     #create sets of variable names (not actual variables) for each stage
-    variables_first_stage=Set()
-    variables_second_stage=Set()
+    variables_first_stage = Set()
+    variables_second_stage = Set()
 
     for gen in power_system.get_generators_without_scenarios():
         # for each non stochastic generator
         if gen.is_controllable: 
-            variables_first_stage.add(str(gen.get_variable('status',indexed=True,time=None))+'[*]')
-            variables_second_stage.add(str(gen.get_variable('power',indexed=True,time=None))+'[*]')
-        #note - appending '[*]' to the indicies is required to get pysp to assign all the variables in the array to a shape
+            variables_first_stage.add(
+                str(gen.get_variable('status',indexed=True,time=None))+'[*]')
+            variables_second_stage.add(
+                str(gen.get_variable('power',indexed=True,time=None))+'[*]')
+        # note - appending '[*]' to the indicies is required to get 
+        # pysp to assign all the variables in the array to a shape
         
     # variables_first_stage.pprint()
-    scenario_tree.StageVariables['first stage']=variables_first_stage
-    scenario_tree.StageVariables['second stage']=variables_second_stage
+    scenario_tree.StageVariables['first stage'] = variables_first_stage
+    scenario_tree.StageVariables['second stage'] = variables_second_stage
     
     #power_system._model=power_system._model.create()
     #power_system._model.pprint()
-    scenario_tree.StageCostVariable['first stage']=str(power_system.cost_first_stage())
-    scenario_tree.StageCostVariable['second stage']=str(power_system.cost_second_stage())
+    scenario_tree.StageCostVariable['first stage'] = str(power_system.cost_first_stage())
+    scenario_tree.StageCostVariable['second stage'] = str(power_system.cost_second_stage())
 
 def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_hours,overlap_hours, stage_number):
         
@@ -82,7 +80,7 @@ def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_
 
     gen = power_system.get_generator_with_scenarios()
     
-    scenario_instances={}
+    scenario_instances = {}
 
     #construct scenario instances
     gc.disable()  
@@ -116,10 +114,10 @@ def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_
                 full_problem_instance._clear_attribute('{s}_{u}_{t}'.format(s=scenario,u=u,t=str(time)))
     
         
-    power_system.stochastic_formulation=True
-    power_system._stochastic_instance=full_problem_instance
-    power_system._scenario_tree=scenario_tree
-    power_system._scenario_instances=scenario_instances
+    power_system.stochastic_formulation = True
+    power_system._stochastic_instance = full_problem_instance
+    power_system._scenario_tree = scenario_tree
+    power_system._scenario_instances = scenario_instances
     return power_system
 
 def get_scenario_based_costs(scenario_tree,scenario_instances):
@@ -127,21 +125,25 @@ def get_scenario_based_costs(scenario_tree,scenario_instances):
     costs=dict()
     for node in scenario_tree._tree_node_map.values():
         scenarios=node._scenarios
-        if len(scenarios)==1: costs[node._scenarios[0]._name]=node.computeExpectedNodeCost(scenario_instances)
-        else: continue
+        if len(scenarios)==1: 
+            costs[node._scenarios[0]._name] = \
+                node.computeExpectedNodeCost(scenario_instances)
+        else: 
+            continue
     return costs
 
 def update_variables(power_system,times):
     '''Convert all variables into dictionaries of their solved values, keyed by scenario'''
-    first_scenario=True
-    variable_names=power_system._model.active_components(Var).keys()
-    values=dict([(nm,{}) for nm in variable_names])
-    for s,scenario in power_system._scenario_instances.items():
-        for var_name,var in scenario.active_components(Var).items():
-            if var.is_indexed(): values[var_name][s]=dict([(idx,var_val.value) for idx,var_val in var.iteritems()])
-            else: values[var_name][s]=var.value
-    power_system._per_scenario_values=values
-
+    variable_names = power_system._model.active_components(Var).keys()
+    values=dict([(nm, {}) for nm in variable_names])
+    for s, scenario in power_system._scenario_instances.items():
+        for var_name, var in scenario.active_components(Var).items():
+            if var.is_indexed(): 
+                    values[var_name][s] = dict(
+                        [(idx, var_val.value) for idx, var_val in var.iteritems()])
+            else: 
+                    values[var_name][s] = var.value
+    power_system._per_scenario_values = values
 
 
 def new_scenario_tree_model():
@@ -153,12 +155,16 @@ def new_scenario_tree_model():
     scenario_tree_model.Stages = Set(ordered=True)
     scenario_tree_model.Nodes = Set()
 
-    scenario_tree_model.NodeStage = Param(scenario_tree_model.Nodes, within=scenario_tree_model.Stages)
-    scenario_tree_model.Children = Set(scenario_tree_model.Nodes, within=scenario_tree_model.Nodes, ordered=True)
-    scenario_tree_model.ConditionalProbability = Param(scenario_tree_model.Nodes)
+    scenario_tree_model.NodeStage = Param(scenario_tree_model.Nodes,
+        within=scenario_tree_model.Stages)
+    scenario_tree_model.Children = Set(scenario_tree_model.Nodes,
+        within=scenario_tree_model.Nodes, ordered=True)
+    scenario_tree_model.ConditionalProbability = Param(
+        scenario_tree_model.Nodes)
 
     scenario_tree_model.Scenarios = Set(ordered=True)
-    scenario_tree_model.ScenarioLeafNode = Param(scenario_tree_model.Scenarios, within=scenario_tree_model.Nodes)
+    scenario_tree_model.ScenarioLeafNode = Param(scenario_tree_model.Scenarios,
+        within=scenario_tree_model.Nodes)
 
     scenario_tree_model.StageVariables = Set(scenario_tree_model.Stages)
     scenario_tree_model.StageCostVariable = Param(scenario_tree_model.Stages)
@@ -170,10 +176,12 @@ def new_scenario_tree_model():
     # tree. the node-based method is more compact, but the scenario-based method is
     # often more natural when parameter data is generated via simulation. the default
     # is scenario-based.
-    scenario_tree_model.ScenarioBasedData = Param(within=Boolean, default=True, mutable=True)
+    scenario_tree_model.ScenarioBasedData = Param(within=Boolean,
+        default=True, mutable=True)
 
     # do we bundle, and if so, how?
-    scenario_tree_model.Bundling = Param(within=Boolean, default=False, mutable=True)
+    scenario_tree_model.Bundling = Param(within=Boolean,
+        default=False, mutable=True)
     scenario_tree_model.Bundles = Set() # bundle names
     scenario_tree_model.BundleScenarios = Set(scenario_tree_model.Bundles)
     

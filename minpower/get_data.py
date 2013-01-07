@@ -389,7 +389,8 @@ def _parse_scenario_day(filename):
         data = data[ data.index<Nscenarios ]
         data['probability'] = data['probability']/sum( data['probability'] )
 
-    return data
+    # return the data with probability column first
+    return data[data.columns.drop('probability').insert(0, 'probability')]
 
 
 def setup_scenarios(gen_data, generators, times):
@@ -421,8 +422,8 @@ def setup_scenarios(gen_data, generators, times):
     alldata = OrderedDict()
     for i,f in enumerate(filenames):
         data = _parse_scenario_day(f)
-        day_idx = 1 if data.columns[0]=='probability' else 0
-        day = Timestamp(data.columns[day_idx])
+        # label scenarios for day with the first timestamp
+        day = Timestamp(data.columns.drop('probability')[0])
         alldata[day] = data
 
     # TODO - assumes one hour intervals!!

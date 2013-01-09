@@ -67,7 +67,8 @@ def make_loads_times(Pd=200,Pdt=None,**kwargs):
     
     return dict(loads=loads,times=times)
 
-def solve_problem(generators,loads=None,times=None, gen_init=None, lines=None):
+def solve_problem(generators, loads=None, times=None, 
+    gen_init=None, lines=None, do_reset_config=True):
     
     if lines is None: lines=[]
 
@@ -80,8 +81,9 @@ def solve_problem(generators,loads=None,times=None, gen_init=None, lines=None):
     power_system=powersystems.PowerSystem(generators,loads,lines)
     solve.create_problem(power_system,times)
     power_system.solve()
-    
-    reset_config()
+
+    if do_reset_config:
+        reset_config()
     
     if power_system.solved:
         power_system.update_variables()

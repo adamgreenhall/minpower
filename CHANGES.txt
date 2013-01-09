@@ -1,5 +1,13 @@
 ----
 
+Version 4.2.3, Wed 09 Jan 2013
+===============================
+
+9c9138cfd6	add scaling of wind power. raise error on bad csv header column names. (Adam Greenhall)
+1e7ce31674	pull version numbering from __init__.py, don
+    't require seed. (Adam Greenhall)
+
+
 Version 4.2.2, Mon 07 Jan 2013
 ===============================
 

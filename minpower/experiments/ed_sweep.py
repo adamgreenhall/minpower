@@ -8,7 +8,7 @@ from minpower.config import user_config
 from minpower.get_data import parsedir
 from minpower.commonscripts import joindir
 from minpower.tests.test_utils import make_loads_times, solve_problem
-from pandas import Series
+from pandas import DataFrame
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
@@ -20,20 +20,27 @@ def main(args):
     if args['max'] == 0:
         args['max'] = sum(gen.pmax for gen in generators if gen.is_controllable)
     
+    
     load_values = np.arange(args['min'], args['max'], args['interval'])
-    prices = Series(index=load_values) 
+    results = DataFrame(columns=['prices', 'committed'], index=load_values)
     for load_val in load_values:
         print load_val
         loads_times = make_loads_times(Pd=load_val)
         power_system, times = solve_problem(generators, 
             do_reset_config=False, **loads_times)
-        prices[load_val] = power_system.buses[0].price(times[0])
+        t = times[0]
+        results.ix[load_val, 'prices'] = power_system.buses[0].price(t)
+        results.ix[load_val, 'committed'] = sum(map(
+            lambda gen: gen.power(t).value > gen.pmin, 
+            filter(lambda gen: gen.is_controllable, generators)))
     
-    prices.to_csv(joindir(user_config.directory, 'ed_sweep.csv'))
-    
-    prices.plot()
-    plt.xlabel('System Load (MW)')
-    plt.ylabel('Estimated System Price ($/MWh)')
+    results.to_csv(joindir(user_config.directory, 'ed_sweep.csv'))
+
+    ax = results.plot(secondary_y=['committed'])
+    ax.set_xlabel('System Load (MW)')
+    ax.set_ylabel('Estimated System Price ($/MWh)')
+    ax.right_ax.set_ylabel('Units committed')
+
     plt.savefig(joindir(user_config.directory, 'ed_sweep.png'))
     
     

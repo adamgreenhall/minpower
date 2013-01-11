@@ -420,16 +420,11 @@ class OptimizationProblem(OptimizationObject):
             logging.debug('... LP problem solved')    
         
         if self.stochastic_formulation:
-            self._scenario_tree.snapshotSolutionFromInstances(self._scenario_instances)
+            self._scenario_tree.snapshotSolutionFromInstances(self._scenario_instances)        
         
-        def get_objective(name):
-            try: return results.Solution.objective[name].value
-            except AttributeError: return results.Solution.objective['__default_objective__'].value
-        obj_name='objective' if (not self.stochastic_formulation) else 'MASTER'
         
-        #print results.Solution.objective
-        #print get_duals,self.stochastic_formulation,obj_name
-        self.objective = get_objective(obj_name)
+        self.objective = get_objective(results,
+            name='MASTER' if self.stochastic_formulation else 'objective')
         
         #self.constraints = instance.active_components(pyomo.Constraint)
         #self.variables =   instance.active_components(pyomo.Var)
@@ -553,6 +548,18 @@ def detect_status(results, solver):
     return success
 
 
+def get_objective(results, name='objective'):
+    value = 0
+    try:
+        value = results.Solution.objective[name].value
+    except AttributeError:
+        try: 
+            value = results.Solution.objective['__default_objective__'].value
+        except AttributeError:
+            # this seems to happen in the python API case
+            objs = results.Solution.objective.values()
+            value = [obj['Value'] for obj in objs if 'Value' in obj][0]
+    return value
 
 
 class OptimizationError(Exception):

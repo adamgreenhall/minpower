@@ -445,7 +445,17 @@ class OptimizationProblem(OptimizationObject):
         suffixes = ['dual'] if get_duals else []
 
         if not hasattr(self,'_opt_solver'):
-            self._opt_solver = cooprsolver.SolverFactory(solver)
+            kwds = {}            
+            try: 
+                if solver == 'gurobi':
+                    import gurobipy
+                    kwds['solver_io'] = 'python'
+                elif solver == 'cplex':
+                    import cplex
+                    kwds['solver_io'] = 'python'         
+            except ImportError: pass
+
+            self._opt_solver = cooprsolver.SolverFactory(solver, **kwds)
             # self._opt_solver.options.mipgap = '0.001'
             
             if self._opt_solver is None: 

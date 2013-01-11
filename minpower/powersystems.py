@@ -463,11 +463,11 @@ class PowerSystem(OptimizationProblem):
                     try: self.solve()
                     except OptimizationError:
                         logging.warning('allowing load shedding')
-                        self._allow_shed_resolve(sln.times, only_non_overlap=True)
+                        self._allow_shedding(sln.times, resolve=True)
                         self.solve()
             else:
                 # just shed the un-meetable load and calculate cost later
-                self._allow_shed_resolve(sln.times, only_non_overlap=True)
+                self._allow_shedding(sln.times, resolve=True)
                 self.solve()
         
         self.resolve_solution_time = self.solution_time

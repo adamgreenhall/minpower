@@ -43,8 +43,7 @@ class Generator(OptimizationObject):
         startupcost=0,shutdowncost=0,
         faststart=False,
         mustrun=False,
-        name='',index=None,bus=None,
-        dispatch_decommit_allowed=False):
+        name='',index=None,bus=None):
 
         update_attributes(self,locals()) #load in inputs
         if self.rampratemin is None and self.rampratemax is not None: self.rampratemin = -1*self.rampratemax
@@ -68,7 +67,7 @@ class Generator(OptimizationObject):
 
     def status(self,time=None,scenario=None):
         '''on/off status at time'''
-        if self.commitment_problem:
+        if self.commitment_problem or user_config.dispatch_decommit_allowed:
             if time is not None and is_init(time):
                 return self.initial_status
             else:
@@ -201,7 +200,7 @@ class Generator(OptimizationObject):
         self.commitment_problem = len(times)>1
         self.add_variable('power', index=times.set, low=0, high=self.pmax)
 
-        if self.commitment_problem or self.dispatch_decommit_allowed:
+        if self.commitment_problem or user_config.dispatch_decommit_allowed:
             self.add_variable('status', index=times.set, kind='Binary',fixed_value=1 if self.mustrun else None)
 
         if self.commitment_problem:

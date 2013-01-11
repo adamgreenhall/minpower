@@ -296,25 +296,24 @@ class Solution_ED(Solution):
         def niceTF(value): return 0 if value==0 else 1
         def nice_zeros(value): return 0 if value==0 else value
 
-        t=self.times[0]
-        generators=self.generators
-        output_loads= [load for load in self.loads if getattr(load,'kind',None) in ['bidding','shifting']]
-        fields,data=[],[]
-        components=flatten([generators,output_loads])
-        fields.append('name')
-        data.append(getattrL(components,'name'))
+        t = self.times.strings.index[0]
+        
+        out = pd.DataFrame(columns=['power', 'IC'], 
+            index=self.generators_power.columns) 
+        out['power'] = self.generators_power.ix[t]
+        out['IC'] = [nice_zeros(g.incrementalcost(self.times[0])) \
+            for g in self.generators]
 
         if user_config.dispatch_decommit_allowed:
-            fields.append('u')
-            data.append([niceTF( value(g.status(t)) and value(g.power(t))>0) for g in components])
+            # add status, but label all units at Pmin as OFF
+            Pmin = [gen.pmin for gen in self.generators]
+            out['status'] = self.generators_status.ix[t]            
+            out = out.drop('IC', axis=1)
 
-        fields.append('P')
-        data.append([nice_zeros(value(g.power(t))) for g in components])
-
-        fields.append('IC')
-        data.append([nice_zeros(g.incrementalcost(t)) for g in components])
-
-        writeCSV(fields,transpose(data),filename=full_filename('dispatch.csv'))
+        out.index = [gen.name for gen in self.generators]
+        out.index.name = 'name'
+        
+        out.to_csv(full_filename('dispatch.csv'))
 
 
 class Solution_OPF(Solution):

@@ -441,14 +441,14 @@ class OptimizationProblem(OptimizationObject):
 
         if not hasattr(self,'_opt_solver'):
             kwds = {}            
-            try: 
-                if solver == 'gurobi':
-                    import gurobipy
-                    kwds['solver_io'] = 'python'
-                elif solver == 'cplex':
-                    import cplex
-                    kwds['solver_io'] = 'python'         
-            except ImportError: pass
+#            try: 
+#                if solver == 'gurobi':
+#                    import gurobipy
+#                    kwds['solver_io'] = 'python'
+#                elif solver == 'cplex':
+#                    import cplex
+#                    kwds['solver_io'] = 'python'         
+#            except ImportError: pass
 
             self._opt_solver = cooprsolver.SolverFactory(solver, **kwds)
             # self._opt_solver.options.mipgap = '0.001'

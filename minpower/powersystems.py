@@ -310,7 +310,9 @@ class PowerSystem(OptimizationProblem):
     def total_scheduled_load(self):
         return sum([load.schedule for load in self.loads()]) 
     
-    
+    def total_scheduled_generation(self):
+        return sum(gen.schedule for gen in self.generators() if not gen.is_controllable)    
+        
     def get_generators_without_scenarios(self):
         return filter(lambda gen: getattr(gen,'is_stochastic',False)==False, self.generators())
 
@@ -389,26 +391,27 @@ class PowerSystem(OptimizationProblem):
         sln.observed_totalcost = sln.totalcost_generation
         return
 
-    def _allow_shed_resolve(self, sln):
+    def _allow_shedding(self, times, resolve=False):
         self.set_load_shedding(True)
+        const_times = times.non_overlap() if resolve else times
         
         # make load power into a variable instead of a param
         for load in self.loads():
-            load.create_variables(sln.times)  # need all for the .set attrib
-            load.create_constraints(sln.times_non_overlap)
+            load.create_variables(times)  # need all for the .set attrib
+            load.create_constraints(const_times)
         
         # recalc the power balance constraint
         for bus in self.buses:
-            for time in sln.times:
+            for time in times:
                 bus._remove_component('power balance', time)
-            bus.create_constraints(sln.times_non_overlap, 
+            bus.create_constraints(const_times, 
                 self.Bmatrix, self.buses, include_children=False)
         
         # reset objective
         self._model.objective = None
-        self.create_objective(sln.times_non_overlap)
+        self.create_objective(const_times)
         # re-create system cost constraints 
-        self.create_constraints(sln.times_non_overlap, include_children=False)
+        self.create_constraints(const_times, include_children=False)
 
 # recreating all constraints would be simpler, but would take a bit longer
 #        # reset objective
@@ -460,11 +463,11 @@ class PowerSystem(OptimizationProblem):
                     try: self.solve()
                     except OptimizationError:
                         logging.warning('allowing load shedding')
-                        self._allow_shed_resolve(sln)
+                        self._allow_shed_resolve(sln.times, only_non_overlap=True)
                         self.solve()
             else:
                 # just shed the un-meetable load and calculate cost later
-                self._allow_shed_resolve(sln)
+                self._allow_shed_resolve(sln.times, only_non_overlap=True)
                 self.solve()
         
         self.resolve_solution_time = self.solution_time
@@ -484,3 +487,21 @@ class PowerSystem(OptimizationProblem):
             for time in times:
                 gen.status(time).fixed = True
                 if fix_power: gen.power(time).fixed = True
+                
+    def debug_infeasibe(self, times):
+        scheduled = pd.DataFrame({
+            'load': self.total_scheduled_load().ix[times.strings.values], 
+            'generation': self.total_scheduled_generation().ix[times.strings.values]})
+        scheduled['net_required'] = scheduled['load'] - scheduled.generation
+        
+        print 'total scheduled\n', scheduled
+        gens = filter(lambda gen: \
+            gen.is_controllable and gen.initial_status == 1,
+            self.generators())
+        committed = pd.Series(dict(
+            Pmin=sum(gen.pmin for gen in gens),
+            Pmax=sum(gen.pmax for gen in gens),
+            rampratemin=sum(gen.rampratemin for gen in gens),
+            rampratemax=sum(gen.rampratemax for gen in gens),
+            ))
+        print 'total committed\n', committed

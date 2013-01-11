@@ -163,15 +163,13 @@ def create_solve_problem(power_system, times, scenario_tree=None,
     try: 
         instance = power_system.solve()
     except OptimizationError:
-
         #re-do stage, with load shedding allowed
         logging.critical('stage infeasible, re-running with load shedding.')
-        power_system.reset_model()
-        power_system.set_load_shedding(True)
-        create_problem(power_system, times, scenario_tree, stage_number)
+        power_system._allow_shedding(times)
         try:
             instance = power_system.solve()
         except OptimizationError:
+            power_system.debug_infeasibe(times)
             raise OptimizationError('failed to solve, even with load shedding.')
         power_system.set_load_shedding(False)
 

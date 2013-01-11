@@ -15,11 +15,12 @@ import argparse
 
 def main(args):
     generators, loads, _, times, _, data = parsedir()
-    if args['min'] == 0:
-        args['min'] = sum(gen.pmin for gen in generators if gen.is_controllable)
-    if args['max'] == 0:
-        args['max'] = sum(gen.pmax for gen in generators if gen.is_controllable)
+    generators = filter(lambda gen: gen.is_controllable, generators)
     
+    if args['min'] == 0:
+        args['min'] = 1.1 * sum(gen.pmin for gen in generators)
+    if args['max'] == 0:
+        args['max'] = 0.99 * sum(gen.pmax for gen in generators)
     
     load_values = np.arange(args['min'], args['max'], args['interval'])
     results = DataFrame(columns=['prices', 'committed'], index=load_values)
@@ -31,9 +32,9 @@ def main(args):
         t = times[0]
         results.ix[load_val, 'prices'] = power_system.buses[0].price(t)
         results.ix[load_val, 'committed'] = sum(map(
-            lambda gen: gen.power(t).value > gen.pmin, 
-            filter(lambda gen: gen.is_controllable, generators)))
-    
+            lambda gen: gen.power(t).value > gen.pmin,
+            power_system.generators()))
+        
     results.to_csv(joindir(user_config.directory, 'ed_sweep.csv'))
 
     ax = results.plot(secondary_y=['committed'])
@@ -41,8 +42,7 @@ def main(args):
     ax.set_ylabel('Estimated System Price ($/MWh)')
     ax.right_ax.set_ylabel('Units committed')
 
-    plt.savefig(joindir(user_config.directory, 'ed_sweep.png'))
-    
+    plt.savefig(joindir(user_config.directory, 'ed_sweep.png'))    
     
 def get_args():
     parser = argparse.ArgumentParser(

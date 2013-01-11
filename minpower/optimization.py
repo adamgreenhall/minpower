@@ -422,7 +422,6 @@ class OptimizationProblem(OptimizationObject):
         if self.stochastic_formulation:
             self._scenario_tree.snapshotSolutionFromInstances(self._scenario_instances)        
         
-        
         self.objective = get_objective(results,
             name='MASTER' if self.stochastic_formulation else 'objective')
         
@@ -451,7 +450,7 @@ class OptimizationProblem(OptimizationObject):
 #            except ImportError: pass
 
             self._opt_solver = cooprsolver.SolverFactory(solver, **kwds)
-            # self._opt_solver.options.mipgap = '0.001'
+            self._opt_solver.options.mipgap = user_config.mipgap
             
             if self._opt_solver is None: 
                 msg='solver "{}" not found by coopr'.format(solver)
@@ -465,9 +464,12 @@ class OptimizationProblem(OptimizationObject):
         if not keepFiles: logger.setLevel(current_log_level)
         self.solved = detect_status(results, self._opt_solver.name)
         
-        try: logging.debug('solution gap={}'.format(
-            results.Solution[0]['Gap']))
-        except: pass
+        if not get_duals:
+            try: 
+                self.mipgap = results.Solution[0]['Gap']
+                logging.debug('solution gap={}'.format(self._mipgap))
+            except: 
+                self.mipgap = None
         
         return results, elapsed
     
@@ -553,12 +555,8 @@ def get_objective(results, name='objective'):
     try:
         value = results.Solution.objective[name].value
     except AttributeError:
-        try: 
-            value = results.Solution.objective['__default_objective__'].value
-        except AttributeError:
-            # this seems to happen in the python API case
-            objs = results.Solution.objective.values()
-            value = [obj['Value'] for obj in objs if 'Value' in obj][0]
+        objs = results.Solution.objective.values()
+        value = [obj['Value'] for obj in objs if 'Value' in obj][0]
     return value
 
 

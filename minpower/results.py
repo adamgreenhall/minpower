@@ -120,6 +120,10 @@ class Solution(object):
     def _get_problem_info(self):
         self.solve_time = self.power_system.solution_time
         self.objective = float(value(self.power_system.objective))       
+        try: 
+            self.mipgap = self.power_system.mipgap
+        except AttributeError: 
+            self.mipgap = None
         
     def _get_outputs(self):
         self.generators_power = self.gen_time_df('power')

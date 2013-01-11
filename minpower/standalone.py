@@ -62,6 +62,7 @@ def init_store(power_system, times, data):
     
     # setup one-per-stage results
     storage['solve_time'] = Series(index=range(stages))
+    storage['mipgap'] = Series(index=range(stages))
     
     # store configuration
     storage['configuration'] = Series(user_config)
@@ -86,7 +87,8 @@ def store_state(power_system, times, sln=None):
             [gen.finalstatus['hoursinstatus'] for gen in generators]
         ])
     
-    _add_tbl_val(storage, 'solve_time', stg, sln.solve_time)                
+    _add_tbl_val(storage, 'solve_time', stg, sln.solve_time)
+    _add_tbl_val(storage, 'mipgap', stg, sln.mipgap)
     
     if sln.is_stochastic or user_config.deterministic_solve:
         table_append(storage, 'observed_cost', sln.observed_totalcost)

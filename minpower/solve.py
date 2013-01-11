@@ -274,6 +274,10 @@ def main():
         default=user_config.hours_overlap,
         help='number hours to overlap commitments in a rolling UC')
 
+    parser.add_argument('--mipgap',  type=float,
+        default=user_config.mipgap,
+        help='the MIP gap solution tolerence')
+
     parser.add_argument('--reserve_fixed', type=float,
         default=user_config.reserve_fixed,
         help='The static amount of reserve required at all times (in MW)')

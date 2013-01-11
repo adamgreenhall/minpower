@@ -113,6 +113,7 @@ user_config = DotDict(dict(
     dispatch_decommit_allowed = \
         parser.getboolean('minpower', 'dispatch_decommit_allowed'),
     solver = parser.get('minpower', 'solver'),
+    mipgap = parser.getfloat('minpower', 'mipgap'), 
 
     reserve_fixed = parser.getfloat('minpower', 'reserve_fixed'),
     reserve_load_fraction = \

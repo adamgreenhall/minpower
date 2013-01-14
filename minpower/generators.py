@@ -134,7 +134,7 @@ class Generator(OptimizationObject):
             if len(noneq) == 0: 
                 intervals = 0
             else:
-                intervals = len(stat.ix[noneq.index[-1] + 1:])
+                intervals = len(stat.ix[noneq.index[-1]:]) - 1
 
             hrs = intervals * times.intervalhrs
 

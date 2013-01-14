@@ -271,46 +271,47 @@ def main():
         default=user_config.mipgap,
         help='the MIP gap solution tolerence')
 
-    parser.add_argument('--reserve_fixed', type=float,
+    reserve = parser.add_argument_group('Reserve',
+        'Does the system require reserve? The default is no reserve.')
+    reserve.add_argument('--reserve_fixed', type=float,
         default=user_config.reserve_fixed,
-        help='The static amount of reserve required at all times (in MW)')
-    parser.add_argument('--reserve_load_fraction', type=float,
+        help='the static amount of reserve required at all times (in MW)')
+    reserve.add_argument('--reserve_load_fraction', type=float,
         default=user_config.reserve_load_fraction,
         help='fraction of the total system load which is required as reserve')
 
-    parser.add_argument('--problemfile',action="store_true",
-        default=user_config.problem_filename,
-        help='flag to write the problem formulation to a problem-formulation.lp file -- useful for debugging')
     parser.add_argument('--duals','-d',action="store_true",
         default=user_config.duals,
         help='flag to get the duals, or prices, of the optimization problem')
     parser.add_argument('--dispatch_decommit_allowed', action="store_true",
         default=user_config.dispatch_decommit_allowed,
         help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
-    parser.add_argument('--logfile','-l',type=str,
-        default=user_config.logging_filename,
-        help='log file, default is to log to terminal')
-    parser.add_argument('--scenarios',type=int,
-        default=user_config.scenarios,
-        help='limit the number of scenarios to N')
 
     parser.add_argument('--wind_multiplier', type=float,
         default=user_config.wind_multiplier,
         help='scale the wind power by this factor')
-
-    parser.add_argument('--deterministic_solve', action='store_true',
-        default=user_config.deterministic_solve,
-        help='solve a stochastic problem deterministically using the forecast_filename paramter')
-    parser.add_argument('--perfect_solve', action='store_true',
-        default=user_config.perfect_solve,  #False
-        help='solve a stochastic problem with perfect information')
-    parser.add_argument('--scenarios_directory', type=str,
-        default=user_config.scenarios_directory,
-        help='override scenarios directory for stochastic problem')
-    parser.add_argument('--faststart_resolve', action='store_true',
+    
+    stochastic = parser.add_argument_group('Stochastic UC',
+        'options to modify the behavior of a stochastic problem')
+    stochastic.add_argument('--scenarios',type=int,
+        default=user_config.scenarios,
+        help='limit the number of scenarios to N')        
+    stochastic.add_argument('--faststart_resolve', action='store_true',
         default=user_config.faststart_resolve,
         help="""allow faststart units which are off to be
-                started up during resolve""")
+                started up during resolve with observed wind values""")
+
+    stochastic_mode = stochastic.add_mutually_exclusive_group()
+    stochastic_mode.add_argument('--deterministic_solve', action='store_true',
+        default=user_config.deterministic_solve,
+        help='solve a stochastic problem deterministically using the forecast_filename paramter')
+    stochastic_mode.add_argument('--perfect_solve', action='store_true',
+        default=user_config.perfect_solve,  #False
+        help='solve a stochastic problem with perfect information')
+    stochastic_mode.add_argument('--scenarios_directory', type=str,
+        default=user_config.scenarios_directory,
+        help='override scenarios directory for stochastic problem')
+        
 
     parser.add_argument('--standalone', '-m', action="store_true", 
         default=user_config.standalone,
@@ -319,20 +320,33 @@ def main():
         default=user_config.output_prefix,
         help='Prefix all results files with the process id (for a record of simulataneous solves)')
 
-    parser.add_argument('--load_shedding_allowed', action='store_true',
-        default=user_config.load_shedding_allowed,
-        )
-
-    parser.add_argument('--profile',action="store_true",
-        default=False,
-        help='run cProfile and output to minpower.profile')
-    parser.add_argument('--error','-e',action="store_true",
-        default=user_config.error,
-        help='redirect error messages to the standard output (useful for debugging on remote machines)')
-    parser.add_argument('--debugger',action="store_true",
+    debugging = parser.add_argument_group('Debugging tools')
+    debugging.add_argument('--debugger',action="store_true",
         default=user_config.debugger,
         help='use pdb when an error is raised')
-        
+    debugging.add_argument('--logfile','-l',type=str,
+        default=user_config.logging_filename,
+        help='log file, default is to log to terminal')
+    debugging.add_argument('--problemfile',action="store_true",
+        default=user_config.problem_filename,
+        help='flag to write the problem formulation to a problem-formulation.lp file -- useful for debugging')    
+    debugging.add_argument('--profile',action="store_true",
+        default=False,
+        help='run cProfile and output to minpower.profile')
+    
+    constraints = parser.add_argument_group('Ignore/relax constraints',
+        'Ignore or relax sets of constraints to allow for feasible solutions.')
+    constraints.add_argument('--load_shedding_allowed', action='store_true',
+        default=user_config.load_shedding_allowed,
+        help='''Allow load shedding at a high cost (shedding is always a 
+            fallback if the system cannot meet the load).''')
+    constraints.add_argument('--ignore_minhours_constraints', action="store_true",
+        default=user_config.ignore_minhours_constraints,
+        help='drop the min up/down time constraints on the generators')
+    constraints.add_argument('--ignore_ramping_constraints', action="store_true",
+        default=user_config.ignore_ramping_constraints,
+        help='drop the min ramping power constraints on the generators')
+    
     # NOTE - don't let defaults creep into this defenition
     # that makes resetting the defaults during testing very hard 
 

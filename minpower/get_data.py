@@ -136,8 +136,17 @@ def parsedir(
 
     #add loads
     loads = build_class_list(loads_data, powersystems.Load, times, timeseries)
+
     #add generators
+    if user_config.ignore_minhours_constraints:
+        generators_data['minuptime'] = 0
+        generators_data['mindowntime'] = 0
+    if user_config.ignore_ramping_constraints:
+        generators_data['rampratemax'] = None
+        generators_data['rampratemin'] = None
+        
     generators = build_class_list(generators_data, Generator, times, timeseries)
+
     #add lines
     lines = build_class_list(lines_data, powersystems.Line)
     #add initial conditions

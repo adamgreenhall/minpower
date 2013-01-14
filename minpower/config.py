@@ -126,7 +126,6 @@ user_config = DotDict(dict(
     logging_filename = parser.getboolean('minpower', 'logging_filename'),
     problem_filename = parser.getboolean('minpower', 'problem_filename'),
     output_prefix = parser.getboolean('minpower', 'output_prefix'),
-    error = parser.getboolean('minpower', 'error'),
     debugger = parser.getboolean('minpower', 'debugger'),
 
 
@@ -138,6 +137,11 @@ user_config = DotDict(dict(
     standalone = parser.getboolean('minpower', 'standalone'),
 
     wind_multiplier = parser.getfloat('minpower', 'wind_multiplier'),
+
+    ignore_minhours_constraints = parser.getboolean(
+        'minpower', 'ignore_minhours_constraints'),
+    ignore_ramping_constraints = parser.getboolean(
+        'minpower', 'ignore_ramping_constraints'),
 
     # HACKs to help out resetting the config in testing
     directory = parser.get('minpower', 'directory'),

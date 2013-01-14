@@ -121,17 +121,23 @@ class Generator(OptimizationObject):
             hoursinstatus=self.gethrsinstatus(times, status))
     def gethrsinstatus(self, times, stat):
         if not self.is_controllable: return 0
-        valcol = stat.name
-        status = stat.reset_index()
-        end_status = status[valcol][status.index[-1]]
-        last_noneq = status[status[valcol] != end_status]
-        if len(last_noneq)==0: return 0
+        
+        end_status = stat.ix[stat.index[-1]]
+        
+        if (stat == end_status).all():
+            intervals = len(stat)
+            hrs = intervals * times.intervalhrs
+            if self.initial_status == end_status:
+                hrs += self.initial_status_hours            
         else:
-            intervals = len(status[last_noneq.index[-1]+1:])
+            noneq = stat[stat != end_status]
+            if len(noneq) == 0: 
+                intervals = 0
+            else:
+                intervals = len(stat.ix[noneq.index[-1] + 1:])
 
-        hrs = intervals * times.intervalhrs
-        if self.initial_status == end_status:
-            hrs += self.initial_status_hours
+            hrs = intervals * times.intervalhrs
+
         return hrs
 
     def set_initial_condition(self, time=None,

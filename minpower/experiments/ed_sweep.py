@@ -12,6 +12,7 @@ from pandas import DataFrame
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+from ipdb import set_trace
 
 def main(args):
     generators, loads, _, times, _, data = parsedir()
@@ -31,9 +32,8 @@ def main(args):
             do_reset_config=False, **loads_times)
         t = times[0]
         results.ix[load_val, 'prices'] = power_system.buses[0].price(t)
-        results.ix[load_val, 'committed'] = sum(map(
-            lambda gen: gen.power(t).value > gen.pmin,
-            power_system.generators()))
+        results.ix[load_val, 'committed'] = sum([gen.status(t).value 
+            for gen in power_system.generators()])
         
     results.to_csv(joindir(user_config.directory, 'ed_sweep.csv'))
 
@@ -64,7 +64,8 @@ def get_args():
 
     user_config.directory = args.directory
     user_config.duals = True
-    user_config.perfect_solve = True
+    user_config.perfect_solve = True  # hack - ignore scenarios
+    user_config.dispatch_decommit_allowed = True
     
     return vars(args)
 

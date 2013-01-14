@@ -18,6 +18,10 @@ class Generator(OptimizationObject):
     :param mindowntime: min. time after de-commitment in off status (hours)
     :param rampratemax: max. positive change in real power over 1hr (MW/hr)
     :param rampratemin: max. negative change in real power over 1hr (MW/hr)
+    :param startupramplimit: max. positive change in real power over the 
+        first hour after startup (MW/hr)
+    :param shutdownramplimit: max. negative change in real power over the 
+        last hour before shutdown (MW/hr)
     :param costcurveequation: text describing a polynomial cost curve ($/MWh)
       see :meth:`~bidding.parsePolynomial` for more.
     :param heatratestring: text describing a polynomial heat rate curve (MBTU/MW).
@@ -40,13 +44,21 @@ class Generator(OptimizationObject):
         heatrateequation=None, fuelcost=1,
         bid_points=None,
         noloadcost=0,
-        startupcost=0,shutdowncost=0,
+        startupcost=0, shutdowncost=0,
+        startupramplimit=None,
+        shutdownramplimit=None,
         faststart=False,
         mustrun=False,
         name='',index=None,bus=None):
 
         update_attributes(self,locals()) #load in inputs
-        if self.rampratemin is None and self.rampratemax is not None: self.rampratemin = -1*self.rampratemax
+        if self.rampratemin is None and self.rampratemax is not None: 
+            self.rampratemin = -1*self.rampratemax
+        if self.startupramplimit is None and self.rampratemax is not None:
+            self.startupramplimit = max(self.pmin, self.rampratemax)
+        if self.shutdownramplimit is None and self.rampratemin is not None:
+            self.shutdownramplimit = min(-1*self.pmin, self.rampratemin)
+            
         self.is_controllable=True
         self.is_stochastic = False
         self.commitment_problem=True
@@ -62,6 +74,9 @@ class Generator(OptimizationObject):
 
     def power_available(self, time=None, scenario=None):
         '''power availble (constrained by pmax, ramprate, ...) at time'''
+        if time is not None and is_init(time):
+            return self.initial_power
+        
         var_name = 'power_available' if self.commitment_problem else 'power'
         return self.get_variable(var_name,time,scenario=scenario,indexed=True)
 
@@ -275,10 +290,29 @@ class Generator(OptimizationObject):
 
             #ramping power
             if self.rampratemax is not None:
-                self.add_constraint('ramp lim high', time, self.power_available(time) <= self.power(times[t-1]) + self.rampratemax*self.status(times[t-1]) )
+                ramp_limit = self.rampratemax * self.status(times[t-1])
+                if self.startupramplimit is not None:
+                    ramp_limit += self.startupramplimit * self.status_change(t, times) 
+                    # + self.pmax * (1 - self.status(times[t]))
+                    
+                self.add_constraint('ramp lim high', time, 
+                    self.power_available(time) <= self.power(times[t-1]) + ramp_limit)
+
+#               # EQ19 from Carrion and Arroyo - has a conflicting 
+#               # definition of shutdown power, available after shutdown hour?
+#                if self.shutdownramplimit is not None:
+#                    # if shutting down, available power must be reduced
+#                    self.add_constraint('ramp lim high shutdown', time,
+#                        self.power_available(times[t-1]) <= self.pmax * self.status(time) + \
+#                        self.shutdownramplimit * -1 * self.status_change(t, times)
+#                        )
 
             if self.rampratemin is not None:
-                self.add_constraint('ramp lim low', time,  self.rampratemin <= self.power_change(t,times) )
+                ramp_limit = self.rampratemin * self.status(time) 
+                # + self.pmax * (1 - self.status(times[t-1]))
+                if self.shutdownramplimit is not None:
+                    ramp_limit += self.shutdownramplimit * (-1 * self.status_change(t, times))
+                self.add_constraint('ramp lim low', time,  ramp_limit <= self.power_change(t,times) )
 
 
             #min up time

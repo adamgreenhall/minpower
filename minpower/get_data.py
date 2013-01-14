@@ -38,6 +38,7 @@ fields = dict(
     'power',  # for a non-controllable gen in an ED
     'rampratemin', 'rampratemax',
     'minuptime', 'mindowntime',
+    'startupramplimit', 'shutdownramplimit',
     #for a bid points defined gen, noloadcost replaces the constant polynomial
     'costcurvepointsfilename',
     'noloadcost',

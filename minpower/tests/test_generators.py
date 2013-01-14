@@ -3,7 +3,9 @@
 import logging
 logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s')
 
+from minpower.generators import Generator
 from minpower.optimization import value
+from minpower import results
 
 from test_utils import *
 
@@ -101,15 +103,67 @@ def ramp_down_initial():
     Ensure that exp. unit is at its limit.
     '''
     ramp_limit= -80
-    generators=[
+    generators = [
         make_cheap_gen(),
-        make_expensive_gen(rampratemin=ramp_limit)  ]
+        make_expensive_gen(rampratemin=ramp_limit)]
     initial = [{'power':250},{'power':250}]
     
     _,times=solve_problem(generators,gen_init=initial,**make_loads_times(Pdt=[300,300]))
     ramp_rate = generators[1].power(times[0]) - generators[1].initial_power
     assert ramp_rate == ramp_limit
 
+
+@istest
+def cold_ramp_up():
+    '''
+    Create three generators, one that must ramp up from cold. 
+    Ensure that the generator ramps at within its limit.
+    '''
+    ramp_limit_SU = 20
+    ramp_limit = 30
+    generators = [
+        make_cheap_gen(pmax=200),
+        make_mid_gen(pmin=10, rampratemax=ramp_limit, 
+            startupramplimit=ramp_limit_SU),
+        make_expensive_gen(pmin=1)]
+    initial = [{'power': 200}, {'status': 0}, {'status': 0}]
+
+    power_system, times = solve_problem(generators, gen_init=initial, 
+        **make_loads_times(Pdt=[200, 230, 280]))
+    
+    ramp_rate_SU = value(generators[1].power(times[1])) - value(generators[1].power(times[0]))
+    assert ramp_rate_SU <= ramp_limit_SU
+    ramp_rate = value(generators[1].power(times[2])) - value(generators[1].power(times[1]))
+    assert ramp_rate <= ramp_limit
+    
+
+@istest
+def hot_shut_down():
+    '''
+    Create three generators, one that must shut down from hot. 
+    Ensure that the generator ramps within its limit.
+    '''
+    ramp_limit_SD = -30
+    ramp_limit = -20
+    generators = [
+        make_cheap_gen(pmax=200),
+        make_expensive_gen(pmin=20, 
+            rampratemin=ramp_limit, 
+            shutdownramplimit=ramp_limit_SD
+        ),
+        make_mid_gen(pmin=1)]
+    initial = [{'power': 200}, {'power': 50}, {'power': 50}]
+
+    power_system, times = solve_problem(generators, gen_init=initial, 
+        **make_loads_times(Pdt=[280, 150]))
+        
+
+    ramp_rate = value(generators[1].power(times[0])) - generators[1].initial_power
+    assert ramp_limit <= ramp_rate
+
+    ramp_rate_SD = value(generators[1].power(times[1])) - value(generators[1].power(times[0]))
+    assert ramp_limit_SD == ramp_rate_SD 
+    assert value(generators[1].status(times[1])) == 0     
 
 
 @istest

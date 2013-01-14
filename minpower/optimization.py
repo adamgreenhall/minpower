@@ -464,11 +464,11 @@ class OptimizationProblem(OptimizationObject):
         if not keepFiles: logger.setLevel(current_log_level)
         self.solved = detect_status(results, self._opt_solver.name)
         
-        if not get_duals:
+        if self.solved and not get_duals:
             try: 
                 self.mipgap = results.Solution[0]['Gap']
-                logging.debug('solution gap={}'.format(self._mipgap))
-            except: 
+                logging.debug('solution gap={}'.format(self.mipgap))
+            except AttributeError: 
                 self.mipgap = None
         
         return results, elapsed

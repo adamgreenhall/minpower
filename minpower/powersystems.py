@@ -393,7 +393,7 @@ class PowerSystem(OptimizationProblem):
 
     def set_noncontrollable_gen_shedding(self, to_mode):
         for gen in filter(lambda g: 
-            not g.is_controllable and g.shedding_allowed, self.generators()):
+            not g.is_controllable and g.sheddingallowed, self.generators()):
             gen.shedding_mode = to_mode
 
     

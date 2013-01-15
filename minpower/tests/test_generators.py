@@ -284,7 +284,7 @@ def wind_shedding():
     Pwind = pd.Series([60, 100, 120, 60], index=lts['times'].strings.values)
     
     generators = [
-        Generator_nonControllable(schedule=Pwind, shedding_allowed=True),
+        Generator_nonControllable(schedule=Pwind, sheddingallowed=True),
         make_expensive_gen()]
     
     power_system, times=solve_problem(generators, **lts)

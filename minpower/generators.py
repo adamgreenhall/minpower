@@ -361,7 +361,7 @@ class Generator_nonControllable(Generator):
         noloadcost=0,
         mustrun=False,
         faststart=False,
-        shedding_allowed=False,
+        sheddingallowed=False,
         pmin=0, pmax=None,
         name='', index=None, bus=None, kind='wind',
         observed_values=None,

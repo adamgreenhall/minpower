@@ -157,9 +157,11 @@ def create_solve_problem(power_system, times, scenario_tree=None,
         user_config.problemfile = joindir(
             user_config.directory, 'problem-formulation.lp')
 
+    power_system._disallow_shedding()
+    
     create_problem(power_system, times, scenario_tree,
         stage_number, rerun)
-
+    
     try: 
         instance = power_system.solve()
     except OptimizationError:
@@ -169,9 +171,10 @@ def create_solve_problem(power_system, times, scenario_tree=None,
         try:
             instance = power_system.solve()
         except OptimizationError:
-            power_system.debug_infeasibe(times)
+            scheduled, committed = power_system.debug_infeasibe(times)
             raise OptimizationError('failed to solve, even with load shedding.')
-        power_system.set_load_shedding(False)
+        
+        
 
     logging.debug('solved... get results')
 

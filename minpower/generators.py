@@ -361,6 +361,7 @@ class Generator_nonControllable(Generator):
         noloadcost=0,
         mustrun=False,
         faststart=False,
+        shedding_allowed=False,
         pmin=0, pmax=None,
         name='', index=None, bus=None, kind='wind',
         observed_values=None,
@@ -373,11 +374,17 @@ class Generator_nonControllable(Generator):
         self.build_cost_model()
         self.init_optimization()
         self.is_stochastic = False
-    def power(self,time, scenario=None):
-        return self.get_parameter('power',time, indexed=True)
+        self.shedding_mode = False
+    def power(self, time, scenario=None):
+        if self.shedding_mode:    
+            power = self.get_variable('power_used', time, \
+                scenario=scenario, indexed=True)
+        else:
+            power = self.get_parameter('power', time, indexed=True)
+        return power
     def status(self,time=None,scenarios=None): return True
     def power_available(self, time=None, scenario=None):
-        return self.power(time,scenario=scenario)
+        return self.get_parameter('power', time , scenario=scenario)
 
     def set_initial_condition(self, time=None,
         power=None, status=None, hoursinstatus=None):
@@ -392,19 +399,32 @@ class Generator_nonControllable(Generator):
             power=self.power(tend),
             hoursinstatus=0)
     def create_variables(self,times):
+        if self.shedding_mode:
+            self.add_variable('power_used', index=times.set, low=0)
         self.add_parameter('power', index=times.set, 
             values=dict([(t, self.get_scheduled_ouput(t)) for t in times]) )
         self.bids=bidding.Bid(
             polynomial=self.cost_coeffs,
             owner=self,
             times=times,
-            fixed_input=True
+            fixed_input=True,
+            status_variable=lambda *args: True,
+            input_variable=self.power
             )
-    def create_constraints(self,times): return {}
+    def create_constraints(self, times):
+        if self.shedding_mode:
+            for time in times:
+                self.add_constraint('max_power', time, 
+                    self.get_variable('power_used', time, indexed=True) <= \
+                    self.get_parameter('power', time, indexed=True))
+    
     def cost(self, time, scenario=None, evaluate=False):
         return self.operatingcost(time)
     def operatingcost(self, time=None, scenario=None, evaluate=False):
-        return self.bids.output_true( self.power(time) )
+        if self.shedding_mode: 
+            return self.bids.output(time)
+        else:
+            return self.bids.output_true( self.power(time) )
     def truecost(self, time, scenario=None):
         return self.cost(time)
     def incrementalcost(self, time, scenario=None):

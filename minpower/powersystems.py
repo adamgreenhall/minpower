@@ -206,15 +206,6 @@ class PowerSystem(OptimizationProblem):
 
         self.is_stochastic = len(filter(lambda gen: gen.is_stochastic, generators))>0
 
-    def set_load_shedding(self,is_allowed):
-        '''set system mode for load shedding'''
-
-        self.load_shedding_allowed = is_allowed
-
-        for load in self.loads():
-            load.shedding_allowed=is_allowed
-            load.cost_shedding=self.cost_load_shedding
-
     def make_buses_list(self, loads, generators):
         """
         Create list of :class:`powersystems.Bus` objects
@@ -391,14 +382,36 @@ class PowerSystem(OptimizationProblem):
         sln.observed_totalcost = sln.totalcost_generation
         return
 
+    def set_load_shedding(self, is_allowed):
+        '''set system mode for load shedding'''
+
+        self.load_shedding_allowed = is_allowed
+
+        for load in self.loads():
+            load.shedding_allowed=is_allowed
+            load.cost_shedding=self.cost_load_shedding
+
+    def set_noncontrollable_gen_shedding(self, to_mode):
+        for gen in filter(lambda g: 
+            not g.is_controllable and g.shedding_allowed, self.generators()):
+            gen.shedding_mode = to_mode
+
+    
     def _allow_shedding(self, times, resolve=False):
         self.set_load_shedding(True)
+        self.set_noncontrollable_gen_shedding(True)
+        
         const_times = times.non_overlap() if resolve else times
         
         # make load power into a variable instead of a param
         for load in self.loads():
             load.create_variables(times)  # need all for the .set attrib
             load.create_constraints(const_times)
+        
+        for gen in filter(lambda g: 
+            getattr(g, 'shedding_mode', False), self.generators()):
+            gen.create_variables(times)
+            gen.create_constraints(const_times)
         
         # recalc the power balance constraint
         for bus in self.buses:
@@ -411,14 +424,19 @@ class PowerSystem(OptimizationProblem):
         self._model.objective = None
         self.create_objective(const_times)
         # re-create system cost constraints 
-        self.create_constraints(const_times, include_children=False)
-
+        self.create_constraints(const_times, include_children=False)        
 # recreating all constraints would be simpler, but would take a bit longer
 #        # reset objective
 #        self._model.objective = None
 #        self.create_objective(sln.times_non_overlap)
 #        # re-create constraints 
 #        self.create_constraints(sln.times_non_overlap)
+
+
+    def _disallow_shedding(self):
+        # change shedding allowed flags for the next stage
+        self.set_load_shedding(False)
+        self.set_noncontrollable_gen_shedding(False)
             
     def _resolve_problem(self, sln):
         times = sln.times_non_overlap
@@ -505,3 +523,5 @@ class PowerSystem(OptimizationProblem):
             rampratemax=sum(gen.rampratemax for gen in gens),
             ))
         print 'total committed\n', committed
+        
+        return scheduled, committed

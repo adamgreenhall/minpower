@@ -3,7 +3,8 @@
 import logging
 logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s')
 
-from minpower.generators import Generator
+import pandas as pd
+from minpower.generators import Generator, Generator_nonControllable
 from minpower.optimization import value
 from minpower import results
 
@@ -272,3 +273,21 @@ def min_up_time_longer():
     #logging.critical([(generators[1].startup(t),generators[1].shutdown(t)) for t in times])
     #logging.critical(problem.constraints['minuptime_g1t01'])
     assert limgen_status == [0,1,1,1,1,1,1,1,1,0] or limgen_status == [1,1,1,1,1,1,1,1,0,0]
+    
+@istest
+def wind_shedding():
+    '''
+    Create a sheddable wind generator and a situation that requires shedding.
+    Ensure that the minimum power is shed.
+    '''
+    lts = make_loads_times(Pdt=[85, 110, 80, 80])
+    Pwind = pd.Series([60, 100, 120, 60], index=lts['times'].strings.values)
+    
+    generators = [
+        Generator_nonControllable(schedule=Pwind, shedding_allowed=True),
+        make_expensive_gen()]
+    
+    power_system, times=solve_problem(generators, **lts)
+    assert generators[0].power(times[2]) == 80
+    assert generators[0].power(times[3]) == 60
+    assert sum(generators[1].power(t).value for t in times) == 25 + 10 + 20

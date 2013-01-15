@@ -1,8 +1,8 @@
 from pandas import Series, DataFrame
-from minpower import optimization,powersystems,schedule,solve
+from minpower import powersystems,schedule,solve
 from minpower.generators import Generator
 from minpower.config import user_config
-from minpower.optimization import value
+from minpower.optimization import value, OptimizationError
 
 import nose
 from nose.tools import istest, with_setup, raises, set_trace
@@ -80,7 +80,20 @@ def solve_problem(generators, loads=None, times=None,
     
     power_system=powersystems.PowerSystem(generators,loads,lines)
     solve.create_problem(power_system,times)
-    power_system.solve()
+
+    try: 
+        instance = power_system.solve()
+    except OptimizationError:
+        #re-do stage, with load shedding allowed
+        logging.critical('stage infeasible, re-running with load shedding.')
+        power_system._allow_shedding(times)
+        try:
+            instance = power_system.solve()
+        except OptimizationError:
+            scheduled, committed = power_system.debug_infeasibe(times)
+            set_trace()
+            raise OptimizationError('failed to solve, even with load shedding.')
+        
 
     if do_reset_config:
         reset_config()
@@ -90,5 +103,5 @@ def solve_problem(generators, loads=None, times=None,
     else:
         #logging.critical( [g.power[times.initialTime] for g in generators] )
         power_system.write_model('problem.lp')
-        raise optimization.OptimizationError('infeasible problem, wrote to problem.lp')
+        raise OptimizationError('infeasible problem, wrote to problem.lp')
     return power_system,times

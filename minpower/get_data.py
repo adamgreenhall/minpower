@@ -47,6 +47,7 @@ fields = dict(
     'startupcost', 'shutdowncost',
     'faststart',
     'mustrun',
+    'shedding_allowed',
     ],
 
     Load = ['name', 'bus', 'power'],

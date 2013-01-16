@@ -40,9 +40,9 @@ class Load(OptimizationObject):
             if evaluate: power = value(power)
             return power
         else:
-            return self.get_scheduled_ouput(time)
+            return self.get_scheduled_output(time)
     def shed(self, time, evaluate=False): 
-        return self.get_scheduled_ouput(time) - self.power(time,evaluate)
+        return self.get_scheduled_output(time) - self.power(time,evaluate)
     def cost(self,time): return self.cost_shedding * self.shed(time)
     def cost_first_stage(self, times): return 0
     def cost_second_stage(self, times):
@@ -54,7 +54,7 @@ class Load(OptimizationObject):
         if self.shedding_mode:
             for time in times:
                 self.add_constraint('max_load_power',time,
-                    self.power(time) <= self.get_scheduled_ouput(time))
+                    self.power(time) <= self.get_scheduled_output(time))
     def create_objective(self,times):
         return sum([ self.cost(time) for time in times])
 
@@ -62,8 +62,8 @@ class Load(OptimizationObject):
     def __int__(self): return self.index
     def iden(self, t): return str(self)+str(t)
 
-    def get_scheduled_ouput(self, time):
-        return self.schedule.ix[time]
+    def get_scheduled_output(self, time):
+        return float(self.schedule.ix[time])
 
 class Line(OptimizationObject):
     """

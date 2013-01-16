@@ -49,7 +49,6 @@ def load_shedding():
     '''
     
     user_config.duals = True
-    user_config.load_shedding_allowed = True
     pmax=100
     Pdt1=211
     generators=[make_cheap_gen(pmax=pmax)]

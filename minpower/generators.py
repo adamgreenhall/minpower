@@ -384,7 +384,7 @@ class Generator_nonControllable(Generator):
         return power
     def status(self,time=None,scenarios=None): return True
     def power_available(self, time=None, scenario=None):
-        return self.get_parameter('power', time , scenario=scenario)
+        return self.get_parameter('power', time, indexed=True)
     def shed(self, time, evaluate=False): 
         return self.power_available(time) - self.power(time, evaluate)
 
@@ -430,7 +430,7 @@ class Generator_nonControllable(Generator):
         return self.cost(time)
     def incrementalcost(self, time, scenario=None):
         return self.bids.output_incremental(self.power(time))
-    def get_scheduled_ouput(self, time): return self.schedule.ix[time]
+    def get_scheduled_ouput(self, time): return float(self.schedule.ix[time])
 
 class Generator_Stochastic(Generator_nonControllable):
     """

@@ -169,9 +169,7 @@ def create_solve_problem(power_system, times, scenario_tree=None,
         power_system.resolve_stochastic_with_observed(instance, sln)
     elif user_config.deterministic_solve:
         power_system.resolve_determinisitc_with_observed(sln)
-
-    power_system.disallow_shedding()
-    
+   
     if sln.load_shed_timeseries.sum() > 0.01:
         logging.debug('shed {}MW in resolve of stage'.format(
             sln.load_shed_timeseries.sum()))
@@ -179,7 +177,7 @@ def create_solve_problem(power_system, times, scenario_tree=None,
     if len(times)>1:
         power_system.get_finalconditions(sln)
 
-        power_system.set_load_shedding(False)
+        power_system.disallow_shedding()
         sln.stage_number = stage_number
     
     return sln

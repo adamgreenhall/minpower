@@ -216,8 +216,6 @@ def _setup_logging(pid=None):
         level=user_config.logging_level,
         datefmt='%Y-%m-%d %H:%M:%S',
         format='%(asctime)s %(levelname)s: %(message)s')
-    if user_config.logging_filename:
-        kwds['filename'] = user_config.logging_filename
     if user_config.output_prefix:
         kwds['filename'] = joindir(user_config.directory,
             '{}.pylog'.format(pid))
@@ -282,14 +280,14 @@ def main():
     stochastic.add_argument('--scenarios',type=int,
         default=user_config.scenarios,
         help='limit the number of scenarios to N')        
-    stochastic.add_argument('--faststart_resolve', action='store_true',
-        default=user_config.faststart_resolve,
+    stochastic.add_argument('--faststart_resolve', '-F',
+        action='store_true', default=user_config.faststart_resolve,
         help="""allow faststart units which are off to be
                 started up during resolve with observed wind values""")
 
     stochastic_mode = stochastic.add_mutually_exclusive_group()
-    stochastic_mode.add_argument('--deterministic_solve', action='store_true',
-        default=user_config.deterministic_solve,
+    stochastic_mode.add_argument('--deterministic_solve', '-D',
+        action='store_true', default=user_config.deterministic_solve,
         help='solve a stochastic problem deterministically using the forecast_filename paramter')
     stochastic_mode.add_argument('--perfect_solve', action='store_true',
         default=user_config.perfect_solve,  #False
@@ -310,22 +308,15 @@ def main():
     debugging.add_argument('--debugger',action="store_true",
         default=user_config.debugger,
         help='use pdb when an error is raised')
-    debugging.add_argument('--logfile','-l',type=str,
-        default=user_config.logging_filename,
-        help='log file, default is to log to terminal')
-    debugging.add_argument('--problemfile',action="store_true",
-        default=user_config.problem_filename,
-        help='flag to write the problem formulation to a problem-formulation.lp file -- useful for debugging')    
+    debugging.add_argument('--problem_file',action="store_true",
+        default=user_config.problem_file,
+        help='flag to write the problem formulation to a problem.lp file')    
     debugging.add_argument('--profile',action="store_true",
         default=False,
         help='run cProfile and output to minpower.profile')
     
     constraints = parser.add_argument_group('Ignore/relax constraints',
         'Ignore or relax sets of constraints to allow for feasible solutions.')
-    constraints.add_argument('--load_shedding_allowed', action='store_true',
-        default=user_config.load_shedding_allowed,
-        help='''Allow load shedding at a high cost (shedding is always a 
-            fallback if the system cannot meet the load).''')
     constraints.add_argument('--ignore_minhours_constraints', action="store_true",
         default=user_config.ignore_minhours_constraints,
         help='drop the min up/down time constraints on the generators')

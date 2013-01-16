@@ -121,8 +121,7 @@ user_config = DotDict(dict(
 
     visualization = parser.getboolean('minpower', 'visualization'),
     logging_level = parser.getint('minpower', 'logging_level'),
-    logging_filename = parser.getboolean('minpower', 'logging_filename'),
-    problem_filename = parser.getboolean('minpower', 'problem_filename'),
+    problem_file = parser.getboolean('minpower', 'problem_file'),
     output_prefix = parser.getboolean('minpower', 'output_prefix'),
     debugger = parser.getboolean('minpower', 'debugger'),
 

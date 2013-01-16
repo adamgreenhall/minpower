@@ -391,14 +391,14 @@ class OptimizationProblem(OptimizationObject):
             self.solution_time =elapsed #results.Solver[0]['Wallclock time']
             logging.info('Problem solved in {}s.'.format(self.solution_time))
         
-        if user_config.problem_filename:
+        if user_config.problem_file:
             # disable coopr's funny loggings when writing lp files.  
             logging.getLogger().setLevel(logging.CRITICAL) 
-            self.write_model(full_filename(user_config.problem_filename))
+            self.write_model(full_filename('problem.lp'))
             logging.getLogger().setLevel(user_config.logging_level)
                 
         if not self.solved:
-            if user_config.problem_filename:
+            if user_config.problem_file:
                 if self.stochastic_formulation: 
                     self._stochastic_instance.pprint(full_filename(
                         'unsolved-stochastic-instance.txt'))

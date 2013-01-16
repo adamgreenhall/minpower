@@ -156,8 +156,6 @@ def create_solve_problem(power_system, times, scenario_tree=None,
     if user_config.problemfile:
         user_config.problemfile = joindir(
             user_config.directory, 'problem-formulation.lp')
-
-    power_system._disallow_shedding()
     
     create_problem(power_system, times, scenario_tree,
         stage_number, rerun)
@@ -172,6 +170,7 @@ def create_solve_problem(power_system, times, scenario_tree=None,
             instance = power_system.solve()
         except OptimizationError:
             scheduled, committed = power_system.debug_infeasibe(times)
+            set_trace()
             raise OptimizationError('failed to solve, even with load shedding.')
         
         
@@ -179,6 +178,8 @@ def create_solve_problem(power_system, times, scenario_tree=None,
     logging.debug('solved... get results')
 
     sln = results.make_solution(power_system, times)
+    
+    power_system._disallow_shedding()
 
     # resolve with observed power and fixed status
     if sln.is_stochastic:
@@ -186,6 +187,8 @@ def create_solve_problem(power_system, times, scenario_tree=None,
     elif user_config.deterministic_solve:
         power_system.resolve_determinisitc_with_observed(sln)
 
+    power_system._disallow_shedding()
+    
     if sln.load_shed_timeseries.sum() > 0.01:
         logging.debug('shed {}MW in resolve of stage'.format(
             sln.load_shed_timeseries.sum()))

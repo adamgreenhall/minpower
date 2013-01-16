@@ -447,6 +447,7 @@ class Generator_Stochastic(Generator_nonControllable):
                  name='', index=None, bus=None, kind='wind',
                  observed_values=None,
                  schedule=None,
+                 sheddingallowed=False,
                  **kwargs):
         update_attributes(self,locals()) #load in inputs
         self.is_controllable = False
@@ -457,6 +458,7 @@ class Generator_Stochastic(Generator_nonControllable):
         self.init_optimization()
         self.startupcost = 0
         self.shutdowncost = 0
+        self.shedding_mode = False
 
     def power(self,time,scenario=None):
         return self.get_variable('power', time=time,

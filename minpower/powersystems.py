@@ -350,7 +350,6 @@ class PowerSystem(OptimizationProblem):
                 instance = self.solve()
             except OptimizationError:
                 scheduled, committed = self.debug_infeasibe(times)
-                set_trace()
                 raise OptimizationError('failed to solve with load shedding.')
         return instance
 
@@ -470,31 +469,43 @@ class PowerSystem(OptimizationProblem):
         try: self.solve()
         except OptimizationError:
             if user_config.faststart_resolve:
-                # allow faststart units to be started up to meet the load
-                self._unfix_variables()
-                self._fix_non_faststarts(sln.times)
-                logging.warning('allowing fast-starting units')
-                try: self.solve()
-                except OptimizationError:
-                    self._unfix_variables()
-                    self._fix_non_faststarts(sln.times, fix_power=False)
-                    logging.warning('''allowing non fast-starters
-                        to change power output''')
-                    try: self.solve()
-                    except OptimizationError:
-                        logging.warning('allowing load shedding')
-                        self.allow_shedding(sln.times, resolve=True)
-                        self.solve()
+                self._resolve_with_faststarts(sln)
             else:
                 # just shed the un-meetable load and calculate cost later
                 self.allow_shedding(sln.times, resolve=True)
-                self.solve()
+                try: self.solve()
+                except OptimizationError:
+                    scheduled, committed = self.debug_infeasibe(
+                        sln.times, resolve_sln=sln)
+                    raise
         
         self.resolve_solution_time = self.solution_time
         self.solution_time = self.full_sln_time
         logging.info('resolved instance with observed values (in {}s)'.format(
             self.resolve_solution_time))
-            
+
+    def _resolve_with_faststarts(self, sln):
+        '''allow faststart units to be started up to meet the load'''
+        self._unfix_variables()
+        self._fix_non_faststarts(sln.times)
+        logging.warning('allowing fast-starting units')
+        try: self.solve()
+        except OptimizationError:
+            self._unfix_variables()
+            self._fix_non_faststarts(sln.times, fix_power=False)
+            logging.warning(
+                'allowing non fast-starters to change power output')
+            try: self.solve()
+            except OptimizationError:
+                logging.warning('allowing load shedding')
+                self.allow_shedding(sln.times, resolve=True)
+                try: self.solve()
+                except OptimizationError:
+                    scheduled, committed = self.debug_infeasibe(
+                        sln.times, resolve_sln=sln)
+                    raise
+                
+                
     def _fix_non_faststarts(self, times, fix_power=True):
         '''
         fix non-faststart units - both power and status
@@ -507,22 +518,53 @@ class PowerSystem(OptimizationProblem):
             for time in times:
                 gen.status(time).fixed = True
                 if fix_power: gen.power(time).fixed = True
-    def debug_infeasibe(self, times):
-        scheduled = pd.DataFrame({
-            'load': self.total_scheduled_load().ix[times.strings.values], 
-            'generation': self.total_scheduled_generation().ix[times.strings.values]})
-        scheduled['net_required'] = scheduled['load'] - scheduled.generation
-        
+
+
+    def debug_infeasibe(self, times, resolve_sln=None):
+        generators = self.generators()
+        if resolve_sln: 
+            windgen = self.get_generator_with_observed()
+            
+            scheduled = pd.DataFrame({
+                'expected_power': resolve_sln.generators_power.sum(axis=1).values,
+                'expected_wind': windgen.schedule.ix[times.non_overlap()],
+                'observed_wind': windgen.observed_values.ix[times.non_overlap()],
+                })
+            scheduled['net_required'] = \
+                scheduled.observed_wind -  scheduled.expected_wind
+        else:                
+            scheduled = pd.DataFrame({
+                'load': self.total_scheduled_load().ix[times.strings.values], 
+                'generation': self.total_scheduled_generation().ix[times.strings.values]})
+            scheduled['net_required'] = scheduled['load'] - scheduled.generation        
         print 'total scheduled\n', scheduled
-        gens = filter(lambda gen: \
-            gen.is_controllable and gen.initial_status == 1,
-            self.generators())
-        committed = pd.Series(dict(
-            Pmin=sum(gen.pmin for gen in gens),
-            Pmax=sum(gen.pmax for gen in gens),
-            rampratemin=sum(gen.rampratemin for gen in gens),
-            rampratemax=sum(gen.rampratemax for gen in gens),
-            ))
-        print 'total committed\n', committed
         
+        if resolve_sln:
+            committed = pd.DataFrame(dict(
+                Pmin=[gen.pmin for gen in generators],
+                Pmax=[gen.pmax for gen in generators],
+                rampratemin=[getattr(gen, 'rampratemin', None) for gen in generators],
+                rampratemax=[getattr(gen, 'rampratemax', None) for gen in generators],
+                )).T
+            print 'generator limits\n', committed
+        else:
+            gens = filter(lambda gen: \
+                gen.is_controllable and gen.initial_status == 1,
+                self.generators())
+            committed = pd.Series(dict(
+                Pmin=sum(gen.pmin for gen in gens),
+                Pmax=sum(gen.pmax for gen in gens),
+                rampratemin=pd.Series(gen.rampratemin for gen in gens).sum(),
+                rampratemax=pd.Series(gen.rampratemax for gen in gens).sum(),
+                ))
+            print 'total committed\n', committed
+
+        if resolve_sln: 
+            print 'expected status\n', resolve_sln.generators_status
+            ep = resolve_sln.generators_power
+            ep['net_required'] = (scheduled.observed_wind -  scheduled.expected_wind).values
+            print 'expected power\n', ep
+        else:
+            print 'initial_status\n'
+            print pd.Series([gen.initial_status for gen in self.generators()])
         return scheduled, committed

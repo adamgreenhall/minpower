@@ -18,6 +18,9 @@ variable_kinds = dict(
 from config import user_config
 from commonscripts import update_attributes, joindir
 
+def full_filename(filename):
+    return joindir(user_config.directory, filename)
+
 class OptimizationObject(object):
     '''
     A base class for an optimization object. 
@@ -391,16 +394,15 @@ class OptimizationProblem(OptimizationObject):
         if user_config.problem_filename:
             # disable coopr's funny loggings when writing lp files.  
             logging.getLogger().setLevel(logging.CRITICAL) 
-            self.write_model(user_config.problem_filename)
+            self.write_model(full_filename(user_config.problem_filename))
             logging.getLogger().setLevel(user_config.logging_level)
                 
         if not self.solved:
             if user_config.problem_filename:
                 if self.stochastic_formulation: 
-                    self._stochastic_instance.pprint(joindir(
-                        user_config.directory,
+                    self._stochastic_instance.pprint(full_filename(
                         'unsolved-stochastic-instance.txt'))
-                self.write_model(joindir(user_config.directory,
+                self.write_model(full_filename(
                     'unsolved-problem-formulation.lp'))
             raise OptimizationError('problem not solved')
         

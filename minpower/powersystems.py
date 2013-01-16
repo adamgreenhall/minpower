@@ -27,13 +27,15 @@ class Load(OptimizationObject):
     """
     def __init__(self,
         name='', index=None, bus=None, schedule=None,
-                 shedding_allowed=False,
-                 cost_shedding=user_config.cost_load_shedding
-                 ):
+        shedding_allowed=True,
+        cost_shedding=user_config.cost_load_shedding
+        ):
         update_attributes(self,locals()) #load in inputs
         self.init_optimization()
+        self.shedding_mode = False
+        
     def power(self, time, evaluate=False):
-        if self.shedding_allowed:
+        if self.shedding_mode:
             power = self.get_variable('power', time, indexed=True)
             if evaluate: power = value(power)
             return power
@@ -41,25 +43,27 @@ class Load(OptimizationObject):
             return self.get_scheduled_ouput(time)
     def shed(self, time, evaluate=False): 
         return self.get_scheduled_ouput(time) - self.power(time,evaluate)
-    def cost(self,time): return self.cost_shedding*self.shed(time)
-    def cost_first_stage(self,times): return 0
-    def cost_second_stage(self,times): return sum(self.cost(time) for time in times)
+    def cost(self,time): return self.cost_shedding * self.shed(time)
+    def cost_first_stage(self, times): return 0
+    def cost_second_stage(self, times):
+        return sum(self.cost(time) for time in times)
     def create_variables(self,times):
-        if self.shedding_allowed:
-            self.add_variable('power',index=times.set,low=0)
+        if self.shedding_mode:
+            self.add_variable('power', index=times.set, low=0)
     def create_constraints(self,times):
-        if self.shedding_allowed:
+        if self.shedding_mode:
             for time in times:
-                self.add_constraint('max_load_power',time,self.power(time)<=self.get_scheduled_ouput(time))
+                self.add_constraint('max_load_power',time,
+                    self.power(time) <= self.get_scheduled_ouput(time))
     def create_objective(self,times):
         return sum([ self.cost(time) for time in times])
 
     def __str__(self): return 'd{ind}'.format(ind=self.index)
     def __int__(self): return self.index
-    def iden(self,t):     return str(self)+str(t)
+    def iden(self, t): return str(self)+str(t)
 
     def get_scheduled_ouput(self, time):
-        return float(self.schedule.ix[time])
+        return self.schedule.ix[time]
 
 class Line(OptimizationObject):
     """
@@ -176,35 +180,23 @@ class PowerSystem(OptimizationProblem):
     Other settings are inherited from `user_config`.
     '''
     def __init__(self, generators, loads, lines=None):
-        update_attributes(self,locals(),exclude=['generators','loads','lines']) #load in inputs
-        self.num_breakpoints           = user_config.breakpoints
-        self.load_shedding_allowed     = user_config.load_shedding_allowed
-        self.cost_load_shedding        = user_config.cost_load_shedding
-        self.dispatch_decommit_allowed = user_config.dispatch_decommit_allowed
-        self.reserve_fixed             = user_config.reserve_fixed
-        self.reserve_load_fraction     = user_config.reserve_load_fraction
-
+        # load in inputs
+        update_attributes(self, locals(),
+            exclude=['generators', 'loads', 'lines']) 
+        self.reserve_fixed = user_config.reserve_fixed
+        self.reserve_load_fraction = user_config.reserve_load_fraction
 
         if lines is None: lines=[]
 
-        buses=self.make_buses_list(loads,generators)
-        self.create_admittance_matrix(buses,lines)
+        buses = self.make_buses_list(loads, generators)
+        self.create_admittance_matrix(buses, lines)
         self.init_optimization()
 
-        self.add_children(buses,'buses')
-        self.add_children(lines,'lines')
-
-        #add system mode parameters to relevant components
-        self.set_load_shedding(self.load_shedding_allowed) #set load shedding
-        for load in loads:
-                try: load.cost_breakpoints = self.num_breakpoints
-                except AttributeError: pass #load has no cost model
-        for gen in generators:
-            gen.dispatch_decommit_allowed = self.dispatch_decommit_allowed
-            try: gen.cost_breakpoints = self.num_breakpoints
-            except AttributeError: pass #gen has no cost model
+        self.add_children(buses, 'buses')
+        self.add_children(lines, 'lines')
 
         self.is_stochastic = len(filter(lambda gen: gen.is_stochastic, generators))>0
+        self.shedding_mode = False
 
     def make_buses_list(self, loads, generators):
         """
@@ -282,7 +274,7 @@ class PowerSystem(OptimizationProblem):
                 line.create_constraints(times, self.buses)
 
         # system reserve constraint
-        self._has_reserve = not self.load_shedding_allowed and \
+        self._has_reserve = not self.shedding_mode and \
             (self.reserve_fixed>0 or self.reserve_load_fraction>0)
         if self._has_reserve:
             for time in times:
@@ -347,6 +339,21 @@ class PowerSystem(OptimizationProblem):
         return
 
 
+    def solve_problem(self, times):
+        try: 
+            instance = self.solve()
+        except OptimizationError:
+            #re-do stage, with load shedding allowed
+            logging.critical('stage infeasible, re-run with load shedding.')
+            self.allow_shedding(times)
+            try:
+                instance = self.solve()
+            except OptimizationError:
+                scheduled, committed = self.debug_infeasibe(times)
+                set_trace()
+                raise OptimizationError('failed to solve with load shedding.')
+        return instance
+
     def resolve_stochastic_with_observed(self, instance, sln):
         s = sln.scenarios[0]        
         self._model = instance.active_components(pyomo.Block)[s]
@@ -382,24 +389,21 @@ class PowerSystem(OptimizationProblem):
         sln.observed_totalcost = sln.totalcost_generation
         return
 
-    def set_load_shedding(self, is_allowed):
+    def _set_load_shedding(self, to_mode):
         '''set system mode for load shedding'''
-
-        self.load_shedding_allowed = is_allowed
-
         for load in self.loads():
-            load.shedding_allowed=is_allowed
-            load.cost_shedding=self.cost_load_shedding
+            load.shedding_mode = to_mode
 
-    def set_noncontrollable_gen_shedding(self, to_mode):
+    def _set_gen_shedding(self, to_mode):
         for gen in filter(lambda g: 
             not g.is_controllable and g.sheddingallowed, self.generators()):
             gen.shedding_mode = to_mode
 
     
-    def _allow_shedding(self, times, resolve=False):
-        self.set_load_shedding(True)
-        self.set_noncontrollable_gen_shedding(True)
+    def allow_shedding(self, times, resolve=False):
+        self.shedding_mode = True
+        self._set_load_shedding(True)
+        self._set_gen_shedding(True)
         
         const_times = times.non_overlap() if resolve else times
         
@@ -425,19 +429,17 @@ class PowerSystem(OptimizationProblem):
         self.create_objective(const_times)
         # re-create system cost constraints 
         self.create_constraints(const_times, include_children=False)        
-# recreating all constraints would be simpler, but would take a bit longer
-#        # reset objective
-#        self._model.objective = None
-#        self.create_objective(sln.times_non_overlap)
-#        # re-create constraints 
-#        self.create_constraints(sln.times_non_overlap)
 
+        # recreating all constraints would be simpler
+        # but would take a bit longer
 
-    def _disallow_shedding(self):
+    def disallow_shedding(self):
         # change shedding allowed flags for the next stage
-        self.set_load_shedding(False)
-        self.set_noncontrollable_gen_shedding(False)
-            
+        self.shedding_mode = False
+        self._set_load_shedding(False)
+        self._set_gen_shedding(False)
+
+
     def _resolve_problem(self, sln):
         times = sln.times_non_overlap
 
@@ -481,11 +483,11 @@ class PowerSystem(OptimizationProblem):
                     try: self.solve()
                     except OptimizationError:
                         logging.warning('allowing load shedding')
-                        self._allow_shedding(sln.times, resolve=True)
+                        self.allow_shedding(sln.times, resolve=True)
                         self.solve()
             else:
                 # just shed the un-meetable load and calculate cost later
-                self._allow_shedding(sln.times, resolve=True)
+                self.allow_shedding(sln.times, resolve=True)
                 self.solve()
         
         self.resolve_solution_time = self.solution_time
@@ -505,7 +507,6 @@ class PowerSystem(OptimizationProblem):
             for time in times:
                 gen.status(time).fixed = True
                 if fix_power: gen.power(time).fixed = True
-                
     def debug_infeasibe(self, times):
         scheduled = pd.DataFrame({
             'load': self.total_scheduled_load().ix[times.strings.values], 

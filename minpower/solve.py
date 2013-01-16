@@ -152,34 +152,17 @@ def solve_multistage(power_system, times, scenario_tree=None, data=None):
 def create_solve_problem(power_system, times, scenario_tree=None,
     stage_number=None, rerun=False):
     '''create and solve an optimization problem.'''
-
-    if user_config.problemfile:
-        user_config.problemfile = joindir(
-            user_config.directory, 'problem-formulation.lp')
     
     create_problem(power_system, times, scenario_tree,
         stage_number, rerun)
     
-    try: 
-        instance = power_system.solve()
-    except OptimizationError:
-        #re-do stage, with load shedding allowed
-        logging.critical('stage infeasible, re-running with load shedding.')
-        power_system._allow_shedding(times)
-        try:
-            instance = power_system.solve()
-        except OptimizationError:
-            scheduled, committed = power_system.debug_infeasibe(times)
-            set_trace()
-            raise OptimizationError('failed to solve, even with load shedding.')
-        
-        
+    instance = power_system.solve_problem(times)
 
     logging.debug('solved... get results')
 
     sln = results.make_solution(power_system, times)
     
-    power_system._disallow_shedding()
+    power_system.disallow_shedding()
 
     # resolve with observed power and fixed status
     if sln.is_stochastic:
@@ -187,7 +170,7 @@ def create_solve_problem(power_system, times, scenario_tree=None,
     elif user_config.deterministic_solve:
         power_system.resolve_determinisitc_with_observed(sln)
 
-    power_system._disallow_shedding()
+    power_system.disallow_shedding()
     
     if sln.load_shed_timeseries.sum() > 0.01:
         logging.debug('shed {}MW in resolve of stage'.format(

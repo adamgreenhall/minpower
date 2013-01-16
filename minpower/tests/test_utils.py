@@ -86,7 +86,7 @@ def solve_problem(generators, loads=None, times=None,
     except OptimizationError:
         #re-do stage, with load shedding allowed
         logging.critical('stage infeasible, re-running with load shedding.')
-        power_system._allow_shedding(times)
+        power_system.allow_shedding(times)
         try:
             instance = power_system.solve()
         except OptimizationError:

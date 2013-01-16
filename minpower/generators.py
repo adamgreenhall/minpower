@@ -380,11 +380,13 @@ class Generator_nonControllable(Generator):
             power = self.get_variable('power_used', time, \
                 scenario=scenario, indexed=True)
         else:
-            power = self.get_parameter('power', time, indexed=True)
+            power = self.power_available(time)
         return power
     def status(self,time=None,scenarios=None): return True
     def power_available(self, time=None, scenario=None):
         return self.get_parameter('power', time , scenario=scenario)
+    def shed(self, time, evaluate=False): 
+        return self.power_available(time) - self.power(time, evaluate)
 
     def set_initial_condition(self, time=None,
         power=None, status=None, hoursinstatus=None):
@@ -415,8 +417,7 @@ class Generator_nonControllable(Generator):
         if self.shedding_mode:
             for time in times:
                 self.add_constraint('max_power', time, 
-                    self.get_variable('power_used', time, indexed=True) <= \
-                    self.get_parameter('power', time, indexed=True))
+                    self.power(time) <= self.power_available(time))
     
     def cost(self, time, scenario=None, evaluate=False):
         return self.operatingcost(time)
@@ -429,7 +430,7 @@ class Generator_nonControllable(Generator):
         return self.cost(time)
     def incrementalcost(self, time, scenario=None):
         return self.bids.output_incremental(self.power(time))
-    def get_scheduled_ouput(self, time): return float(self.schedule.ix[time])
+    def get_scheduled_ouput(self, time): return self.schedule.ix[time]
 
 class Generator_Stochastic(Generator_nonControllable):
     """

@@ -4,7 +4,7 @@ import logging
 logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s')
 
 import pandas as pd
-from minpower.generators import Generator, Generator_nonControllable
+from minpower.generators import Generator_nonControllable, Generator_Stochastic
 from minpower.optimization import value
 from minpower import results
 
@@ -287,7 +287,20 @@ def wind_shedding():
         Generator_nonControllable(schedule=Pwind, sheddingallowed=True),
         make_expensive_gen()]
     
-    power_system, times=solve_problem(generators, **lts)
+    power_system, times = solve_problem(generators, **lts)
+    assert generators[0].power(times[2]) == 80
+    assert generators[0].power(times[3]) == 60
+    assert sum(generators[1].power(t).value for t in times) == 25 + 10 + 20
+    
+    
+    # this should work for stochastic generators
+    # TODO - a real stochastic test case
+    #   this one just tests deterministic solve
+    user_config.deterministic_solve = True
+    generators = [
+        Generator_Stochastic(schedule=Pwind, sheddingallowed=True),
+        make_expensive_gen()]
+    power_system, times = solve_problem(generators, **lts)
     assert generators[0].power(times[2]) == 80
     assert generators[0].power(times[3]) == 60
     assert sum(generators[1].power(t).value for t in times) == 25 + 10 + 20

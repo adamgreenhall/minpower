@@ -124,6 +124,10 @@ def solve_problem(datadir='.',
     if user_config.visualization: solution.visualization()
     # if solution_file: solution.save(solution_file)
     logging.info('total time: {}s'.format(timer.time()-start_time))
+
+    if user_config.on_complete_script:
+        os.system(user_config.on_complete_script)
+
     return solution
 
 
@@ -289,7 +293,7 @@ def main():
     stochastic_mode.add_argument('--deterministic_solve', '-D',
         action='store_true', default=user_config.deterministic_solve,
         help='solve a stochastic problem deterministically using the forecast_filename paramter')
-    stochastic_mode.add_argument('--perfect_solve', action='store_true',
+    stochastic_mode.add_argument('--perfect_solve', '-P', action='store_true',
         default=user_config.perfect_solve,  #False
         help='solve a stochastic problem with perfect information')
     stochastic_mode.add_argument('--scenarios_directory', type=str,
@@ -330,6 +334,9 @@ def main():
         action="store_true", default=user_config.ignore_pmin_constraints,
         help='drop the min power constraints on the generators')
     
+    parser.add_argument('--on_complete_script', type=str, 
+        default=user_config.on_complete_script,
+        help='run a script on completion of the minpower script')
     # NOTE - don't let defaults creep into this defenition
     # that makes resetting the defaults during testing very hard 
 

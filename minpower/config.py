@@ -141,7 +141,9 @@ user_config = DotDict(dict(
         'minpower', 'ignore_ramping_constraints'),
     ignore_pmin_constraints = parser.getboolean(
         'minpower', 'ignore_pmin_constraints'),
-
+    
+    on_complete_script = parser.get('minpower', 'on_complete_script'),
+    
     # HACKs to help out resetting the config in testing
     directory = parser.get('minpower', 'directory'),
     store_filename = parser.get('minpower', 'store_filename'),

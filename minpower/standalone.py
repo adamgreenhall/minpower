@@ -107,8 +107,11 @@ def load_state():
     startidx = int(storage['times'][0].strip('t'))
     times = TimeIndex(storage['times'].index, startidx)
     intervalhrs = (times.strings.index[1] - times.strings.index[0]).total_seconds() / 3600.0
-    times._int_overlap = user_config.hours_overlap / intervalhrs
     times._int_division = user_config.hours_commitment / intervalhrs
+    times._int_overlap = user_config.hours_overlap / intervalhrs
+    if len(times) <= times._int_division:
+        # dont set overlap for last stage
+        times._int_overlap = 0
 
     # create power_system
     power_system, times, scenario_tree = parse_standalone(storage, times)

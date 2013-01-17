@@ -9,7 +9,7 @@ days = pd.date_range(forecast.index[0], forecast.index[-1],
     freq='D', tz=tz)[:-1] - pd.DateOffset(hours=6)
 
 for day in days:
-    periods = 36 if day < days[-1] else 23
+    periods = 36 if day < days[-1] else 24
     trange = pd.date_range(day, periods=periods, freq='H', tz=tz)
     fcst = forecast.ix[trange]
     

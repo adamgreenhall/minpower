@@ -22,12 +22,12 @@ class Load(OptimizationObject):
     Currently only real power is considered.
     For OPF problems, the name of the bus can.
     For UC problems, schedules (pandas.Series objects) are used.
-    By setting `shedding_allowed`, the amount of power can become a variable,
+    By setting `sheddingallowed`, the amount of power can become a variable,
         (bounded to be at most the scheduled amount).
     """
     def __init__(self,
         name='', index=None, bus=None, schedule=None,
-        shedding_allowed=True,
+        sheddingallowed=True,
         cost_shedding=user_config.cost_load_shedding
         ):
         update_attributes(self,locals()) #load in inputs
@@ -390,7 +390,8 @@ class PowerSystem(OptimizationProblem):
 
     def _set_load_shedding(self, to_mode):
         '''set system mode for load shedding'''
-        for load in self.loads():
+        for load in filter(lambda ld:
+            ld.sheddingallowed, self.loads()):
             load.shedding_mode = to_mode
 
     def _set_gen_shedding(self, to_mode):
@@ -531,7 +532,7 @@ class PowerSystem(OptimizationProblem):
                 'observed_wind': windgen.observed_values.ix[times.non_overlap()],
                 })
             scheduled['net_required'] = \
-                scheduled.observed_wind -  scheduled.expected_wind
+                scheduled.expected_wind - scheduled.observed_wind
         else:                
             scheduled = pd.DataFrame({
                 'load': self.total_scheduled_load().ix[times.strings.values], 
@@ -562,7 +563,7 @@ class PowerSystem(OptimizationProblem):
         if resolve_sln: 
             print 'expected status\n', resolve_sln.generators_status
             ep = resolve_sln.generators_power
-            ep['net_required'] = (scheduled.observed_wind -  scheduled.expected_wind).values
+            ep['net_required'] = scheduled.net_required.values
             print 'expected power\n', ep
         else:
             print 'initial_status\n'

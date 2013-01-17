@@ -310,19 +310,25 @@ def main():
         help='use pdb when an error is raised')
     debugging.add_argument('--problem_file',action="store_true",
         default=user_config.problem_file,
-        help='flag to write the problem formulation to a problem.lp file')    
+        help='flag to write the problem formulation to a problem.lp file')        
+    parser.add_argument('--logging_level', type=int,
+        default=user_config.logging_level,
+        help='set the level of detail for logging')
     debugging.add_argument('--profile',action="store_true",
         default=False,
         help='run cProfile and output to minpower.profile')
     
     constraints = parser.add_argument_group('Ignore/relax constraints',
         'Ignore or relax sets of constraints to allow for feasible solutions.')
-    constraints.add_argument('--ignore_minhours_constraints', action="store_true",
-        default=user_config.ignore_minhours_constraints,
+    constraints.add_argument('--ignore_minhours_constraints', 
+        action="store_true", default=user_config.ignore_minhours_constraints,
         help='drop the min up/down time constraints on the generators')
-    constraints.add_argument('--ignore_ramping_constraints', action="store_true",
-        default=user_config.ignore_ramping_constraints,
+    constraints.add_argument('--ignore_ramping_constraints', 
+        action="store_true", default=user_config.ignore_ramping_constraints,
         help='drop the min ramping power constraints on the generators')
+    constraints.add_argument('--ignore_pmin_constraints', 
+        action="store_true", default=user_config.ignore_pmin_constraints,
+        help='drop the min power constraints on the generators')
     
     # NOTE - don't let defaults creep into this defenition
     # that makes resetting the defaults during testing very hard 

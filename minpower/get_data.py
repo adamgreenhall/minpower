@@ -146,7 +146,9 @@ def parsedir(
     if user_config.ignore_ramping_constraints:
         generators_data['rampratemax'] = None
         generators_data['rampratemin'] = None
-        
+    if user_config.ignore_pmin_constraints:
+        generators_data['pmin'] = 0
+                
     generators = build_class_list(generators_data, Generator, times, timeseries)
 
     #add lines

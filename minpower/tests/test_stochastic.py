@@ -1,6 +1,7 @@
 import logging
 logging.basicConfig(level=logging.ERROR)
 
+import nose
 import numpy as np
 from minpower.tests.test_utils import istest
 from minpower.tests.test_integration import run_case
@@ -38,6 +39,11 @@ def mock_stochastic():
 
 @istest
 def standalone():
+    try:
+        import tables
+    except ImportError:
+        raise nose.SkipTest('standalone mode requires pytables')
+
     slnA = run_case('stochastic_short_case', deterministic_solve=True)
     slnB = run_case('stochastic_short_case', deterministic_solve=True, standalone=True)
 

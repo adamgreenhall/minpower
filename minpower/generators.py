@@ -393,8 +393,7 @@ class Generator_nonControllable(Generator):
         self.initial_power = 0
         self.initial_status = 1
         self.initial_status_hours = 0
-
-
+    
     def getstatus(self, tend, times=None, status=None):
         return dict(
             status=1,
@@ -402,9 +401,12 @@ class Generator_nonControllable(Generator):
             hoursinstatus=0)
     def create_variables(self,times):
         if self.shedding_mode:
-            self.add_variable('power_used', index=times.set, low=0)
+            self.create_variables_shedding(times)    
         self.add_parameter('power', index=times.set, 
             values=dict([(t, self.get_scheduled_ouput(t)) for t in times]) )
+        self.create_bids(times)
+
+    def create_bids(self, times):
         self.bids=bidding.Bid(
             polynomial=self.cost_coeffs,
             owner=self,
@@ -413,6 +415,9 @@ class Generator_nonControllable(Generator):
             status_variable=lambda *args: True,
             input_variable=self.power
             )
+
+    def create_variables_shedding(self, times):
+        self.add_variable('power_used', index=times.set, low=0)        
     def create_constraints(self, times):
         if self.shedding_mode:
             for time in times:
@@ -431,6 +436,12 @@ class Generator_nonControllable(Generator):
     def incrementalcost(self, time, scenario=None):
         return self.bids.output_incremental(self.power(time))
     def get_scheduled_ouput(self, time): return float(self.schedule.ix[time])
+    def set_power_to_observed(self, times):
+        power = self.power_available()
+        for time in times:
+            power[time] = self.observed_values[time]
+    
+
 
 class Generator_Stochastic(Generator_nonControllable):
     """
@@ -460,18 +471,23 @@ class Generator_Stochastic(Generator_nonControllable):
         self.shutdowncost = 0
         self.shedding_mode = False
 
-    def power(self,time,scenario=None):
-        return self.get_variable('power', time=time,
-            scenario=scenario, indexed=True)
-
+    def power(self, time, scenario=None):
+        return self.get_variable('power_used' if self.shedding_mode else 'power',
+            time=time, scenario=scenario, indexed=True)
+    def power_available(self, time=None, scenario=None):
+        return self.get_variable('power',
+            time=time, scenario=scenario, indexed=True)
+    
     def _get_scenario_values(self,times,s=0):
         # scenario values are structured as a pd.Panel
         # with axes: day, scenario, {prob, [hours]}
         return self.scenario_values[times.Start][
             range(len(times))].ix[s].values.tolist()
 
-    def create_variables(self,times):
-        #initialize to first scenario value
+    def create_variables(self, times):
+        if self.shedding_mode:
+            self.create_variables_shedding(times)    
+        # initialize parameter set to first scenario value
         if self.is_stochastic:
             self.add_parameter('power', index=times.set, nochecking=True)
             power = self.power(time=None)
@@ -482,14 +498,8 @@ class Generator_Stochastic(Generator_nonControllable):
             # set to forecast values
             self.add_parameter('power', index=times.set, 
                 values=dict([(t, self.get_scheduled_ouput(t)) for t in times]))
-            
-
-        self.bids=bidding.Bid(
-            polynomial=self.cost_coeffs,
-            owner=self,
-            times=times,
-            fixed_input=True
-            )
+        
+        self.create_bids(times)
         return
     def cost_startup(self, time, scenario=None): return 0
     def cost_shutdown(self, time, scenario=None): return 0

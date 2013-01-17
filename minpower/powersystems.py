@@ -350,7 +350,7 @@ class PowerSystem(OptimizationProblem):
                 instance = self.solve()
             except OptimizationError:
                 scheduled, committed = self.debug_infeasibe(times)
-                raise OptimizationError('failed to solve with load shedding.')
+                raise OptimizationError('failed to solve withs shedding.')
         return instance
 
     def resolve_stochastic_with_observed(self, instance, sln):
@@ -366,13 +366,10 @@ class PowerSystem(OptimizationProblem):
         sln._get_costs(resolve=True)
 
         self.is_stochastic = True
+        self.disallow_shedding()
         return
 
     def resolve_determinisitc_with_observed(self, sln):
-        # expectP = sln.gen_time_df('power', False)
-        # expectU = sln.gen_time_df('status', False).astype(int)
-        self._resolve_problem(sln)
-
         # store the useful expected value solution information
         sln.expected_status = sln.generators_status.copy()
         sln.expected_power = sln.generators_power.copy()
@@ -380,12 +377,16 @@ class PowerSystem(OptimizationProblem):
         sln.expected_totalcost = sln.totalcost_generation.copy()
         sln.expected_load_shed = float(sln.load_shed)
 
+        # resolve the problem
+        self._resolve_problem(sln)
+
         # re-calc the generator outputs and costs
         sln._get_outputs()
         sln._get_costs()
 
         sln.observed_fuelcost = sln.fuelcost
         sln.observed_totalcost = sln.totalcost_generation
+        self.disallow_shedding()
         return
 
     def _set_load_shedding(self, to_mode):
@@ -414,7 +415,8 @@ class PowerSystem(OptimizationProblem):
         
         for gen in filter(lambda g: 
             getattr(g, 'shedding_mode', False), self.generators()):
-            gen.create_variables(times)
+            # create only the power_used var, don't reset the power param
+            gen.create_variables_shedding(times) 
             gen.create_constraints(const_times)
         
         # recalc the power balance constraint
@@ -456,9 +458,7 @@ class PowerSystem(OptimizationProblem):
         
         # set wind to observed power
         gen = self.get_generator_with_observed()
-        wind_power = gen.power(time=None)
-        for time in times:
-            wind_power[time] = gen.observed_values[time]
+        gen.set_power_to_observed(times)
 
         # fix statuses for all units
         self.fix_binary_variables()

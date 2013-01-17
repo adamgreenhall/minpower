@@ -7,14 +7,12 @@ env:
 matrix:
     include:
         - python: 2.7
-          env: FULL_DEPS=false
-        - python: 2.7
           env: FULL_DEPS=true
 
 before_install: 
     - sudo apt-get update
-    - sudo apt-get install python-numpy glpk 
-install: .travis_install.sh
+install: 
+    - .travis_install.sh
 script:
     - pip install --use-mirrors nose coverage objgraph
     - nosetests --with-coverage --cover-package=minpower

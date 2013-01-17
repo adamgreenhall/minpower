@@ -422,6 +422,7 @@ class Solution_UC_multistage(Solution_UC):
 
         self.objective = self._sum_over('objective', stage_solutions)
         self.solve_time = self._sum_over('solve_time', stage_solutions)
+        self.mipgaps = pd.Series([sln.mipgap for sln in stage_solutions])
 
         self._get_outputs(stage_solutions)
         self._get_costs(stage_solutions)
@@ -581,7 +582,7 @@ class Solution_Stochastic(Solution):
             self.expected_status = \
                 self.generators_status_scenarios[self.scenarios[0]]
             self.generators_status = self.expected_status.copy()
-            self.expected_power = self._calc_expected(
+            self.expected_power = self.generators_power = self._calc_expected(
                 self.generators_power_scenarios)
         return
     

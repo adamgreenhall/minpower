@@ -1,5 +1,28 @@
 ----
 
+Version 4.2.5, Thu 17 Jan 2013
+===============================
+
+c8c4064864	fix shedding control for stochastic and noncontrollable generators under resolve (Adam Greenhall)
+3950c2cc61	add test for stochastic generator with shedding (Adam Greenhall)
+223410f5fd	travis install: cython is a tables requirement (Adam Greenhall)
+c113a88cae	travis install: pip install numexpr first, then tables (Adam Greenhall)
+7d0392decb	make standalone test skipable if pytables not installed. call travis install script with bash (Adam Greenhall)
+0f86dfc623	travis: fix call to install script (Adam Greenhall)
+178c10e471	travis: fix call to install script (Adam Greenhall)
+59dc8bf3d4	standalone: dont truncate the last day if it doesnt include overlap (Adam Greenhall)
+7bc2694d5d	last hour in stochastic mock scenario values cant be null (Adam Greenhall)
+e07b3301ed	use consistent generators_power attribute for stochastic expected power (Adam Greenhall)
+39b39c885e	dont truncate the last day if it doesnt include overlap (Adam Greenhall)
+64a074a119	add stochastic mock test to see if two equal scenario stochastic formulation matches deterministic (Adam Greenhall)
+4edef331aa	add stochastic testing case (Adam Greenhall)
+d6a500c972	add ignore_pmin_constraints option (Adam Greenhall)
+63177b8ff4	cleanup (Adam Greenhall)
+4c4bac6786	reorganize faststart resolve. add some infeasible resolve debugging (Adam Greenhall)
+4be6a339d3	cleanup options for writing a .lp problem file. drop broken option for logging file. (Adam Greenhall)
+79905ac1f6	setup a full dependencies travis test (Adam Greenhall)
+
+
 Version 4.2.4, Wed 16 Jan 2013
 ===============================
 

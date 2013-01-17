@@ -12,7 +12,7 @@ matrix:
 before_install: 
     - sudo apt-get update
 install: 
-    - .travis_install.sh
+    - sh .travis_install.sh
 script:
     - pip install --use-mirrors nose coverage objgraph
     - nosetests --with-coverage --cover-package=minpower

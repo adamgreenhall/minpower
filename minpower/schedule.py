@@ -108,6 +108,9 @@ class TimeIndex(object):
             subset._int_overlap = int_overlap
             subset._int_division = int_division
             subsets.append(subset)
+
+        if len(subsets[-1]) <= int_division:
+            subsets[-1]._int_overlap = 0
         return subsets
         
 def is_init(time):

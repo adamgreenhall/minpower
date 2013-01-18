@@ -412,7 +412,7 @@ class Solution_UC_multistage(Solution_UC):
         update_attributes(self, locals(),
             exclude=['stage_solutions', 'stage_times'])
         self._resolved = power_system.is_stochastic \
-            or user_config.deterministic_solve
+            or user_config.deterministic_solve or user_config.perfect_solve
 
         self.is_stochastic = any(sln.is_stochastic for sln in stage_solutions)
         
@@ -441,9 +441,7 @@ class Solution_UC_multistage(Solution_UC):
         if self._resolved:
             self.expected_power = self._concat('expected_power', slns)
             self.expected_status = self._concat('expected_status', slns)
-        elif user_config.perfect_solve:
-            self.expected_power = self.generators_power
-            self.expected_status = self.generators_status
+
 
     def _get_costs(self, slns):
         self.expected_cost = self.totalcost_generation = \
@@ -455,9 +453,7 @@ class Solution_UC_multistage(Solution_UC):
         if self._resolved:
             self.observed_cost = self.totalcost_generation = \
                 self._concat('observed_totalcost', slns)
-        elif user_config.perfect_solve:
-            self.observed_cost = self.totalcost_generation = self.expected_cost
-
+                
 
     def info_cost(self):
         resolved = self._resolved
@@ -501,14 +497,15 @@ class MultistageStandalone(Solution_UC_multistage):
     def __init__(self, power_system, stage_times, store):
         self.power_system = power_system
         self.is_stochastic = power_system.is_stochastic
-        self._resolved = self.is_stochastic or user_config.deterministic_solve
+        self._resolved = self.is_stochastic or \
+            user_config.deterministic_solve or user_config.perfect_solve
         times = pd.concat([times.non_overlap().strings for times in stage_times]).index
         self.times=TimeIndex(times)
         self.times.set_initial(stage_times[0].initialTime)
 
         self.expected_cost = self.totalcost_generation = store['expected_cost']
 
-        if self._resolved or user_config.perfect_solve:
+        if self._resolved:
             self.observed_cost = self.totalcost_generation = \
                 store['observed_cost']
             

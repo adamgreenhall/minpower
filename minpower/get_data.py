@@ -278,7 +278,8 @@ def build_class_list(data, model, times=None, timeseries=None):
 
             if user_config.perfect_solve and observed_name:
                 # for a perfect information solve forecast = observed
-                kwds['schedule'] = timeseries[observed_name]
+                kwds['schedule'] = kwds['observed_values'] \
+                    = timeseries[observed_name]
             elif forecast_name:
                 kwds['schedule'] = timeseries[forecast_name]
 

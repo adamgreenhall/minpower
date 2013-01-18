@@ -171,7 +171,7 @@ def create_solve_problem(power_system, times, scenario_tree=None,
     # resolve with observed power and fixed status
     if sln.is_stochastic:
         power_system.resolve_stochastic_with_observed(instance, sln)
-    elif user_config.deterministic_solve:
+    elif user_config.deterministic_solve or user_config.perfect_solve:
         power_system.resolve_determinisitc_with_observed(sln)
    
     if sln.load_shed_timeseries.sum() > 0.01:

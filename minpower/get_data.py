@@ -372,7 +372,10 @@ def setup_times(generators_data, loads_data, filename_timeseries):
             name = 'g{}_forecast'.format(i)
             generators_data.ix[i, fcstcol] = name
             timeseries[name] = get_schedule(joindir(datadir, gen[ffcstcol])) * \
-                user_config.wind_multiplier
+                user_config.wind_multiplier + user_config.wind_forecast_adder
+            if (timeseries[name]<0).any():
+                print timeseries[name].describe()
+                raise ValueError('wind forecast must always be at least zero')
         generators_data = generators_data.drop(ffcstcol, axis=1)
 
     generators_data = generators_data.drop(fcol, axis=1)

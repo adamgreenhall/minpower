@@ -101,52 +101,54 @@ parser.read([
     # add another override in the specific case directory??
     )
 
+
+m = 'minpower'
 user_config = DotDict(dict(
-    duals = parser.getboolean('minpower', 'duals'),
-    breakpoints = parser.getint('minpower', 'breakpoints'),
-    hours_commitment = parser.getint('minpower', 'hours_commitment'),
-    hours_overlap = parser.getint('minpower', 'hours_overlap'),
+    duals = parser.getboolean(m, 'duals'),
+    breakpoints = parser.getint(m, 'breakpoints'),
+    hours_commitment = parser.getint(m, 'hours_commitment'),
+    hours_overlap = parser.getint(m, 'hours_overlap'),
     
-    cost_load_shedding = parser.getfloat('minpower', 'cost_load_shedding'),
+    cost_load_shedding = parser.getfloat(m, 'cost_load_shedding'),
     dispatch_decommit_allowed = \
-        parser.getboolean('minpower', 'dispatch_decommit_allowed'),
-    solver = parser.get('minpower', 'solver'),
-    mipgap = parser.getfloat('minpower', 'mipgap'), 
+        parser.getboolean(m, 'dispatch_decommit_allowed'),
+    solver = parser.get(m, 'solver'),
+    mipgap = parser.getfloat(m, 'mipgap'), 
 
-    reserve_fixed = parser.getfloat('minpower', 'reserve_fixed'),
+    reserve_fixed = parser.getfloat(m, 'reserve_fixed'),
     reserve_load_fraction = \
-        parser.getfloat('minpower', 'reserve_load_fraction'),
+        parser.getfloat(m, 'reserve_load_fraction'),
 
-    faststart_resolve = parser.getboolean('minpower', 'faststart_resolve'),
+    faststart_resolve = parser.getboolean(m, 'faststart_resolve'),
 
-    visualization = parser.getboolean('minpower', 'visualization'),
-    logging_level = parser.getint('minpower', 'logging_level'),
-    problem_file = parser.getboolean('minpower', 'problem_file'),
-    output_prefix = parser.getboolean('minpower', 'output_prefix'),
-    debugger = parser.getboolean('minpower', 'debugger'),
+    visualization = parser.getboolean(m, 'visualization'),
+    logging_level = parser.getint(m, 'logging_level'),
+    problem_file = parser.getboolean(m, 'problem_file'),
+    output_prefix = parser.getboolean(m, 'output_prefix'),
+    debugger = parser.getboolean(m, 'debugger'),
 
 
-    scenarios = parser.getint('minpower', 'scenarios'),
-    deterministic_solve = parser.getboolean('minpower', 'deterministic_solve'),
-    perfect_solve = parser.getboolean('minpower', 'perfect_solve'),
-    scenarios_directory = parser.get('minpower', 'scenarios_directory'),
+    scenarios = parser.getint(m, 'scenarios'),
+    deterministic_solve = parser.getboolean(m, 'deterministic_solve'),
+    perfect_solve = parser.getboolean(m, 'perfect_solve'),
+    scenarios_directory = parser.get(m, 'scenarios_directory'),
     
-    standalone = parser.getboolean('minpower', 'standalone'),
-
-    wind_multiplier = parser.getfloat('minpower', 'wind_multiplier'),
+    standalone = parser.getboolean(m, 'standalone'),
+    wind_forecast_adder = parser.getfloat(m, 'wind_forecast_adder'),
+    wind_multiplier = parser.getfloat(m, 'wind_multiplier'),
 
     ignore_minhours_constraints = parser.getboolean(
-        'minpower', 'ignore_minhours_constraints'),
+        m, 'ignore_minhours_constraints'),
     ignore_ramping_constraints = parser.getboolean(
-        'minpower', 'ignore_ramping_constraints'),
+        m, 'ignore_ramping_constraints'),
     ignore_pmin_constraints = parser.getboolean(
-        'minpower', 'ignore_pmin_constraints'),
+        m, 'ignore_pmin_constraints'),
     
-    on_complete_script = parser.get('minpower', 'on_complete_script'),
+    on_complete_script = parser.get(m, 'on_complete_script'),
     
     # HACKs to help out resetting the config in testing
-    directory = parser.get('minpower', 'directory'),
-    store_filename = parser.get('minpower', 'store_filename'),
+    directory = parser.get(m, 'directory'),
+    store_filename = parser.get(m, 'store_filename'),
     ))
 
 available_solvers = []

@@ -267,16 +267,20 @@ def main():
         default=user_config.reserve_load_fraction,
         help='fraction of the total system load which is required as reserve')
 
+    parser.add_argument('--wind_multiplier', type=float,
+        default=user_config.wind_multiplier,
+        help='scale the wind power by this factor')
+    parser.add_argument('--wind_forecast_adder', type=float,
+        default=user_config.wind_forecast_adder,
+        help='add a fixed amount (e.g. bias) to the wind power forecast')
+
+
     parser.add_argument('--duals','-d',action="store_true",
         default=user_config.duals,
         help='flag to get the duals, or prices, of the optimization problem')
     parser.add_argument('--dispatch_decommit_allowed', action="store_true",
         default=user_config.dispatch_decommit_allowed,
         help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
-
-    parser.add_argument('--wind_multiplier', type=float,
-        default=user_config.wind_multiplier,
-        help='scale the wind power by this factor')
     
     stochastic = parser.add_argument_group('Stochastic UC',
         'options to modify the behavior of a stochastic problem')

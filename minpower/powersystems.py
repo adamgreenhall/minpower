@@ -465,6 +465,7 @@ class PowerSystem(OptimizationProblem):
         
         # store original problem solve time
         self.full_sln_time = self.solution_time
+        full_mipgap = self.mipgap
         
         logging.info('resolving with observed values')
         try: self.solve()
@@ -480,8 +481,12 @@ class PowerSystem(OptimizationProblem):
                         sln.times, resolve_sln=sln)
                     raise
         
-        self.resolve_solution_time = self.solution_time
-        self.solution_time = self.full_sln_time
+        self.resolve_solution_time = float(self.solution_time)
+        self.solution_time = float(self.full_sln_time)
+        
+        if self.mipgap: self.mipgap_resolve = float(self.mipgap)
+        if full_mipgap: self.mipgap = float(full_mipgap)
+        
         logging.info('resolved instance with observed values (in {}s)'.format(
             self.resolve_solution_time))
 

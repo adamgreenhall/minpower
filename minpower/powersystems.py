@@ -362,6 +362,7 @@ class PowerSystem(OptimizationProblem):
         self._resolve_problem(sln)
         
         # re-store the generator outputs and costs
+        sln._resolved = True
         sln._get_outputs(resolve=True)
         sln._get_costs(resolve=True)
 
@@ -381,6 +382,7 @@ class PowerSystem(OptimizationProblem):
         self._resolve_problem(sln)
 
         # re-calc the generator outputs and costs
+        sln._resolved = True
         sln._get_outputs()
         sln._get_costs()
 

@@ -120,9 +120,8 @@ def solve_problem(datadir='.',
             solution.show()
             sys.stdout = stdout
         solution.show()
-    if csv: solution.saveCSV()
+    if csv and not user_config.standalone: solution.saveCSV()
     if user_config.visualization: solution.visualization()
-    # if solution_file: solution.save(solution_file)
     logging.info('total time: {}s'.format(timer.time()-start_time))
 
     if user_config.on_complete_script:

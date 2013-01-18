@@ -59,6 +59,8 @@ def init_store(power_system, times, data):
     storage['observed_cost'] = DataFrame()
     storage['expected_status'] = DataFrame()
     storage['expected_power'] = DataFrame()
+    storage['expected_fuelcost'] = DataFrame()
+    storage['observed_fuelcost'] = DataFrame()
     
     # setup one-per-stage results
     storage['solve_time'] = Series(index=range(stages))
@@ -90,13 +92,16 @@ def store_state(power_system, times, sln=None):
     _add_tbl_val(storage, 'solve_time', stg, sln.solve_time)
     _add_tbl_val(storage, 'mipgap', stg, sln.mipgap)
     
-    if sln.is_stochastic or user_config.deterministic_solve:
+    if sln._resolved:
         table_append(storage, 'observed_cost', sln.observed_totalcost)
+        table_append(storage, 'observed_fuelcost', sln.observed_fuelcost)
         table_append(storage, 'expected_cost', sln.expected_totalcost)
+        table_append(storage, 'expected_fuelcost', sln.expected_fuelcost)
         table_append(storage, 'expected_power', sln.expected_power)
         table_append(storage, 'expected_status', sln.expected_status)
     else:
         table_append(storage, 'expected_cost', sln.totalcost_generation)
+        table_append(storage, 'expected_fuelcost', sln.fuelcost)
     return storage
     
 def load_state():

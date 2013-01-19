@@ -9,7 +9,7 @@ from collections import OrderedDict
 
 from commonscripts import (update_attributes, gen_time_dataframe, joindir,
     replace_all, getattrL, elementwiseAdd, writeCSV, transpose, within,
-    flatten, set_trace)
+    set_trace)
 from schedule import TimeIndex
 from optimization import value
 from config import user_config
@@ -139,7 +139,17 @@ class Solution(object):
         self.load_shed_timeseries = pd.Series(
             [sum(self.get_values(self.loads, 'shed', t, evaluate=True)) for t in times],
             index = times.strings.index)
+        self.gen_shed_timeseries = pd.Series([sum(self.get_values(
+            filter(lambda gen: not gen.is_controllable, self.generators),
+            'shed', t, evaluate=True)) for t in times],
+            index=times.strings.index)
         self.load_shed = self.load_shed_timeseries.sum()
+        self.gen_shed = self.gen_shed_timeseries.sum()
+        
+        if self.gen_shed > 0.01:
+            logging.debug('generation shed: {}MW'.format(self.gen_shed))
+        if self.load_shed > 0.01:
+            logging.debug('load shed: {}MW'.format(self.load_shed))
         self._get_cost_error()
         
     def _get_cost_error(self):
@@ -310,7 +320,6 @@ class Solution_ED(Solution):
 
         if user_config.dispatch_decommit_allowed:
             # add status, but label all units at Pmin as OFF
-            Pmin = [gen.pmin for gen in self.generators]
             out['status'] = self.generators_status.ix[t]            
             out = out.drop('IC', axis=1)
 
@@ -448,7 +457,10 @@ class Solution_UC_multistage(Solution_UC):
             self._concat('expected_totalcost' \
                 if self._resolved else 'totalcost_generation', slns)
         self.load_shed_timeseries = self._concat('load_shed_timeseries', slns)
+        self.gen_shed_timeseries = self._concat('gen_shed_timeseries', slns)
+
         self.load_shed = self.load_shed_timeseries.sum()
+        self.gen_shed = self.gen_shed_timeseries.sum()
 
         if self._resolved:
             self.observed_cost = self.totalcost_generation = \
@@ -489,8 +501,12 @@ class Solution_UC_multistage(Solution_UC):
         return ['solved multistage problem in a total solver time ' + \
             'of {time:0.4f} sec'.format(time=self.solve_time)]
     def info_shedding(self):
-        return ['total load shed={}MW'.format(self.load_shed) \
-            if self.load_shed > 0.01 else '']
+        return [
+            'total load shed={}MW'.format(self.load_shed) \
+                if self.load_shed > 0.01 else '',
+            'total gen shed={}MW'.format(self.gen_shed) \
+                if self.gen_shed > 0.01 else '',
+            ]
 
 
 class MultistageStandalone(Solution_UC_multistage):

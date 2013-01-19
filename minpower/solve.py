@@ -173,10 +173,6 @@ def create_solve_problem(power_system, times, scenario_tree=None,
     elif user_config.deterministic_solve or user_config.perfect_solve:
         power_system.resolve_determinisitc_with_observed(sln)
    
-    if sln.load_shed_timeseries.sum() > 0.01:
-        logging.debug('shed {}MW in resolve of stage'.format(
-            sln.load_shed_timeseries.sum()))
-
     if len(times)>1:
         power_system.get_finalconditions(sln)
 
@@ -286,6 +282,14 @@ def main():
     parser.add_argument('--dispatch_decommit_allowed', action="store_true",
         default=user_config.dispatch_decommit_allowed,
         help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
+    
+    parser.add_argument('--cost_wind_shedding', type=float,
+        default=user_config.cost_wind_shedding,
+        help='the cost to the system to shed a MWh of wind energy')
+    parser.add_argument('--cost_load_shedding', type=float,
+        default=user_config.cost_load_shedding,
+        help='the cost to the system to shed a MWh of load')
+        
     
     stochastic = parser.add_argument_group('Stochastic UC',
         'options to modify the behavior of a stochastic problem')

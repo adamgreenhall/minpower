@@ -431,9 +431,8 @@ class PowerSystem(OptimizationProblem):
         # reset objective
         self._model.objective = None
         self.create_objective(const_times)
-        # re-create system cost constraints 
-        self.create_constraints(const_times, include_children=False)        
-
+        # re-create system cost constraints
+        self.create_constraints(const_times, include_children=False)
         # recreating all constraints would be simpler
         # but would take a bit longer
 

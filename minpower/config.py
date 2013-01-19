@@ -110,6 +110,7 @@ user_config = DotDict(dict(
     hours_overlap = parser.getint(m, 'hours_overlap'),
     
     cost_load_shedding = parser.getfloat(m, 'cost_load_shedding'),
+    cost_wind_shedding = parser.getfloat(m, 'cost_wind_shedding'),
     dispatch_decommit_allowed = \
         parser.getboolean(m, 'dispatch_decommit_allowed'),
     solver = parser.get(m, 'solver'),

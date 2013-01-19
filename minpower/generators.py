@@ -385,8 +385,14 @@ class Generator_nonControllable(Generator):
     def status(self,time=None,scenarios=None): return True
     def power_available(self, time=None, scenario=None):
         return self.get_parameter('power', time, indexed=True)
-    def shed(self, time, evaluate=False): 
-        return self.power_available(time) - self.power(time, evaluate)
+    def shed(self, time, scenario=None, evaluate=False): 
+        Pused = self.power(time, scenario=scenario)
+        Pavail = self.power_available(time, scenario=scenario)
+        if evaluate: 
+            Pused = value(Pused)
+            Pavail = value(Pavail)
+        return Pavail - Pused
+            
 
     def set_initial_condition(self, time=None,
         power=None, status=None, hoursinstatus=None):
@@ -425,16 +431,21 @@ class Generator_nonControllable(Generator):
                     self.power(time) <= self.power_available(time))
     
     def cost(self, time, scenario=None, evaluate=False):
-        return self.operatingcost(time)
+        return self.operatingcost(time, evaluate=evaluate)
     def operatingcost(self, time=None, scenario=None, evaluate=False):
-        if self.shedding_mode: 
-            return self.bids.output(time)
-        else:
-            return self.bids.output_true( self.power(time) )
+        return self.bids.output(time) + user_config.cost_wind_shedding * \
+            self.shed(time, scenario=scenario, evaluate=evaluate)
+        # return self.bids.output_true( self.power(time) )
     def truecost(self, time, scenario=None):
         return self.cost(time)
     def incrementalcost(self, time, scenario=None):
         return self.bids.output_incremental(self.power(time))
+    def cost_startup(self, time, scenario=None): return 0
+    def cost_shutdown(self, time, scenario=None): return 0
+    def cost_first_stage(self, times): return 0
+    def cost_second_stage(self, times): 
+        return sum(self.cost(time) for time in times)
+
     def get_scheduled_ouput(self, time): return float(self.schedule.ix[time])
     def set_power_to_observed(self, times):
         power = self.power_available()
@@ -501,5 +512,3 @@ class Generator_Stochastic(Generator_nonControllable):
         
         self.create_bids(times)
         return
-    def cost_startup(self, time, scenario=None): return 0
-    def cost_shutdown(self, time, scenario=None): return 0

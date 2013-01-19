@@ -134,9 +134,11 @@ user_config = DotDict(dict(
     scenarios_directory = parser.get(m, 'scenarios_directory'),
     
     standalone = parser.getboolean(m, 'standalone'),
+
     wind_forecast_adder = parser.getfloat(m, 'wind_forecast_adder'),
     wind_multiplier = parser.getfloat(m, 'wind_multiplier'),
-
+    load_multiplier = parser.getfloat(m, 'load_multiplier'),
+    
     ignore_minhours_constraints = parser.getboolean(
         m, 'ignore_minhours_constraints'),
     ignore_ramping_constraints = parser.getboolean(

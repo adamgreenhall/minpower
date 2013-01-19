@@ -267,12 +267,17 @@ def main():
         default=user_config.reserve_load_fraction,
         help='fraction of the total system load which is required as reserve')
 
-    parser.add_argument('--wind_multiplier', type=float,
+    ts = parser.add_argument_group('Timeseries modifiers',
+        'Alter the timeseries after parsing the data.')
+    ts.add_argument('--wind_multiplier', type=float,
         default=user_config.wind_multiplier,
         help='scale the wind power by this factor')
-    parser.add_argument('--wind_forecast_adder', type=float,
+    ts.add_argument('--wind_forecast_adder', type=float,
         default=user_config.wind_forecast_adder,
         help='add a fixed amount (e.g. bias) to the wind power forecast')
+    ts.add_argument('--load_multiplier', type=float,
+        default=user_config.load_multiplier,
+        help='scale the load power by this factor')
 
 
     parser.add_argument('--duals','-d',action="store_true",

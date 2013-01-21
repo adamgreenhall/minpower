@@ -19,7 +19,7 @@ def main(args):
     generators = filter(lambda gen: gen.is_controllable, generators)
     
     if args['min'] == 0:
-        args['min'] = 1.1 * sum(gen.pmin for gen in generators)
+        args['min'] = 1.1 * min(gen.pmin for gen in generators)
     if args['max'] == 0:
         args['max'] = 0.99 * sum(gen.pmax for gen in generators)
     
@@ -34,15 +34,19 @@ def main(args):
         results.ix[load_val, 'prices'] = power_system.buses[0].price(t)
         results.ix[load_val, 'committed'] = sum([gen.status(t).value 
             for gen in power_system.generators()])
-        
+    
     results.to_csv(joindir(user_config.directory, 'ed_sweep.csv'))
+    
+    if args['hide_units_committed']:
+        ax = results.prices.plot(drawstyle='steps')
+    else:
+        ax = results.plot(drawstyle='steps', secondary_y=['committed'])
+        ax.right_ax.set_ylabel('Units committed')
 
-    ax = results.plot(secondary_y=['committed'])
     ax.set_xlabel('System Load (MW)')
     ax.set_ylabel('Estimated System Price ($/MWh)')
-    ax.right_ax.set_ylabel('Units committed')
 
-    plt.savefig(joindir(user_config.directory, 'ed_sweep.png'))    
+    plt.savefig(joindir(user_config.directory, 'ed_sweep.png'))
     
 def get_args():
     parser = argparse.ArgumentParser(
@@ -60,6 +64,9 @@ def get_args():
     parser.add_argument('--interval', type=float,
         default=100,
         help='the interval to increment the load by')
+    parser.add_argument('--hide_units_committed', '-c', 
+        action='store_true', default=False)
+    
     args = parser.parse_args()
 
     user_config.directory = args.directory

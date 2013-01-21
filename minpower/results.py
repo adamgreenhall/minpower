@@ -112,10 +112,12 @@ class Solution(object):
             out = [value(getattr(obj, method)) for obj in items]
         return out
 
-    def gen_time_df(self, method, non_overlap=True, evaluate=False):
+    def gen_time_df(self, method, non_overlap=True, evaluate=False,
+        generators=None):
         times = self.times_non_overlap if non_overlap else self.times
-        return gen_time_dataframe(self.generators, times, 
-            [self.get_values(self.generators, method, t, evaluate) for t in times])
+        if generators is None: generators = self.generators
+        return gen_time_dataframe(generators, times, 
+            [self.get_values(generators, method, t, evaluate) for t in times])
 
     def _get_problem_info(self):
         self.solve_time = self.power_system.solution_time
@@ -139,10 +141,10 @@ class Solution(object):
         self.load_shed_timeseries = pd.Series(
             [sum(self.get_values(self.loads, 'shed', t, evaluate=True)) for t in times],
             index = times.strings.index)
-        self.gen_shed_timeseries = pd.Series([sum(self.get_values(
-            filter(lambda gen: not gen.is_controllable, self.generators),
-            'shed', t, evaluate=True)) for t in times],
-            index=times.strings.index)
+        self.gen_shed_timeseries = self.gen_time_df('shed', evaluate=True,
+            generators=self.power_system.get_generators_noncontrollable()
+            ).sum(axis=1)
+            
         self.load_shed = self.load_shed_timeseries.sum()
         self.gen_shed = self.gen_shed_timeseries.sum()
         
@@ -572,15 +574,18 @@ class Solution_Stochastic(Solution):
             major_axis = times.strings.index,
             minor_axis = [str(g) for g in self.generators])
 
-    def gen_time_df(self, method, scenario, non_overlap=True, evaluate=False):
+    def gen_time_df(self, method, scenario, non_overlap=True, evaluate=False,
+        generators=None):
+        if generators is None: generators = self.generators
+        
         if evaluate: 
             getval = lambda gen, t: value(getattr(gen, method)(t, scenario, evaluate=True))
         else:
             getval = lambda gen, t: value(getattr(gen, method)(t, scenario))
             
         times = self.times_non_overlap if non_overlap else self.times
-        return gen_time_dataframe(self.generators, times, 
-            [[getval(gen, t) for t in times] for gen in self.generators])
+        return gen_time_dataframe(generators, times, 
+            [[getval(gen, t) for t in times] for gen in generators])
 
 
     def _get_outputs(self, resolve=False):
@@ -626,14 +631,19 @@ class Solution_Stochastic(Solution):
                 self.gen_time_df('operatingcost', s, evaluate=True)
             
             #calc observed load shed            
-            if len(self.loads)>1: raise NotImplementedError
-            self.load_shed_timeseries = \
-                self.loads[0].schedule.ix[self.times_non_overlap].values - \
-                self.generators_power.sum(axis=1)
+            if len(self.loads) > 1: raise NotImplementedError
+            self.load_shed_timeseries = pd.Series(
+                [self.power_system.loads()[0].shed(time, evaluate=True) 
+                    for time in self.times_non_overlap],
+                index=self.generators_power.index)
             
-            # TODO - add generation shed timeseries
+            self.gen_shed_timeseries = self.gen_time_df('shed', s, 
+                evaluate=True,
+                generators=self.power_system.get_generators_noncontrollable()
+                ).sum(axis=1)
             
             self.load_shed = self.load_shed_timeseries.sum()
+            self.gen_shed = self.gen_shed_timeseries.sum()
             
         else: 
             # get expected cost of non_overlap times

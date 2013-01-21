@@ -84,7 +84,7 @@ class Bid(OptimizationObject):
                 warn_domain_coverage=False)
 
         pw_representation.name = self.iden()
-        self.max_output = pw_rule_points(None, None, self.max_input)
+        self.max_output = pw_representation._f_rule(None, None, self.max_input)
         self._parent_problem().add_component_to_problem(pw_representation)
             
                 

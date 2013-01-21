@@ -295,10 +295,12 @@ class PowerSystem(OptimizationProblem):
     
     def total_scheduled_generation(self):
         return sum(gen.schedule for gen in self.generators() if not gen.is_controllable)    
+
+    def get_generators_noncontrollable(self):
+        return filter(lambda gen: not gen.is_controllable, self.generators())
         
     def get_generators_without_scenarios(self):
         return filter(lambda gen: getattr(gen,'is_stochastic',False)==False, self.generators())
-
 
     def get_generator_with_scenarios(self):
         gens = filter(lambda gen: getattr(gen,'is_stochastic',False), self.generators())

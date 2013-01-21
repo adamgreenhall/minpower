@@ -1,7 +1,8 @@
-from commonscripts import * # update_attributes, pairwise
+import numpy as np
+from commonscripts import update_attributes, pairwise
 from optimization import value,OptimizationObject
 from config import user_config
-import re,weakref
+import re
 from coopr.pyomo import Piecewise
 
 
@@ -64,27 +65,26 @@ class Bid(OptimizationObject):
             # custom bid points
             self.is_linear = False
             self.is_pwl = True
-            self.add_variable('cost',index=self.times.set,low=0)            
-
-            self.discrete_input_points=[ bp[0] for bp in self.bid_points ]
-            in_pts=dict((t,self.discrete_input_points) for t in self.times.set)
-            mapping = dict(self.bid_points)
-            def pw_rule(model,time,input_var): 
+            self.add_variable('cost', index=self.times.set, low=0)            
+            self.discrete_input_points = self.bid_points.power.values.tolist()
+            in_pts = dict((t, self.discrete_input_points) for t in self.times.set)
+            mapping = self.bid_points.set_index('power').to_dict()['cost']
+            def pw_rule_points(model, time, input_var): 
                 # just the input->output points mapping in this case
                 # see coopr/examples/pyomo/piecewise/example3.py
                 return mapping[input_var]
                 
-            pw_representation=Piecewise(self.times.set,
+            pw_representation = Piecewise(self.times.set,
                 self.get_variable('cost',time=None,indexed=True),
                 self.input_variable(),
                 pw_pts=in_pts,
                 pw_constr_type='LB',
                 pw_repn='DCC', # the disagregated convex combination method 
-                f_rule=pw_rule,
+                f_rule=pw_rule_points,
                 warn_domain_coverage=False)
 
-        pw_representation.name=self.iden()
-        self.max_output = pw_rule(None,None, self.max_input)
+        pw_representation.name = self.iden()
+        self.max_output = pw_rule_points(None, None, self.max_input)
         self._parent_problem().add_component_to_problem(pw_representation)
             
                 
@@ -118,8 +118,10 @@ class Bid(OptimizationObject):
                 bid_pt_outputs = map(lambda pt: polynomial_value(self.polynomial, pt), self.discrete_input_points)
                 self.bid_points = zip(self.discrete_input_points, bid_pt_outputs)
             
-            for A,B in pairwise(self.bid_points):
-                if A[0]<=input_val<=B[0]: return get_line_value(A, B, input_val) + self.constant_term
+            
+            for A, B in pairwise(self.bid_points.values.tolist()):
+                if A[0] <= input_val <= B[0]: 
+                    return get_line_value(A, B, input_val) + self.constant_term
         else: 
             return polynomial_value(self.polynomial, input_val)
 
@@ -146,9 +148,13 @@ class Bid(OptimizationObject):
     def iden(self,*a,**k): return 'bid_{}'.format(self.owner_id)
 
 def is_linear(coefs):
-    if len(coefs)<2: return True
-    elif all(m==0 for m in coefs[2:]): return True
-    else: return False
+    result = False
+    if coefs is None: result = False
+    else:
+        if len(coefs) < 2: result = True
+        elif all(m==0 for m in coefs[2:]): result = True
+        else: result = False
+    return result
 
 def discretize_range(num_breakpoints,minimum,maximum):
     step = (maximum-minimum)/float(num_breakpoints-1)

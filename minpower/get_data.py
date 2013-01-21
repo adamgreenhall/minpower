@@ -40,7 +40,6 @@ fields = dict(
     'minuptime', 'mindowntime',
     'startupramplimit', 'shutdownramplimit',
     #for a bid points defined gen, noloadcost replaces the constant polynomial
-    'costcurvepointsfilename',
     'noloadcost',
     'costcurveequation', 'heatrateequation',
     'fuelcost',
@@ -247,7 +246,8 @@ def build_class_list(data, model, times=None, timeseries=None):
 
         if is_generator:
             if schedulename or power or \
-                (forecast_name and user_config.deterministic_solve):
+                (forecast_name and user_config.deterministic_solve) or \
+                (observed_name and user_config.perfect_solve):
                 row_model = Generator_nonControllable
             elif scenariosdirectory or scenariosfilename:
                 row_model = Generator_Stochastic
@@ -294,7 +294,7 @@ def build_class_list(data, model, times=None, timeseries=None):
             if bid_points_filename:
                 kwds['bid_points'] = read_bid_points(
                     joindir(datadir, bid_points_filename))
-                row.costcurveequation = None
+                kwds['costcurveequation'] = None
 
         try:
             obj = row_model(index=i, **kwds)
@@ -309,8 +309,8 @@ def build_class_list(data, model, times=None, timeseries=None):
 
 def read_bid_points(filename):
     bid_points = read_csv(filename)
-    # return a tuple of bidpoints
-    return [ (bp['power'], bp['cost']) for bp in bid_points.iterrows()]
+    # return a dataframe of bidpoints
+    return bid_points[['power', 'cost']].astype(float)
 
 
 def setup_times(generators_data, loads_data, filename_timeseries):

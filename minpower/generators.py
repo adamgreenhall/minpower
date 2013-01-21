@@ -196,13 +196,13 @@ class Generator(OptimizationObject):
 
         else:
             # do some simple validation and delay construction to bidding object
-            min_power_bid = self.bid_points[0][0]
-            max_power_bid = self.bid_points[-1][0]
+            min_power_bid = self.bid_points.power.min()
+            max_power_bid = self.bid_points.power.max()
             if min_power_bid > self.pmin:
                 self.pmin = min_power_bid
                 logging.warning('{g} should have a min. power bid ({mpb}) <= to its min. power limit ({mpl})'.format(g=str(self), mpb=min_power_bid, mpl=self.pmin))
 
-            if max_power_bid<self.pmax:
+            if max_power_bid < self.pmax:
                 self.pmax = max_power_bid
                 logging.warning('{g} should have a max. power bid ({mpb}) >= to its max. power limit ({mpl})'.format(g=str(self), mpb=max_power_bid, mpl=self.pmax))
 

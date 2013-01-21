@@ -529,8 +529,11 @@ class MultistageStandalone(Solution_UC_multistage):
         self.generators_power = store['power']
         self.generators_status = store['status']
         self.load_shed_timeseries = store['load_shed']
-
+        self.gen_shed_timeseries = store['gen_shed']
+        
         self.load_shed = store['load_shed'].sum()
+        self.gen_shed = store['gen_shed'].sum()
+        
         self.solve_time = store['solve_time'].sum()
 
 
@@ -627,7 +630,9 @@ class Solution_Stochastic(Solution):
             self.load_shed_timeseries = \
                 self.loads[0].schedule.ix[self.times_non_overlap].values - \
                 self.generators_power.sum(axis=1)
-                
+            
+            # TODO - add generation shed timeseries
+            
             self.load_shed = self.load_shed_timeseries.sum()
             
         else: 

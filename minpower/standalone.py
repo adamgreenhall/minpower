@@ -55,6 +55,7 @@ def init_store(power_system, times, data):
 
     # setup empty containers for variables
     storage['load_shed'] = Series()
+    storage['gen_shed'] = Series()
     storage['expected_cost'] = DataFrame()
     storage['observed_cost'] = DataFrame()
     storage['expected_status'] = DataFrame()
@@ -82,6 +83,7 @@ def store_state(power_system, times, sln=None):
     table_append(storage, 'power', sln.generators_power)
     table_append(storage, 'status', sln.generators_status)
     table_append(storage, 'load_shed', sln.load_shed_timeseries)
+    table_append(storage, 'gen_shed', sln.gen_shed_timeseries)
     
     tEnd = times.last_non_overlap()
     storage['hrsinstatus'] = gen_time_dataframe(generators, [tEnd], 

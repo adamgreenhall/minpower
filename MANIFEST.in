@@ -1,0 +1,2 @@
+recursive-include minpower/tests *.csv
+recursive-include minpower/configuration *.cfg

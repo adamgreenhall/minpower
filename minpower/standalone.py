@@ -71,9 +71,23 @@ def init_store(power_system, times, data):
     storage['configuration'] = Series(user_config)
     
     
-    storage['version'] = Series({'minpower': 
-        pkg_resources.get_distribution('minpower').version})
+    storage['version'] = Series({
+        'minpower': pkg_resources.get_distribution('minpower').version,
+        # try storing version number of the current working directory 
+        'problem': _get_problem_version(),
+        })
+
+
     return storage
+
+def _get_problem_version():
+    version = None
+    possible_init = os.path.join(
+        os.path.abspath(user_config.directory), '__init__.py')
+    if os.path.exists(possible_init):
+        vstr = open(possible_init, 'r').read()
+        version = vstr.split('"')[1].rstrip('"')
+    return version
     
 def store_state(power_system, times, sln=None):
     storage = get_storage()

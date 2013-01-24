@@ -387,10 +387,19 @@ def setup_times(generators_data, loads_data, filename_timeseries):
     if ffcstcol in generators_data:
         generators_data[fcstcol] = None
         for i, gen in filter_notnull(generators_data, ffcstcol).iterrows():
-            name = 'g{}_forecast'.format(i)
+            fcst_name = 'g{}_forecast'.format(i)
             generators_data.ix[i, fcstcol] = name
-            timeseries[name] = get_schedule(joindir(datadir, gen[ffcstcol])) * \
+            timeseries[fcst_name] = get_schedule(joindir(datadir, gen[ffcstcol])) * \
                 user_config.wind_multiplier + user_config.wind_forecast_adder
+                    
+            if user_config.wind_error_multiplier != 1.0:
+                logging.debug('scaling wind forecast error')
+                obs_name = 'g{}_observations'.format(i)
+                error = timeseries[fcst_name] - timeseries[obs_name]
+                timeseries[fcst_name] = timeseries[obs_name] + \
+                    error * user_config.wind_error_multiplier
+
+            
             if (timeseries[name]<0).any():
                 print timeseries[name].describe()
                 raise ValueError('wind forecast must always be at least zero')

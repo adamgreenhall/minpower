@@ -326,6 +326,9 @@ def main():
     ts.add_argument('--wind_multiplier', type=float,
         default=user_config.wind_multiplier,
         help='scale the wind power by this factor')
+    ts.add_argument('--wind_error_multiplier', type=float,
+        default=user_config.wind_error_multiplier,
+        help='scale the wind power forecast error by this factor')
     ts.add_argument('--wind_forecast_adder', type=float,
         default=user_config.wind_forecast_adder,
         help='add a fixed amount (e.g. bias) to the wind power forecast')

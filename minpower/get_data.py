@@ -72,7 +72,7 @@ field_rename = dict(
     'spillinitial':'spill_initial',
     'productioncurve':'production_curve_equation',
     'productioncurvecorrection':'production_curve_correction_equation',
-    'headcorrection':'head_correction_equation',
+    'headcorrectionconstant':'head_correction_constant',
     }
 
 )

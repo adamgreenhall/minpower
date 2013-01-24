@@ -28,7 +28,7 @@ class HydroGenerator(Generator):
                  spill_initial=0,
                  production_curve_equation='10Q',
                  production_curve_correction_equation='0',
-                 head_correction_equation='0',
+                 head_correction_constant=0,
                  inflow_schedule=None
                  ):
         update_attributes(self, locals())  # load in inputs
@@ -36,22 +36,37 @@ class HydroGenerator(Generator):
         self.upstream_reservoirs = []
         self.is_hydro = True
         self.is_controllable = True
-        self.production_curve_model = bidding.makeModel(production_curve_equation, min_input=self.outflow_min, max_input=self.outflow_max)
-        self.production_correction_model = bidding.makeModel(
-            production_curve_correction_equation)
-        self.head_correction_constant = get_leading_number(
-            head_correction_equation)
+        self.is_stochastic = False
         if self.outflow_initial is None:
             self.outflow_initial = (self.outflow_max - self.outflow_min) / 2.0
+        
+        self.build_cost_model()
+        
+    def build_cost_model(self):
 
+        self.coefs_production = bidding.parse_polynomial(
+            self.production_curve_equation)
+        self.coefs_correction = bidding.parse_polynomial(
+            self.production_curve_correction_equation)
+
+        self.params_production = dict(
+            polynomial=self.coefs_production,
+            min_input=self.outflow_min,
+            max_input=self.outflow_max
+            )
+        
+
+        self.params_correction = self.params_production.copy(
+            ).update({'polynomial': self.coefs_correction})
+        
     def outflow(self, time=None, scenario=None):
-        return self.get_variable('outflow', time=str(time), indexed=True, scenario=scenario)
+        return self.get_variable('outflow', time, scenario=scenario, indexed=True)
 
     def spill(self, time=None, scenario=None):
-        return self.get_variable('spill', time=str(time), indexed=True, scenario=scenario)
+        return self.get_variable('spill', time, scenario=scenario, indexed=True)
 
     def volume(self, time=None, scenario=None):
-        return self.get_variable('volume', time=str(time), indexed=True, scenario=scenario)
+        return self.get_variable('volume', time, scenario=scenario, indexed=True)
 
     def outflow_total(self, time=None, scenario=None):
         return self.outflow(time, scenario) + self.spill(time, scenario)
@@ -71,7 +86,9 @@ class HydroGenerator(Generator):
         the volume correction (based on volume),
         and the head correction (based on outflow and volume)
         '''
-        return self.production_curve(time).output() + self.production_correction(time).output() + self.head_correction(time)
+        return self.production_curve(time).output() + \
+            self.production_correction(time).output() + \
+            self.head_correction(time)
 
     def production_curve(self, time):
         return self.get_child('production_curves', time)
@@ -122,24 +139,9 @@ class HydroGenerator(Generator):
         self.add_variable('volume', index=times.set,
                           low=self.volume_min, high=self.volume_max)
 
-        # production curve
-        production_curves = dict(zip(times, [bidding.Bid(
-            model=self.production_curve_model,
-            time=time,
-            input_var=self.outflow(time),
-            owner_iden=str(self),
-            time_iden=str(time)) for time in times]))
-        production_corrections = dict(zip(times, [bidding.Bid(
-            model=self.production_correction_model,
-            time=time,
-            input_var=self.volume(time),
-            owner_iden=str(self),
-            time_iden=str(time)) for time in times]))
-        self.add_children(production_curves, 'production_curves')
-        self.add_children(production_corrections, 'production_corrections')
-        for time in times:
-            self.production_curve(time).create_variables()
-            self.production_correction(time).create_variables()
+        self.production_model = bidding.Bid(times, **self.params_production)
+        self.production_correction_model = \
+            bidding.Bid(times, **self.params_correction)
 
     def create_constraints(self, times, generators):
         # initial and final volumes
@@ -167,8 +169,8 @@ class HydroGenerator(Generator):
             # production
             self.add_constraint(
                 'production', time, self.power(time) == self.production(time))
-            self.production_curve(time).create_constraints()
-            self.production_correction(time).create_constraints()
+            # self.production_curve(time).create_constraints()
+            # self.production_correction(time).create_constraints()
 
     def __str__(self):
         return 'h{ind}'.format(ind=self.index)

@@ -157,13 +157,12 @@ def parsedir(
 
     try: 
         hydro_data = nice_names(read_csv(file_hydro))
-        set_trace()
     except Exception:
         hydro_data = DataFrame()
 
     #create times
     timeseries, times, generators_data, loads_data = \
-        setup_times(generators_data, loads_data, file_timeseries)
+        setup_times(generators_data, loads_data, hydro_data, file_timeseries)
 
     #add loads
     loads = build_class_list(loads_data, powersystems.Load, times, timeseries)
@@ -347,7 +346,7 @@ def read_bid_points(filename):
     return bid_points[['power', 'cost']].astype(float)
 
 
-def setup_times(generators_data, loads_data, filename_timeseries):
+def setup_times(generators_data, loads_data, hydro_data, filename_timeseries):
     """
     Create a :class:`~schedule.TimeIndex` object
     from the schedule files.
@@ -524,7 +523,7 @@ def setup_hydro(data, times):
         if inflow_schedule_filename is not None:
             row['inflow_schedule'] = schedule.make_schedule(
                 joindir(user_config.directory, inflow_schedule_filename), times)
-        hydro_generators.append(hydro.HydroGenerator(**row))
+        hydro_generators.append(HydroGenerator(**row))
     
     #label upstream reservoir generator indexes
     names=[gen.name for gen in hydro_generators]

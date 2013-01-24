@@ -1,0 +1,7 @@
+name,pmin,pmax,ramp_rate_min,ramp_rate_max,min_down_time,min_up_time,startupcost,heat_rate_equation,fuelcost,faststart,schedule_filename,scenarios_directory,forecast_filename,observed_filename, shedding_allowed
+aggregate wind,,,,,,,,,0.0,,,scenarios,wind_forecast.csv,wind_observed.csv,1
+Oklaunion 1,200,702.0,-691.0,341.0,0.0,2.0,3581.0,400+8P+0.002P^2,2,0.0,,,,,
+Monticello 3,300,859.0,-846.0,391.0,0.0,0.0,3581.0,2000+1.4P+0.006P^2,2,0.0,,,,,
+Magic Valley Generating Station,222.0,772.0,-623.0,396.0,0.0,0.0,3581.0,100+6.4P,3,1.0,,,,,
+Freestone Power Generation LP,120.0,1066.0,-839.0,780.0,0.0,5.0,3581.0,200+6.8P,3,1.0,,,,,
+R W Miller 2,57.0,102.0,-74.0,85.0,0.0,0.0,3581.0,43+11P,3,0.0,,,,,

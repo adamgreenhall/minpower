@@ -1,9 +1,10 @@
 """
-Provide the defaults and data for other modules.
-Specifically, the :class:`~powersystems.Generator` defaults
-are provided by :data:`generator_defaults`.
+Provide the defaults and configuration for other modules.
+`user_config` is treated as a global in minpower.
 """
-import logging
+import os
+from ConfigParser import SafeConfigParser
+from commonscripts import DotDict, joindir
 
 generator_kinds=[
     'generic',
@@ -27,17 +28,17 @@ generator_defaults=dict(
         ),
     is_controllable=dict(generic=True,wind=False),
     power=dict(generic=None),
-    
+
     Pmax=dict(
         generic=             500,
         coal=                550,
-        nuclear=            1117, 
+        nuclear=            1117,
         nggt=                 90,
         ngcc=                420,
         ngst   =             550,#assume equal to coal fired steam
         wind   =             100,
         ),
-    
+
     minuptime=dict(
         generic=0,
         coal=24,
@@ -47,7 +48,7 @@ generator_defaults=dict(
         ngst=24, #assume equal to coal fired steam
         wind=0,
         ),
-    
+
     mindowntime=dict(
         generic=0,
         coal=2,
@@ -57,7 +58,7 @@ generator_defaults=dict(
         ngst=12,#assume equal to coal fired steam
         wind=0,
         ),
-    
+
     fuelcost=dict(
         generic=    1,
         coal=       2.0,   #from EIA national average coal price: http://www.eia.gov/electricity/monthly/
@@ -67,10 +68,10 @@ generator_defaults=dict(
         nuclear =   0.65,  #from NWPP plan - Table I-34: Forecast nuclear fuel prices (2006$/MMBtu)
         wind=       0,
         ),
-    
-    
+
+
     startupcost=dict(
-        generic=              0, #if kind not specified, no startup cost 
+        generic=              0, #if kind not specified, no startup cost
 ##from Henry Louie thesis
 #        coal=            107800,
 #        nuclear=         283500,
@@ -89,12 +90,71 @@ generator_defaults=dict(
     )
 
 
-cost_load_shedding = 1000 #$/MWh
+parser = SafeConfigParser()
+parser.read([
+    # the minpower default set, from the minpower/configuration directory 
+    joindir(os.path.split(__file__)[0], 'configuration/minpower.cfg'), 
+    # the user's overrides, from the home directory
+    os.path.expanduser('~/minpower.cfg'),
+    os.path.expanduser('~/.minpowerrc'),
+    ],
+    # add another override in the specific case directory??
+    )
 
-default_num_breakpoints=11
-default_hours_commitment=24
-default_hours_commitment_overlap=0
 
-optimization_solver='glpk'
-available_solvers = ['glpk','gurobi']#['glpk','gurobi','cplex']
-logging_level= logging.INFO
+m = 'minpower'
+user_config = DotDict(dict(
+    duals = parser.getboolean(m, 'duals'),
+    breakpoints = parser.getint(m, 'breakpoints'),
+    hours_commitment = parser.getint(m, 'hours_commitment'),
+    hours_overlap = parser.getint(m, 'hours_overlap'),
+    
+    cost_load_shedding = parser.getfloat(m, 'cost_load_shedding'),
+    cost_wind_shedding = parser.getfloat(m, 'cost_wind_shedding'),
+    dispatch_decommit_allowed = \
+        parser.getboolean(m, 'dispatch_decommit_allowed'),
+    solver = parser.get(m, 'solver'),
+    mipgap = parser.getfloat(m, 'mipgap'), 
+
+    reserve_fixed = parser.getfloat(m, 'reserve_fixed'),
+    reserve_load_fraction = \
+        parser.getfloat(m, 'reserve_load_fraction'),
+
+    faststart_resolve = parser.getboolean(m, 'faststart_resolve'),
+
+    visualization = parser.getboolean(m, 'visualization'),
+    logging_level = parser.getint(m, 'logging_level'),
+    problem_file = parser.getboolean(m, 'problem_file'),
+    output_prefix = parser.getboolean(m, 'output_prefix'),
+    debugger = parser.getboolean(m, 'debugger'),
+
+
+    scenarios = parser.getint(m, 'scenarios'),
+    deterministic_solve = parser.getboolean(m, 'deterministic_solve'),
+    perfect_solve = parser.getboolean(m, 'perfect_solve'),
+    scenarios_directory = parser.get(m, 'scenarios_directory'),
+    
+    standalone = parser.getboolean(m, 'standalone'),
+
+    wind_forecast_adder = parser.getfloat(m, 'wind_forecast_adder'),
+    wind_multiplier = parser.getfloat(m, 'wind_multiplier'),
+    load_multiplier = parser.getfloat(m, 'load_multiplier'),
+    
+    ignore_minhours_constraints = parser.getboolean(
+        m, 'ignore_minhours_constraints'),
+    ignore_ramping_constraints = parser.getboolean(
+        m, 'ignore_ramping_constraints'),
+    ignore_pmin_constraints = parser.getboolean(
+        m, 'ignore_pmin_constraints'),
+    
+    on_complete_script = parser.get(m, 'on_complete_script'),
+    
+    # HACKs to help out resetting the config in testing
+    directory = parser.get(m, 'directory'),
+    store_filename = parser.get(m, 'store_filename'),
+    ))
+
+available_solvers = []
+for solver in parser.options('available_solvers'):
+  if parser.getboolean('available_solvers', solver):
+      available_solvers.append(solver)

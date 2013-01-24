@@ -1,0 +1,32 @@
+{% extends "basic/layout.html" %}
+
+{% block extrahead %}
+{{ super() }}
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+{% endblock %}
+
+{% block relbar1 %}{% endblock %}
+{% block relbar2 %}{% endblock %}
+{% block sidebar2 %}{{ super()  }}{% endblock %}
+
+{% block document %}
+{{ super() }}
+{% endblock %}
+
+{% block footer %}
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    
+  })();
+</script>
+{% endblock %}
+
+
+

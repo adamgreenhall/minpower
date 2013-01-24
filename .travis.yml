@@ -1,0 +1,22 @@
+language: python
+python:
+  - 2.7
+env:
+    global: 
+        - # need at least this so travis page will show env column
+matrix:
+    include:
+        - python: 2.7
+          env: FULL_DEPS=true
+
+before_install: 
+    - sudo apt-get update
+install: 
+    - bash .travis_install.sh
+script:
+    - pip install --use-mirrors nose coverage objgraph
+    - nosetests --with-coverage --cover-package=minpower
+    
+branches:
+  only:
+    - master

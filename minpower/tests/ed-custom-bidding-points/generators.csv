@@ -1,0 +1,3 @@
+name,type,P max,no load cost,cost curve points filename
+cheap,coal,200,193,bid-points-cheap.csv
+expensive,natural gas,200,306,bid-points-expensive.csv

@@ -1,0 +1,16 @@
+|Column Name|Description|Default|Units|
+|name|generator name| | |
+|P min|min. power output |0|MW|
+|P max|max. power output |500|MW|
+|cost curve equation|polynomial for the cost of fuel given a power output| |$/MWh|
+|heat rate equation|heat rate polynomial| |MMBtu/MWh|
+|fuel cost| (if using a heat rate equation) |1 |$/MMBtu|
+|start up cost| | 0 |$|
+|shut down cost| | 0 |$|
+|ramp rate min| | |MW/h|
+|ramp rate max| | |MW/h|
+|min up time| | 0 | hours |
+|min down time| | 0 | hours |
+|must run| unit status must remain ON|0| |
+|fast start| unit has the ability to start up without having been committed if needed to avoid load shedding (when minpower is run using the faststart option)| False | |
+|bus|name of bus where gen. is connected|single bus| |

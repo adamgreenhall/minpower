@@ -1,0 +1,67 @@
+----
+
+Version 4.2.5, Thu 17 Jan 2013
+===============================
+
+c8c4064864	fix shedding control for stochastic and noncontrollable generators under resolve (Adam Greenhall)
+3950c2cc61	add test for stochastic generator with shedding (Adam Greenhall)
+223410f5fd	travis install: cython is a tables requirement (Adam Greenhall)
+c113a88cae	travis install: pip install numexpr first, then tables (Adam Greenhall)
+7d0392decb	make standalone test skipable if pytables not installed. call travis install script with bash (Adam Greenhall)
+0f86dfc623	travis: fix call to install script (Adam Greenhall)
+178c10e471	travis: fix call to install script (Adam Greenhall)
+59dc8bf3d4	standalone: dont truncate the last day if it doesnt include overlap (Adam Greenhall)
+7bc2694d5d	last hour in stochastic mock scenario values cant be null (Adam Greenhall)
+e07b3301ed	use consistent generators_power attribute for stochastic expected power (Adam Greenhall)
+39b39c885e	dont truncate the last day if it doesnt include overlap (Adam Greenhall)
+64a074a119	add stochastic mock test to see if two equal scenario stochastic formulation matches deterministic (Adam Greenhall)
+4edef331aa	add stochastic testing case (Adam Greenhall)
+d6a500c972	add ignore_pmin_constraints option (Adam Greenhall)
+63177b8ff4	cleanup (Adam Greenhall)
+4c4bac6786	reorganize faststart resolve. add some infeasible resolve debugging (Adam Greenhall)
+4be6a339d3	cleanup options for writing a .lp problem file. drop broken option for logging file. (Adam Greenhall)
+79905ac1f6	setup a full dependencies travis test (Adam Greenhall)
+
+
+Version 4.2.4, Wed 16 Jan 2013
+===============================
+
+b5453c6a29	convert scheduled output to float before making param. get tests passing. (Adam Greenhall)
+ee186b4a51	cleanup power shedding (Adam Greenhall)
+dac0e45d3d	disallow shedding before resolve (Adam Greenhall)
+f21011ab45	follow param naming convention for 'sheddingallowed' (Adam Greenhall)
+1277313bdd	allow shedding of non-controllable generation (Adam Greenhall)
+68895de10d	get rid of breakpoint (Adam Greenhall)
+aba5b3499e	add cold startup and hot shutdown ramping constraints. add tests. (Adam Greenhall)
+0c580d2a17	cleanup minpower command line interfact. add a few constraint set ignore/relax options (Adam Greenhall)
+b39c33e143	fix gethrsinstatus calculation (case where gen changes status). only calc final status if solving a commitment problem. (Adam Greenhall)
+4598173079	fix gethrsinstatus calculation (case where gen has been in same status entire commitment period) (Adam Greenhall)
+790c77160e	fix: actually record mipgap, only if feasible (Adam Greenhall)
+c14e47cfc6	allow generators to decommit during ED sweep (Adam Greenhall)
+37e50f3df6	add mipgap configuration parameter and keep track of mipgaps for multistage problems (Adam Greenhall)
+532f475a40	dont use direct python interfaces by default (they lack duals functionality) (Adam Greenhall)
+4e502f5a81	switch method name to _allow_shedding (Adam Greenhall)
+6870eeb3d2	switch to using allow load shedding method in the main solve module. (Adam Greenhall)
+a950509a2b	fix to get_objective for solvers using direct python API (Adam Greenhall)
+0138be3f33	allow direct use of the Python APIs for CPLEX, Gurobi (Adam Greenhall)
+631c45e2ac	fix dispatch_decommit_allowed. redo ED solution csv writer with pandas and drop pmin hack with dispatch_decommit_allowed. (Adam Greenhall)
+b662088ff2	filter to non-controllable generation for ED sweep (Adam Greenhall)
+72311f294a	add a count of generators committed to ED sweep (Adam Greenhall)
+121b91bae3	add an ED sweep to see the 'aggregate cost curve' of a system (Adam Greenhall)
+
+
+Version 4.2.3, Wed 09 Jan 2013
+===============================
+
+9c9138cfd6	add scaling of wind power. raise error on bad csv header column names. (Adam Greenhall)
+1e7ce31674	pull version numbering from __init__.py, don
+    't require seed. (Adam Greenhall)
+
+
+Version 4.2.2, Mon 07 Jan 2013
+===============================
+
+ef441c7529	cleanup how scenario files are handled - make more robust to probability column location (Adam Greenhall)
+3d3bdcd8b2	some pep8 cleanup (Adam Greenhall)
+a2d383a3a6	use coverage in testing. use seed for releasing (Adam Greenhall)
+

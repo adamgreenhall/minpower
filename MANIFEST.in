@@ -1,2 +1,2 @@
 recursive-include minpower/tests *.csv
-exclude minpower/addons/demandresponse.py
+recursive-include minpower/configuration *.cfg

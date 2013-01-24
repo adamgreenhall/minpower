@@ -9,3 +9,5 @@ h2. power systems optimization made beautiful
 * Problems can be made in simple spreadsheets.
 * Many solvers supported.
 * "Full documentation and tutorials":http://minpowertoolkit.com
+
+Build Status !https://secure.travis-ci.org/adamgreenhall/minpower.png!:http://travis-ci.org/adamgreenhall/minpower

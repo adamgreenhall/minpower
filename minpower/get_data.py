@@ -142,6 +142,14 @@ def parsedir(
     # data modifiers
     if user_config.pmin_multiplier != 1.0:
         generators_data['pmin'] *= user_config.pmin_multiplier
+        invalid_pmin = (generators_data.pmin > generators_data.pmax)
+        if invalid_pmin.any():
+            logging.warning('Pmin scaling resulted in Pmin>Pmax. ' + \
+                'Setting Pmin=Pmax for these {} generators.'.format(
+                invalid_pmin.sum()))
+            generators_data.ix[invalid_pmin, 'pmin'] = \
+                generators_data.ix[invalid_pmin, 'pmax']
+        
     if user_config.ramp_limit_multiplier != 1.0:
         generators_data['rampratemin'] *= user_config.ramp_limit_multiplier
         generators_data['rampratemax'] *= user_config.ramp_limit_multiplier

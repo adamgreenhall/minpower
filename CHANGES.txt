@@ -3,6 +3,28 @@
 Version 4.2.6, Thu 24 Jan 2013
 ===============================
 
+3c4b0022db	Version bump to 4.2.6 and updating CHANGES.txt (Adam Greenhall)
+47102e95f1	add runtime generator constraint modifiers (Adam Greenhall)
+77f6254279	add manifest.in back - was loosing the config file (Adam Greenhall)
+b0c0aeb4f3	check if problem has a version number and record it in standlone storage (Adam Greenhall)
+1e802ec568	ed_sweep tool - allow no display of number of units committed, change default start to min(Pmin) (Adam Greenhall)
+a69b6ea880	add generation shed for stochastic problems (on resolve) (Adam Greenhall)
+27268fd7c8	record generation shed (Adam Greenhall)
+e74e503c0d	cleanup bidpoints handling - keep dataframe as the data structure and use .values.tolist to get (non-numpy) float values (Adam Greenhall)
+c95ca4f5e3	cleanup bidpoints handling - keep dataframe as the data structure and use .values.tolist to get (non-numpy) float values (Adam Greenhall)
+91c605bb8b	add cost of wind shedding option (Adam Greenhall)
+d704110349	add load_multiplier option (Adam Greenhall)
+e4ca786293	added a wind_forecast_adder option (Adam Greenhall)
+dd81dc724a	record fuelcost for multistage standalone solutions. don't write csvs for these solutions. (Adam Greenhall)
+c20f1c1f67	only travis the master branch (Adam Greenhall)
+e1413f697a	make perfect solve do resolves also (Adam Greenhall)
+9e056edba8	record mipgap on resolve seperately from main solution mipgap (Adam Greenhall)
+763b9f2a27	add a on_complete_script option (Adam Greenhall)
+
+
+Version 4.2.6, Thu 24 Jan 2013
+===============================
+
 47102e95f1	add runtime generator constraint modifiers (Adam Greenhall)
 77f6254279	add manifest.in back - was loosing the config file (Adam Greenhall)
 b0c0aeb4f3	check if problem has a version number and record it in standlone storage (Adam Greenhall)

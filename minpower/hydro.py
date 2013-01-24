@@ -26,9 +26,9 @@ class HydroGenerator(Generator):
                  power_initial=0,
                  spill_min=0, spill_max=None,
                  spill_initial=0,
-                 production_curve_string='10Q',
-                 production_curve_correction_string='0',
-                 head_correction_string='0',
+                 production_curve_equation='10Q',
+                 production_curve_correction_equation='0',
+                 head_correction_equation='0',
                  inflow_schedule=None
                  ):
         update_attributes(self, locals())  # load in inputs
@@ -36,11 +36,11 @@ class HydroGenerator(Generator):
         self.upstream_reservoirs = []
         self.is_hydro = True
         self.is_controllable = True
-        self.production_curve_model = bidding.makeModel(production_curve_string, min_input=self.outflow_min, max_input=self.outflow_max)
+        self.production_curve_model = bidding.makeModel(production_curve_equation, min_input=self.outflow_min, max_input=self.outflow_max)
         self.production_correction_model = bidding.makeModel(
-            production_curve_correction_string)
+            production_curve_correction_equation)
         self.head_correction_constant = get_leading_number(
-            head_correction_string)
+            head_correction_equation)
         if self.outflow_initial is None:
             self.outflow_initial = (self.outflow_max - self.outflow_min) / 2.0
 

@@ -52,26 +52,28 @@ fields = dict(
 
     Load = ['name', 'bus', 'power'],
     
-    
-    Hydro = {
-    'name':'name','bus':'bus',
-    'downstreamreservoir':'downstream_reservoir',
+    HydroGenerator = ['name', 'bus'],
+)
+
+field_rename = dict(
+    HydroGenerator = {
+    'downstreamreservoir': 'downstream_reservoir',
     'delaydownstream':'delay_downstream',
-    'minvolume':'volume_min',
-    'maxvolume':'volume_max',
-    'initialvolume':'volume_initial',
-    'finalvolume':'volume_final',
-    'minoutflow':'outflow_min',
-    'maxoutflow':'outflow_max',
-    'initialoutflow':'outflow_initial',    
-    'minpower':'power_min',
-    'maxpower':'power_max',
-    'initialpower':'power_initial',
-    'initialspill':'spill_initial',
-    'productioncurve':'production_curve_string',
-    'productioncurvecorrection':'production_curve_correction_string',
-    'headcorrection':'head_correction_string',
-    'inflowschedule':'inflow_schedule_filename' }
+    'volumemin':'volume_min',
+    'volumemax':'volume_max',
+    'volumeinitial':'volume_initial',
+    'volumefinal':'volume_final',
+    'outflowmin':'outflow_min',
+    'outflowmax':'outflow_max',
+    'outflowinitial':'outflow_initial',    
+    'powermin':'power_min',
+    'powermax':'power_max',
+    'powerinitial':'power_initial',
+    'spillinitial':'spill_initial',
+    'productioncurve':'production_curve_equation',
+    'productioncurvecorrection':'production_curve_correction_equation',
+    'headcorrection':'head_correction_equation',
+    }
 
 )
 
@@ -162,7 +164,7 @@ def parsedir(
 
     #create times
     timeseries, times, generators_data, loads_data = \
-        setup_times(generators_data, loads_data, hydro_data, file_timeseries)
+        setup_times(generators_data, loads_data, file_timeseries)
 
     #add loads
     loads = build_class_list(loads_data, powersystems.Load, times, timeseries)
@@ -188,7 +190,7 @@ def parsedir(
     scenario_values = setup_scenarios(generators_data, generators, times)
     
     #setup hydro if applicable
-    hydro_generators = setup_hydro(hydro_data, times)
+    hydro_generators = setup_hydro(hydro_data, timeseries)
     generators.extend(hydro_generators)
 
     # also return the raw DataFrame objects
@@ -346,7 +348,7 @@ def read_bid_points(filename):
     return bid_points[['power', 'cost']].astype(float)
 
 
-def setup_times(generators_data, loads_data, hydro_data, filename_timeseries):
+def setup_times(generators_data, loads_data, filename_timeseries):
     """
     Create a :class:`~schedule.TimeIndex` object
     from the schedule files.
@@ -385,6 +387,8 @@ def setup_times(generators_data, loads_data, hydro_data, filename_timeseries):
         generators_data.ix[i, ncol] = name
         timeseries[name] = get_schedule(joindir(datadir, gen[fcol]))
 
+
+
     # handle observed and forecast power
     fobscol = 'observedfilename'
     obscol = 'observedname'
@@ -420,6 +424,12 @@ def setup_times(generators_data, loads_data, hydro_data, filename_timeseries):
         return DataFrame(), just_one_time(), generators_data, loads_data
 
     timeseries = DataFrame(timeseries)
+    
+    hs_file = joindir(user_config.directory, 'hydro_schedule.csv')
+    if os.path.exists(hs_file):
+        hydro_ts = read_csv(hs_file, index_col=0, parse_dates=True)
+        timeseries = timeseries.join(hydro_ts)
+    
     times = TimeIndex(timeseries.index)
     timeseries.index = times.strings.values
 
@@ -513,24 +523,26 @@ def setup_scenarios(gen_data, generators, times):
 def _has_valid_attr(obj, name):
     return getattr(obj, name, None) is not None
     
-def setup_hydro(data, times):
+def setup_hydro(data, ts):
     hydro_generators = []
     if len(data) == 0: return hydro_generators
-
-    for i,row in enumerate(data):
-        inflow_schedule_filename = row.pop('inflow_schedule_filename',None)
-        row['index'] = i
-        if inflow_schedule_filename is not None:
-            row['inflow_schedule'] = schedule.make_schedule(
-                joindir(user_config.directory, inflow_schedule_filename), times)
-        hydro_generators.append(HydroGenerator(**row))
+    inflow_name = data.pop('inflowschedulename')
+    
+    data = data.rename(columns=field_rename['HydroGenerator'])
+    
+    for i, row in data.iterrows():
+        row = row.dropna()
+        hg = HydroGenerator(index=i, **row)
+        hg.inflow_schedule = ts[inflow_name.ix[i]]
+        hydro_generators.append(hg)
     
     #label upstream reservoir generator indexes
-    names=[gen.name for gen in hydro_generators]
+    names = [gen.name for gen in hydro_generators]
+    set_trace()
     for gen in hydro_generators: 
-        down_name=gen.downstream_reservoir
+        down_name = gen.downstream_reservoir
         if down_name is not None:
-            down_gen=hydro_generators[names.index(down_name)]
+            down_gen = hydro_generators[names.index(down_name)]
             down_gen.upstream_reservoirs.append(gen.index)
             gen.downstream_reservoir=down_gen.index
     return hydro_generators

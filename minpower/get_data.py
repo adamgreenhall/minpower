@@ -17,6 +17,7 @@ from commonscripts import (joindir, drop_case_spaces, set_trace)
 from powersystems import PowerSystem
 from generators import (Generator,
     Generator_Stochastic, Generator_nonControllable)
+from hydro import HydroGenerator
 from config import user_config
 
 import os, logging
@@ -187,14 +188,10 @@ def parsedir(
     #get scenario values (if applicable)
     scenario_values = setup_scenarios(generators_data, generators, times)
     
-<<<<<<< HEAD
     #setup hydro if applicable
-    hydro_generators=setup_hydro(hydro_data,datadir,times)
+    hydro_generators = setup_hydro(hydro_data, times)
     generators.extend(hydro_generators)
-    #setup scenario tree (if applicable)
-    scenario_tree=setup_scenarios(generators,times)
-    return generators,loads,lines,times,scenario_tree
-=======
+
     # also return the raw DataFrame objects
     data = dict(
         generators=generators_data,
@@ -203,11 +200,10 @@ def parsedir(
         init=init_data,
         timeseries=timeseries,
         scenario_values=scenario_values,
+        hydro=hydro_data,
         )
 
     return generators, loads, lines, times, scenario_values, data
-
->>>>>>> stage
 
 def setup_initialcond(data, generators, times):
     '''
@@ -465,37 +461,6 @@ def setup_scenarios(gen_data, generators, times):
     # directory of scenario values where each file is one day
     scenarios_directory = gen_params['scenariosdirectory'].values[0]
         
-<<<<<<< HEAD
-    #select the one gen with scenarios
-    gen=generators[has_scenarios[0]]
-    gen.has_scenarios=True
-    gen.scenario_values=[]
-    data=csv2dicts(gen.scenarios_filename)
-    probabilities=[row['probability'] for row in data]
-    for row in data:
-        row.pop('probability')
-        gen.scenario_values.append(dict( (times[t],row[time]) for t,time in enumerate(sorted(row.iterkeys())) ))
-    return construct_simple_scenario_tree(probabilities)
-
-def setup_hydro(data,datadir,times):
-    if not data: return []
-    hydro_generators=[]
-    for i,row in enumerate(data):
-        inflow_schedule_filename=row.pop('inflow_schedule_filename',None)
-        row['index']=i
-        if inflow_schedule_filename is not None: row['inflow_schedule']=schedule.make_schedule(joindir(datadir,inflow_schedule_filename),times)
-        hydro_generators.append(powersystems.Hydro_Generator(**row))
-    
-    #label upstream reservoir generator indexes
-    names=[gen.name for gen in hydro_generators]
-    for gen in hydro_generators: 
-        down_name=gen.downstream_reservoir
-        if down_name is not None:
-            down_gen=hydro_generators[names.index(down_name)]
-            down_gen.upstream_reservoirs.append(gen.index)
-            gen.downstream_reservoir=down_gen.index
-    return hydro_generators
-=======
     searchstr = "*.csv"
 
     filenames = sorted(glob(joindir(user_config.directory,
@@ -548,4 +513,25 @@ def setup_hydro(data,datadir,times):
 
 def _has_valid_attr(obj, name):
     return getattr(obj, name, None) is not None
->>>>>>> stage
+    
+def setup_hydro(data, times):
+    hydro_generators = []
+    if len(data) == 0: return hydro_generators
+
+    for i,row in enumerate(data):
+        inflow_schedule_filename = row.pop('inflow_schedule_filename',None)
+        row['index'] = i
+        if inflow_schedule_filename is not None:
+            row['inflow_schedule'] = schedule.make_schedule(
+                joindir(user_config.directory, inflow_schedule_filename), times)
+        hydro_generators.append(hydro.HydroGenerator(**row))
+    
+    #label upstream reservoir generator indexes
+    names=[gen.name for gen in hydro_generators]
+    for gen in hydro_generators: 
+        down_name=gen.downstream_reservoir
+        if down_name is not None:
+            down_gen=hydro_generators[names.index(down_name)]
+            down_gen.upstream_reservoirs.append(gen.index)
+            gen.downstream_reservoir=down_gen.index
+    return hydro_generators

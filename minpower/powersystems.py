@@ -198,7 +198,7 @@ class PowerSystem(OptimizationProblem):
         self.is_stochastic = \
             sum(map(lambda gen: gen.is_stochastic, generators)) > 0
         self.has_hydro = \
-            sum(map(lambda gen: getattr(gen, 'is_hydro', False))) > 0
+            sum(map(lambda gen: getattr(gen, 'is_hydro', False), generators)) > 0
         self.shedding_mode = False
 
     def make_buses_list(self, loads, generators):

@@ -7,7 +7,7 @@ from optimization import value
 from schedule import is_init
 import bidding
 
-class Hydro_Generator(Generator):
+class HydroGenerator(Generator):
     """
     A hydro plant model, including the upstream reservoir. 
     Has constraints and variables which are significantly different from conventional generators.

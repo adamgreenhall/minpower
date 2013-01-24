@@ -263,19 +263,6 @@ def main():
         default=user_config.reserve_load_fraction,
         help='fraction of the total system load which is required as reserve')
 
-    ts = parser.add_argument_group('Timeseries modifiers',
-        'Alter the timeseries after parsing the data.')
-    ts.add_argument('--wind_multiplier', type=float,
-        default=user_config.wind_multiplier,
-        help='scale the wind power by this factor')
-    ts.add_argument('--wind_forecast_adder', type=float,
-        default=user_config.wind_forecast_adder,
-        help='add a fixed amount (e.g. bias) to the wind power forecast')
-    ts.add_argument('--load_multiplier', type=float,
-        default=user_config.load_multiplier,
-        help='scale the load power by this factor')
-
-
     parser.add_argument('--duals','-d',action="store_true",
         default=user_config.duals,
         help='flag to get the duals, or prices, of the optimization problem')
@@ -334,6 +321,19 @@ def main():
         default=False,
         help='run cProfile and output to minpower.profile')
     
+    ts = parser.add_argument_group('Timeseries modifiers',
+        'Alter the timeseries after parsing the data.')
+    ts.add_argument('--wind_multiplier', type=float,
+        default=user_config.wind_multiplier,
+        help='scale the wind power by this factor')
+    ts.add_argument('--wind_forecast_adder', type=float,
+        default=user_config.wind_forecast_adder,
+        help='add a fixed amount (e.g. bias) to the wind power forecast')
+    ts.add_argument('--load_multiplier', type=float,
+        default=user_config.load_multiplier,
+        help='scale the load power by this factor')
+    
+    
     constraints = parser.add_argument_group('Ignore/relax constraints',
         'Ignore or relax sets of constraints to allow for feasible solutions.')
     constraints.add_argument('--ignore_minhours_constraints', 
@@ -345,6 +345,14 @@ def main():
     constraints.add_argument('--ignore_pmin_constraints', 
         action="store_true", default=user_config.ignore_pmin_constraints,
         help='drop the min power constraints on the generators')
+    constraints.add_argument('--pmin_multiplier', type=float,
+        default=user_config.pmin_multiplier,
+        help='scale the generator minimum power limits by this factor')
+    constraints.add_argument('--ramp_limit_multiplier', type=float,
+        default=user_config.ramp_limit_multiplier,
+        help='scale the generator ramp power limits by this factor')
+
+
     
     parser.add_argument('--on_complete_script', type=str, 
         default=user_config.on_complete_script,

@@ -139,7 +139,10 @@ user_config = DotDict(dict(
     wind_forecast_adder = parser.getfloat(m, 'wind_forecast_adder'),
     wind_multiplier = parser.getfloat(m, 'wind_multiplier'),
     load_multiplier = parser.getfloat(m, 'load_multiplier'),
-    
+
+    pmin_multiplier = parser.getfloat(m, 'pmin_multiplier'),
+    ramp_limit_multiplier = parser.getfloat(m, 'ramp_limit_multiplier'),
+
     ignore_minhours_constraints = parser.getboolean(
         m, 'ignore_minhours_constraints'),
     ignore_ramping_constraints = parser.getboolean(

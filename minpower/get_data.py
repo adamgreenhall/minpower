@@ -354,7 +354,7 @@ def setup_times(generators_data, loads_data, filename_timeseries):
         name = 'd{}'.format(i)
         loads_data.ix[i, ncol] = name
         timeseries[name] = get_schedule(joindir(datadir, load[fcol])) * \
-            user_config.load_multiplier
+            user_config.load_multiplier + user_config.load_adder
 
     for i, gen in filter_notnull(generators_data, fcol).iterrows():
         name = 'g{}'.format(i)

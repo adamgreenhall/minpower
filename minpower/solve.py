@@ -332,7 +332,9 @@ def main():
     ts.add_argument('--load_multiplier', type=float,
         default=user_config.load_multiplier,
         help='scale the load power by this factor')
-    
+    ts.add_argument('--load_adder', type=float,
+        default=user_config.load_adder,
+        help='add a fixed amount to the load power')
     
     constraints = parser.add_argument_group('Ignore/relax constraints',
         'Ignore or relax sets of constraints to allow for feasible solutions.')

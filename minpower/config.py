@@ -139,7 +139,8 @@ user_config = DotDict(dict(
     wind_forecast_adder = parser.getfloat(m, 'wind_forecast_adder'),
     wind_multiplier = parser.getfloat(m, 'wind_multiplier'),
     load_multiplier = parser.getfloat(m, 'load_multiplier'),
-
+    load_adder = parser.getfloat(m, 'load_adder'),
+    
     pmin_multiplier = parser.getfloat(m, 'pmin_multiplier'),
     ramp_limit_multiplier = parser.getfloat(m, 'ramp_limit_multiplier'),
 

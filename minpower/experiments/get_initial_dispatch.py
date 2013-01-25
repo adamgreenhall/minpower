@@ -1,0 +1,61 @@
+from minpower.config import user_config
+from minpower.get_data import _load_raw_data, _parse_raw_data, setup_times
+from minpower.commonscripts import joindir, set_trace
+from minpower.powersystems import PowerSystem
+from minpower.solve import create_solve_problem
+import pandas as pd
+import argparse 
+
+
+def initial_dispatch(directory):
+    user_config.directory = directory
+    user_config.dispatch_decommit_allowed = True
+    
+    generators_data, loads_data, lines_data, init_data = _load_raw_data()
+    
+    init_data = pd.DataFrame()
+    
+    timeseries, times, generators_data, loads_data = \
+        setup_times(generators_data, loads_data)
+
+    # get rid of a bunch of stuff to make this an ED problem    
+    generators_data['power'] = None
+    loads_data['power'] = None
+    for i, snm in generators_data.pop('schedulename').dropna().iterkv():
+        generators_data.ix[i, 'power'] = timeseries[snm].values[0]
+
+    for i, snm in loads_data.pop('schedulename').dropna().iterkv():
+        loads_data.ix[i, 'power'] = timeseries[snm].values[0]
+                
+    for i, snm in generators_data.pop('observedname').dropna().iterkv():
+        generators_data.ix[i, 'power'] = timeseries[snm].values[0]
+
+    generators_data = generators_data.drop(
+        ['scenariosdirectory', 'forecastname'], axis=1)
+        
+    generators, loads, lines, times, scenario_values, data = \
+        _parse_raw_data(generators_data, loads_data, 
+            lines_data, init_data)
+
+    power_system = PowerSystem(generators, loads, lines)
+    sln = create_solve_problem(power_system, times)
+
+    # save a csv of the dispatch
+    dispatch = pd.DataFrame({
+        'power': sln.generators_power.ix[0].values, 
+        'status': sln.generators_status.ix[0].values},
+        index=[gen.name for gen in sln.generators])
+    dispatch.index.name = 'name'
+    dispatch.to_csv(joindir(user_config.directory, 'initial.csv'))
+    
+    print(dispatch)
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('directory', type=str, default='.',
+        help='the direcory of the problem you want to solve')
+    args = parser.parse_args()
+    initial_dispatch(args.directory)
+
+if __name__ == '__main__':
+    main()

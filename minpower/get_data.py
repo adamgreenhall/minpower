@@ -98,25 +98,21 @@ def parse_standalone(storage, times):
     return power_system, times, scenario_values
 
 
-def parsedir(
-        file_gens='generators.csv',
-        file_loads='loads.csv',
-        file_lines='lines.csv',
-        file_init='initial.csv',
-        file_timeseries='timeseries.csv'
-        ):
-    """
-    Import data from spreadsheets and build lists of
-    :mod:`powersystems` classes.
-    """
+def _load_raw_data(
+    file_gens='generators.csv',
+    file_loads='loads.csv',
+    file_lines='lines.csv',
+    file_init='initial.csv',
+    ):
+    """import data from spreadsheets"""
 
     datadir = user_config.directory
 
     if not os.path.isdir(datadir):
         raise OSError('data directory "{d}" does not exist'.format(d=datadir))
-    [file_gens, file_loads, file_lines, file_init, file_timeseries] = \
+    [file_gens, file_loads, file_lines, file_init] = \
         [joindir(datadir,filename) for filename in
-            (file_gens,file_loads,file_lines,file_init, file_timeseries)]
+            (file_gens,file_loads,file_lines,file_init)]
 
     generators_data = nice_names(read_csv(file_gens))
     loads_data = nice_names(read_csv(file_loads))
@@ -131,9 +127,13 @@ def parsedir(
     except Exception:
         init_data = DataFrame()
 
+    return generators_data, loads_data, lines_data, init_data
+
+def _parse_raw_data(generators_data, loads_data, lines_data, init_data):
     #create times
-    timeseries, times, generators_data, loads_data = \
-        setup_times(generators_data, loads_data, file_timeseries)
+    timeseries, times, generators_data, loads_data = setup_times(
+        generators_data, loads_data)
+
 
     #add loads
     loads = build_class_list(loads_data, powersystems.Load, times, timeseries)
@@ -187,6 +187,19 @@ def parsedir(
 
     return generators, loads, lines, times, scenario_values, data
 
+
+
+def parsedir(**filename_kwargs):
+    """
+    Import data from spreadsheets and build lists of
+    :mod:`powersystems` classes.
+    """
+
+    generators_data, loads_data, lines_data, init_data = _load_raw_data(
+        **filename_kwargs)
+
+    return _parse_raw_data(generators_data, loads_data, 
+        lines_data, init_data)
 
 def setup_initialcond(data, generators, times):
     '''
@@ -330,7 +343,7 @@ def read_bid_points(filename):
     return bid_points[['power', 'cost']].astype(float)
 
 
-def setup_times(generators_data, loads_data, filename_timeseries):
+def setup_times(generators_data, loads_data):
     """
     Create a :class:`~schedule.TimeIndex` object
     from the schedule files.

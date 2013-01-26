@@ -48,3 +48,35 @@ def standalone():
     slnB = run_case('stochastic_short_case', deterministic_solve=True, standalone=True)
 
     assert(slnA.observed_cost.sum().sum() == slnB.observed_cost.sum().sum())
+    
+
+
+    
+@istest
+def expected_cost_case():
+    '''
+    ensure that a under-forecast wind case has
+    an expected cost > observed cost
+    '''
+    # this is a short and simple case with 4hrs, but make it into two UC days
+    hrs = dict(hours_commitment=2, hours_overlap=0)
+    slnD = run_case('expected_observed_cost', deterministic_solve=True, **hrs)
+    
+    assert(slnD.expected_cost.sum().sum() > slnD.observed_cost.sum().sum())
+
+
+@istest
+def designed_diff_case():
+    '''
+    ensure that a simple case designed to produce a more expensive 
+    deterministic forecast solution has a cheaper perfect forecast
+    '''
+    # this is a short and simple case with 4hrs, but make it into two UC days
+    hrs = dict(hours_commitment=2, hours_overlap=0)
+    slnP = run_case('deterministic_perfect_difference', perfect_solve=True, **hrs)
+    slnD = run_case('deterministic_perfect_difference', deterministic_solve=True, **hrs)
+    
+    assert (slnP.generators_power.sum(axis=1) - \
+        slnD.generators_power.sum(axis=1) == 0).all()
+    assert slnP.observed_cost.sum().sum() < slnD.observed_cost.sum().sum()
+    

@@ -133,8 +133,7 @@ def _parse_raw_data(generators_data, loads_data, lines_data, init_data):
     #create times
     timeseries, times, generators_data, loads_data = setup_times(
         generators_data, loads_data)
-
-
+    
     #add loads
     loads = build_class_list(loads_data, powersystems.Load, times, timeseries)
 
@@ -319,7 +318,7 @@ def build_class_list(data, model, times=None, timeseries=None):
                 except:
                     raise IOError('''you must provide an
                         observed filename for a rolling stochastic UC''')
-
+            
             # add a custom bid points file with {power, cost} columns
             if bid_points_filename:
                 kwds['bid_points'] = read_bid_points(
@@ -391,9 +390,9 @@ def setup_times(generators_data, loads_data):
     if fobscol in generators_data:
         generators_data[obscol] = None
         for i, gen in filter_notnull(generators_data, fobscol).iterrows():
-            name = 'g{}_observations'.format(i)
-            generators_data.ix[i, obscol] = name
-            timeseries[name] = get_schedule(joindir(datadir, gen[fobscol])) * \
+            obs_name = 'g{}_observations'.format(i)
+            generators_data.ix[i, obscol] = obs_name
+            timeseries[obs_name] = get_schedule(joindir(datadir, gen[fobscol])) * \
                 user_config.wind_multiplier
         generators_data = generators_data.drop(fobscol, axis=1)
 
@@ -401,7 +400,7 @@ def setup_times(generators_data, loads_data):
         generators_data[fcstcol] = None
         for i, gen in filter_notnull(generators_data, ffcstcol).iterrows():
             fcst_name = 'g{}_forecast'.format(i)
-            generators_data.ix[i, fcstcol] = name
+            generators_data.ix[i, fcstcol] = fcst_name
             timeseries[fcst_name] = get_schedule(joindir(datadir, gen[ffcstcol])) * \
                 user_config.wind_multiplier + user_config.wind_forecast_adder
                     
@@ -413,8 +412,8 @@ def setup_times(generators_data, loads_data):
                     error * user_config.wind_error_multiplier
 
             
-            if (timeseries[name]<0).any():
-                print timeseries[name].describe()
+            if (timeseries[fcst_name]<0).any():
+                print timeseries[fcst_name].describe()
                 raise ValueError('wind forecast must always be at least zero')
         generators_data = generators_data.drop(ffcstcol, axis=1)
 

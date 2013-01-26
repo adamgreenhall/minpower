@@ -1,5 +1,16 @@
 ----
 
+Version 4.2.7, Fri 25 Jan 2013
+===============================
+
+d790ec1218	fix deterministic solve mode (forcast was getting overwritten with observed). add test (Adam Greenhall)
+eae524fe15	add another user config override in the working directory (Adam Greenhall)
+401d200ff7	add initial_dispatch script to find a starting state for unit commitments" (Adam Greenhall)
+ecb3c47866	add wind error multiplier to on-load data modifiers (Adam Greenhall)
+2e62bd73e6	dont scale pmin above pmax (Adam Greenhall)
+694bc238cb	add load adder to the on-load data modifiers (Adam Greenhall)
+
+
 Version 4.2.6, Thu 24 Jan 2013
 ===============================
 

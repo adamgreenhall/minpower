@@ -97,9 +97,10 @@ parser.read([
     # the user's overrides, from the home directory
     os.path.expanduser('~/minpower.cfg'),
     os.path.expanduser('~/.minpowerrc'),
-    ],
-    # add another override in the specific case directory??
-    )
+    # add another override in the working directory
+    joindir(os.getcwd(), 'minpower.cfg'),
+    joindir(os.getcwd(), '.minpowerrc'),
+    ])
 
 
 m = 'minpower'

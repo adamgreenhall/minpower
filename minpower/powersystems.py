@@ -11,10 +11,11 @@ import logging
 from coopr import pyomo
 import numpy as np
 import pandas as pd
-from optimization import (value, dual, OptimizationObject, 
-    OptimizationProblem, OptimizationError)
+from optimization import (value, dual, OptimizationObject,
+                          OptimizationProblem, OptimizationError)
 from commonscripts import (update_attributes, getattrL, flatten, set_trace)
 from config import user_config
+
 
 class Load(OptimizationObject):
     """
@@ -26,44 +27,60 @@ class Load(OptimizationObject):
         (bounded to be at most the scheduled amount).
     """
     def __init__(self,
-        name='', index=None, bus=None, schedule=None,
-        sheddingallowed=True,
-        cost_shedding=user_config.cost_load_shedding
-        ):
-        update_attributes(self,locals()) #load in inputs
+                 name='', index=None, bus=None, schedule=None,
+                 sheddingallowed=True,
+                 cost_shedding=user_config.cost_load_shedding
+                 ):
+        update_attributes(self, locals())  # load in inputs
         self.init_optimization()
         self.shedding_mode = False
-        
+
     def power(self, time, evaluate=False):
         if self.shedding_mode:
             power = self.get_variable('power', time, indexed=True)
-            if evaluate: power = value(power)
+            if evaluate:
+                power = value(power)
             return power
         else:
             return self.get_scheduled_output(time)
-    def shed(self, time, evaluate=False): 
-        return self.get_scheduled_output(time) - self.power(time,evaluate)
-    def cost(self,time): return self.cost_shedding * self.shed(time)
-    def cost_first_stage(self, times): return 0
+
+    def shed(self, time, evaluate=False):
+        return self.get_scheduled_output(time) - self.power(time, evaluate)
+
+    def cost(self, time):
+        return self.cost_shedding * self.shed(time)
+
+    def cost_first_stage(self, times):
+        return 0
+
     def cost_second_stage(self, times):
         return sum(self.cost(time) for time in times)
-    def create_variables(self,times):
+
+    def create_variables(self, times):
         if self.shedding_mode:
             self.add_variable('power', index=times.set, low=0)
-    def create_constraints(self,times):
+
+    def create_constraints(self, times):
         if self.shedding_mode:
             for time in times:
-                self.add_constraint('max_load_power',time,
-                    self.power(time) <= self.get_scheduled_output(time))
-    def create_objective(self,times):
-        return sum([ self.cost(time) for time in times])
+                self.add_constraint('max_load_power', time,
+                                    self.power(time) <= self.get_scheduled_output(time))
 
-    def __str__(self): return 'd{ind}'.format(ind=self.index)
-    def __int__(self): return self.index
-    def iden(self, t): return str(self)+str(t)
+    def create_objective(self, times):
+        return sum([self.cost(time) for time in times])
+
+    def __str__(self):
+        return 'd{ind}'.format(ind=self.index)
+
+    def __int__(self):
+        return self.index
+
+    def iden(self, t):
+        return str(self) + str(t)
 
     def get_scheduled_output(self, time):
         return float(self.schedule.ix[time])
+
 
 class Line(OptimizationObject):
     """
@@ -71,31 +88,45 @@ class Line(OptimizationObject):
     only considers real power flow under normal conditions.
     """
     def __init__(self, name='', index=None, frombus=None, tobus=None,
-        reactance=0.05, pmin=None, pmax=9999, **kwargs):
-        update_attributes(self,locals()) #load in inputs
-        if self.pmin is None: 
-            self.pmin=-1*self.pmax   # default is -1*pmax
+                 reactance=0.05, pmin=None, pmax=9999, **kwargs):
+        update_attributes(self, locals())  # load in inputs
+        if self.pmin is None:
+            self.pmin = -1 * self.pmax   # default is -1*pmax
         self.init_optimization()
-    def power(self,time): return self.get_variable('power',time,indexed=True)
-    def price(self,time):
+
+    def power(self, time):
+        return self.get_variable('power', time, indexed=True)
+
+    def price(self, time):
         '''congestion price on line'''
-        return dual(self.get_constraint('line flow',time))
-    def create_variables(self,times):
-        self.add_variable('power',index=times.set)
-    def create_constraints(self,times,buses):
+        return dual(self.get_constraint('line flow', time))
+
+    def create_variables(self, times):
+        self.add_variable('power', index=times.set)
+
+    def create_constraints(self, times, buses):
         '''create the constraints for a line over all times'''
-        busNames=getattrL(buses,'name')
-        iFrom,iTo=busNames.index(self.frombus),busNames.index(self.tobus)
+        busNames = getattrL(buses, 'name')
+        iFrom, iTo = busNames.index(self.frombus), busNames.index(self.tobus)
         for t in times:
             line_flow_ij = self.power(t) == \
-                1/self.reactance * (buses[iFrom].angle(t) - buses[iTo].angle(t))
-            self.add_constraint('line flow',t,line_flow_ij)
-            self.add_constraint('line limit high',t,self.power(t)<=self.pmax)
-            self.add_constraint('line limit low',t,self.pmin<=self.power(t))
+                1 / self.reactance * (buses[iFrom].angle(t) -
+                                      buses[iTo].angle(t))
+            self.add_constraint('line flow', t, line_flow_ij)
+            self.add_constraint(
+                'line limit high', t, self.power(t) <= self.pmax)
+            self.add_constraint(
+                'line limit low', t, self.pmin <= self.power(t))
         return
-    def __str__(self): return 'k{ind}'.format(ind=self.index)
-    def __int__(self): return self.index
-    def iden(self,t): return str(self)+str(t)
+
+    def __str__(self):
+        return 'k{ind}'.format(ind=self.index)
+
+    def __int__(self):
+        return self.index
+
+    def iden(self, t):
+        return str(self) + str(t)
 
 
 class Bus(OptimizationObject):
@@ -106,30 +137,44 @@ class Bus(OptimizationObject):
     :param isSwing: flag if the bus is the swing bus
       (sets the reference angle for the system)
     """
-    def __init__(self,name=None,index=None,isSwing=False):
-        update_attributes(self,locals()) #load in inputs
-        self.generators,self.loads=[],[]
+    def __init__(self, name=None, index=None, isSwing=False):
+        update_attributes(self, locals())  # load in inputs
+        self.generators, self.loads = [], []
         self.init_optimization()
 
-    def angle(self,time): return self.get_variable('angle',time,indexed=True)
-    def price(self,time): 
+    def angle(self, time):
+        return self.get_variable('angle', time, indexed=True)
+
+    def price(self, time):
         return dual(self.get_constraint('power balance', time))
-    def Pgen(self,t,evaluate=False):
-        if evaluate: return sum(value(gen.power(t)) for gen in self.generators)
-        else: return sum(gen.power(t) for gen in self.generators)
-    def Pload(self,t,evaluate=False):
-        if evaluate: return sum(value(ld.power(t)) for ld in self.loads)
-        else: return sum(ld.power(t) for ld in self.loads)
-    def power_balance(self,t,Bmatrix,allBuses):
-        if len(allBuses)==1: lineFlowsFromBus=0
-        else: lineFlowsFromBus=sum([Bmatrix[self.index][otherBus.index]*otherBus.angle(t) for otherBus in allBuses]) #P_{ij}=sum_{i} B_{ij}*theta_j ???
-        return sum([ -lineFlowsFromBus,-self.Pload(t),self.Pgen(t) ])
-    def create_variables(self,times):
-        self.add_children(self.generators,'generators')
-        self.add_children(self.loads,'loads')
-        logging.debug('added bus {} components - generators and loads'.format(self.name))
+
+    def Pgen(self, t, evaluate=False):
+        if evaluate:
+            return sum(value(gen.power(t)) for gen in self.generators)
+        else:
+            return sum(gen.power(t) for gen in self.generators)
+
+    def Pload(self, t, evaluate=False):
+        if evaluate:
+            return sum(value(ld.power(t)) for ld in self.loads)
+        else:
+            return sum(ld.power(t) for ld in self.loads)
+
+    def power_balance(self, t, Bmatrix, allBuses):
+        if len(allBuses) == 1:
+            lineFlowsFromBus = 0
+        else:
+            lineFlowsFromBus = sum([Bmatrix[self.index][otherBus.index] * otherBus.angle(t) for otherBus in allBuses])  # P_{ij}=sum_{i} B_{ij}*theta_j ???
+        return sum([-lineFlowsFromBus, -self.Pload(t), self.Pgen(t)])
+
+    def create_variables(self, times):
+        self.add_children(self.generators, 'generators')
+        self.add_children(self.loads, 'loads')
+        logging.debug('added bus {} components - generators and loads'.format(
+            self.name))
 #        if len(self.generators)<50:
-        for gen in self.generators: gen.create_variables(times)
+        for gen in self.generators:
+            gen.create_variables(times)
 #        else:
 #            for gen in self.generators:
 #                threading.Thread(target=_call_generator_create_variables,args=(gen,times)).start()
@@ -139,35 +184,49 @@ class Bus(OptimizationObject):
 #                    else: th.join()
 
         logging.debug('created generator variables')
-        for load in self.loads: load.create_variables(times)
+        for load in self.loads:
+            load.create_variables(times)
         logging.debug('created load variables')
-        self.add_variable('angle',index=times.set)
+        self.add_variable('angle', index=times.set)
         logging.debug('created bus variables ... returning')
         return
-    def create_objective(self,times): return self.cost_first_stage(times) + self.cost_second_stage(times)
-    def cost_first_stage(self,times):
+
+    def create_objective(self, times):
+        return self.cost_first_stage(times) + self.cost_second_stage(times)
+
+    def cost_first_stage(self, times):
         return sum(gen.cost_first_stage(times) for gen in self.generators) + \
             sum(load.cost_first_stage(times) for load in self.loads)
-    def cost_second_stage(self,times):
+
+    def cost_second_stage(self, times):
         return sum(gen.cost_second_stage(times) for gen in self.generators) + \
             sum(load.cost_second_stage(times) for load in self.loads)
+
     def create_constraints(self, times, Bmatrix, buses, include_children=True):
         if include_children:
-            for gen in self.generators: gen.create_constraints(times)
-            for load in self.loads: load.create_constraints(times)
-        nBus=len(buses)
+            for gen in self.generators:
+                gen.create_constraints(times)
+            for load in self.loads:
+                load.create_constraints(times)
+        nBus = len(buses)
         for time in times:
-            self.add_constraint('power balance',time, self.power_balance(time,Bmatrix,buses)==0) #power balance must be zero
-            if nBus>1 and self.isSwing:
-                self.add_constraint('swing bus',time, self.angle(time)==0)#swing bus has angle=0
+            self.add_constraint('power balance', time, self.power_balance(
+                time, Bmatrix, buses) == 0)  # power balance must be zero
+            if nBus > 1 and self.isSwing:
+                self.add_constraint('swing bus', time, self.angle(
+                    time) == 0)  # swing bus has angle=0
         return
     # def clear_constraints(self):
     #     self.constraints={}
     #     for gen in self.generators: gen.clear_constraints()
     #     for load in self.loads: load.clear_constraints()
 
-    def iden(self,t):   return str(self)+str(t)
-    def __str__(self):  return 'i{ind}'.format(ind=self.index)
+    def iden(self, t):
+        return str(self) + str(t)
+
+    def __str__(self):
+        return 'i{ind}'.format(ind=self.index)
+
 
 class PowerSystem(OptimizationProblem):
     '''
@@ -182,11 +241,12 @@ class PowerSystem(OptimizationProblem):
     def __init__(self, generators, loads, lines=None):
         # load in inputs
         update_attributes(self, locals(),
-            exclude=['generators', 'loads', 'lines']) 
+                          exclude=['generators', 'loads', 'lines'])
         self.reserve_fixed = user_config.reserve_fixed
         self.reserve_load_fraction = user_config.reserve_load_fraction
 
-        if lines is None: lines=[]
+        if lines is None:
+            lines = []
 
         buses = self.make_buses_list(loads, generators)
         self.create_admittance_matrix(buses, lines)
@@ -195,7 +255,8 @@ class PowerSystem(OptimizationProblem):
         self.add_children(buses, 'buses')
         self.add_children(lines, 'lines')
 
-        self.is_stochastic = len(filter(lambda gen: gen.is_stochastic, generators))>0
+        self.is_stochastic = len(
+            filter(lambda gen: gen.is_stochastic, generators)) > 0
         self.shedding_mode = False
 
     def make_buses_list(self, loads, generators):
@@ -209,29 +270,30 @@ class PowerSystem(OptimizationProblem):
         :param generators: a list of :class:`powersystems.Generator` objects
         :returns: a list of :class:`powersystems.Bus` objects
         """
-        busNameL=[]
-        busNameL.extend(getattrL(generators,'bus'))
-        busNameL.extend(getattrL(loads,'bus'))
+        busNameL = []
+        busNameL.extend(getattrL(generators, 'bus'))
+        busNameL.extend(getattrL(loads, 'bus'))
         busNameL = pd.Series(pd.unique(busNameL)).dropna().tolist()
 
         if len(busNameL) == 0:
             busNameL = [None]
-            
+
         buses = []
         swingHasBeenSet = False
 
         for b, busNm in enumerate(busNameL):
             newBus = Bus(name=busNm, index=b)
             for gen in generators:
-                if gen.bus == newBus.name: 
+                if gen.bus == newBus.name:
                     newBus.generators.append(gen)
-                if not swingHasBeenSet: 
+                if not swingHasBeenSet:
                     newBus.isSwing = swingHasBeenSet = True
             for ld in loads:
                 if ld.bus == newBus.name:
                     newBus.loads.append(ld)
             buses.append(newBus)
         return buses
+
     def create_admittance_matrix(self, buses, lines):
         """
         Creates the admittance matrix (B),
@@ -241,80 +303,102 @@ class PowerSystem(OptimizationProblem):
         :param buses: list of :class:`~powersystems.Line` objects
         :param lines: list of :class:`~powersystems.Bus` objects
         """
-        nB=len(buses)
-        self.Bmatrix=np.zeros((nB,nB))
-        namesL=[bus.name for bus in buses]
+        nB = len(buses)
+        self.Bmatrix = np.zeros((nB, nB))
+        namesL = [bus.name for bus in buses]
         for line in lines:
             busFrom = buses[namesL.index(line.frombus)]
             busTo = buses[namesL.index(line.tobus)]
-            self.Bmatrix[busFrom.index,busTo.index] += -1/line.reactance
-            self.Bmatrix[busTo.index,busFrom.index] += -1/line.reactance
-        for i in range(0,nB):
-            self.Bmatrix[i,i]=-1*sum(self.Bmatrix[i,:])
-    def loads(self): return flatten(bus.loads for bus in self.buses)
-    def generators(self): return flatten(bus.generators for bus in self.buses)
-    def create_variables(self,times):
+            self.Bmatrix[busFrom.index, busTo.index] += -1 / line.reactance
+            self.Bmatrix[busTo.index, busFrom.index] += -1 / line.reactance
+        for i in range(0, nB):
+            self.Bmatrix[i, i] = -1 * sum(self.Bmatrix[i, :])
+
+    def loads(self):
+        return flatten(bus.loads for bus in self.buses)
+
+    def generators(self):
+        return flatten(bus.generators for bus in self.buses)
+
+    def create_variables(self, times):
         self.add_variable('cost_first_stage')
         self.add_variable('cost_second_stage')
         self.add_set('times', times._set, ordered=True)
-        times.set=self._model.times
-        for bus in self.buses:  bus.create_variables(times)
-        for line in self.lines: line.create_variables(times)
+        times.set = self._model.times
+        for bus in self.buses:
+            bus.create_variables(times)
+        for line in self.lines:
+            line.create_variables(times)
         logging.debug('... created power system vars... returning')
 
-    def cost_first_stage(self,scenario=None): return self.get_component('cost_first_stage',scenario=scenario)
-    def cost_second_stage(self,scenario=None): return self.get_component('cost_second_stage',scenario=scenario)
-    def create_objective(self,times):
-        self.add_objective(self.cost_first_stage()+self.cost_second_stage())
+    def cost_first_stage(self, scenario=None):
+        return self.get_component('cost_first_stage', scenario=scenario)
+
+    def cost_second_stage(self, scenario=None):
+        return self.get_component('cost_second_stage', scenario=scenario)
+
+    def create_objective(self, times):
+        self.add_objective(self.cost_first_stage() + self.cost_second_stage())
+
     def create_constraints(self, times, include_children=True):
         if include_children:
-            for bus in self.buses: 
+            for bus in self.buses:
                 bus.create_constraints(times, self.Bmatrix, self.buses)
-            for line in self.lines: 
+            for line in self.lines:
                 line.create_constraints(times, self.buses)
 
         # system reserve constraint
         self._has_reserve = not self.shedding_mode and \
-            (self.reserve_fixed>0 or self.reserve_load_fraction>0)
+            (self.reserve_fixed > 0 or self.reserve_load_fraction > 0)
         if self._has_reserve:
             for time in times:
                 required_generation_availability = self.reserve_fixed + (1.0 + self.reserve_load_fraction) * sum(load.power(time) for load in self.loads())
-                generation_availability = sum(gen.power_available(time) for gen in self.generators())
-                self.add_constraint('reserve', generation_availability >= required_generation_availability, time=time )
+                generation_availability = sum(
+                    gen.power_available(time) for gen in self.generators())
+                self.add_constraint('reserve', generation_availability >= required_generation_availability, time=time)
 
-        self.add_constraint('system_cost_first_stage',self.cost_first_stage()==sum(bus.cost_first_stage(times) for bus in self.buses))
-        self.add_constraint('system_cost_second_stage',self.cost_second_stage()==sum(bus.cost_second_stage(times) for bus in self.buses))
-    def iden(self,time=None):
-        name='system'
-        if time is not None: name+='_'+str(time)
+        self.add_constraint('system_cost_first_stage', self.cost_first_stage(
+        ) == sum(bus.cost_first_stage(times) for bus in self.buses))
+        self.add_constraint('system_cost_second_stage', self.cost_second_stage(
+        ) == sum(bus.cost_second_stage(times) for bus in self.buses))
+
+    def iden(self, time=None):
+        name = 'system'
+        if time is not None:
+            name += '_' + str(time)
         return name
 
-    
     def total_scheduled_load(self):
-        return sum([load.schedule for load in self.loads()]) 
-    
+        return sum([load.schedule for load in self.loads()])
+
     def total_scheduled_generation(self):
-        return sum(gen.schedule for gen in self.generators() if not gen.is_controllable)    
+        return sum(gen.schedule for gen in self.generators() if not gen.is_controllable)
 
     def get_generators_noncontrollable(self):
         return filter(lambda gen: not gen.is_controllable, self.generators())
-        
+
     def get_generators_without_scenarios(self):
-        return filter(lambda gen: getattr(gen,'is_stochastic',False)==False, self.generators())
+        return filter(lambda gen: getattr(gen, 'is_stochastic', False) == False, self.generators())
 
     def get_generator_with_scenarios(self):
-        gens = filter(lambda gen: getattr(gen,'is_stochastic',False), self.generators())
-        if len(gens)>1: raise NotImplementedError('Dont handle the case of multiple stochastic generators')
-        elif len(gens)==0: return []
-        else: return gens[0]
+        gens = filter(lambda gen: getattr(gen, 'is_stochastic',
+                      False), self.generators())
+        if len(gens) > 1:
+            raise NotImplementedError(
+                'Dont handle the case of multiple stochastic generators')
+        elif len(gens) == 0:
+            return []
+        else:
+            return gens[0]
+
     def get_generator_with_observed(self):
-        return filter(lambda gen: getattr(gen,'observed_values',None) is not None, self.generators())[0]
+        return filter(lambda gen: getattr(gen, 'observed_values', None) is not None, self.generators())[0]
 
     def get_finalconditions(self, sln):
         times = sln.times
 
-        tEnd = times.last_non_overlap() # like 2011-01-01 23:00:00
-        tEndstr = times.non_overlap().last() # like t99
+        tEnd = times.last_non_overlap()  # like 2011-01-01 23:00:00
+        tEndstr = times.non_overlap().last()  # like t99
 
         status = sln.generators_status
 
@@ -326,10 +410,10 @@ class PowerSystem(OptimizationProblem):
                     power=sln.generators_power[g][tEnd],
                     status=sln.generators_status[g][tEnd],
                     hoursinstatus=gen.gethrsinstatus(times.non_overlap(), stat)
-                    )
+                )
             else:
-                gen.finalstatus = gen.getstatus(tEndstr, 
-                    times.non_overlap(), stat)
+                gen.finalstatus = gen.getstatus(tEndstr,
+                                                times.non_overlap(), stat)
         return
 
     def set_initialconditions(self, initTime):
@@ -340,12 +424,11 @@ class PowerSystem(OptimizationProblem):
                 del gen.finalstatus
         return
 
-
     def solve_problem(self, times):
-        try: 
+        try:
             instance = self.solve()
         except OptimizationError:
-            #re-do stage, with load shedding allowed
+            # re-do stage, with load shedding allowed
             logging.critical('stage infeasible, re-run with load shedding.')
             self.allow_shedding(times)
             try:
@@ -356,13 +439,13 @@ class PowerSystem(OptimizationProblem):
         return instance
 
     def resolve_stochastic_with_observed(self, instance, sln):
-        s = sln.scenarios[0]        
+        s = sln.scenarios[0]
         self._model = instance.active_components(pyomo.Block)[s]
         self.is_stochastic = False
         self.stochastic_formulation = False
-        
+
         self._resolve_problem(sln)
-        
+
         # re-store the generator outputs and costs
         sln._resolved = True
         sln._get_outputs(resolve=True)
@@ -396,40 +479,39 @@ class PowerSystem(OptimizationProblem):
     def _set_load_shedding(self, to_mode):
         '''set system mode for load shedding'''
         for load in filter(lambda ld:
-            ld.sheddingallowed, self.loads()):
+                           ld.sheddingallowed, self.loads()):
             load.shedding_mode = to_mode
 
     def _set_gen_shedding(self, to_mode):
-        for gen in filter(lambda g: 
-            not g.is_controllable and g.sheddingallowed, self.generators()):
+        for gen in filter(lambda g:
+                          not g.is_controllable and g.sheddingallowed, self.generators()):
             gen.shedding_mode = to_mode
 
-    
     def allow_shedding(self, times, resolve=False):
         self.shedding_mode = True
         self._set_load_shedding(True)
         self._set_gen_shedding(True)
-        
+
         const_times = times.non_overlap() if resolve else times
-        
+
         # make load power into a variable instead of a param
         for load in self.loads():
             load.create_variables(times)  # need all for the .set attrib
             load.create_constraints(const_times)
-        
-        for gen in filter(lambda g: 
-            getattr(g, 'shedding_mode', False), self.generators()):
+
+        for gen in filter(lambda g:
+                          getattr(g, 'shedding_mode', False), self.generators()):
             # create only the power_used var, don't reset the power param
-            gen.create_variables_shedding(times) 
+            gen.create_variables_shedding(times)
             gen.create_constraints(const_times)
-        
+
         # recalc the power balance constraint
         for bus in self.buses:
             for time in times:
                 bus._remove_component('power balance', time)
-            bus.create_constraints(const_times, 
-                self.Bmatrix, self.buses, include_children=False)
-        
+            bus.create_constraints(const_times,
+                                   self.Bmatrix, self.buses, include_children=False)
+
         # reset objective
         self._model.objective = None
         self.create_objective(const_times)
@@ -444,7 +526,6 @@ class PowerSystem(OptimizationProblem):
         self._set_load_shedding(False)
         self._set_gen_shedding(False)
 
-
     def _resolve_problem(self, sln):
         times = sln.times_non_overlap
 
@@ -458,38 +539,42 @@ class PowerSystem(OptimizationProblem):
         # reset objective to only the non-overlap times
         self._model.objective = None
         self.create_objective(times)
-        
+
         # set wind to observed power
         gen = self.get_generator_with_observed()
         gen.set_power_to_observed(times)
 
         # fix statuses for all units
         self.fix_binary_variables()
-        
+
         # store original problem solve time
         self.full_sln_time = self.solution_time
         full_mipgap = self.mipgap
-        
+
         logging.info('resolving with observed values')
-        try: self.solve()
+        try:
+            self.solve()
         except OptimizationError:
             if user_config.faststart_resolve:
                 self._resolve_with_faststarts(sln)
             else:
                 # just shed the un-meetable load and calculate cost later
                 self.allow_shedding(sln.times, resolve=True)
-                try: self.solve()
+                try:
+                    self.solve()
                 except OptimizationError:
                     scheduled, committed = self.debug_infeasibe(
                         sln.times, resolve_sln=sln)
                     raise
-        
+
         self.resolve_solution_time = float(self.solution_time)
         self.solution_time = float(self.full_sln_time)
-        
-        if self.mipgap: self.mipgap_resolve = float(self.mipgap)
-        if full_mipgap: self.mipgap = float(full_mipgap)
-        
+
+        if self.mipgap:
+            self.mipgap_resolve = float(self.mipgap)
+        if full_mipgap:
+            self.mipgap = float(full_mipgap)
+
         logging.info('resolved instance with observed values (in {}s)'.format(
             self.resolve_solution_time))
 
@@ -498,23 +583,25 @@ class PowerSystem(OptimizationProblem):
         self._unfix_variables()
         self._fix_non_faststarts(sln.times)
         logging.warning('allowing fast-starting units')
-        try: self.solve()
+        try:
+            self.solve()
         except OptimizationError:
             self._unfix_variables()
             self._fix_non_faststarts(sln.times, fix_power=False)
             logging.warning(
                 'allowing non fast-starters to change power output')
-            try: self.solve()
+            try:
+                self.solve()
             except OptimizationError:
                 logging.warning('allowing load shedding')
                 self.allow_shedding(sln.times, resolve=True)
-                try: self.solve()
+                try:
+                    self.solve()
                 except OptimizationError:
                     scheduled, committed = self.debug_infeasibe(
                         sln.times, resolve_sln=sln)
                     raise
-                
-                
+
     def _fix_non_faststarts(self, times, fix_power=True):
         '''
         fix non-faststart units - both power and status
@@ -522,53 +609,56 @@ class PowerSystem(OptimizationProblem):
         the idea is that fast-starts should be contributing power
         only for system security, not economics
         '''
-        for gen in filter(lambda gen: \
-            (not gen.faststart) and gen.is_controllable, self.generators()):
+        for gen in filter(lambda gen:
+                         (not gen.faststart) and gen.is_controllable, self.generators()):
             for time in times:
                 gen.status(time).fixed = True
-                if fix_power: gen.power(time).fixed = True
-
+                if fix_power:
+                    gen.power(time).fixed = True
 
     def debug_infeasibe(self, times, resolve_sln=None):
         generators = self.generators()
-        if resolve_sln: 
+        if resolve_sln:
             windgen = self.get_generator_with_observed()
-            
+
             scheduled = pd.DataFrame({
                 'expected_power': resolve_sln.generators_power.sum(axis=1).values,
                 'expected_wind': windgen.schedule.ix[times.non_overlap()],
                 'observed_wind': windgen.observed_values.ix[times.non_overlap()],
-                })
+            })
             scheduled['net_required'] = \
                 scheduled.expected_wind - scheduled.observed_wind
-        else:                
+        else:
             scheduled = pd.DataFrame({
-                'load': self.total_scheduled_load().ix[times.strings.values], 
+                'load': self.total_scheduled_load().ix[times.strings.values],
                 'generation': self.total_scheduled_generation().ix[times.strings.values]})
-            scheduled['net_required'] = scheduled['load'] - scheduled.generation        
+            scheduled['net_required'] = scheduled['load'] - \
+                scheduled.generation
         print 'total scheduled\n', scheduled
-        
+
         if resolve_sln:
             committed = pd.DataFrame(dict(
                 Pmin=[gen.pmin for gen in generators],
                 Pmax=[gen.pmax for gen in generators],
-                rampratemin=[getattr(gen, 'rampratemin', None) for gen in generators],
-                rampratemax=[getattr(gen, 'rampratemax', None) for gen in generators],
-                )).T
+                rampratemin=[getattr(gen, 'rampratemin',
+                                     None) for gen in generators],
+                rampratemax=[getattr(gen, 'rampratemax',
+                                     None) for gen in generators],
+            )).T
             print 'generator limits\n', committed
         else:
-            gens = filter(lambda gen: \
-                gen.is_controllable and gen.initial_status == 1,
-                self.generators())
+            gens = filter(lambda gen:
+                          gen.is_controllable and gen.initial_status == 1,
+                          self.generators())
             committed = pd.Series(dict(
                 Pmin=sum(gen.pmin for gen in gens),
                 Pmax=sum(gen.pmax for gen in gens),
                 rampratemin=pd.Series(gen.rampratemin for gen in gens).sum(),
                 rampratemax=pd.Series(gen.rampratemax for gen in gens).sum(),
-                ))
+            ))
             print 'total committed\n', committed
 
-        if resolve_sln: 
+        if resolve_sln:
             print 'expected status\n', resolve_sln.generators_status
             ep = resolve_sln.generators_power
             ep['net_required'] = scheduled.net_required.values

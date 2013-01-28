@@ -18,7 +18,7 @@ install_requires=[
     'pandas>=0.10',
     ]
     
-if python_version[0] == 2 and python_version[1] <= 7:
+if python_version[0] == 2 and python_version[1] < 7:
     install_requires.append('ordereddict>=1.1')
     
     # syntax changes currently result in failures on python 2.6

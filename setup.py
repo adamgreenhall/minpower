@@ -5,9 +5,25 @@
 # and then 
 # seed release
 
+import sys
 from setuptools import setup, find_packages
 
 version_number = open('minpower/__init__.py').read().split('"')[1].rstrip('"')
+
+python_version = sys.version_info
+
+install_requires=[
+    'Coopr>=3.2.6148', #3.1.5409
+    'coopr.core>=1.0',
+    'pyutilib>=4.0',
+    'numpy>=1.6.1',
+    'pandas>=0.10',
+    'python-dateutil>=1.4.1',
+    'PyYAML>=3.10',
+    ]
+    
+if python_version[0] == 2 and python_version[1]== 6:
+    install_requires.append('ordereddict>=1.1')
 
 setup(
     name = "minpower",
@@ -29,16 +45,8 @@ setup(
             '*/*.csv',
             '*/*/*.csv']},
 
-    install_requires=[
-        'Coopr>=3.2.6148', #3.1.5409
-        'coopr.core>=1.0',
-        'pyutilib>=4.0',
-        'numpy>=1.6.1',
-        'pandas>=0.10',
-        'python-dateutil>=1.4.1',
-        'ordereddict>=1.1',
-        'PyYAML>=3.10',
-    ],
+    install_requires=install_requires,
+    
     tests_require=[
         'nose',
         'coverage',
@@ -47,7 +55,6 @@ setup(
     
     # it helps to have seed if you are going to make releases
     # but it is not required for setup
-    # setup_requires=['seed >= 0.2.12'],
 
     description = "power systems optimization made beautiful",
     author = "Adam Greenhall",

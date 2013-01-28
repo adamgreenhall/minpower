@@ -6,7 +6,11 @@
 import logging
 import os
 import pandas as pd
-from collections import OrderedDict
+
+try: 
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 
 from commonscripts import (update_attributes, gen_time_dataframe, joindir,
     replace_all, getattrL, elementwiseAdd, writeCSV, transpose, within,

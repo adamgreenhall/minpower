@@ -8,7 +8,12 @@ Also extract the time information and create all
 import pandas as pd
 from pandas import DataFrame, Timestamp, read_csv
 from glob import glob
-from collections import OrderedDict
+
+try: 
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
+    
 import powersystems
 from schedule import (just_one_time, get_schedule,
                       TimeIndex, make_constant_schedule)

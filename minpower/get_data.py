@@ -423,7 +423,9 @@ def setup_times(generators_data, loads_data):
 
             if (timeseries[fcst_name] < 0).any():
                 print timeseries[fcst_name].describe()
-                raise ValueError('wind forecast must always be at least zero')
+                logging.warning('Wind forecast must always be at least zero.')
+                timeseries[fcst_name][timeseries[fcst_name] < 0] = 0
+                
         generators_data = generators_data.drop(ffcstcol, axis=1)
 
     generators_data = generators_data.drop(fcol, axis=1)

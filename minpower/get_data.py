@@ -397,15 +397,19 @@ def setup_times(generators_data, loads_data):
     ffcstcol = 'forecastfilename'
     fcstcol = 'forecastname'
 
+    obs_name = None    
     if fobscol in generators_data:
         generators_data[obscol] = None
         for i, gen in filter_notnull(generators_data, fobscol).iterrows():
             obs_name = 'g{}_observations'.format(i)
             generators_data.ix[i, obscol] = obs_name
-            timeseries[obs_name] = get_schedule(joindir(datadir, gen[fobscol])) * \
-                user_config.wind_multiplier
+            timeseries[obs_name] = get_schedule(joindir(datadir, gen[fobscol]))
+            if user_config.wind_multiplier != 1.0:
+                timeseries[obs_name] *= user_config.wind_multiplier
+                
         generators_data = generators_data.drop(fobscol, axis=1)
-
+    
+    fcst_name = None
     if ffcstcol in generators_data:
         generators_data[fcstcol] = None
         for i, gen in filter_notnull(generators_data, ffcstcol).iterrows():
@@ -438,6 +442,21 @@ def setup_times(generators_data, loads_data):
     timeseries = DataFrame(timeseries)
     times = TimeIndex(timeseries.index)
     timeseries.index = times.strings.values
+
+    if user_config.wind_capacity_factor != 0:
+        if len(filter_notnull(generators_data, obscol)) != 1:
+            raise NotImplementedError(
+                'wind capacity factor only works with one wind generator')
+            
+        max_load = timeseries[filter(lambda col: col.startswith('d'),
+            timeseries.columns)].sum(axis=1).max()
+        capf_current = timeseries[obs_name].max() / max_load
+        
+        wind_mult = user_config.wind_capacity_factor / capf_current
+
+        timeseries[obs_name] *= wind_mult
+        if fcst_name:
+            timeseries[fcst_name] *= wind_mult
 
     return timeseries, times, generators_data, loads_data
 

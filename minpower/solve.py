@@ -323,9 +323,15 @@ def main():
     
     ts = parser.add_argument_group('Timeseries modifiers',
         'Alter the timeseries after parsing the data.')
-    ts.add_argument('--wind_multiplier', type=float,
+    
+    wind_modifier = ts.add_mutually_exclusive_group()
+    wind_modifier.add_argument('--wind_multiplier', type=float,
         default=user_config.wind_multiplier,
         help='scale the wind power by this factor')
+    wind_modifier.add_argument('--wind_capacity_factor', type=float,
+        default=user_config.wind_capacity_factor,
+        help='scale the wind power to match the capacity factor (as a percentage of peak load power)')
+    
     ts.add_argument('--wind_error_multiplier', type=float,
         default=user_config.wind_error_multiplier,
         help='scale the wind power forecast error by this factor')

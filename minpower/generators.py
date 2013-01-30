@@ -59,6 +59,8 @@ class Generator(OptimizationObject):
         if self.shutdownramplimit is None and self.rampratemin is not None:
             self.shutdownramplimit = min(-1 * self.pmin, self.rampratemin)
 
+        self.fuelcost = float(fuelcost)
+        
         self.is_controllable = True
         self.is_stochastic = False
         self.commitment_problem = True
@@ -413,6 +415,7 @@ class Generator_nonControllable(Generator):
         self.is_controllable = False
         self.startupcost = 0
         self.shutdowncost = 0
+        self.fuelcost = float(fuelcost)
         self.build_cost_model()
         self.init_optimization()
         self.is_stochastic = False
@@ -539,6 +542,7 @@ class Generator_Stochastic(Generator_nonControllable):
         self.init_optimization()
         self.startupcost = 0
         self.shutdowncost = 0
+        self.fuelcost = float(fuelcost)
         self.shedding_mode = False
 
     def power(self, time, scenario=None):

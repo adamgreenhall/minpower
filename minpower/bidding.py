@@ -226,7 +226,7 @@ def parse_polynomial(s):
             return -1
         elif s == '+':
             return 1
-        return eval(s)
+        return float(eval(s))
 
     def parse_p(s, powerPattern):
         '''Parse the power part of a polynomial string term'''

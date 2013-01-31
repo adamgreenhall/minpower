@@ -307,6 +307,7 @@ def main():
         default=user_config.output_prefix,
         help='Prefix all results files with the process id (for a record of simulataneous solves)')
 
+
     debugging = parser.add_argument_group('Debugging tools')
     debugging.add_argument('--debugger',action="store_true",
         default=user_config.debugger,
@@ -320,6 +321,9 @@ def main():
     debugging.add_argument('--profile',action="store_true",
         default=False,
         help='run cProfile and output to minpower.profile')
+    debugging.add_argument('--show_config', action='store_true',
+        default=False, help='just show the configuration and quit')
+
     
     ts = parser.add_argument_group('Timeseries modifiers',
         'Alter the timeseries after parsing the data.')
@@ -372,17 +376,22 @@ def main():
     # that makes resetting the defaults during testing very hard 
 
     #figure out the command line arguments
-    args = parser.parse_args()
+    args = vars(parser.parse_args())
 
-    directory=args.directory
+    directory = args['directory']
+
+    if args.pop('show_config'):
+        from pprint import pprint
+        pprint(args)
+        sys.exit()
 
     if not os.path.isdir(directory):
-        msg='There is no folder named "{}".'.format(directory)
+        msg = 'There is no folder named "{}".'.format(directory)
         raise OSError(msg)
 
-    user_config.update(vars(args))
+    user_config.update(args)
     
-    if args.profile:
+    if args['profile']:
         print 'run profile'
         import cProfile
         prof = cProfile.Profile()
@@ -393,7 +402,7 @@ def main():
         #solve the problem with those arguments
         try: solve_problem(directory)
         except:
-            if args.debugger:
+            if args['debugger']:
                 __, __, tb = sys.exc_info()
                 traceback.print_exc()
                 pdb.post_mortem(tb)

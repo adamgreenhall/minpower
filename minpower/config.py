@@ -119,8 +119,7 @@ user_config = DotDict(dict(
     mipgap=parser.getfloat(m, 'mipgap'),
 
     reserve_fixed=parser.getfloat(m, 'reserve_fixed'),
-    reserve_load_fraction=
-    parser.getfloat(m, 'reserve_load_fraction'),
+    reserve_load_fraction=parser.getfloat(m, 'reserve_load_fraction'),
 
     faststart_resolve=parser.getboolean(m, 'faststart_resolve'),
 

@@ -107,21 +107,18 @@ def parse_standalone(storage, times):
     return power_system, times, scenario_values
 
 
-def _load_raw_data(
-    file_gens='generators.csv',
-    file_loads='loads.csv',
-    file_lines='lines.csv',
-    file_init='initial.csv',
-):
+def _load_raw_data():
     """import data from spreadsheets"""
-
     datadir = user_config.directory
 
     if not os.path.isdir(datadir):
         raise OSError('data directory "{d}" does not exist'.format(d=datadir))
     [file_gens, file_loads, file_lines, file_init] = \
-        [joindir(datadir, filename) for filename in
-            (file_gens, file_loads, file_lines, file_init)]
+        [joindir(datadir, filename) for filename in (
+            user_config.file_gens,
+            user_config.file_loads, 
+            user_config.file_lines, 
+            user_config.file_init)]
 
     generators_data = nice_names(read_csv(file_gens))
     loads_data = nice_names(read_csv(file_loads))

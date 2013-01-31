@@ -156,6 +156,11 @@ def parse_config(parser):
 
         on_complete_script=parser.get(m, 'on_complete_script'),
 
+        file_gens=parser.get(m, 'file_gens'),
+        file_loads=parser.get(m, 'file_loads'),
+        file_lines=parser.get(m, 'file_lines'),
+        file_init=parser.get(m, 'file_init'),
+
         # HACKs to help out resetting the config in testing
         directory=parser.get(m, 'directory'),
         store_filename=parser.get(m, 'store_filename'),
@@ -186,23 +191,29 @@ def get_dir_config(directory):
     
     return parse_config(dirparser)
     
-def parse_command_line_config(mainparser):
+def parse_command_line_config(parser):
     # get the directory first
-    mainparser.add_argument('directory', type=str,
-        help='the direcory of the problem you want to solve')
-        
-    dirns, other_args = mainparser.parse_known_args()
-    directory = dirns.directory
+    
+    parser = setup_parser_args(parser)
+    
+    directory = parser.parse_args().directory
     
     # an extra config parse to make sure that if you are calling a case but not 
     # in the case directory, the case config gets used    
     user_config.update(get_dir_config(directory))
+    
+    parser.set_defaults(**dict(user_config))
 
     #figure out the command line arguments
-    clargs = vars(create_parser().parse_args(other_args))
+    try: clargs = vars(parser.parse_args())
+    except:
+        print("minpower requires the case directory as the first argument")
+        raise
         
     user_config.update(clargs)
 
+    user_config.update(dict(directory=directory))
+    
     if clargs.pop('show_config'):
         from pprint import pprint
         pprint(user_config)
@@ -210,9 +221,9 @@ def parse_command_line_config(mainparser):
 
     return clargs
     
-def create_parser():
-    parser = argparse.ArgumentParser(
-        description='Minpower command line interface')
+def setup_parser_args(parser):
+    parser.add_argument('directory', type=str,
+        help='the direcory of the problem you want to solve')
         
     parser.add_argument('--solver','-s',  type=str,
         default=user_config.solver,
@@ -347,8 +358,13 @@ def create_parser():
         default=user_config.ramp_limit_multiplier,
         help='scale the generator ramp power limits by this factor')
 
+    filenames = parser.add_argument_group('Filenames',
+        'Change the default filenames to use when loading data.')
+    filenames.add_argument('--file_gens', default=user_config.file_gens)
+    filenames.add_argument('--file_loads', default=user_config.file_loads)
+    filenames.add_argument('--file_lines', default=user_config.file_lines)
+    filenames.add_argument('--file_init', default=user_config.file_init)
 
-    
     parser.add_argument('--on_complete_script', type=str, 
         default=user_config.on_complete_script,
         help='run a script on completion of the minpower script')

@@ -237,7 +237,7 @@ def main():
     args = parse_command_line_config(
         argparse.ArgumentParser(description='Minpower command line interface'))
     
-    directory = args['directory']
+    directory = user_config.directory
 
     if not os.path.isdir(directory):
         msg = 'There is no folder named "{}".'.format(directory)

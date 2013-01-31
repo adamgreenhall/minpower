@@ -45,6 +45,7 @@ def initial_dispatch(directory):
         'power': sln.generators_power.ix[0].values, 
         'status': sln.generators_status.ix[0].values},
         index=[gen.name for gen in sln.generators])
+    dispatch.ix[dispatch.status==0, 'power'] = 0
     dispatch.index.name = 'name'
     dispatch.to_csv(joindir(user_config.directory, 'initial.csv'))
     

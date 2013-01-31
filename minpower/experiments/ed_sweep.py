@@ -18,10 +18,12 @@ def main(args):
     generators, loads, _, times, _, data = parsedir()
     generators = filter(lambda gen: gen.is_controllable, generators)
     
+    gen_data = data['generators']
     if args['min'] == 0:
-        args['min'] = 1.1 * min(gen.pmin for gen in generators)
+        args['min'] = 1.1 * gen_data.pmin.sum()
+        
     if args['max'] == 0:
-        args['max'] = 0.99 * sum(gen.pmax for gen in generators)
+        args['max'] = 0.99 * gen_data.pmax.sum()
     
     load_values = np.arange(args['min'], args['max'], args['interval'])
     results = DataFrame(columns=['prices', 'committed'], index=load_values)

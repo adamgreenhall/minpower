@@ -1,5 +1,24 @@
 ----
 
+Version 4.2.8, Thu 31 Jan 2013
+===============================
+
+0171ae9485	add filenames options. use one parser and update its defaults (otherwise --help isn't very usefull) (Adam Greenhall)
+022fe984e1	use a minpower.cfg file from the case directory to override defaults (Adam Greenhall)
+efc239a66a	show_config passes all arguments through scheduler (Adam Greenhall)
+3fa35423dc	add show_config option for debugging (Adam Greenhall)
+adec965496	simplify ef_sweep default parameter calc. cleanup initial_dispatch results. (Adam Greenhall)
+e309a427f7	add wind_capacity_factor option (Adam Greenhall)
+3731760deb	make sure polynomial cost coefs and fuelcosts are floats (Adam Greenhall)
+ca686cc1f7	correct and warn if fcst < 0 (Adam Greenhall)
+3ec9685481	setup fail on < 7, not <= (Adam Greenhall)
+d2d9b37182	dont support python 2.6 (Adam Greenhall)
+408f20a0ca	cleanup install requirements (Adam Greenhall)
+a9d228caf9	make OrderedDict accessible to python 2.6 (Adam Greenhall)
+cb69eaa422	autopep8 (Adam Greenhall)
+c7f3f61ead	test python 2.6 (Adam Greenhall)
+
+
 Version 4.2.7, Fri 25 Jan 2013
 ===============================
 

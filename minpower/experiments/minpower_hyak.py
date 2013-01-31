@@ -18,11 +18,19 @@ def main():
         minpower_args.append('--standalone')
 
     print minpower_args
+    
+    show_config = '--show_config' in minpower_args
 
-    if 'hyak' not in os.uname()[1]:
-        scheduler_args = ['nohup']
-        stdout = open('{}.out'.format(os.getpid()),'w')
-        stderr = open('{}.err'.format(os.getpid()),'w')
+    if ('hyak' not in os.uname()[1]) or show_config:
+        if show_config:
+            # just let all the commands pass through
+            scheduler_args = []
+            stdout = sys.stdout
+            stderr = subprocess.STDOUT
+        else:
+            scheduler_args = ['nohup']        
+            stdout = open('{}.out'.format(os.getpid()),'w')
+            stderr = open('{}.err'.format(os.getpid()),'w')
     else:
         scheduler_args = ['qsub',
             '-l nodes=1:ppn=12,feature=12core,mem=16gb,walltime=48:00:00',

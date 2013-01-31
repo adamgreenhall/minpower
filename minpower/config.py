@@ -4,7 +4,6 @@ Provide the defaults and configuration for other modules.
 """
 import os
 import sys
-import argparse
 from ConfigParser import SafeConfigParser
 from commonscripts import DotDict, joindir, set_trace
 
@@ -104,7 +103,7 @@ parser.read([
 
 def parse_config(parser):
     m = 'minpower'
-    return DotDict(dict(
+    minpower_config = DotDict(dict(
         duals=parser.getboolean(m, 'duals'),
         breakpoints=parser.getint(m, 'breakpoints'),
         hours_commitment=parser.getint(m, 'hours_commitment'),
@@ -165,14 +164,24 @@ def parse_config(parser):
         directory=parser.get(m, 'directory'),
         store_filename=parser.get(m, 'store_filename'),
     ))
+    
+    s = 'scheduler'
+    scheduler_config = DotDict(dict(
+        email=parser.get(s, 'email'),
+        hours_limit=parser.getint(s, 'hours_limit'),
+        memory=parser.getint(s, 'memory'),
+        scheduler_mode=parser.get(s, 'scheduler_mode'),
+        verbose=parser.getboolean(s, 'verbose'),
+        ))
+    
+    return minpower_config, scheduler_config
 
-user_config = parse_config(parser)
+user_config, scheduler_config = parse_config(parser)
 
 available_solvers = []
 for solver in parser.options('available_solvers'):
     if parser.getboolean('available_solvers', solver):
         available_solvers.append(solver)
-        
 
 
 def get_dir_config(directory):
@@ -191,24 +200,23 @@ def get_dir_config(directory):
     
     return parse_config(dirparser)
     
-def parse_command_line_config(parser):
+def parse_command_line_config(parser, preparsed_args=None):
     # get the directory first
     
     parser = setup_parser_args(parser)
     
-    directory = parser.parse_args().directory
-    
+    directory = parser.parse_args(preparsed_args).directory
+        
     # an extra config parse to make sure that if you are calling a case but not 
-    # in the case directory, the case config gets used    
-    user_config.update(get_dir_config(directory))
+    # in the case directory, the case config gets used
+    new_user_config, new_scheduler_config = get_dir_config(directory)
+    user_config.update(new_user_config)
+    scheduler_config.update(new_scheduler_config)
     
     parser.set_defaults(**dict(user_config))
 
     #figure out the command line arguments
-    try: clargs = vars(parser.parse_args())
-    except:
-        print("minpower requires the case directory as the first argument")
-        raise
+    clargs = vars(parser.parse_args(preparsed_args))
         
     user_config.update(clargs)
 

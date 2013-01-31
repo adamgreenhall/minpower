@@ -36,7 +36,7 @@ setup(
     [console_scripts]
     minpower = minpower.solve:main
     standalone_minpower = minpower.solve:standaloneUC
-    hyak_minpower = minpower.experiments.minpower_hyak:main
+    scheduler_minpower = minpower.experiments.scheduler_minpower:main
     initial_dispatch = minpower.experiments.get_initial_dispatch:main
     """,
 

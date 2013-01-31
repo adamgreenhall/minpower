@@ -1,5 +1,11 @@
 ----
 
+Version 4.2.9, Thu 31 Jan 2013
+===============================
+
+def044c0f7	rewrite minpower scheduler to make more robust and configurable (same defaults, home dir, case dir setup as user_config) (Adam Greenhall)
+
+
 Version 4.2.8, Thu 31 Jan 2013
 ===============================
 

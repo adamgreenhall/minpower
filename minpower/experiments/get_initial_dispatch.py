@@ -1,4 +1,4 @@
-from minpower.config import user_config
+from minpower.config import user_config, parse_command_line_config
 from minpower.get_data import _load_raw_data, _parse_raw_data, setup_times
 from minpower.commonscripts import joindir, set_trace
 from minpower.powersystems import PowerSystem
@@ -7,7 +7,7 @@ import pandas as pd
 import argparse 
 
 
-def initial_dispatch(directory):
+def initial_dispatch(directory='.', output_filename='initial.csv'):
     user_config.directory = directory
     user_config.dispatch_decommit_allowed = True
     
@@ -47,16 +47,20 @@ def initial_dispatch(directory):
         index=[gen.name for gen in sln.generators])
     dispatch.ix[dispatch.status==0, 'power'] = 0
     dispatch.index.name = 'name'
-    dispatch.to_csv(joindir(user_config.directory, 'initial.csv'))
+    dispatch.to_csv(joindir(user_config.directory, output_filename))
     
     print(dispatch)
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('directory', type=str, default='.',
-        help='the direcory of the problem you want to solve')
-    args = parser.parse_args()
-    initial_dispatch(args.directory)
+    parser = argparse.ArgumentParser('Initial dispatch tool',
+        description='''Get the initial dispatch for a case. Runs a economic
+        dispatch for the first hour of a commitment problem, but allows 
+        generators to turn off to minimize cost.''')
+    parser.add_argument('--output_filename', default='initial.csv')
+
+    # parse all of the standard minpower options
+    args = parse_command_line_config(parser)
+    initial_dispatch(args['directory'], args['output_filename'])
 
 if __name__ == '__main__':
     main()

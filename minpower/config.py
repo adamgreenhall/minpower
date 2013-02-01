@@ -217,7 +217,7 @@ def parse_command_line_config(parser, preparsed_args=None):
 
     #figure out the command line arguments
     clargs = vars(parser.parse_args(preparsed_args))
-        
+
     user_config.update(clargs)
 
     user_config.update(dict(directory=directory))

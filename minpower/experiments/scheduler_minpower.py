@@ -5,7 +5,6 @@ import os
 from pprint import pprint
 from minpower.config import (parse_command_line_config, 
     scheduler_config, user_config)
-from minpower.commonscripts import set_trace
 
 def main():
     '''
@@ -24,8 +23,8 @@ def main():
         choices=['qsub', 'nohup', 'pass'],
         help='''Mode of scheduler operation:
         qsub: use the qsub cluster scheduler
-        nohup: use nohup and redirect stdin, stderr
-        pass: just call minpower as a subprocess
+        nohup: use nohup, call as subprocess, and redirect stdin, stderr
+        pass: just call minpower as a child process (for debugging)
         ''')
     parser.add_argument('--verbose', action="store_true",
         default=scheduler_config.verbose)
@@ -45,7 +44,7 @@ def main():
         help='hours of runtime to limit job to')        
     
     args, minpower_args_raw = parser.parse_known_args()
-
+    
     minpower_parser = argparse.ArgumentParser('minpower')
     minpower_args = parse_command_line_config(minpower_parser,
         preparsed_args=minpower_args_raw)    
@@ -72,12 +71,23 @@ def main():
     stdout = sys.stdout
     stderr = subprocess.STDOUT
 
+    def arg2str(k, v):
+        if k == 'directory':
+            s = v
+        elif v == True:
+            s = '--{k}'.format(k=k)
+        else:
+            s = '--{k}={v}'.format(k=k, v=v)
+        return s
     # make a big chain of args
     minpower_call.extend(sorted(
-        ['--{k}={v}'.format(k=k, v=v) for k, v in minpower_args.iteritems() if
-            (k in default_minpower_config) and (v != default_minpower_config[k])
+        [arg2str(k, v) for k, v in minpower_args.iteritems() if
+            (k == 'directory') or (
+                (k in default_minpower_config) and \
+                (v != default_minpower_config[k])
+            )
         ]))
-
+    
     mode = args.scheduler_mode
     if mode == 'pass':
         # just let all the commands pass through
@@ -117,14 +127,20 @@ def main():
 
     # actually make the call
     if args.dry_run:
-        print('would have executed as a subprocess:\n{c}'.format(
+        print('would have executed as a {p}:\n{c}'.format(
+            p='child process' if mode == 'pass' else 'subprocess',
             c=' '.join((scheduler_call + minpower_call))
             ))
     else:
-        pid = subprocess.Popen( scheduler_call + minpower_call,
-            stdout=stdout,
-            stderr=stderr,
-            ).pid
+        if mode == 'pass':
+            subprocess.call(scheduler_call + minpower_call)
+            pid = None            
+        else:
+            
+            pid = subprocess.Popen( scheduler_call + minpower_call,
+                stdout=stdout,
+                stderr=stderr,
+                ).pid
 
     if args.verbose:
         print 'parent process {}'.format(os.getpid())

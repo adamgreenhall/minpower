@@ -183,6 +183,10 @@ for solver in parser.options('available_solvers'):
     if parser.getboolean('available_solvers', solver):
         available_solvers.append(solver)
 
+def filter_non_defaults(x, defaults):
+    return dict((k, v) for k, v in x.iteritems() if \
+        (k not in defaults) or (v != defaults[k])
+        )
 
 def get_dir_config(directory):
     '''
@@ -194,11 +198,17 @@ def get_dir_config(directory):
         # the minpower default set, from the minpower/configuration directory
         # need this to set the defaults
         joindir(os.path.split(__file__)[0], 'configuration/minpower.cfg'),
-        # the directory's defaults    
+        # need the home directory overrides too
+        os.path.expanduser('~/minpower.cfg'),
+        os.path.expanduser('~/.minpowerrc'),
+        # the directory's defaults
         joindir(directory, 'minpower.cfg'),
     ])
     
-    return parse_config(dirparser)
+    new_user_config, new_scheduler_conifg = parse_config(dirparser)
+    # return (filter_non_defaults(new_user_config, user_config),
+    #    filter_non_defaults(new_scheduler_conifg, scheduler_config))
+    return new_user_config, new_scheduler_conifg
     
 def parse_command_line_config(parser, preparsed_args=None):
     # get the directory first

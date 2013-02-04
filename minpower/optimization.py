@@ -240,6 +240,13 @@ class OptimizationObject(object):
         key = self._t_id(name, time)
         self._parent_problem()._model._clear_attribute(key)
 
+    def values(self, name, reindex=None):
+        '''return the values of an indexed pyomo component as a Series'''
+        var = self._parent_problem().get_component(self._id(name))
+        out = pd.Series(dict([(k, value(v)) for k, v in var.iteritems()]))
+        if reindex is not None:
+            out.index = reindex
+        return out
 
 class OptimizationProblem(OptimizationObject):
     '''an optimization problem/model based on pyomo'''

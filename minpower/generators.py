@@ -54,11 +54,13 @@ class Generator(OptimizationObject):
         update_attributes(self, locals())  # load in inputs
         if self.rampratemin is None and self.rampratemax is not None:
             self.rampratemin = -1 * self.rampratemax
-        if self.startupramplimit is None and self.rampratemax is not None:
-            self.startupramplimit = max(self.pmin, self.rampratemax)
-        if self.shutdownramplimit is None and self.rampratemin is not None:
-            self.shutdownramplimit = min(-1 * self.pmin, self.rampratemin)
-
+        if (self.startupramplimit is None) and (self.rampratemax is not None) \
+            and (self.pmin > self.rampratemax):
+            self.startupramplimit = self.pmin
+        if (self.shutdownramplimit is None) and (self.rampratemin is not None) \
+            and (-1 * self.pmin > self.rampratemin):
+            self.shutdownramplimit = -1 * self.pmin
+    
         self.fuelcost = float(fuelcost)
         
         self.is_controllable = True

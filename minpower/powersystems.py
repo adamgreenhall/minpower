@@ -374,6 +374,9 @@ class PowerSystem(OptimizationProblem):
     def total_scheduled_generation(self):
         return sum(gen.schedule for gen in self.generators() if not gen.is_controllable)
 
+    def get_generators_controllable(self):
+        return filter(lambda gen: gen.is_controllable, self.generators())
+
     def get_generators_noncontrollable(self):
         return filter(lambda gen: not gen.is_controllable, self.generators())
 
@@ -427,15 +430,22 @@ class PowerSystem(OptimizationProblem):
     def solve_problem(self, times):
         try:
             instance = self.solve()
+            
+            for gen in self.get_generators_controllable():
+                try:
+                    assert((gen.values('power')[gen.values('status') == 1] >= gen.pmin).all())
+                except:
+                    set_trace()
+                
         except OptimizationError:
             # re-do stage, with load shedding allowed
-            logging.critical('stage infeasible, re-run with load shedding.')
+            logging.critical('stage infeasible, re-run with shedding.')
             self.allow_shedding(times)
             try:
                 instance = self.solve()
             except OptimizationError:
                 scheduled, committed = self.debug_infeasibe(times)
-                raise OptimizationError('failed to solve withs shedding.')
+                raise OptimizationError('failed to solve with shedding.')
         return instance
 
     def resolve_stochastic_with_observed(self, instance, sln):
@@ -630,8 +640,12 @@ class PowerSystem(OptimizationProblem):
                 scheduled.expected_wind - scheduled.observed_wind
         else:
             scheduled = pd.DataFrame({
-                'load': self.total_scheduled_load().ix[times.strings.values],
-                'generation': self.total_scheduled_generation().ix[times.strings.values]})
+                'load': self.total_scheduled_load().ix[times.strings.values]})
+            if any([hasattr(gen, 'schedule') for gen in self.generators()]):
+                scheduled['generation'] = self.total_scheduled_generation().ix[times.strings.values]
+            else:
+                scheduled['generation'] = 0
+                
             scheduled['net_required'] = scheduled['load'] - \
                 scheduled.generation
         print 'total scheduled\n', scheduled

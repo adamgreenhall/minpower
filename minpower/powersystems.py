@@ -430,13 +430,7 @@ class PowerSystem(OptimizationProblem):
     def solve_problem(self, times):
         try:
             instance = self.solve()
-            
-            for gen in self.get_generators_controllable():
-                try:
-                    assert((gen.values('power')[gen.values('status') == 1] >= gen.pmin).all())
-                except:
-                    set_trace()
-                
+                            
         except OptimizationError:
             # re-do stage, with load shedding allowed
             logging.critical('stage infeasible, re-run with shedding.')

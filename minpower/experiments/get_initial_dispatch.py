@@ -29,9 +29,14 @@ def initial_dispatch(directory='.', output_filename='initial.csv'):
                 
     for i, snm in generators_data.pop('observedname').dropna().iterkv():
         generators_data.ix[i, 'power'] = timeseries[snm].values[0]
-
-    generators_data = generators_data.drop(
-        ['scenariosdirectory', 'forecastname'], axis=1)
+    
+    valid_columns = pd.Index([
+        'name', 'pmin', 'pmax',
+        'fuelcost', 'heatrateequation', 'costcurveequation',
+        'sheddingallowed',
+        'power'])
+    
+    generators_data = generators_data[generators_data.columns & valid_columns]
         
     generators, loads, lines, times, scenario_values, data = \
         _parse_raw_data(generators_data, loads_data, 

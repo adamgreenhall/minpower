@@ -91,7 +91,7 @@ def solve_problem(generators, loads=None, times=None,
             instance = power_system.solve()
         except OptimizationError:
             scheduled, committed = power_system.debug_infeasibe(times)
-            set_trace()
+            power_system.write_model('infeasible.lp')
             raise OptimizationError('failed to solve, even with load shedding.')
         
 

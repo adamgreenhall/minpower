@@ -304,3 +304,24 @@ def wind_shedding():
     assert generators[0].power(times[2]) == 80
     assert generators[0].power(times[3]) == 60
     assert sum(generators[1].power(t).value for t in times) == 25 + 10 + 20
+    
+    
+@istest
+def pmin_startup_limit():
+    '''
+    generators that have a pmin > rampratemax should be able to startup to pmin
+    '''
+    pmin = 185
+    generators=[
+        make_cheap_gen(pmin=0, pmax=100),
+        make_mid_gen(pmin=pmin, pmax=200, rampratemax=10),
+        make_expensive_gen(pmin=0, pmax=200)
+        ]
+    initial = [{'power': 100}, {'status': 0}, {'power': 85}]
+    lts = make_loads_times(Pdt=[185, 210, 250, 285, 290])
+
+    power_system, times = solve_problem(generators, gen_init=initial, **lts)
+    
+    power = generators[1].values('power')
+    status = generators[1].values('status')
+    assert((power[status==1] >= pmin).all())

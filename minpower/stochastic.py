@@ -64,9 +64,9 @@ def define_stage_variables(scenario_tree, power_system, times):
     scenario_tree.StageCostVariable['first stage'] = str(power_system.cost_first_stage())
     scenario_tree.StageCostVariable['second stage'] = str(power_system.cost_second_stage())
 
-def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_hours,overlap_hours, stage_number):
-        
+def create_problem_with_scenarios(power_system, times, scenariotreeinstance, stage_number):        
     #for node in scenariotreeinstance.nodes:
+    logging.debug('constructing scenario tree')
     
     scenario_tree = ScenarioTree(
         scenarioinstance=power_system._model, 
@@ -82,12 +82,13 @@ def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_
     
     scenario_instances = {}
 
-    #construct scenario instances
+    # construct scenario instances
+    logging.debug('constructing scenario instances')
     gc.disable()  
     for s,scenario in enumerate(scenario_tree._scenarios):
         scenario_instance = power_system._model.clone()
         
-        power=getattr(scenario_instance,'power_{}'.format(str(gen)))
+        power = getattr(scenario_instance,'power_{}'.format(str(gen)))
         #set the values of the parameter for this scenario
         logging.debug('setting scenario values for s%i'%s)
         scenario_vals = gen._get_scenario_values(times, s=s)        
@@ -118,7 +119,7 @@ def create_problem_with_scenarios(power_system,times,scenariotreeinstance,stage_
     power_system._stochastic_instance = full_problem_instance
     power_system._scenario_tree = scenario_tree
     power_system._scenario_instances = scenario_instances
-    return power_system
+    return
 
 def get_scenario_based_costs(scenario_tree,scenario_instances):
     #scenario_tree.pprintCosts(scenario_instances)

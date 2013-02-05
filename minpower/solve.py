@@ -202,14 +202,11 @@ def create_problem(power_system, times, scenario_tree=None,
             gen.scenario_values[times.Start]['probability'].values.tolist(),
             time_stage=stage_number)
 
-        logging.debug('constructed tree for stage %i'%stage_number)
+        logging.debug('constructed tree for stage %i' % stage_number)
 
         stochastic.define_stage_variables(tree, power_system, times)
-        power_system = stochastic.create_problem_with_scenarios(
-            power_system, times, tree,
-            user_config.hours_commitment,
-            user_config.hours_overlap,
-            stage_number=stage_number)
+        stochastic.create_problem_with_scenarios(
+            power_system, times, tree, stage_number)
     return
 
 def _setup_logging(pid=None):

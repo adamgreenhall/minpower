@@ -1,5 +1,24 @@
 ----
 
+Version 4.2.10, Mon 04 Feb 2013
+================================
+
+4ac1777837	make scenarios directory absolute path for scheduler (Adam Greenhall)
+eae088cfc7	allow wind shedding for stochastic problems (Adam Greenhall)
+6fb6032f41	cleanup config by adding some custom methods that make setting up options with both ConfigParser and argparse much less repetitive (Adam Greenhall)
+92469e1dea	autopep8 (Adam Greenhall)
+d1700bee63	cleanup stochastic (Adam Greenhall)
+562687656e	store wind_capacity_factor multiplier as wind_multiplier for use in scenario value multiplication (Adam Greenhall)
+e02f947579	remove inline testing (Adam Greenhall)
+db7221594d	cleanup startup ramp limit. cleanup sheddding logging (Adam Greenhall)
+b6a3d5c455	add values method to get values of pyomo components as a Series (Adam Greenhall)
+6f0c0d2e38	add test for startup case when when pmin > rampratemax (Adam Greenhall)
+d2ff79ae65	better columns selection for initial dispatch problem (Adam Greenhall)
+60bfc8c0dd	parse home dir defaults with case directory overrides (Adam Greenhall)
+662ea6ef28	make initial_dispatch take minpower arguments and an output filename argument (Adam Greenhall)
+f0a56bfada	scheduler script can handle the current directory case. allow for debugging of scheduler script (Adam Greenhall)
+
+
 Version 4.2.9, Thu 31 Jan 2013
 ===============================
 

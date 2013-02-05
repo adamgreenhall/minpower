@@ -15,6 +15,7 @@ from optimization import (value, dual, OptimizationObject,
                           OptimizationProblem, OptimizationError)
 from commonscripts import (update_attributes, getattrL, flatten, set_trace)
 from config import user_config
+import stochastic
 
 
 class Load(OptimizationObject):
@@ -523,6 +524,13 @@ class PowerSystem(OptimizationProblem):
         self.create_constraints(const_times, include_children=False)
         # recreating all constraints would be simpler
         # but would take a bit longer
+        
+        if self.is_stochastic:
+            # need to recreate the scenario tree variable links 
+            stochastic.define_stage_variables(self, times)
+            # and the stochastic instance            
+            stochastic.create_problem_with_scenarios(self, times)
+            
 
     def disallow_shedding(self):
         # change shedding allowed flags for the next stage

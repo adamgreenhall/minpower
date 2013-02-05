@@ -7,7 +7,6 @@ from coopr.pysp.ef import create_ef_instance
 import gc
 import logging
 
-
 def construct_simple_scenario_tree(probabilities, time_stage=None):
     '''Construct a simple scenario tree instance'''
     tree = new_scenario_tree_model()
@@ -45,7 +44,7 @@ def construct_simple_scenario_tree(probabilities, time_stage=None):
     return tree
 
 
-def define_stage_variables(scenario_tree, power_system, times):
+def define_stage_variables(power_system, times):
     # scenario_tree.Stages.pprint()
     # scenario_tree.StageVariables.pprint()
 
@@ -63,7 +62,15 @@ def define_stage_variables(scenario_tree, power_system, times):
         # note - appending '[*]' to the indicies is required to get
         # pysp to assign all the variables in the array to a shape
 
+    if power_system.shedding_mode:
+        for gen in filter(lambda gen: gen.shedding_mode, 
+            power_system.get_generators_noncontrollable()):
+            variables_second_stage.add(
+                str(gen.get_variable('power_used', time=None, indexed=True)) + '[*]')
+            
     # variables_first_stage.pprint()
+    scenario_tree = power_system._scenario_tree_instance
+    
     scenario_tree.StageVariables['first stage'] = variables_first_stage
     scenario_tree.StageVariables['second stage'] = variables_second_stage
 
@@ -74,14 +81,13 @@ def define_stage_variables(scenario_tree, power_system, times):
     scenario_tree.StageCostVariable['second stage'] = str(
         power_system.cost_second_stage())
 
-
-def create_problem_with_scenarios(power_system, times, scenariotreeinstance, stage_number):
+def create_problem_with_scenarios(power_system, times):
     # for node in scenariotreeinstance.nodes:
     logging.debug('constructing scenario tree')
 
     scenario_tree = ScenarioTree(
         scenarioinstance=power_system._model,
-        scenariotreeinstance=scenariotreeinstance)
+        scenariotreeinstance=power_system._scenario_tree_instance)
 
     if not scenario_tree.validate():
         for s, scenario in enumerate(scenario_tree._scenarios):

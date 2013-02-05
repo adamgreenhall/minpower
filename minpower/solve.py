@@ -198,15 +198,14 @@ def create_problem(power_system, times, scenario_tree=None,
 
     if scenario_tree is not None and sum(scenario_tree.shape)>0 and not rerun:
         gen = power_system.get_generator_with_scenarios()
-        tree = stochastic.construct_simple_scenario_tree(
+        power_system._scenario_tree_instance = stochastic.construct_simple_scenario_tree(
             gen.scenario_values[times.Start]['probability'].values.tolist(),
             time_stage=stage_number)
 
         logging.debug('constructed tree for stage %i' % stage_number)
 
-        stochastic.define_stage_variables(tree, power_system, times)
-        stochastic.create_problem_with_scenarios(
-            power_system, times, tree, stage_number)
+        stochastic.define_stage_variables(power_system, times)
+        stochastic.create_problem_with_scenarios(power_system, times)
     return
 
 def _setup_logging(pid=None):

@@ -484,12 +484,11 @@ class Generator_nonControllable(Generator):
                                     self.power(time) <= self.power_available(time))
 
     def cost(self, time, scenario=None, evaluate=False):
-        return self.operatingcost(time, evaluate=evaluate)
+        return self.operatingcost(time, scenario=scenario, evaluate=evaluate)
 
     def operatingcost(self, time=None, scenario=None, evaluate=False):
-        return self.bids.output(time) + user_config.cost_wind_shedding * \
-            self.shed(time, scenario=scenario, evaluate=evaluate)
-        # return self.bids.output_true( self.power(time) )
+        return self.bids.output(time, scenario=scenario) + \
+            user_config.cost_wind_shedding * self.shed(time, scenario=scenario, evaluate=evaluate)
 
     def truecost(self, time, scenario=None):
         return self.cost(time)

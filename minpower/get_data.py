@@ -8,11 +8,7 @@ Also extract the time information and create all
 import pandas as pd
 from pandas import DataFrame, Timestamp, read_csv
 from glob import glob
-
-try: 
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+from collections import OrderedDict
     
 import powersystems
 from schedule import (just_one_time, get_schedule,
@@ -450,6 +446,7 @@ def setup_times(generators_data, loads_data):
         capf_current = timeseries[obs_name].max() / max_load
         
         wind_mult = user_config.wind_capacity_factor / capf_current
+        user_config.wind_multiplier = wind_mult
 
         timeseries[obs_name] *= wind_mult
         if fcst_name:

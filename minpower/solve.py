@@ -5,11 +5,11 @@ module contains the top-level commands for creating
 problems and solving them.
 """
 
+import traceback
 import sys, os, logging, subprocess
 import time as timer
 import argparse
 import pdb
-from optimization import OptimizationError
 import get_data, powersystems, stochastic, results
 from config import user_config, parse_command_line_config
 from commonscripts import joindir, StreamToLogger
@@ -69,11 +69,18 @@ def standaloneUC():
 
     # load stage data
     power_system, times, scenario_tree = load_state()
+    try:            
+        sln = create_solve_problem(power_system, times, scenario_tree, stage_number=stg)
 
-    sln = create_solve_problem(power_system, times, scenario_tree, stage_number=stg)
-
-    store = store_state(power_system, times, sln)
-    store.flush()
+        store = store_state(power_system, times, sln)
+        store.close()
+    except:
+        if user_config.debugger:
+            __, __, tb = sys.exc_info()
+            traceback.print_exc()
+            pdb.post_mortem(tb)            
+        else:
+            raise
 
     return
 
@@ -228,7 +235,6 @@ def main():
     The command line interface for minpower. For more info use:
     ``minpower --help``
     '''
-    import os,traceback,sys
 
     args = parse_command_line_config(
         argparse.ArgumentParser(description='Minpower command line interface'))

@@ -62,6 +62,11 @@ def main():
         # so it requires an absolute path
         minpower_args['directory'] = os.path.abspath(
             minpower_args['directory'])
+
+        if 'scenarios_directory' in minpower_args:
+            minpower_args['scenarios_directory'] = os.path.abspath(
+                minpower_args['scenarios_directory'])
+            	
     
     if args.verbose:
         pprint(minpower_args)

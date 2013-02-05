@@ -62,8 +62,8 @@ def main():
         # so it requires an absolute path
         minpower_args['directory'] = os.path.abspath(
             minpower_args['directory'])
-
-        if 'scenarios_directory' in minpower_args:
+        
+        if 'scenarios_directory' in minpower_args and minpower_args['scenarios_directory']:
             minpower_args['scenarios_directory'] = os.path.abspath(
                 minpower_args['scenarios_directory'])
             	

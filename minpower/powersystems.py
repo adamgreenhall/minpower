@@ -440,6 +440,7 @@ class PowerSystem(OptimizationProblem):
                 instance = self.solve()
             except OptimizationError:
                 scheduled, committed = self.debug_infeasibe(times)
+                set_trace()
                 raise OptimizationError('failed to solve with shedding.')
         return instance
 
@@ -489,13 +490,15 @@ class PowerSystem(OptimizationProblem):
 
     def _set_gen_shedding(self, to_mode):
         for gen in filter(lambda g:
-                          not g.is_controllable and g.sheddingallowed, self.generators()):
+            not g.is_controllable and g.sheddingallowed, self.generators()):
             gen.shedding_mode = to_mode
 
     def allow_shedding(self, times, resolve=False):
         self.shedding_mode = True
         self._set_load_shedding(True)
-        self._set_gen_shedding(True)
+        
+        if not user_config.economic_wind_shed:
+            self._set_gen_shedding(True)
 
         const_times = times.non_overlap() if resolve else times
 
@@ -503,19 +506,20 @@ class PowerSystem(OptimizationProblem):
         for load in self.loads():
             load.create_variables(times)  # need all for the .set attrib
             load.create_constraints(const_times)
-
-        for gen in filter(lambda g:
-                          getattr(g, 'shedding_mode', False), self.generators()):
-            # create only the power_used var, don't reset the power param
-            gen.create_variables_shedding(times)
-            gen.create_constraints(const_times)
+        
+        if not user_config.economic_wind_shed:
+            for gen in filter(lambda gen: gen.shedding_mode,
+                self.get_generators_noncontrollable()):
+                # create only the power_used var, don't reset the power param
+                gen.create_variables_shedding(times)
+                gen.create_constraints(const_times)
 
         # recalc the power balance constraint
         for bus in self.buses:
             for time in times:
                 bus._remove_component('power balance', time)
             bus.create_constraints(const_times,
-                                   self.Bmatrix, self.buses, include_children=False)
+               self.Bmatrix, self.buses, include_children=False)
 
         # reset objective
         self._model.objective = None
@@ -643,13 +647,32 @@ class PowerSystem(OptimizationProblem):
         else:
             scheduled = pd.DataFrame({
                 'load': self.total_scheduled_load().ix[times.strings.values]})
-            if any([hasattr(gen, 'schedule') for gen in self.generators()]):
-                scheduled['generation'] = self.total_scheduled_generation().ix[times.strings.values]
-            else:
-                scheduled['generation'] = 0
+
+            if self.is_stochastic:
+                gen = self.get_generator_with_scenarios()
+                scenarios = gen.scenario_values[times.Start].drop('probability', axis=1).T
+                scenarios.index = scheduled.index
                 
-            scheduled['net_required'] = scheduled['load'] - \
-                scheduled.generation
+                scheduled['net_load'] = scheduled['load'] - sum(
+                    map(lambda gen: gen.schedule, 
+                        filter(lambda gen: not gen.is_stochastic, 
+                            self.get_generators_noncontrollable())))
+                
+                gen_required = (-1 * scenarios).add(scheduled.net_load, axis=0)
+                
+                print('generation required')
+                print(gen_required)
+                print(gen_required.describe())
+                
+            else:                    
+                if any([hasattr(gen, 'schedule') for gen in self.generators()]):
+                    scheduled['generation'] = self.total_scheduled_generation().ix[times.strings.values]
+                else:
+                    scheduled['generation'] = 0
+                    
+                scheduled['net_required'] = scheduled['load'] - \
+                    scheduled.generation
+                    
         print 'total scheduled\n', scheduled
 
         if resolve_sln:

@@ -67,6 +67,9 @@ def define_stage_variables(power_system, times):
             power_system.get_generators_noncontrollable()):
             variables_second_stage.add(
                 str(gen.get_variable('power_used', time=None, indexed=True)) + '[*]')
+        for load in power_system.loads():
+            variables_second_stage.add(
+                str(load.get_variable('power', time=None, indexed=True)) + '[*]')
             
     # variables_first_stage.pprint()
     scenario_tree = power_system._scenario_tree_instance

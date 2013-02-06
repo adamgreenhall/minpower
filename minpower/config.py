@@ -24,6 +24,7 @@ option_types = dict(
     
     cost_load_shedding=float,
     cost_wind_shedding=float,
+    economic_wind_shed=bool,
     dispatch_decommit_allowed=bool,
     solver=str,
     mipgap=float,
@@ -205,10 +206,13 @@ def setup_parser_args(parser):
     add_opt(parser, 'dispatch_decommit_allowed',
         help='flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs')
     
-    add_opt(parser, 'cost_wind_shedding',
-        help='the cost to the system to shed a MWh of wind energy')
     add_opt(parser, 'cost_load_shedding', 
         help='the cost to the system to shed a MWh of load')
+    add_opt(parser, 'cost_wind_shedding',
+        help='the cost to the system to shed a MWh of wind energy')
+    add_opt(parser, 'economic_wind_shed',
+        help='is wind allowed to be shed for economic reasons ' + \
+        '(default is to allow wind shedding only if infeasible)')
         
     
     stochastic = parser.add_argument_group('Stochastic UC',

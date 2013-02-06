@@ -421,7 +421,7 @@ class Generator_nonControllable(Generator):
         self.build_cost_model()
         self.init_optimization()
         self.is_stochastic = False
-        self.shedding_mode = False
+        self.shedding_mode = sheddingallowed and user_config.economic_wind_shed
 
     def power(self, time, scenario=None):
         if self.shedding_mode:
@@ -544,7 +544,7 @@ class Generator_Stochastic(Generator_nonControllable):
         self.startupcost = 0
         self.shutdowncost = 0
         self.fuelcost = float(fuelcost)
-        self.shedding_mode = False
+        self.shedding_mode = sheddingallowed and user_config.economic_wind_shed
 
     def power(self, time, scenario=None):
         return self.get_variable(

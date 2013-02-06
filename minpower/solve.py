@@ -209,7 +209,7 @@ def create_problem(power_system, times, scenario_tree=None,
             gen.scenario_values[times.Start]['probability'].values.tolist(),
             time_stage=stage_number)
 
-        logging.debug('constructed tree for stage %i' % stage_number)
+        logging.debug('constructed tree for stage {s}'.format(s=stage_number))
 
         stochastic.define_stage_variables(power_system, times)
         stochastic.create_problem_with_scenarios(power_system, times)

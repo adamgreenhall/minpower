@@ -80,3 +80,18 @@ def designed_diff_case():
         slnD.generators_power.sum(axis=1) == 0).all()
     assert slnP.observed_cost.sum().sum() < slnD.observed_cost.sum().sum()
     
+    
+@istest
+def stochastic_shedding():
+    '''
+    Create a sheddable wind generator and one scenario that requires shedding.
+    Ensure that wind is shed in one scenario but not the other.
+    '''
+    
+    sln = run_case('stochastic_shedding_case')
+    
+    epower = sln.generators_power_scenarios
+    load_sched = sln.loads[0].schedule
+    
+    assert((epower['s0'].sum(axis=1) < load_sched).all())
+    assert((epower['s1'].sum(axis=1) == load_sched).all())

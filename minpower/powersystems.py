@@ -439,8 +439,7 @@ class PowerSystem(OptimizationProblem):
             try:
                 instance = self.solve()
             except OptimizationError:
-                scheduled, committed = self.debug_infeasibe(times)
-                set_trace()
+                scheduled, committed = self.debug_infeasible(times)
                 raise OptimizationError('failed to solve with shedding.')
         return instance
 
@@ -540,7 +539,8 @@ class PowerSystem(OptimizationProblem):
         # change shedding allowed flags for the next stage
         self.shedding_mode = False
         self._set_load_shedding(False)
-        self._set_gen_shedding(False)
+        if user_config.economic_wind_shed is False:
+            self._set_gen_shedding(False)
 
     def _resolve_problem(self, sln):
         times = sln.times_non_overlap
@@ -550,15 +550,17 @@ class PowerSystem(OptimizationProblem):
         # dont create reserve constraints
         self.reserve_fixed = 0
         self.reserve_load_fraction = 0
-        # recreate constraints only for the non-overlap times
-        self.create_constraints(times)
-        # reset objective to only the non-overlap times
-        self._model.objective = None
-        self.create_objective(times)
 
         # set wind to observed power
         gen = self.get_generator_with_observed()
         gen.set_power_to_observed(times)
+
+        # reset objective to only the non-overlap times
+        self._model.objective = None
+        self.create_objective(times)
+
+        # recreate constraints only for the non-overlap times
+        self.create_constraints(times)
 
         # fix statuses for all units
         self.fix_binary_variables()
@@ -579,7 +581,7 @@ class PowerSystem(OptimizationProblem):
                 try:
                     self.solve()
                 except OptimizationError:
-                    scheduled, committed = self.debug_infeasibe(
+                    scheduled, committed = self.debug_infeasible(
                         sln.times, resolve_sln=sln)
                     raise
 
@@ -614,7 +616,7 @@ class PowerSystem(OptimizationProblem):
                 try:
                     self.solve()
                 except OptimizationError:
-                    scheduled, committed = self.debug_infeasibe(
+                    scheduled, committed = self.debug_infeasible(
                         sln.times, resolve_sln=sln)
                     raise
 
@@ -632,7 +634,7 @@ class PowerSystem(OptimizationProblem):
                 if fix_power:
                     gen.power(time).fixed = True
 
-    def debug_infeasibe(self, times, resolve_sln=None):
+    def debug_infeasible(self, times, resolve_sln=None):
         generators = self.generators()
         if resolve_sln:
             windgen = self.get_generator_with_observed()
@@ -698,11 +700,20 @@ class PowerSystem(OptimizationProblem):
             print 'total committed\n', committed
 
         if resolve_sln:
-            print 'expected status\n', resolve_sln.generators_status
+            print 'expected status'
+            if len(resolve_sln.generators_status.columns) < 5: 
+                print(resolve_sln.generators_status)
+            else:
+                print(resolve_sln.generators_status.sum(axis=1))
             ep = resolve_sln.generators_power
             ep['net_required'] = scheduled.net_required.values
-            print 'expected power\n', ep
+            print('expected power')
+            if len(ep.columns) < 5:
+                print(ep)
+            else: 
+                print(ep.sum(axis=1))
         else:
             print 'initial_status\n'
             print pd.Series([gen.initial_status for gen in self.generators()])
+        
         return scheduled, committed

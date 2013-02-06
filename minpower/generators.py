@@ -574,7 +574,7 @@ class Generator_Stochastic(Generator_nonControllable):
         else:
             # set to forecast values
             self.add_parameter('power', index=times.set,
-                               values=dict([(t, self.get_scheduled_ouput(t)) for t in times]))
+               values=dict([(t, self.get_scheduled_ouput(t)) for t in times]))
 
         self.create_bids(times)
         return

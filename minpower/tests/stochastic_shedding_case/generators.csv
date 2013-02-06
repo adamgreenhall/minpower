@@ -1,0 +1,3 @@
+name,pmin,pmax,scenarios_directory,forecast_filename,observed_filename
+aggregate wind,,,scenarios,wind_forecast.csv,wind_observed.csv
+baseload,0,500,,,

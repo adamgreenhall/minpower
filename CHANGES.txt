@@ -1,5 +1,18 @@
 ----
 
+Version 4.2.11, Thu 07 Feb 2013
+================================
+
+4b92b32fb9	much better process based naming of scheduled tasks via --pid option (Adam Greenhall)
+489d87e9e7	fix schedule.post_horizon for end of times (Adam Greenhall)
+07097dc264	cleanup (Adam Greenhall)
+5b1aa10f08	fix logging in standalone. allow debugging of standalone. (Adam Greenhall)
+95fef5c177	get economic_wind_shed working. add test (Adam Greenhall)
+d76ba67434	add economic_wind_shed option. improve stochastic shedding. (Adam Greenhall)
+7e592cc6f6	scheduler: don't change the default (empty) scenario directory (Adam Greenhall)
+a7b952bb16	debugging mode carries down to standalone mode (Adam Greenhall)
+
+
 Version 4.2.10, Mon 04 Feb 2013
 ================================
 

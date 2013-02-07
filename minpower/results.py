@@ -40,8 +40,8 @@ except ImportError:
 
 
 def full_filename(filename):
-    if user_config.output_prefix:
-        filename = '{}-{}'.format(os.getpid(), filename)
+    if user_config.standalone:
+        filename = '{}-{}'.format(user_config.pid, filename)
     return joindir(user_config.directory, filename)
 
 

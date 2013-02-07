@@ -46,6 +46,7 @@ option_types = dict(
     scenarios_directory=str,
 
     standalone=bool,
+    pid=str,
 
     wind_forecast_adder=float,
     wind_multiplier=float,
@@ -236,7 +237,8 @@ def setup_parser_args(parser):
         help='Make each multi-day commitment its own subprocess (helps with memory issues).')
     add_opt(parser, 'output_prefix', '-p',
         help='Prefix all results files with the process id (for a record of simulataneous solves)')
-
+    add_opt(parser, 'pid', 
+        help='Expicitly specify the standalone storage process id')
 
     debugging = parser.add_argument_group('Debugging tools')
     add_opt(debugging, 'debugger',

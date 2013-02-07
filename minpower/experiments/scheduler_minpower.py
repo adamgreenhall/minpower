@@ -55,7 +55,7 @@ def main():
     
     # subprocess style
     minpower_args['standalone'] = True
-    minpower_args['output_prefix'] = True
+    minpower_args['pid'] = os.getpid()
 
     if args.scheduler_mode == 'qsub':
         # qsub makes all of its script calls from the home directory
@@ -120,7 +120,7 @@ def main():
                 ])
 
         # there should be a better way than having to call a script on disk
-        script_name = './call{}.sh'.format(os.getpid())
+        script_name = './{}.sh'.format(os.getpid())
         if args.dry_run:
             print('would have written script {f}: \n{c}'.format(
                 f=script_name,
@@ -142,7 +142,7 @@ def main():
             pid = None            
         else:
             
-            pid = subprocess.Popen( scheduler_call + minpower_call,
+            pid = subprocess.Popen(scheduler_call + minpower_call,
                 stdout=stdout,
                 stderr=stderr,
                 ).pid

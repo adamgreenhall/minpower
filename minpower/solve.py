@@ -17,7 +17,7 @@ from standalone import store_times, init_store, get_storage, repack_storage
 
 def _set_store_filename(pid=None):
     fnm = 'stage-store.hd5'
-    if user_config.output_prefix:
+    if user_config.output_prefix or user_config.pid:
         fnm = '{}-{}'.format(pid, fnm)
 
     user_config.store_filename = joindir(user_config.directory, fnm)
@@ -28,19 +28,22 @@ def solve_multistage_standalone(power_system, times, scenario_tree, data):
         user_config.hours_commitment, user_config.hours_overlap)
 
     storage = init_store(power_system, stage_times, data)
-
+    pid = user_config.pid if user_config.pid else os.getpid()
+    has_pid = user_config.output_prefix or user_config.pid
+    
     for stg,t_stage in enumerate(stage_times):
         logging.info('Stage starting at {}'.format(t_stage.Start.date()))
         # store current stage times
         storage = store_times(t_stage, storage)
         storage.close()
         storage = None
-        command = 'standalone_minpower {dir} {stg} {pid}'.format(
+        command = 'standalone_minpower {dir} {stg} {pid} {db}'.format(
                 dir=user_config.directory, stg=stg,
-                pid='--pid {}'.format(os.getpid()) if user_config.output_prefix else '')
+                pid='--pid {}'.format(pid) if has_pid else '',
+                db='--debugger' if user_config.debugger else '')
         try: subprocess.check_call(command, shell=True, stdout=sys.stdout)
         except AttributeError:
-            # HACk - avoid error when nose hijacks sys.stdout
+            # HACK - avoid error when nose hijacks sys.stdout
             subprocess.check_call(command, shell=True)
 
     repack_storage()
@@ -54,7 +57,7 @@ def standaloneUC():
     parser = argparse.ArgumentParser()
     parser.add_argument('directory', type=str, help='the problem direcory')
     parser.add_argument('stg', type=int, help='the stage number')
-    parser.add_argument('--pid', type=int, default=None,
+    parser.add_argument('--pid', default='',
         help='the process id of the parent')
     parser.add_argument('--debugger', action='store_true', default=False,
         help='do some debugging')        
@@ -62,17 +65,16 @@ def standaloneUC():
     args = parser.parse_args()
     stg = args.stg
     user_config.directory = args.directory
-    if args.pid:
-        user_config.output_prefix = True
-    
-    _set_store_filename(args.pid)    
-    # load stage data
-    power_system, times, scenario_tree = load_state()
-    user_config.directory = args.directory
+    user_config.pid = args.pid
 
-    _setup_logging(args.pid)
+    try:          
+        _set_store_filename(args.pid)    
+        # load stage data
+        power_system, times, scenario_tree = load_state()
+        user_config.directory = args.directory
 
-    try:            
+        _setup_logging(args.pid)
+      
         sln = create_solve_problem(power_system, times, scenario_tree, stage_number=stg)
 
         store = store_state(power_system, times, sln)
@@ -100,7 +102,8 @@ def solve_problem(datadir='.',
     """
     user_config.directory = datadir
     
-    pid = os.getpid()
+    pid = user_config.pid if user_config.pid else os.getpid()
+        
     _set_store_filename(pid)
     _setup_logging(pid)
 
@@ -127,7 +130,7 @@ def solve_problem(datadir='.',
             power_system, stage_times, stage_solutions)
 
     if shell:
-        if user_config.output_prefix:
+        if user_config.output_prefix or user_config.pid:
             stdout = sys.stdout
             sys.stdout = StreamToLogger()
             solution.show()
@@ -224,9 +227,9 @@ def _setup_logging(pid=None):
         level=user_config.logging_level,
         datefmt='%Y-%m-%d %H:%M:%S',
         format='%(asctime)s %(levelname)s: %(message)s')
-    if user_config.output_prefix:
+    if user_config.output_prefix or user_config.pid:
         kwds['filename'] = joindir(user_config.directory,
-            '{}.pylog'.format(pid))
+            '{}.log'.format(pid))
     if (user_config.logging_level > 10) and (not 'filename' in kwds):
         # don't log the time if debugging isn't turned on
         kwds['format'] = '%(levelname)s: %(message)s'

@@ -20,7 +20,7 @@ import pkg_resources
 def wipe_storage():
     try:
         os.remove(user_config.store_filename)
-        print 'wipe storage'
+        logging.debug('wipe storage')
     except OSError:
         pass
 

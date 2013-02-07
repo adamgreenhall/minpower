@@ -70,22 +70,19 @@ def define_stage_variables(power_system, times):
         for load in power_system.loads():
             variables_second_stage.add(
                 str(load.get_variable('power', time=None, indexed=True)) + '[*]')
-            
+    
     # variables_first_stage.pprint()
     scenario_tree = power_system._scenario_tree_instance
     
     scenario_tree.StageVariables['first stage'] = variables_first_stage
     scenario_tree.StageVariables['second stage'] = variables_second_stage
 
-    # power_system._model=power_system._model.create()
-    # power_system._model.pprint()
     scenario_tree.StageCostVariable['first stage'] = str(
         power_system.cost_first_stage())
     scenario_tree.StageCostVariable['second stage'] = str(
         power_system.cost_second_stage())
 
 def create_problem_with_scenarios(power_system, times):
-    # for node in scenariotreeinstance.nodes:
     logging.debug('constructing scenario tree')
 
     scenario_tree = ScenarioTree(

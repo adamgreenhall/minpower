@@ -564,13 +564,12 @@ class Generator_Stochastic(Generator_nonControllable):
     def create_variables(self, times):
         if self.shedding_mode:
             self.create_variables_shedding(times)
-        # initialize parameter set to first scenario value
+        
         if self.is_stochastic:
-            self.add_parameter('power', index=times.set, nochecking=True)
-            power = self.power(time=None)
+            # initialize parameter set to first scenario value
             scenario_one = self._get_scenario_values(times, s=0)
-            for t, time in enumerate(times):
-                power[str(time)] = scenario_one[t]
+            self.add_parameter('power', index=times.set, nochecking=True,
+                values=dict(zip(times, scenario_one)))
         else:
             # set to forecast values
             self.add_parameter('power', index=times.set,

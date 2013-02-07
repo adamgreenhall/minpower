@@ -497,6 +497,7 @@ class PowerSystem(OptimizationProblem):
         self._set_load_shedding(True)
         
         if not user_config.economic_wind_shed:
+            logging.debug('allowing non-controllable generation shedding')
             self._set_gen_shedding(True)
 
         const_times = times.non_overlap() if resolve else times

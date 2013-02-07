@@ -56,6 +56,8 @@ def standaloneUC():
     parser.add_argument('stg', type=int, help='the stage number')
     parser.add_argument('--pid', type=int, default=None,
         help='the process id of the parent')
+    parser.add_argument('--debugger', action='store_true', default=False,
+        help='do some debugging')        
 
     args = parser.parse_args()
     stg = args.stg
@@ -63,19 +65,20 @@ def standaloneUC():
     if args.pid:
         user_config.output_prefix = True
     
-    _set_store_filename(args.pid)
+    _set_store_filename(args.pid)    
+    # load stage data
+    power_system, times, scenario_tree = load_state()
+    user_config.directory = args.directory
 
     _setup_logging(args.pid)
 
-    # load stage data
-    power_system, times, scenario_tree = load_state()
     try:            
         sln = create_solve_problem(power_system, times, scenario_tree, stage_number=stg)
 
         store = store_state(power_system, times, sln)
         store.close()
     except:
-        if user_config.debugger:
+        if user_config.debugger or args.debugger:
             __, __, tb = sys.exc_info()
             traceback.print_exc()
             pdb.post_mortem(tb)            

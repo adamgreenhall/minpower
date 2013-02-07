@@ -97,7 +97,7 @@ class TimeIndex(object):
         return
 
     def post_horizon(self):
-        if len(self) > self._int_division:
+        if len(self) > self._int_division + 1:
             str_start = int(self.strings.ix[self._int_division + 1].strip('t'))
             return TimeIndex(self.strings.index[self._int_division + 1:], str_start)
         else:

@@ -52,14 +52,23 @@ class Generator(OptimizationObject):
                  name='', index=None, bus=None):
 
         update_attributes(self, locals())  # load in inputs
-        if self.rampratemin is None and self.rampratemax is not None:
-            self.rampratemin = -1 * self.rampratemax
-        if (self.startupramplimit is None) and (self.rampratemax is not None) \
-            and (self.pmin > self.rampratemax):
-            self.startupramplimit = self.pmin
-        if (self.shutdownramplimit is None) and (self.rampratemin is not None) \
-            and (-1 * self.pmin > self.rampratemin):
-            self.shutdownramplimit = -1 * self.pmin
+       
+        # The formulation below requires that startup ramp limits are set.
+        # The defaults are the normal ramp rate limits,
+        # unless Pmin so high and Rmin/max small that startup is infeasible.
+        # In that case the default is Pmin.
+        
+        if (self.startupramplimit is None) and (self.rampratemax is not None):
+            if self.pmin > self.rampratemax:
+                self.startupramplimit = self.pmin
+            else:
+                self.startupramplimit = self.rampratemax
+            
+        if (self.shutdownramplimit is None) and (self.rampratemin is not None):
+            if (-1 * self.pmin < self.rampratemin):
+                self.shutdownramplimit = -1 * self.pmin
+            else:
+                self.shutdownramplimit = self.rampratemin
     
         self.fuelcost = float(fuelcost)
         

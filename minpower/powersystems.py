@@ -30,9 +30,11 @@ class Load(OptimizationObject):
     def __init__(self,
                  name='', index=None, bus=None, schedule=None,
                  sheddingallowed=True,
-                 cost_shedding=user_config.cost_load_shedding
+                 cost_shedding=None,
                  ):
         update_attributes(self, locals())  # load in inputs
+        if cost_shedding is None:
+            self.cost_shedding = user_config.cost_load_shedding
         self.init_optimization()
         self.shedding_mode = False
 

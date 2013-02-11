@@ -1,5 +1,12 @@
 ----
 
+Version 4.2.12, Mon 11 Feb 2013
+================================
+
+22246a7659	BUG: set startup shutdown ramp limit defaults properly. The formulation requires they be set. Added test for this case. (Adam Greenhall)
+a62d2a02aa	fix cost_load_shedding default (can't be in __init__ definition, has to be looked up on creation) (Adam Greenhall)
+
+
 Version 4.2.11, Thu 07 Feb 2013
 ================================
 

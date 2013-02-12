@@ -247,7 +247,9 @@ class PowerSystem(OptimizationProblem):
                           exclude=['generators', 'loads', 'lines'])
         self.reserve_fixed = user_config.reserve_fixed
         self.reserve_load_fraction = user_config.reserve_load_fraction
-
+        self.reserve_required = (self.reserve_fixed > 0) or \
+            (self.reserve_load_fraction > 0.0)
+        
         if lines is None:
             lines = []
 
@@ -521,16 +523,17 @@ class PowerSystem(OptimizationProblem):
             for time in times:
                 bus._remove_component('power balance', time)
             bus.create_constraints(const_times,
-               self.Bmatrix, self.buses, include_children=False)
+                self.Bmatrix, self.buses, include_children=False)
 
         # reset objective
         self._model.objective = None
         self.create_objective(const_times)
         # re-create system cost constraints
         self.create_constraints(const_times, include_children=False)
+
         # recreating all constraints would be simpler
         # but would take a bit longer
-        
+        # self.create_constraints(const_times, include_children=True)        
         if self.is_stochastic:
             # need to recreate the scenario tree variable links 
             stochastic.define_stage_variables(self, times)
@@ -576,7 +579,10 @@ class PowerSystem(OptimizationProblem):
         try:
             self.solve()
         except OptimizationError:
-            if user_config.faststart_resolve:
+            faststarts = map(lambda gen: str(gen), filter(lambda gen: gen.faststart, self.generators()))
+            # at least one faststarting unit must be available (off)
+            if user_config.faststart_resolve and \
+                (sln.expected_status[faststarts] == 0).any().any():
                 self._resolve_with_faststarts(sln)
             else:
                 # just shed the un-meetable load and calculate cost later
@@ -604,6 +610,7 @@ class PowerSystem(OptimizationProblem):
         self._unfix_variables()
         self._fix_non_faststarts(sln.times)
         logging.warning('allowing fast-starting units')
+        
         try:
             self.solve()
         except OptimizationError:
@@ -630,12 +637,13 @@ class PowerSystem(OptimizationProblem):
         the idea is that fast-starts should be contributing power
         only for system security, not economics
         '''
+        names = []
         for gen in filter(lambda gen:
                          (not gen.faststart) and gen.is_controllable, self.generators()):
-            for time in times:
-                gen.status(time).fixed = True
-                if fix_power:
-                    gen.power(time).fixed = True
+            names.append(gen.status().name)
+            if fix_power:
+                names.append(gen.power().name)
+        self._fix_variables(names)
 
     def debug_infeasible(self, times, resolve_sln=None):
         generators = self.generators()

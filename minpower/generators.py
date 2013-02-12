@@ -90,7 +90,8 @@ class Generator(OptimizationObject):
         if time is not None and is_init(time):
             return self.initial_power
 
-        var_name = 'power_available' if self.commitment_problem else 'power'
+        var_name = 'power_available' if self.commitment_problem \
+            and self.reserve_required else 'power'
         return self.get_variable(var_name, time, scenario=scenario, indexed=True)
 
     def status(self, time=None, scenario=None):
@@ -260,8 +261,10 @@ class Generator(OptimizationObject):
 
         if self.commitment_problem:
             # power_available exists for easier reserve requirement
-            self.add_variable(
-                'power_available', index=times.set, low=0, high=self.pmax)
+            self.reserve_required = self._parent_problem().reserve_required
+            if self.reserve_required:
+                self.add_variable(
+                    'power_available', index=times.set, low=0, high=self.pmax)
             if self.startupcost > 0:
                 self.add_variable('startupcost', index=times.set,
                                   low=0, high=self.startupcost)
@@ -332,9 +335,9 @@ class Generator(OptimizationObject):
 
             if len(times) == 1:
                 continue  # if ED or OPF problem
-
-            self.add_constraint('max gen power avail', time, self.power(
-                time) <= self.power_available(time))
+            if self.reserve_required:
+                self.add_constraint('max gen power avail', time, self.power(
+                    time) <= self.power_available(time))
 
             # ramping power
             if self.rampratemax is not None:
@@ -345,7 +348,7 @@ class Generator(OptimizationObject):
                     # + self.pmax * (1 - self.status(times[t]))
 
                 self.add_constraint('ramp lim high', time,
-                                    self.power_available(time) <= self.power(times[t - 1]) + ramp_limit)
+                                    self.power_available(time) - self.power(times[t - 1]) <= ramp_limit)
 
 #               # EQ19 from Carrion and Arroyo - has a conflicting
 #               # definition of shutdown power, available after shutdown hour?
@@ -363,7 +366,7 @@ class Generator(OptimizationObject):
                     ramp_limit += self.shutdownramplimit * \
                         (-1 * self.status_change(t, times))
                 self.add_constraint('ramp lim low', time,
-                                    ramp_limit <= self.power_change(t, times))
+                                    ramp_limit <= self.power_available(time) - self.power(times[t - 1]))
 
             # min up time
             if t >= min_up_intervals_remaining_init and self.minuptime > 0:

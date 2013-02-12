@@ -251,6 +251,8 @@ def setup_parser_args(parser):
         help='run cProfile and output to minpower.profile')
     debugging.add_argument('--show_config', action='store_true', default=False,
         help='just show the configuration and quit')
+    debugging.add_argument('--keep_lp_files', action='store_true', default=False,
+        help='keep a record of all of the solver lp files')
 
     
     ts = parser.add_argument_group('Timeseries modifiers',

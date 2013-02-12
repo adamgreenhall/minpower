@@ -19,7 +19,7 @@ variable_kinds = dict(
     Boolean=pyomo.Boolean)
 
 from config import user_config
-from commonscripts import update_attributes, joindir
+from commonscripts import update_attributes, joindir, set_trace
 
 
 def full_filename(filename):
@@ -439,8 +439,7 @@ class OptimizationProblem(OptimizationObject):
                     'unsolved-stochastic-instance.txt'))
             raise OptimizationError('problem not solved')
 
-        instance.load(results,
-                      allow_consistent_values_for_fixed_vars=True)
+        instance.load(results, allow_consistent_values_for_fixed_vars=True)
         logging.debug('... solution loaded')
 
         if get_duals:
@@ -464,13 +463,15 @@ class OptimizationProblem(OptimizationObject):
 
         # self.constraints = instance.active_components(pyomo.Constraint)
         # self.variables =   instance.active_components(pyomo.Var)
-
         return instance
 
     def __str__(self):
         return 'power_system_problem'
 
     def _solve_instance(self, instance, solver=user_config.solver, get_duals=False, keepFiles=False):
+        if user_config.keep_lp_files: 
+            keepFiles = True
+
         if not keepFiles:
             logger = logging.getLogger()
             current_log_level = logger.level
@@ -524,6 +525,8 @@ class OptimizationProblem(OptimizationObject):
 
     def _unfix_variables(self):
         _unfix_variables(self._model)
+    def _fix_variables(self, names):
+        _fix_variables(names, self._model)
 
     def _remove_all_constraints(self):
         for key in self._model.active_components(pyomo.Constraint).keys():
@@ -552,6 +555,17 @@ def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
     # need to preprocess after fixing
     instance.preprocess()
 
+
+def _fix_variables(names, instance):
+    active_vars = instance.active_components(pyomo.Var)
+    for var in active_vars.values():
+        if var.name in names:
+            if var.is_indexed():
+                for key, ind_var in var.iteritems():
+                    ind_var.fixed = True
+            else:
+                var.fixed = True
+        
 
 def _unfix_variables(instance):
     active_vars = instance.active_components(pyomo.Var)

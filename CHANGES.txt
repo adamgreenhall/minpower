@@ -1,5 +1,15 @@
 ----
 
+Version 4.2.13, Tue 12 Feb 2013
+================================
+
+4ba79a3262	ensure that at least one faststart unit is available before resolving with faststarters (Adam Greenhall)
+8884e65172	use assert_series_equal (Adam Greenhall)
+695f63edf8	only create power_available variable if there is a reserve requirement (Adam Greenhall)
+e7eba65012	add commandline opt to keep lp files (Adam Greenhall)
+8278fb4989	ed_sweep: add committed unit name information (Adam Greenhall)
+
+
 Version 4.2.12, Mon 11 Feb 2013
 ================================
 

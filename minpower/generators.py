@@ -385,15 +385,19 @@ class Generator(OptimizationObject):
             # start up and shut down costs
             if self.startupcost > 0:
                 self.add_constraint('startup cost', time,
-                                    self.cost_startup(time) ==
+                                    self.cost_startup(time) >=
                                     self.startupcost * self.status_change(t, times))
+                                    
             if self.shutdowncost > 0:
                 self.add_constraint('shutdown cost', time,
-                                    self.cost_shutdown(time) ==
+                                    self.cost_shutdown(time) >=
                                     self.shutdowncost * -1 * self.status_change(t, times))
-            # note: costs must be equal to constraints - not greater than
-            #  or equal to - because for very large problems with >= constraints,
-            #  the solver will NOT always force the costs down to their minimum
+
+            # note: costs must be >= constraints
+            # for very large problems with >= constraints,
+            # the solver may not always force the costs down to their minimum
+            # however, the == formulation is incorrect and will not allow
+            # unit shutdowns if the unit has a startup cost
 
         return
 

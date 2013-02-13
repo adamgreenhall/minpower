@@ -4,9 +4,9 @@ import logging
 logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s')
 
 import pandas as pd
+from pandas.util.testing import assert_series_equal
 from minpower.generators import Generator_nonControllable, Generator_Stochastic
 from minpower.optimization import value
-from minpower import results
 
 from test_utils import *
 
@@ -325,3 +325,28 @@ def pmin_startup_limit():
     power = generators[1].values('power')
     status = generators[1].values('status')
     assert((power[status==1] >= pmin).all())
+    
+        
+@istest
+def startupcost_can_shutdown():
+    '''
+    Generators with a startup cost must be able to shut down.
+    '''
+    pmax = 100
+    startupcost = 100
+    generators = [
+        make_cheap_gen(pmax=pmax),
+        make_expensive_gen(startupcost=startupcost, pmin=20)
+        ]
+    initial = [{'power': 90}, {'status': 0}]
+    Pdt = [90, 120, 90]
+    power_system, times = solve_problem(
+        generators, gen_init=initial, **make_loads_times(Pdt=Pdt))
+
+    # the expensive unit turns on and back off
+    assert_series_equal(pd.Series([0.0, 1.0, 0.0], index=times.strings),
+        generators[1].values('status'))
+        
+    assert_series_equal(pd.Series([0.0, startupcost, 0.0], index=times.strings),
+        generators[1].values('startupcost'))
+    

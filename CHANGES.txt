@@ -1,5 +1,11 @@
 ----
 
+Version 4.2.14, Wed 13 Feb 2013
+================================
+
+9e47a64ca3	BUG-FIX: allow shutdowns for generators with startupcosts (Adam Greenhall)
+
+
 Version 4.2.13, Tue 12 Feb 2013
 ================================
 

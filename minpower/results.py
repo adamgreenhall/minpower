@@ -100,9 +100,9 @@ class Solution(object):
         self._setup_powersystem()
 
         self._get_problem_info()
+        self._get_outputs()
         self._get_costs()
         self._get_prices()
-        self._get_outputs()
 
     def _setup_powersystem(self):
         '''shortcuts for power system attributes'''

@@ -17,6 +17,12 @@ from get_data import parse_standalone
 import pkg_resources
 
 
+try:
+    import tables as tb
+except ImportError:
+    logging.debug('could not load pytables - cannot use standalone mode.')
+
+
 def wipe_storage():
     try:
         os.remove(user_config.store_filename)
@@ -44,19 +50,30 @@ def init_store(power_system, times, data):
 
     # store the problem info read from the spreadsheets
     for key, df in data.iteritems():
+        if key != 'scenario_values': 
+            for k, v in (df.dtypes == object).iterkv():
+                if v: df[k] = df[k].fillna('')
+        
         key = 'data_' + key
         storage[key] = df
 
     stages = len(times)  # stage_times
+    est_Nt = len(data['timeseries'])
     t = [times[0].initialTime]
 
     # store first stage initial state
-    storage['power'] = gen_time_dataframe(generators, t,
-                                          values=[[gen.initial_power for gen in generators]])
-    storage['status'] = gen_time_dataframe(generators, t,
-                                           values=[[gen.initial_status for gen in generators]])
+    storage.append('power', 
+        gen_time_dataframe(generators, t,
+            values=[[gen.initial_power for gen in generators]]),
+        expectedrows=est_Nt)
+        
+    storage.append('status',
+        gen_time_dataframe(generators, t,
+            values=[[gen.initial_status for gen in generators]]),
+        expectedrows=est_Nt)
+        
     storage['hrsinstatus'] = gen_time_dataframe(generators, t,
-                                                values=[[gen.initial_status_hours for gen in generators]])
+        values=[[gen.initial_status_hours for gen in generators]])
 
     # setup empty containers for variables
     storage['load_shed'] = Series()
@@ -85,7 +102,7 @@ def init_store(power_system, times, data):
 
 
 def _get_problem_version():
-    version = None
+    version = ''
     possible_init = os.path.join(
         os.path.abspath(user_config.directory), '__init__.py')
     if os.path.exists(possible_init):
@@ -123,7 +140,7 @@ def store_state(power_system, times, sln=None):
     else:
         table_append(storage, 'expected_cost', sln.totalcost_generation)
         table_append(storage, 'expected_fuelcost', sln.fuelcost)
-    return storage
+    return storage        
 
 
 def load_state():
@@ -175,29 +192,3 @@ def _add_tbl_val(storage, tablename, index, value):
 def table_append(store, name, newvals):
     store[name] = store[name].append(newvals)
     return
-
-try:
-    import tables as tb
-    import atexit
-
-    # FIXME - not working
-    # make pytables quiet down
-    # http://www.pytables.org/moin/UserDocuments/AtexitHooks
-    def quiet_table_close(verbose=False):
-        open_files = tb.file._open_files
-        are_open_files = len(open_files) > 0
-        if verbose and are_open_files:
-            print >> sys.stderr, "Closing remaining open files:",
-        for fileh in open_files.keys():
-            if verbose:
-                print >> sys.stderr, "%s..." % (open_files[fileh].filename,),
-            open_files[fileh].close()
-            if verbose:
-                print >> sys.stderr, "done",
-        if verbose and are_open_files:
-            print >> sys.stderr
-
-    atexit.register(quiet_table_close)
-
-except ImportError:
-    logging.debug('could not load pytables - cannot use standalone mode.')

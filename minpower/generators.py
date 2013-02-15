@@ -384,9 +384,14 @@ class Generator(OptimizationObject):
 
             # start up and shut down costs
             if self.startupcost > 0:
-                self.add_constraint('startup cost', time,
+                self.add_constraint('startup cost min', time,
                                     self.cost_startup(time) >=
                                     self.startupcost * self.status_change(t, times))
+                                    
+                self.add_constraint('startup cost max', time,
+                                    self.cost_startup(time) <=
+                                    self.startupcost * self.status(time))
+                
                                     
             if self.shutdowncost > 0:
                 self.add_constraint('shutdown cost', time,
@@ -398,6 +403,8 @@ class Generator(OptimizationObject):
             # the solver may not always force the costs down to their minimum
             # however, the == formulation is incorrect and will not allow
             # unit shutdowns if the unit has a startup cost
+            # solution is to use the min and max constraints together.
+            
 
         return
 

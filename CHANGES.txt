@@ -1,5 +1,11 @@
 ----
 
+Version 4.2.15, Thu 14 Feb 2013
+================================
+
+d2fa296d4c	enforce max startup cost constraints to get correct results for large problems (Adam Greenhall)
+
+
 Version 4.2.14, Wed 13 Feb 2013
 ================================
 

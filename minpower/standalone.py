@@ -144,15 +144,24 @@ def store_state(power_system, times, sln=None):
 #    # DEBUGGING
 #    from pandas.util.testing import assert_frame_equal
 #    try: 
+#        gens = storage['data_generators'].copy()
+#        gens.index = ['g{}'.format(g) for g in gens.index]
 #        status = storage['status'].ix[1:]
 #        power = storage['power'][status.columns].ix[status.index]
 #        cost = storage['observed_cost'][status.columns].ix[status.index]
+#        fuelcost = storage['observed_fuelcost'][status.columns].ix[status.index]
+#        stcost = cost - fuelcost
+
+#        
 #        pcheck = (power * status)
 #        ccheck = (cost * status)
+#        stcheck = (stcost * status)
 #        assert_frame_equal(pcheck, power)
 #        assert_frame_equal(ccheck, cost)
-#    except:
-#        set_trace()
+#        assert_frame_equal(stcheck, stcost)
+#        assert(((stcost < gens.startupcost - 1e-5) & (stcost > 1e-5) ).sum().sum() == 0)
+#        
+#    except AssertionError:
 #        raise
         
     return storage

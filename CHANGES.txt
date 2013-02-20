@@ -1,5 +1,13 @@
 ----
 
+Version 4.3.0, Wed 20 Feb 2013
+===============================
+
+eb6d17bc37	better standalone inline debugging check (Adam Greenhall)
+4efa001a0d	constraint list formulations of most constraints (Adam Greenhall)
+b68d419993	allow different numbers of scenarios per day. record expected shed for stochastic problems. (Adam Greenhall)
+
+
 Version 4.2.16, Wed 20 Feb 2013
 ================================
 

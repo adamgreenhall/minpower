@@ -551,7 +551,9 @@ class PowerSystem(OptimizationProblem):
 
     def _resolve_problem(self, sln):
         times = sln.times_non_overlap
-
+        self.add_set('times', times._set, ordered=True)
+        times.set = self._model.times
+        
         # reset the constraints
         self._remove_all_constraints()
         # dont create reserve constraints

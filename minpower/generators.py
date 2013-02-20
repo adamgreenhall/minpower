@@ -324,37 +324,24 @@ class Generator(OptimizationObject):
             min_up_intervals = roundoff(self.minuptime / times.intervalhrs)
             min_down_intervals = roundoff(self.mindowntime / times.intervalhrs)
 
-# constraintlist style
-#            if self.pmin > 0:
-#                def min_power(model, t):
-#                    return self.power(t) - self.status(t) * self.pmin >= 0
-#                self.add_constraint_set('min gen power', times.set, min_power)
-
-        for t, time in enumerate(times):
-            # min/max power
-            if self.pmin > 0:
-                self.add_constraint('min gen power', time, self.power(
-                    time) >= self.status(time) * self.pmin)
-
-            self.add_constraint('max gen power', time, self.power_available(
-                time) <= self.status(time) * self.pmax)
-
-            if len(times) == 1:
-                continue  # if ED or OPF problem
+            # reserve            
             if self.reserve_required:
-                self.add_constraint('max gen power avail', time, self.power(
-                    time) <= self.power_available(time))
+                def reserve_req(model, t):
+                    return self.power(t) <= self.power_available(t)
+                self.add_constraint_set('max gen power avail', times.set, reserve_req)
 
             # ramping power
             if self.rampratemax is not None:
-                ramp_limit = self.rampratemax * self.status(times[t - 1])
-                if self.startupramplimit is not None:
-                    ramp_limit += self.startupramplimit * \
-                        self.status_change(t, times)
-                    # + self.pmax * (1 - self.status(times[t]))
+                def ramp_max(model, t):
+                    tPrev = get_tPrev(t, model, times)
+                    ramp_limit = self.rampratemax * self.status(tPrev)
+                    if self.startupramplimit is not None:
+                        ramp_limit += self.startupramplimit * (
+                            self.status(t) - self.status(tPrev))
+                        # + self.pmax * (1 - self.status(times[t]))
+                    return self.power_available(t) - self.power(tPrev) <= ramp_limit
 
-                self.add_constraint('ramp lim high', time,
-                                    self.power_available(time) - self.power(times[t - 1]) <= ramp_limit)
+                self.add_constraint_set('ramp limit high', times.set, ramp_max)
 
 #               # EQ19 from Carrion and Arroyo - has a conflicting
 #               # definition of shutdown power, available after shutdown hour?
@@ -365,44 +352,41 @@ class Generator(OptimizationObject):
 #                        self.shutdownramplimit * -1 * self.status_change(t, times)
 #                        )
 
-            if self.rampratemin is not None:
-                ramp_limit = self.rampratemin * self.status(time)
-                # + self.pmax * (1 - self.status(times[t-1]))
-                if self.shutdownramplimit is not None:
-                    ramp_limit += self.shutdownramplimit * \
-                        (-1 * self.status_change(t, times))
-                self.add_constraint('ramp lim low', time,
-                                    ramp_limit <= self.power_available(time) - self.power(times[t - 1]))
 
-            # min up time
-            if t >= min_up_intervals_remaining_init and self.minuptime > 0:
-                no_shut_down = range(t, min(tEnd, t + min_up_intervals))
-                min_up_intervals_remaining = min(tEnd - t, min_up_intervals)
-                E = sum([self.status(times[s]) for s in no_shut_down]) >= min_up_intervals_remaining * self.status_change(t, times)
-                self.add_constraint('min up time', time, E)
-            # min down time
-            if t >= min_down_intervals_remaining_init and self.mindowntime > 0:
-                no_start_up = range(t, min(tEnd, t + min_down_intervals))
-                min_down_intervals_remaining = min(
-                    tEnd - t, min_down_intervals)
-                E = sum([1 - self.status(times[s]) for s in no_start_up]) >= min_down_intervals_remaining * -1 * self.status_change(t, times)
-                self.add_constraint('min down time', time, E)
+            if self.rampratemin is not None:
+                def ramp_min(model, t):
+                    tPrev = get_tPrev(t, model, times)
+                    ramp_limit = self.rampratemin * self.status(t)
+                    # + self.pmax * (1 - self.status(times[t-1]))
+                    if self.shutdownramplimit is not None:
+                        ramp_limit += self.shutdownramplimit * \
+                            (-1 * (self.status(t) - self.status(tPrev)))
+
+                    return ramp_limit <= self.power_available(t) - self.power(tPrev)
+                self.add_constraint_set('ramp limit low', times.set, ramp_min)
 
             # start up and shut down costs
             if self.startupcost > 0:
-                self.add_constraint('startup cost min', time,
-                                    self.cost_startup(time) >=
-                                    self.startupcost * self.status_change(t, times))
-                                    
-                self.add_constraint('startup cost max', time,
-                                    self.cost_startup(time) <=
-                                    self.startupcost * self.status(time))
+                def startupcostmin(model, t):
+                    tPrev = get_tPrev(t, model, times)
+                    return self.cost_startup(t) >= self.startupcost * (
+                        self.status(t) - self.status(tPrev))
+                self.add_constraint_set('startup cost min', times.set, startupcostmin)
+
+                def startupcostmax(model, t):
+                    return self.cost_startup(t) <= self.startupcost * self.status(t)
+                self.add_constraint_set('startup cost max', times.set, startupcostmax)
                 
+                def startupcostmax_prev(model, t):
+                    tPrev = get_tPrev(t, model, times)
+                    return self.cost_startup(t) <= self.startupcost * (1 - self.status(tPrev))
+                self.add_constraint_set('startup cost max prev', times.set, startupcostmax_prev)
                                     
             if self.shutdowncost > 0:
-                self.add_constraint('shutdown cost', time,
-                                    self.cost_shutdown(time) >=
-                                    self.shutdowncost * -1 * self.status_change(t, times))
+                def shutdowncost(model, t):
+                    tPrev = get_tPrev(t, model, times)
+                    return self.cost_shutdown(t) >= self.shutdowncost * -1 * (self.status(t) - self.status(tPrev))
+                self.add_constraint_set('shutdown cost', times.set, shutdowncost)
 
             # note: costs must be >= constraints
             # for very large problems with >= constraints,
@@ -410,7 +394,36 @@ class Generator(OptimizationObject):
             # however, the == formulation is incorrect and will not allow
             # unit shutdowns if the unit has a startup cost
             # solution is to use the min and max constraints together.
-            
+
+            # TODO: convert these to constraint list form
+            for t, time in enumerate(times):
+
+                # min up time
+                if t >= min_up_intervals_remaining_init and self.minuptime > 0:
+                    no_shut_down = range(t, min(tEnd, t + min_up_intervals))
+                    min_up_intervals_remaining = min(tEnd - t, min_up_intervals)
+                    E = sum([self.status(times[s]) for s in no_shut_down]) >= min_up_intervals_remaining * self.status_change(t, times)
+                    self.add_constraint('min up time', time, E)
+                # min down time
+                if t >= min_down_intervals_remaining_init and self.mindowntime > 0:
+                    no_start_up = range(t, min(tEnd, t + min_down_intervals))
+                    min_down_intervals_remaining = min(
+                        tEnd - t, min_down_intervals)
+                    E = sum([1 - self.status(times[s]) for s in no_start_up]) >= min_down_intervals_remaining * -1 * self.status_change(t, times)
+                    self.add_constraint('min down time', time, E)
+                
+
+
+        # min/max power limits
+        # these always apply (even if not a UC problem)
+        if self.pmin > 0:
+            def min_power(model, t):
+                return self.power(t) >= self.status(t) * self.pmin
+            self.add_constraint_set('min gen power', times.set, min_power)
+
+        def max_power(model, t):
+            return self.power_available(t) <= self.status(t) * self.pmax
+        self.add_constraint_set('max gen power', times.set, max_power)
 
         return
 
@@ -422,6 +435,9 @@ class Generator(OptimizationObject):
 
     def iden(self, t):
         return str(self) + str(t)
+
+def get_tPrev(t, model, times):
+    return model.times.prev(t) if t != model.times.first() else times.initialTime
 
 
 class Generator_nonControllable(Generator):

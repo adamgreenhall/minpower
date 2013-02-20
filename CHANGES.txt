@@ -1,5 +1,12 @@
 ----
 
+Version 4.2.16, Wed 20 Feb 2013
+================================
+
+79f31bb5ba	fix status variable precision on resolve problems. scaffold constraint lists (Adam Greenhall)
+afeec5f9ab	autopep8 (Adam Greenhall)
+
+
 Version 4.2.15, Thu 14 Feb 2013
 ================================
 

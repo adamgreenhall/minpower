@@ -213,3 +213,14 @@ def update_attributes(instance, variables, exclude=['self'], include=None):
             exclude.append('self')
         [setattr(
             instance, k, v) for k, v in variables.items() if k not in exclude]
+
+
+def debug_frame_unequal(left, right, tol=1e-5):
+    diff = left - right
+    different = diff[ (diff < -tol) | (diff > tol) ]
+    cols = different.columns[different.any()]
+    idx = different.ix[different.any(axis=1)].index
+    
+    print(left[cols].ix[idx])
+    print(right[cols].ix[idx])
+    return cols, idx            

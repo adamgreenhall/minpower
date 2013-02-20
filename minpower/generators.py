@@ -324,6 +324,12 @@ class Generator(OptimizationObject):
             min_up_intervals = roundoff(self.minuptime / times.intervalhrs)
             min_down_intervals = roundoff(self.mindowntime / times.intervalhrs)
 
+# constraintlist style
+#            if self.pmin > 0:
+#                def min_power(model, t):
+#                    return self.power(t) - self.status(t) * self.pmin >= 0
+#                self.add_constraint_set('min gen power', times.set, min_power)
+
         for t, time in enumerate(times):
             # min/max power
             if self.pmin > 0:

@@ -153,9 +153,14 @@ class OptimizationObject(object):
 
     def add_constraint(self, name, time, expression):
         '''Create a new constraint and add it to the object's constraints and the model's constraints.'''
-        name = self._t_id(name, time)
+        cname = self._t_id(name, time)
         self._parent_problem().add_component_to_problem(
-            pyomo.Constraint(name=name, rule=expression))
+            pyomo.Constraint(name=cname, rule=expression))
+
+    def add_constraint_set(self, name, index, expression):
+        cname = self._id(name)
+        self._parent_problem().add_component_to_problem(
+            pyomo.Constraint(index, name=cname, rule=expression))
 
     def get_variable(self, name, time=None, indexed=False, scenario=None):
         if indexed:
@@ -401,9 +406,9 @@ class OptimizationProblem(OptimizationObject):
             try:
                 setattr(self._model, name, value(var))
             except ValueError:
-                # for boolean sets this doesnt work due to rounding
+                # for boolean sets this sometimes doesn't work due to rounding
                 if var.domain == pyomo.Boolean:
-                    setattr(self._model, name, int(value(var)))
+                    setattr(self._model, name, round(value(var)))
                 else:
                     raise
 
@@ -542,6 +547,10 @@ def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
             if var.is_indexed():
                 for key, ind_var in var.iteritems():
                     if fix_offs or ind_var.value == 1:
+                        if 1e-8 < ind_var.value < (1 - 1e-8):
+                            # not quite integer values can create strange resolve problems
+                            logging.debug('rounding {}'.format(str(ind_var)))
+                            ind_var.value = round(ind_var.value)
                         ind_var.fixed = True
             else:
                 if fix_offs or var.value == 1:
@@ -565,7 +574,8 @@ def _fix_variables(names, instance):
                     ind_var.fixed = True
             else:
                 var.fixed = True
-        
+    instance.preprocess()
+
 
 def _unfix_variables(instance):
     active_vars = instance.active_components(pyomo.Var)

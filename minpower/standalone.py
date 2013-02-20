@@ -9,7 +9,7 @@ import logging
 import sys
 import pandas as pd
 from pandas import Series, DataFrame
-from commonscripts import gen_time_dataframe, set_trace
+from commonscripts import gen_time_dataframe, debug_frame_unequal, set_trace
 from config import user_config
 
 from schedule import TimeIndex
@@ -140,7 +140,22 @@ def store_state(power_system, times, sln=None):
     else:
         table_append(storage, 'expected_cost', sln.totalcost_generation)
         table_append(storage, 'expected_fuelcost', sln.fuelcost)
-    return storage        
+
+#    # DEBUGGING
+#    from pandas.util.testing import assert_frame_equal
+#    try: 
+#        status = storage['status'].ix[1:]
+#        power = storage['power'][status.columns].ix[status.index]
+#        cost = storage['observed_cost'][status.columns].ix[status.index]
+#        pcheck = (power * status)
+#        ccheck = (cost * status)
+#        assert_frame_equal(pcheck, power)
+#        assert_frame_equal(ccheck, cost)
+#    except:
+#        set_trace()
+#        raise
+        
+    return storage
 
 
 def load_state():

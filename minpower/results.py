@@ -779,9 +779,7 @@ class Solution_Stochastic_UC(Solution_Stochastic):
 def _correct_status(status):
     # correct for strange solver values returned on resolve
     status[status > 0.99] = 1
-
-    test_status = status.to_frame() if hasattr(status, 'to_frame') else status
-    assert(not ((test_status <= 0.99) & (test_status >= 0.01)).any().any())
+    status[status < 0.01] = 0
     return status.astype(int)
 
 

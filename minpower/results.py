@@ -639,10 +639,10 @@ class Solution_Stochastic(Solution):
         gen = self.power_system.get_generator_with_scenarios()
 
         try:  # single stage setup
-            self.probability = gen.scenario_values.probability
+            self.probability = gen.scenario_values.probability.dropna()
         except AttributeError:  # staged setup
             self.probability = gen.scenario_values[
-                self.stage_start].probability
+                self.stage_start].probability.dropna()
 
         self.probability.index = self.scenarios
 
@@ -651,7 +651,13 @@ class Solution_Stochastic(Solution):
         self._get_costs()
         self._get_prices()
 
-    def stg_panel(self, method, no_overlap=True, evaluate=False):
+    def stg_panel(self, method, 
+        generators=None,
+        no_overlap=True,
+        evaluate=False):
+        if generators is None:
+            generators = self.generators
+            
         times = self.times_non_overlap if no_overlap else self.times
         if evaluate:
             getval = lambda s, gen, t: value(
@@ -659,11 +665,11 @@ class Solution_Stochastic(Solution):
         else:
             getval = lambda s, gen, t: value(getattr(gen, method)(t, s))
         return pd.Panel(
-            [[[getval(s, gen, t) for gen in self.generators]
+            [[[getval(s, gen, t) for gen in generators]
                 for t in times] for s in self.scenarios],
             items=[s for s in self.scenarios],
             major_axis=times.strings.index,
-            minor_axis=[str(g) for g in self.generators])
+            minor_axis=[str(g) for g in generators])
 
     def gen_time_df(self, method, scenario, non_overlap=True, evaluate=False,
                     generators=None):
@@ -739,13 +745,34 @@ class Solution_Stochastic(Solution):
             self.load_shed = self.load_shed_timeseries.sum()
             self.gen_shed = self.gen_shed_timeseries.sum()
 
+            if self.gen_shed > 0.01:
+                logging.debug('generation shed: {}MW'.format(self.gen_shed))
+            if self.load_shed > 0.01:
+                logging.debug('load shed: {}MW'.format(self.load_shed))
+
         else:
             # get expected cost of non_overlap times
             self.expected_totalcost = self._calc_expected_cost('cost')
             self.expected_fuelcost = self._calc_expected_cost('operatingcost')
 
-            # TODO calculate expected load shed
-            self.expected_load_shed = None
+            # calculate expected load, gen shed
+            self.expected_gen_shed_timeseries = self._calc_expected(self.stg_panel('shed', evaluate=True, 
+                generators=self.power_system.get_generators_noncontrollable()))            
+            self.expected_gen_shed = self.expected_gen_shed_timeseries.sum().sum()
+                
+            self.expected_load_shed_timeseries = self._calc_expected(
+                self.stg_panel('shed', evaluate=True, 
+                    generators=self.power_system.loads()))
+            self.expected_load_shed = self.expected_load_shed_timeseries.sum()
+
+            if self.expected_gen_shed > 0.01:
+                logging.debug('expected generation shed: {}MW'.format(
+                    self.expected_gen_shed))
+            if self.expected_load_shed > 0.01:
+                logging.debug('expected load shed: {}MW'.format(
+                    self.expected_load_shed))
+            
+                
 
     def _get_cost_error(self):
         pass

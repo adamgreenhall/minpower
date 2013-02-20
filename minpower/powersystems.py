@@ -38,20 +38,21 @@ class Load(OptimizationObject):
         self.init_optimization()
         self.shedding_mode = False
 
-    def power(self, time, evaluate=False):
+    def power(self, time, scenario=None, evaluate=False):
         if self.shedding_mode:
-            power = self.get_variable('power', time, indexed=True)
+            power = self.get_variable('power', time, 
+                scenario=scenario, indexed=True)
             if evaluate:
                 power = value(power)
             return power
         else:
             return self.get_scheduled_output(time)
 
-    def shed(self, time, evaluate=False):
-        return self.get_scheduled_output(time) - self.power(time, evaluate)
+    def shed(self, time, scenario=None, evaluate=False):
+        return self.get_scheduled_output(time) - self.power(time, scenario, evaluate)
 
-    def cost(self, time):
-        return self.cost_shedding * self.shed(time)
+    def cost(self, time, scenario=None):
+        return self.cost_shedding * self.shed(time, scenario)
 
     def cost_first_stage(self, times):
         return 0

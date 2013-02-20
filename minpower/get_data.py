@@ -508,7 +508,7 @@ def setup_scenarios(gen_data, generators, times):
     # make scenarios into a pd.Panel with axes: day, scenario, {prob, [hours]}
     scenario_values = pd.Panel(
         items=alldata.keys(),
-        major_axis=range(len(data)),
+        major_axis=range(max([len(dat) for dat in alldata.values()])),
         minor_axis=['probability'] + range(hrs)
     )
 
@@ -518,13 +518,12 @@ def setup_scenarios(gen_data, generators, times):
             scenarios = scenarios[
                 scenarios.columns[:-1].insert(0, 'probability')]
         # rename the times into just hour offsets
-        scenarios = scenarios.rename(columns=
-                                     dict(zip(scenarios.columns,
-                                              ['probability'] + range(len(scenarios.columns) - 1))))
+        scenarios = scenarios.rename(columns=dict(zip(scenarios.columns,
+            ['probability'] + range(len(scenarios.columns) - 1))))
 
         # and take the number of hours needed
         scenarios = scenarios[scenarios.columns[:1 + hrs]]
-
+        
         scenario_values[day] = scenarios
 
     if user_config.wind_multiplier != 1.0:

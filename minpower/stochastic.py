@@ -7,8 +7,12 @@ from coopr.pysp.ef import create_ef_instance
 import gc
 import logging
 
-def construct_simple_scenario_tree(probabilities, time_stage=None):
+def construct_simple_scenario_tree(power_system, times, time_stage=None):
     '''Construct a simple scenario tree instance'''
+
+    gen = power_system.get_generator_with_scenarios()    
+    probabilities = gen.scenario_values[times.Start].probability.dropna().values.tolist()
+
     tree = new_scenario_tree_model()
 
     prob_set = range(len(probabilities))
@@ -39,9 +43,11 @@ def construct_simple_scenario_tree(probabilities, time_stage=None):
         tree.ScenarioLeafNode[nm] = node_names[i]
     # tree.Scenarios.pprint()
 
+    power_system._scenario_tree_instance = tree
+    logging.debug('constructed tree for stage {s}'.format(s=time_stage))
     # note that stage variables still need definition
     # as do the values of the per scenario variables
-    return tree
+    return
 
 
 def define_stage_variables(power_system, times):
@@ -124,15 +130,14 @@ def create_problem_with_scenarios(power_system, times):
 
     # relax the non-anticipatory constraints on the generator status variables
     # beyond the UC time horizon
+    if len(times.post_horizon()) > 0:
+        logging.debug('removing non-anticipatory constraints for post-commitment horizon')
     for time in times.post_horizon():
-        logging.debug('get rid of NA constraint at ' + str(time))
         for scenario in scenario_instances.keys():
             for gen in power_system.generators():
                 if not gen.is_controllable:
                     continue
                 u = gen.status().name
-                # print 'clear constraint on
-                # {s}_{u}_{t}'.format(s=scenario,u=u,t=str(time))
                 full_problem_instance._clear_attribute(
                     '{s}_{u}_{t}'.format(s=scenario, u=u, t=str(time)))
 

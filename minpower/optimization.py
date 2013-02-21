@@ -546,11 +546,10 @@ def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
                 isinstance(var.domain, pyomo.base.BooleanSet):
             if var.is_indexed():
                 for key, ind_var in var.iteritems():
-                    if fix_offs or ind_var.value == 1:
-                        if 1e-8 < ind_var.value < (1 - 1e-8):
-                            # not quite integer values can create strange resolve problems
-                            logging.debug('rounding {}'.format(str(ind_var)))
-                            ind_var.value = round(ind_var.value)
+                    if fix_offs or ind_var.value >= 1 - 1e-5:
+                        # not quite integer values can create strange
+                        # and often infeasible resolve problems
+                        ind_var.value = round(ind_var.value)
                         ind_var.fixed = True
             else:
                 if fix_offs or var.value == 1:

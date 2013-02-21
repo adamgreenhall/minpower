@@ -1,0 +1,4 @@
+name,pmin,pmax,scenarios_directory,forecast_filename,observed_filename,shedding_allowed
+aggregate wind,,,scenarios,wind_forecast.csv,wind_observed.csv,1
+baseload,400,500,,,,
+othergen,400,500,,,,

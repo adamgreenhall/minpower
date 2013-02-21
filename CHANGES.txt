@@ -1,5 +1,14 @@
 ----
 
+Version 4.3.1, Thu 21 Feb 2013
+===============================
+
+9c11413ffe	BUGFIX - round all binary variables before fixing (Adam Greenhall)
+41a20f93e3	BUGFIX - correct tiny status values before setting initial status (Adam Greenhall)
+987dfbe723	added csvs for stochastic wind shedding case (Adam Greenhall)
+faa10a7239	add test for stochastic wind shedding (Adam Greenhall)
+
+
 Version 4.3.0, Wed 20 Feb 2013
 ===============================
 

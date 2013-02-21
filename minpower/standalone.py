@@ -12,6 +12,7 @@ from pandas import Series, DataFrame
 from commonscripts import gen_time_dataframe, debug_frame_unequal, set_trace
 from config import user_config
 
+from results import _correct_status
 from schedule import TimeIndex
 from get_data import parse_standalone
 import pkg_resources
@@ -188,12 +189,12 @@ def load_state():
 
     # set up initial state
     t = times.initialTime
-
+    status = _correct_status(storage['status']).ix[t]
     for gen in generators:
         g = str(gen)
         gen.set_initial_condition(t,
                                   power=storage['power'][g][t],
-                                  status=storage['status'][g][t],
+                                  status=status[g],
                                   hoursinstatus=storage['hrsinstatus'][g][t])
 
     return power_system, times, scenario_tree

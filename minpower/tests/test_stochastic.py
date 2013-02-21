@@ -3,8 +3,9 @@ logging.basicConfig(level=logging.ERROR)
 
 import nose
 import numpy as np
+import pandas as pd
 from minpower.tests.test_utils import istest
-from minpower.tests.test_integration import run_case
+from minpower.tests.test_integration import run_case, assert_series_equal
 
 mipgap = 0.0001
 
@@ -82,9 +83,9 @@ def designed_diff_case():
     
     
 @istest
-def stochastic_shedding():
+def stochastic_load_shedding():
     '''
-    Create a sheddable wind generator and one scenario that requires shedding.
+    Create a sheddable wind generator and one scenario that requires load shedding.
     Ensure that wind is shed in one scenario but not the other.
     '''
     
@@ -95,3 +96,34 @@ def stochastic_shedding():
     
     assert((epower['s0'].sum(axis=1) < load_sched).all())
     assert((epower['s1'].sum(axis=1) == load_sched).all())
+    
+@istest
+def stochastic_gen_shedding():
+    '''
+    Create a sheddable wind generator and one scenario that requires wind shedding.
+    Ensure that wind is shed in one scenario but not the other.
+    '''
+    
+    sln = run_case('stochastic_shedding_wind_case')
+    
+    
+    epower = sln.generators_power_scenarios
+    load_sched = sln.loads[0].schedule
+    load_sched.index = epower.major_axis
+    # check that generation meets the load for all scenarios
+    assert(epower.sum(axis=2).eq(load_sched, axis=0).all().all())
+
+    # get wind power scenarios
+    scenario_values = sln.generators[0].scenario_values.drop(
+        'probability', axis=2)
+    scenario_values = scenario_values[
+        scenario_values.items[0]].T.ix[:len(epower.major_axis) -1] \
+        .set_index(epower.major_axis) \
+        .rename(
+            columns=dict(zip(range(len(sln.scenarios)), sln.scenarios)))
+    # calculate wind shed per scenario
+    wind_shed = scenario_values - epower.minor_xs('g0')
+    
+    assert_series_equal(
+        pd.Series(dict(s0=False, s1=True)), 
+        (wind_shed > 0).all())

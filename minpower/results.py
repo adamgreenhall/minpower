@@ -6,6 +6,7 @@
 import logging
 import os
 import pandas as pd
+import numpy as np
 
 try: 
     from collections import OrderedDict
@@ -278,8 +279,8 @@ class Solution_ED(Solution):
         loads = self.loads
 
         plotted_gens, names_gens, plotted_loads, names_loads = [], [], [], []
-        minGen = min(getattrL(generators, 'Pmin'))
-        maxGen = max(getattrL(generators, 'Pmax'))
+        minGen = min(getattrL(generators, 'pmin'))
+        maxGen = max(getattrL(generators, 'pmax'))
 
         # save a plot of the price space - illustrating equal IC
         ax = plot.axes()
@@ -406,9 +407,9 @@ class Solution_OPF(Solution):
         for line in lines:
             P = value(line.power(t))
             if P >= 0:
-                G.add_edge(line.From, line.To, P=P, Plim=line.Pmax)
+                G.add_edge(line.frombus, line.tobus, P=P, Plim=line.pmax)
             else:
-                G.add_edge(line.To, line.From, P=-P, Plim=-line.Pmin)
+                G.add_edge(line.tobus, line.frombus, P=-P, Plim=-line.pmin)
 
         pos = nx.spectral_layout(G)
         Pinj = [ndata['Pinj'] for bus, ndata in G.nodes(data=True)
@@ -488,7 +489,7 @@ class Solution_UC(Solution):
 
         prices = [self.lmps[str(t)][0] for t in self.times]
         stack_plot_UC(
-            self, self.generators, self.times, prices, withPrices=withPrices)
+            self, self.power_system.generators(), self.times, prices, withPrices=withPrices)
         self.savevisualization(full_filename('commitment.png'))
 
 
@@ -832,67 +833,39 @@ def stack_plot_UC(solution, generators, times, prices,
     ax.yaxis.set_label_coords(**yLabel_pos)
     prettify_axes(ax)
 
-    gens_plotted, legend_labels = [], []
-
-    T = [t.Start for t in times]
+    T = times.times.values
     bar_width = times.intervalhrs / 24.0  # maplotlib dates have base of 1day
-    stack_bottom = [0] * len(T)
 
-    def addtostackplot(ax, time, power, color, gens_plotted, stack_bottom):
-        # add commitment times to stackplot
-        plt = ax.bar(time, power, bottom=stack_bottom, color=color,
-                     linewidth=.01, width=bar_width)
-        # add power to stack bottom
-        stack_bottom = elementwiseAdd(power, stack_bottom)
-        # add to list of gens plotted
-        gens_plotted.append(plt[0])
-        return gens_plotted, stack_bottom
+    convert_to_GW = solution.generators_power.max().sum() > 20e3
+    
+    power = solution.generators_power.copy()
+    if convert_to_GW:
+        power = power / 1e3
 
-    if len(generators) <= 5:
-        colors = _colormap(len(generators), colormapName='Blues')
-        for g, gen in enumerate(generators):
-            Pgen = [solution.generators_power[t][g] for t,
-                    time in enumerate(times)]  # [value(gen.power(t)) for t in times]
-            gens_plotted, stack_bottom = addtostackplot(
-                ax, T, Pgen, colors[g], gens_plotted, stack_bottom)
-            legend_labels.append(gen.name)
-    else:
-        # group generators by kind
-        kind_map = dict(ngst='shoulder NG', ngcc='shoulder NG',
-                        nggt='peaker NG', chp='CHP')
-        ordered_kinds = ['nuclear', 'coal', 'CHP', 'other',
-                         'shoulder NG', 'peaker NG', 'wind']
-        colors = _colormap(len(ordered_kinds), colormapName='Blues')
-        power_by_kind = OrderedDict(
-            zip(ordered_kinds, [None] * len(ordered_kinds)))
-        for g, gen in enumerate(generators):
-            kind = gen.kind.lower() if gen.kind.lower() in ordered_kinds else kind_map.get(gen.kind.lower(), 'other')
-            if power_by_kind[kind] is None:
-                power_by_kind[kind] = [solution.generators_power[t][g] for t, time in enumerate(times)]  # [value(gen.power(t)) for t in times]
-            else:
-                power_by_kind[kind] = elementwiseAdd([solution.power_generation[t][g] for t, time in enumerate(times)], power_by_kind[kind])  # [value(gen.power(t)) for t in times]
+    colors = _colormap(len(generators), colormapName='Blues')
 
-        for kind, Pgen in power_by_kind.iteritems():
-            if Pgen is None:
-                continue
-            gens_plotted, stack_bottom = addtostackplot(ax, T, Pgen, colors[ordered_kinds.index(kind)], gens_plotted, stack_bottom)
-            legend_labels.append(kind)
-
-    convert_to_GW = True if max(stack_bottom) > 20000 else False
-
+    power.plot(ax=ax, kind='bar', legend=True, stacked=True, color=colors, edgecolor='none')
+    
     # show prices
     if withPrices:
-        prices = replace_all(prices, user_config.cost_load_shedding, None)
-        prices_wo_none = [p for p in prices if p is not None]
-        if prices_wo_none:
+        prices = pd.Series(prices, index=times.times)
+        prices[prices == user_config.cost_load_shedding] = None
+        prices = prices.dropna()
+        if len(prices):
             axes_price = plot.axes([figLeft, .75, figWidth, .2], sharex=ax)
-            axes_price.step(T + [times.End], prices + [prices[-1]],
-                            where='post')  # start from 1 past initial time
+
+            # HACK - pandas uses this index for the bar plots
+            # and since they share an x axis, use the same x values here            
+            pd.Series(prices.values, index=np.arange(len(prices)) + 0.25).plot(
+                ax=axes_price, drawstyle='steps')
+            
+            # axes_price.step(times.times.tolist() + [times.End], prices.values.tolist() + [prices[prices.index[-1]]],
+            #                 where='post')  # start from 1 past initial time
             axes_price.set_ylabel('price\n[$/MWh]', ha='center', **font_big)
             axes_price.yaxis.set_label_coords(**yLabel_pos)
             plot.setp(axes_price.get_xticklabels(), visible=False)
             # format the price axis nicely
-            plot.ylim((.9 * min(prices_wo_none), 1.1 * max(prices_wo_none)))
+            axes_price.set_ylim(.9 * prices.min(), 1.1 * prices.max())
             axes_price.yaxis.set_major_locator(
                 matplotlib.ticker.MaxNLocator(5))
             prettify_axes(axes_price)
@@ -905,16 +878,22 @@ def stack_plot_UC(solution, generators, times, prices,
 
     # format the time axis nicely
     if hours_tick_interval is None:
-        if 24 * 10 > times.spanhrs > 48:
-            ax.xaxis.set_major_locator(matplotlib.dates.DayLocator())
-            ax.xaxis.set_major_formatter(
-                matplotlib.dates.DateFormatter('%Y-%m-%d'))
-            ax.xaxis.set_minor_locator(matplotlib.dates.HourLocator())
-        elif times.spanhrs < 48:
-            ax.xaxis.set_major_locator(matplotlib.dates.HourLocator())
-            ax.xaxis.set_major_formatter(
-                matplotlib.dates.DateFormatter('%H:%M'))
-        # otherwise use defaults
+        if len(times) < 10:
+            pass
+        else:
+            if 24 * 10 > times.spanhrs > 48:
+                # TODO - this isn't working because pandas bar internals
+                # sets the x values to floats, instead of the actual times
+                # https://github.com/pydata/pandas/blob/master/pandas/tools/plotting.py#L1257
+                ax.xaxis.set_major_locator(matplotlib.dates.DayLocator())
+                ax.xaxis.set_major_formatter(
+                    matplotlib.dates.DateFormatter('%Y-%m-%d'))
+                ax.xaxis.set_minor_locator(matplotlib.dates.HourLocator())
+            elif times.spanhrs < 48:
+                ax.xaxis.set_major_locator(matplotlib.dates.HourLocator())
+                ax.xaxis.set_major_formatter(
+                    matplotlib.dates.DateFormatter('%H:%M'))
+            # otherwise use defaults
     else:
         ax.xaxis.set_major_locator(
             matplotlib.dates.HourLocator(interval=hours_tick_interval))
@@ -922,29 +901,8 @@ def stack_plot_UC(solution, generators, times, prices,
 
     # format the power axis nicely
     if convert_to_GW:
-        labels_power = ax.get_yticks()
-        labels_power = [P / 1000 for P in labels_power]
-        ax.set_yticklabels(labels_power)
         ax.set_ylabel('energy [GWh]', ha='center', **font_big)
     ax.autoscale_view()
-
-    # add the legend
-    plottedL = gens_plotted[::-1]
-#    shrink_axis(ax,0.30)
-#    if withPrices: shrink_axis(axes_price,0.30)
-    legend_font = matplotlib.font_manager.FontProperties()
-    legend_font.set_size('small')
-
-    if seperate_legend:
-        figlegend = plot.figure()
-        figlegend.legend(
-            plottedL, legend_labels[::-1], prop=legend_font, loc='center')
-        figlegend.savefig(full_filename('commitment-legend.png'))
-        plot.close(figlegend)
-    else:
-        ax.legend(plottedL, legend_labels[::-1], prop=legend_font)
-                  #,loc='center left', bbox_to_anchor=(1, 0.5))
-
 
 def prettify_axes(ax):
     ax.spines['top'].set_visible(False)

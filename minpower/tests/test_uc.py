@@ -18,7 +18,7 @@ def prices():
         make_expensive_gen()
     ]
 
-    power_system, times = solve_problem(generators, 
+    power_system, times = solve_problem(generators, do_reset_config=False,
         **make_loads_times(Pdt=[80,110,130]))
     lmps = [power_system.buses[0].price(t) for t in times]
     
@@ -55,8 +55,8 @@ def load_shedding():
     Pdt1=211
     generators=[make_cheap_gen(pmax=pmax)]
     Pdt=[110,Pdt1,110]
-    power_system, times = solve_problem(
-        generators, **make_loads_times(Pdt=Pdt))
+    power_system, times = solve_problem(generators, do_reset_config=False,
+        **make_loads_times(Pdt=Pdt))
     load=power_system.loads()[0]
     load_t1=load.power(times[1], evaluate=True)
     load_t1_shed=load.shed(times[1], evaluate=True)

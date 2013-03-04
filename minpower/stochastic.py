@@ -122,9 +122,15 @@ def create_problem_with_scenarios(power_system, times):
         scenario_instances[scenario._name] = scenario_instance
 
     gc.enable()
-    scenario_tree.defineVariableIndexSets(scenario_instances)
+    scenario_tree.defineVariableIndexSets(power_system._model)
     full_problem_instance = create_ef_instance(
         scenario_tree, scenario_instances)
+#        generate_weighted_cvar = generate_weighted_cvar,
+#        cvar_weight = cvar_weight,
+#        risk_alpha = risk_alpha,
+#        cc_indicator_var_name = cc_indicator_var_name,
+#        cc_alpha = cc_alpha)
+        
     # could generate cvar here
     # full_problem_instance.pprint()
 
@@ -138,7 +144,7 @@ def create_problem_with_scenarios(power_system, times):
                 if not gen.is_controllable:
                     continue
                 u = gen.status().name
-                full_problem_instance._clear_attribute(
+                delattr(full_problem_instance, 
                     '{s}_{u}_{t}'.format(s=scenario, u=u, t=str(time)))
 
     power_system.stochastic_formulation = True

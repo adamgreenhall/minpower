@@ -11,7 +11,7 @@ import pandas as pd
 
 # make pyomo recognize that True == 1
 pyomo.base.numvalue.KnownConstants[
-    True] = pyomo.base.numvalue.NumericConstant(None, None, 1.0)
+    True] = pyomo.base.numvalue.NumericConstant(1.0)
 
 variable_kinds = dict(
     Continuous=pyomo.Reals,
@@ -91,11 +91,6 @@ class OptimizationObject(object):
         '''
         return  # self.all_constraints(times)
 
-    def _t_id(self, name, time):
-        return name.replace(' ', '_') + '_' + self.iden(time)
-
-    def _id(self, name):
-        return name.replace(' ', '_') + '_' + str(self)
 
     def add_variable(self, name, time=None,
                      fixed_value=None,
@@ -161,7 +156,15 @@ class OptimizationObject(object):
         cname = self._id(name)
         self._parent_problem().add_component_to_problem(
             pyomo.Constraint(index, name=cname, rule=expression))
-
+    
+    def get_dual(self, cname, time=None):
+        '''get the dual of a constraint of an LP problem''' 
+        if user_config.duals:
+            return self._parent_problem()._model.dual.getValue(
+                self.get_constraint(cname, time))
+        else:
+            return None
+    
     def get_variable(self, name, time=None, indexed=False, scenario=None):
         if indexed:
             var_name = self._id(name)
@@ -225,11 +228,13 @@ class OptimizationObject(object):
         Identifing string for the object, depending on time.
         Used to name variables and constraints for the object.
         '''
-        raise NotImplementedError('''
-            the iden() method must be overwritten
-            for a child of the OptimizationObject class.
-            this one is ''' + str(type(self)))
-        return 'some unique identifying string'
+        return str(self) + '_' + str(time)
+
+    def _t_id(self, name, time):
+        return name.replace(' ', '_') + '_' + self.iden(time)
+
+    def _id(self, name):
+        return name.replace(' ', '_') + '_' + str(self)
 
     def __str__(self):
         '''
@@ -239,11 +244,9 @@ class OptimizationObject(object):
         '''
         return 'opt_obj{ind}'.format(ind=self.index)
 
-    def _remove_component(self, name, time, indexed=False):
-        if indexed:
-            raise NotImplementedError
+    def _remove_component(self, name, time=None):
         key = self._t_id(name, time)
-        self._parent_problem()._model._clear_attribute(key)
+        delattr(self._parent_problem()._model, key)
 
     def values(self, name, reindex=None):
         '''return the values of an indexed pyomo component as a Series'''
@@ -277,7 +280,7 @@ class OptimizationProblem(OptimizationObject):
         '''add a optimization component to the model'''
         if ':' in component.name:
             raise ValueError('no colons allowed in optimization object names')
-        self._model._add_component(component.name, component)
+        self._model.add_component(component.name, component)
 
     def add_objective(self, expression, sense=pyomo.minimize):
         '''add an objective to the problem'''
@@ -286,7 +289,7 @@ class OptimizationProblem(OptimizationObject):
 
     def add_set(self, name, items, ordered=False):
         '''add a :class:`pyomo.Set` to the problem'''
-        self._model._add_component(name,
+        self._model.add_component(name,
                                    pyomo.Set(initialize=items, name=name, ordered=ordered))
 
     def add_variable(self, name, **kwargs):
@@ -294,13 +297,17 @@ class OptimizationProblem(OptimizationObject):
         def map_args(kind='Continuous', low=None, high=None):
             return dict(bounds=(low, high), domain=variable_kinds[kind])
         var = pyomo.Var(name=name, **map_args(**kwargs))
-        self._model._add_component(name, var)
+        self._model.add_component(name, var)
 
     def add_constraint(self, name, expression, time=None):
-        if time is not None:
-            name = self._t_id(name, time)
-        self._model._add_component(name,
+        cname = self._t_id(name, time) if time is not None else name
+        self._model.add_component(cname,
                                    pyomo.Constraint(name=name, rule=expression))
+
+    def add_suffix(self, name):
+        self._model.add_component(name, 
+            pyomo.Suffix(direction=pyomo.Suffix.IMPORT))
+
 
     def get_component(self, name, scenario=None):
         '''Get an optimization component'''
@@ -325,6 +332,14 @@ class OptimizationProblem(OptimizationObject):
         except:
             self._model.pprint(filename)
 
+    def _remove_component(self, name, time=None):
+        key = self._t_id(name, time) if time is not None else name
+        delattr(self._model, key)
+
+    
+    def reset_objective(self):
+        delattr(self._model, 'objective')
+    
     def reset_model(self):
         instances = [self._model]
         if self.stochastic_formulation:
@@ -350,7 +365,7 @@ class OptimizationProblem(OptimizationObject):
 
                 # var = None
                 # if instance==self._stochastic_instance: debug()
-                instance._clear_attribute(key)
+                delattr(instance, key)
 
 #        debug()
         # for stage in self._scenario_tree._stages
@@ -471,13 +486,13 @@ class OptimizationProblem(OptimizationObject):
         return instance
 
     def __str__(self):
-        return 'power_system_problem'
+        return 'system'
 
-    def _solve_instance(self, instance, solver=user_config.solver, get_duals=False, keepFiles=False):
+    def _solve_instance(self, instance, solver=user_config.solver, get_duals=False, keepfiles=False):
         if user_config.keep_lp_files: 
-            keepFiles = True
+            keepfiles = True
 
-        if not keepFiles:
+        if not keepfiles:
             logger = logging.getLogger()
             current_log_level = logger.level
             logger.setLevel(logging.WARNING)
@@ -503,13 +518,13 @@ class OptimizationProblem(OptimizationObject):
 
         start = time.time()
         results = self._opt_solver.solve(
-            instance, suffixes=suffixes, keepFiles=keepFiles)
+            instance, suffixes=suffixes, keepfiles=keepfiles)
         try:
             self._opt_solver._symbol_map = None  # this should mimic the memory leak bugfix at: software.sandia.gov/trac/coopr/changeset/5449
         except AttributeError:
             pass  # should remove after this fix becomes part of a release
         elapsed = (time.time() - start)
-        if not keepFiles:
+        if not keepfiles:
             logger.setLevel(current_log_level)
         self.solved = detect_status(results, self._opt_solver.name)
 
@@ -535,7 +550,7 @@ class OptimizationProblem(OptimizationObject):
 
     def _remove_all_constraints(self):
         for key in self._model.active_components(pyomo.Constraint).keys():
-            self._model._clear_attribute(key)
+            delattr(self._model, key)
 
 
 def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
@@ -595,11 +610,6 @@ def value(variable):
         return variable.value
     except AttributeError:
         return variable  # just a number
-
-
-def dual(constraint, index=None):
-    '''Dual of optimization constraint, after the problem is solved.'''
-    return constraint[index].dual
 
 
 def detect_status(results, solver):

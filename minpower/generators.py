@@ -196,7 +196,7 @@ class Generator(OptimizationObject):
         if pd.isnull(power):
             raise ValueError('inital power cannot be null')
         self.initial_status = bool_to_int(status)
-        self.initial_power = power * self.initial_status  # note: this eliminates ambiguity of off status with power non-zero output
+        self.initial_power = float(power * self.initial_status)  # note: this eliminates ambiguity of off status with power non-zero output
         self.initial_status_hours = hoursinstatus
 
     def build_cost_model(self):
@@ -434,8 +434,6 @@ class Generator(OptimizationObject):
     def __int__(self):
         return self.index
 
-    def iden(self, t):
-        return str(self) + str(t)
 
 def get_tPrev(t, model, times):
     return model.times.prev(t) if t != model.times.first() else times.initialTime

@@ -11,7 +11,7 @@ import logging
 from coopr import pyomo
 import numpy as np
 import pandas as pd
-from optimization import (value, dual, OptimizationObject,
+from optimization import (value, OptimizationObject,
                           OptimizationProblem, OptimizationError)
 from commonscripts import (update_attributes, getattrL, flatten, set_trace)
 from config import user_config
@@ -79,9 +79,6 @@ class Load(OptimizationObject):
     def __int__(self):
         return self.index
 
-    def iden(self, t):
-        return str(self) + str(t)
-
     def get_scheduled_output(self, time):
         return float(self.schedule.ix[time])
 
@@ -103,7 +100,7 @@ class Line(OptimizationObject):
 
     def price(self, time):
         '''congestion price on line'''
-        return dual(self.get_constraint('line flow', time))
+        return self.get_dual('line flow', time)
 
     def create_variables(self, times):
         self.add_variable('power', index=times.set)
@@ -129,9 +126,6 @@ class Line(OptimizationObject):
     def __int__(self):
         return self.index
 
-    def iden(self, t):
-        return str(self) + str(t)
-
 
 class Bus(OptimizationObject):
     """
@@ -150,7 +144,7 @@ class Bus(OptimizationObject):
         return self.get_variable('angle', time, indexed=True)
 
     def price(self, time):
-        return dual(self.get_constraint('power balance', time))
+        return self.get_dual('power balance', time)
 
     def Pgen(self, t, evaluate=False):
         if evaluate:
@@ -224,9 +218,6 @@ class Bus(OptimizationObject):
     #     self.constraints={}
     #     for gen in self.generators: gen.clear_constraints()
     #     for load in self.loads: load.clear_constraints()
-
-    def iden(self, t):
-        return str(self) + str(t)
 
     def __str__(self):
         return 'i{ind}'.format(ind=self.index)
@@ -348,11 +339,13 @@ class PowerSystem(OptimizationProblem):
 
     def create_constraints(self, times, include_children=True):
         if include_children:
+            if user_config.duals: 
+                self.add_suffix('dual')
             for bus in self.buses:
                 bus.create_constraints(times, self.Bmatrix, self.buses)
             for line in self.lines:
                 line.create_constraints(times, self.buses)
-
+        
         # system reserve constraint
         self._has_reserve = not self.shedding_mode and \
             (self.reserve_fixed > 0 or self.reserve_load_fraction > 0)
@@ -363,10 +356,14 @@ class PowerSystem(OptimizationProblem):
                     gen.power_available(time) for gen in self.generators())
                 self.add_constraint('reserve', generation_availability >= required_generation_availability, time=time)
 
-        self.add_constraint('system_cost_first_stage', self.cost_first_stage(
-        ) == sum(bus.cost_first_stage(times) for bus in self.buses))
-        self.add_constraint('system_cost_second_stage', self.cost_second_stage(
-        ) == sum(bus.cost_second_stage(times) for bus in self.buses))
+        self.add_constraint('system_cost_first_stage', 
+            self.cost_first_stage() == \
+            sum(bus.cost_first_stage(times) for bus in self.buses))
+        self.add_constraint('system_cost_second_stage', 
+            self.cost_second_stage() == \
+            sum(bus.cost_second_stage(times) for bus in self.buses))
+
+
 
     def iden(self, time=None):
         name = 'system'
@@ -509,8 +506,12 @@ class PowerSystem(OptimizationProblem):
 
         # make load power into a variable instead of a param
         for load in self.loads():
-            load.create_variables(times)  # need all for the .set attrib
-            load.create_constraints(const_times)
+            try: 
+                load.create_variables(times)  # need all for the .set attrib
+                load.create_constraints(const_times)
+            except RuntimeError:
+                # load already has a power variable and shedding constraint
+                pass
         
         if not user_config.economic_wind_shed:
             for gen in filter(lambda gen: gen.shedding_mode,
@@ -527,9 +528,13 @@ class PowerSystem(OptimizationProblem):
                 self.Bmatrix, self.buses, include_children=False)
 
         # reset objective
-        self._model.objective = None
+        self.reset_objective()
         self.create_objective(const_times)
         # re-create system cost constraints
+        self._remove_component('system_cost_first_stage')
+        self._remove_component('system_cost_second_stage')
+        if self._has_reserve:
+            self._remove_component('reserve')
         self.create_constraints(const_times, include_children=False)
 
         # recreating all constraints would be simpler
@@ -551,6 +556,7 @@ class PowerSystem(OptimizationProblem):
 
     def _resolve_problem(self, sln):
         times = sln.times_non_overlap
+        self._remove_component('times')
         self.add_set('times', times._set, ordered=True)
         times.set = self._model.times
         
@@ -565,7 +571,7 @@ class PowerSystem(OptimizationProblem):
         gen.set_power_to_observed(times)
 
         # reset objective to only the non-overlap times
-        self._model.objective = None
+        self.reset_objective()
         self.create_objective(times)
 
         # recreate constraints only for the non-overlap times

@@ -1,7 +1,7 @@
 from pandas import Series, DataFrame
+from minpower.config import user_config
 from minpower import powersystems, schedule, solve
 from minpower.generators import Generator
-from minpower.config import user_config
 from minpower.optimization import value, OptimizationError
 
 import nose
@@ -97,6 +97,7 @@ def solve_problem(generators, loads=None, times=None,
                 gen.set_initial_condition(times.initialTime)
             else:
                 gen.set_initial_condition(times.initialTime, **gen_init[g])
+
 
     power_system = powersystems.PowerSystem(generators, loads, lines)
     solve.create_problem(power_system, times)

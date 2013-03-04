@@ -1,5 +1,11 @@
 ----
 
+Version 4.3.4, Mon 04 Mar 2013
+===============================
+
+ecd0cf5504	update to coopr 3.3 (Adam Greenhall)
+
+
 Version 4.3.3, Mon 04 Mar 2013
 ===============================
 

@@ -1,5 +1,11 @@
 ----
 
+Version 4.3.3, Mon 04 Mar 2013
+===============================
+
+d8b0e89112	drop startup cost tightening constraints (Adam Greenhall)
+
+
 Version 4.3.2, Fri 22 Feb 2013
 ===============================
 

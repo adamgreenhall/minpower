@@ -1,5 +1,12 @@
 ----
 
+Version 4.3.5, Mon 04 Mar 2013
+===============================
+
+deed307369	get rid of ipdb in tests (Adam Greenhall)
+5549e18383	log solver output if debugging. try to get pyomo to import quietly (Adam Greenhall)
+
+
 Version 4.3.4, Mon 04 Mar 2013
 ===============================
 

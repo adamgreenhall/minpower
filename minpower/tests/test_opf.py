@@ -4,7 +4,6 @@ from minpower.optimization import value
 from minpower.commonscripts import Series
 from minpower.config import user_config
 
-from ipdb import set_trace
 from test_utils import (istest, get_duals, with_setup, reset_config,
     make_cheap_gen, make_mid_gen, make_expensive_gen, 
     singletime, make_loads_times, 

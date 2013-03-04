@@ -12,7 +12,6 @@ from pandas import DataFrame, Series, Index
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
-from ipdb import set_trace
 
 def main(args):
     generators, loads, _, times, _, data = parsedir()

@@ -373,14 +373,15 @@ class Generator(OptimizationObject):
                         self.status(t) - self.status(tPrev))
                 self.add_constraint_set('startup cost min', times.set, startupcostmin)
 
-                def startupcostmax(model, t):
-                    return self.cost_startup(t) <= self.startupcost * self.status(t)
-                self.add_constraint_set('startup cost max', times.set, startupcostmax)
-                
-                def startupcostmax_prev(model, t):
-                    tPrev = get_tPrev(t, model, times)
-                    return self.cost_startup(t) <= self.startupcost * (1 - self.status(tPrev))
-                self.add_constraint_set('startup cost max prev', times.set, startupcostmax_prev)
+                # these tightening constraints make stochastic problems take a very long time
+#                def startupcostmax(model, t):
+#                    return self.cost_startup(t) <= self.startupcost * self.status(t)
+#                self.add_constraint_set('startup cost max', times.set, startupcostmax)
+#                
+#                def startupcostmax_prev(model, t):
+#                    tPrev = get_tPrev(t, model, times)
+#                    return self.cost_startup(t) <= self.startupcost * (1 - self.status(tPrev))
+#                self.add_constraint_set('startup cost max prev', times.set, startupcostmax_prev)
                                     
             if self.shutdowncost > 0:
                 def shutdowncost(model, t):

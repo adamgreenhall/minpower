@@ -10,6 +10,8 @@ import logging
 import itertools
 import operator
 import datetime
+from contextlib import contextmanager
+
 import numpy as np
 import pandas as pd
 from pandas import DataFrame, Series, date_range
@@ -43,6 +45,29 @@ class StreamToLogger(object):
     def write(self, buf):
         for line in buf.rstrip().splitlines():
             self.logger.log(self.log_level, line.rstrip())
+
+@contextmanager
+def not_quiet():
+    yield
+    
+@contextmanager
+def quiet():
+    sys.stderr.flush()
+    sys.stdout.flush()
+    devnull = open(os.devnull, "w")
+    sys.stdout = devnull
+    sys.stderr = devnull
+
+    logger = logging.getLogger()
+    current_log_level = logger.level
+    logger.setLevel(logging.CRITICAL)
+
+    try:
+        yield
+    finally:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+        logger.setLevel(current_log_level)
 
 
 def gen_time_dataframe(generators, times, values=()):

@@ -10,9 +10,10 @@ import sys, os, logging, subprocess
 import time as timer
 import argparse
 import pdb
-import get_data, powersystems, stochastic, results
+
 from config import user_config, parse_command_line_config
 from commonscripts import joindir, StreamToLogger
+import powersystems, get_data, stochastic, results
 from standalone import store_times, init_store, get_storage, repack_storage
 
 def _set_store_filename(pid=None):

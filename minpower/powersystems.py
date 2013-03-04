@@ -8,14 +8,19 @@ optimization framework from :class:`~optimization.OptimizationObject`.
 """
 
 import logging
+
+from commonscripts import (update_attributes, getattrL, flatten, 
+    quiet, set_trace)
+from config import user_config
+
+from optimization import (value, OptimizationObject,
+                          OptimizationProblem, OptimizationError)
+import stochastic
+
+
 from coopr import pyomo
 import numpy as np
 import pandas as pd
-from optimization import (value, OptimizationObject,
-                          OptimizationProblem, OptimizationError)
-from commonscripts import (update_attributes, getattrL, flatten, set_trace)
-from config import user_config
-import stochastic
 
 
 class Load(OptimizationObject):

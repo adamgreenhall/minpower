@@ -5,7 +5,10 @@ Basically a wrapper around Coopr's `pyomo.ConcreteModel` class.
 import logging
 import time
 import weakref
-import coopr.pyomo as pyomo
+from commonscripts import quiet, not_quiet, set_trace
+
+with quiet():    
+    import coopr.pyomo as pyomo
 from coopr.opt.base import solvers as cooprsolver
 import pandas as pd
 
@@ -492,10 +495,6 @@ class OptimizationProblem(OptimizationObject):
         if user_config.keep_lp_files: 
             keepfiles = True
 
-        if not keepfiles:
-            logger = logging.getLogger()
-            current_log_level = logger.level
-            logger.setLevel(logging.WARNING)
         suffixes = ['dual'] if get_duals else []
 
         if not hasattr(self, '_opt_solver'):
@@ -516,16 +515,23 @@ class OptimizationProblem(OptimizationObject):
                 msg = 'solver "{}" not found by coopr'.format(solver)
                 raise OptimizationError(msg)
 
+        # if we are debugging, show the solver output
+        show_solver_output = user_config.logging_level <= 10
+
         start = time.time()
-        results = self._opt_solver.solve(
-            instance, suffixes=suffixes, keepfiles=keepfiles)
+         
+        quiet_fn = not_quiet if keepfiles or show_solver_output else quiet
+        
+        with quiet_fn():
+            results = self._opt_solver.solve(instance, 
+                suffixes=suffixes, 
+                keepfiles=keepfiles, 
+                tee=show_solver_output)
         try:
             self._opt_solver._symbol_map = None  # this should mimic the memory leak bugfix at: software.sandia.gov/trac/coopr/changeset/5449
         except AttributeError:
             pass  # should remove after this fix becomes part of a release
         elapsed = (time.time() - start)
-        if not keepfiles:
-            logger.setLevel(current_log_level)
         self.solved = detect_status(results, self._opt_solver.name)
 
         if self.solved and not get_duals:

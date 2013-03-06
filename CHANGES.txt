@@ -1,5 +1,12 @@
 ----
 
+Version 4.3.6, Wed 06 Mar 2013
+===============================
+
+be51e3ad8c	add solver timelimit option (and allow use of incomplete solutions). better debugging (show solver output, don't log to files, set logging level to debug) (Adam Greenhall)
+353c98fdae	clean WW UC example (Adam Greenhall)
+
+
 Version 4.3.5, Mon 04 Mar 2013
 ===============================
 

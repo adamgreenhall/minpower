@@ -491,10 +491,15 @@ class OptimizationProblem(OptimizationObject):
     def __str__(self):
         return 'system'
 
-    def _solve_instance(self, instance, solver=user_config.solver, get_duals=False, keepfiles=False):
+    def _solve_instance(self, instance,
+        solver=user_config.solver, 
+        get_duals=False,
+        keepfiles=False,
+        ):
+        
         if user_config.keep_lp_files: 
             keepfiles = True
-
+        
         suffixes = ['dual'] if get_duals else []
 
         if not hasattr(self, '_opt_solver'):
@@ -510,10 +515,15 @@ class OptimizationProblem(OptimizationObject):
 
             self._opt_solver = cooprsolver.SolverFactory(solver, **kwds)
             self._opt_solver.options.mipgap = user_config.mipgap
+            
 
             if self._opt_solver is None:
                 msg = 'solver "{}" not found by coopr'.format(solver)
                 raise OptimizationError(msg)
+
+        if user_config.solver_time_limit: 
+            self._opt_solver.options.timelimit = user_config.solver_time_limit
+
 
         # if we are debugging, show the solver output
         show_solver_output = user_config.logging_level <= 10
@@ -526,7 +536,8 @@ class OptimizationProblem(OptimizationObject):
             results = self._opt_solver.solve(instance, 
                 suffixes=suffixes, 
                 keepfiles=keepfiles, 
-                tee=show_solver_output)
+                tee=show_solver_output,
+                )
         try:
             self._opt_solver._symbol_map = None  # this should mimic the memory leak bugfix at: software.sandia.gov/trac/coopr/changeset/5449
         except AttributeError:
@@ -626,8 +637,9 @@ def detect_status(results, solver):
         success = True
     elif status_text in ['infeasible', 'unbounded']:
         success = False
-    elif status_text == 'unknown':
-        # this is an edge case encountered in resolves
+    elif status_text in ['unknown', 'maxTimeLimit']:
+        # max time limit - the solver may have reached a viable solution
+        # unknown - an edge case encountered in resolves
         success = len(results.Solution.Variable.keys()) > 0
     else:
         success = False

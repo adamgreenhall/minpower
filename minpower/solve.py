@@ -72,7 +72,10 @@ def standaloneUC():
         _set_store_filename(args.pid)    
         # load stage data
         power_system, times, scenario_tree = load_state()
+
+        # override the stored config with the current command line config
         user_config.directory = args.directory
+        user_config.debugger = args.debugger
 
         _setup_logging(args.pid)
       
@@ -220,10 +223,12 @@ def create_problem(power_system, times, scenario_tree=None,
 def _setup_logging(pid=None):
     ''' set up the logging to report on the status'''
     kwds = dict(
-        level=user_config.logging_level,
+        level=user_config.logging_level if not user_config.debugger else logging.debug,
         datefmt='%Y-%m-%d %H:%M:%S',
         format='%(asctime)s %(levelname)s: %(message)s')
-    if user_config.output_prefix or user_config.pid:
+    # log to file if pid is set, unless in debugging mode
+    if (user_config.output_prefix or user_config.pid) \
+        and not user_config.debugger:
         kwds['filename'] = joindir(user_config.directory,
             '{}.log'.format(pid))
     if (user_config.logging_level > 10) and (not 'filename' in kwds):

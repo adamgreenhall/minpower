@@ -28,7 +28,8 @@ option_types = dict(
     dispatch_decommit_allowed=bool,
     solver=str,
     mipgap=float,
-
+    solver_time_limit=float,
+    
     reserve_fixed=float,
     reserve_load_fraction=float,
 
@@ -192,9 +193,14 @@ def setup_parser_args(parser):
     add_opt(parser, 'hours_overlap','-o',
         help='number hours to overlap commitments in a rolling UC')
 
-    add_opt(parser, 'mipgap',
-        help='the MIP gap solution tolerence')
 
+    solver_opt = parser.add_argument_group('Solver options')
+    add_opt(solver_opt, 'mipgap',
+        help='the MIP gap solution tolerence')
+    add_opt(solver_opt, 'solver_time_limit', 
+        help='the MIP solver time limit (in seconds)')
+
+        
     reserve = parser.add_argument_group('Reserve',
         'Does the system require reserve? The default is no reserve.')
     add_opt(reserve, 'reserve_fixed',

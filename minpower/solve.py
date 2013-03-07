@@ -223,7 +223,7 @@ def create_problem(power_system, times, scenario_tree=None,
 def _setup_logging(pid=None):
     ''' set up the logging to report on the status'''
     kwds = dict(
-        level=user_config.logging_level if not user_config.debugger else logging.debug,
+        level=int(user_config.logging_level) if not user_config.debugger else logging.DEBUG,
         datefmt='%Y-%m-%d %H:%M:%S',
         format='%(asctime)s %(levelname)s: %(message)s')
     # log to file if pid is set, unless in debugging mode

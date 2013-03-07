@@ -7,8 +7,12 @@ import time
 import weakref
 from commonscripts import quiet, not_quiet, set_trace
 
-with quiet():    
+with quiet():
+    # FIXME - cplex ilog manager is making noise
+    # can't seem to figure out which stream it is outputing to
+    # it isn't stdout or stderr
     import coopr.pyomo as pyomo
+
 from coopr.opt.base import solvers as cooprsolver
 import pandas as pd
 

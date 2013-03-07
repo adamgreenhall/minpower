@@ -14,7 +14,7 @@ except ImportError:
     from ordereddict import OrderedDict
 
 from commonscripts import (update_attributes, gen_time_dataframe, joindir,
-    replace_all, getattrL, elementwiseAdd, writeCSV, transpose, within,
+    replace_all, getattrL, writeCSV, transpose, within, correct_status,
     set_trace)
 from schedule import TimeIndex
 from optimization import value
@@ -143,7 +143,7 @@ class Solution(object):
 
     def _get_outputs(self):
         self.generators_power = self.gen_time_df('power')
-        self.generators_status = _correct_status(self.gen_time_df('status'))
+        self.generators_status = correct_status(self.gen_time_df('status'))
 
     def _get_costs(self):
         self.totalcost_generation = self.gen_time_df('cost', evaluate=True)
@@ -698,7 +698,7 @@ class Solution_Stochastic(Solution):
         else:
             self.generators_power_scenarios = self.stg_panel('power')
             self.generators_status_scenarios = \
-                _correct_status(self.stg_panel('status'))
+                correct_status(self.stg_panel('status'))
             self.expected_status = \
                 self.generators_status_scenarios[self.scenarios[0]]
             self.generators_status = self.expected_status.copy()
@@ -802,13 +802,6 @@ class Solution_Stochastic_UC(Solution_Stochastic):
             logging.warn('''didnt resolve - no power
                  values are available for csv format''')
         self.generators_status.to_csv(full_filename('commitment-status.csv'))
-
-
-def _correct_status(status):
-    # correct for strange solver values returned on resolve
-    status[status > 0.99] = 1
-    status[status < 0.01] = 0
-    return status.astype(int)
 
 
 def _colormap(numcolors, colormapName='gist_rainbow', mincolor=1):

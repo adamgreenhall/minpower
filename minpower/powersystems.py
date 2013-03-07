@@ -9,8 +9,7 @@ optimization framework from :class:`~optimization.OptimizationObject`.
 
 import logging
 
-from commonscripts import (update_attributes, getattrL, flatten, 
-    quiet, set_trace)
+from commonscripts import (update_attributes, getattrL, flatten, set_trace)
 from config import user_config
 
 from optimization import (value, OptimizationObject,
@@ -527,7 +526,7 @@ class PowerSystem(OptimizationProblem):
 
         # recalc the power balance constraint
         for bus in self.buses:
-            for time in times:
+            for time in const_times:
                 bus._remove_component('power balance', time)
             bus.create_constraints(const_times,
                 self.Bmatrix, self.buses, include_children=False)

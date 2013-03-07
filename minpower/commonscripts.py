@@ -54,6 +54,13 @@ def not_quiet():
 def quiet():
     sys.stderr.flush()
     sys.stdout.flush()
+    if sys.stdout != sys.__stdout__:
+        # ipython notebook redirects std_out to some crazy special object
+        # the rest of this stream redirection breaks the ipython notebook
+        # so skip it
+        yield
+        return
+        
     devnull = open(os.devnull, "w")
     sys.stdout = devnull
     sys.stderr = devnull
@@ -116,6 +123,12 @@ class DotDict(dict):
     __delattr__ = dict.__delitem__
 
 ###### matrix stuff #######
+
+def correct_status(status):
+    # correct for strange solver values returned on resolve
+    status[status > 0.99] = 1
+    status[status < 0.01] = 0
+    return status.astype(int)
 
 
 def elementwiseAdd(La, Lb):

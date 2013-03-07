@@ -9,10 +9,9 @@ import logging
 import sys
 import pandas as pd
 from pandas import Series, DataFrame
-from commonscripts import gen_time_dataframe, debug_frame_unequal, set_trace
+from commonscripts import gen_time_dataframe, correct_status, debug_frame_unequal, set_trace
 from config import user_config
 
-from results import _correct_status
 from schedule import TimeIndex
 from get_data import parse_standalone
 import pkg_resources
@@ -189,7 +188,7 @@ def load_state():
 
     # set up initial state
     t = times.initialTime
-    status = _correct_status(storage['status']).ix[t]
+    status = correct_status(storage['status']).ix[t]
     for gen in generators:
         g = str(gen)
         gen.set_initial_condition(t,

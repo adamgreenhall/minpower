@@ -1,8 +1,18 @@
 '''Test the constraint behavior of the bids'''
 from minpower.generators import Generator
 from minpower.optimization import value
-
+from minpower.bidding import parse_polynomial
 from test_utils import *
+
+@istest
+def parser():
+    assert parse_polynomial('7x^2 + 6x - 5') == [-5, 6, 7]
+    # with explicit * symbol for multiplication
+    assert parse_polynomial('7*x^2 + 6 * x - 5') == [-5, 6, 7]
+    # random order
+    assert parse_polynomial('6*P - 5 + 7*P^2') == [-5, 6, 7]
+    # make sure we can skip the linear term
+    assert parse_polynomial('6P') == [0, 6]
 
 
 @istest

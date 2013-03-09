@@ -430,7 +430,7 @@ class PowerSystem(OptimizationProblem):
         for gen in self.generators():
             finalstatus = getattr(gen, 'finalstatus', {})
             if finalstatus:
-                gen.set_initial_condition(time=initTime, **finalstatus)
+                gen.set_initial_condition(**finalstatus)
                 del gen.finalstatus
         return
 

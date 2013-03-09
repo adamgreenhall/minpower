@@ -4,6 +4,8 @@ import logging
 logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s')
 
 import pandas as pd
+import numpy as np
+
 from pandas.util.testing import assert_series_equal
 from minpower.generators import Generator_nonControllable, Generator_Stochastic
 from minpower.optimization import value
@@ -369,4 +371,26 @@ def startupcost_can_shutdown():
         
     assert_series_equal(pd.Series([0.0, startupcost, 0.0], index=times.strings),
         generators[1].values('startupcost'))
+
+
+@istest
+def setting_initial_conditions():
+    '''
+    make sure that power and status get properly set (even if numpy values)
+    '''
+    gen = make_cheap_gen()
     
+    # numpy values should be converted to floats
+    gen.set_initial_condition(power=np.float64(5.0), status=1)
+    assert(gen.initial_power == 5.0)
+    assert(type(gen.initial_power) == float)
+    
+    # status must get conveted to int
+    gen.set_initial_condition(status=True)
+    assert(gen.initial_status == 1)
+    assert(type(gen.initial_status) == int)
+
+
+    # if status = 0, power must be zero
+    gen.set_initial_condition(power=5.0, status=0)
+    assert(gen.initial_power == 0)

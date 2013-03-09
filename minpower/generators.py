@@ -52,26 +52,26 @@ class Generator(OptimizationObject):
                  name='', index=None, bus=None):
 
         update_attributes(self, locals())  # load in inputs
-       
+
         # The formulation below requires that startup ramp limits are set.
         # The defaults are the normal ramp rate limits,
         # unless Pmin so high and Rmin/max small that startup is infeasible.
         # In that case the default is Pmin.
-        
+
         if (self.startupramplimit is None) and (self.rampratemax is not None):
             if self.pmin > self.rampratemax:
                 self.startupramplimit = self.pmin
             else:
                 self.startupramplimit = self.rampratemax
-            
+
         if (self.shutdownramplimit is None) and (self.rampratemin is not None):
             if (-1 * self.pmin < self.rampratemin):
                 self.shutdownramplimit = -1 * self.pmin
             else:
                 self.shutdownramplimit = self.rampratemin
-    
+
         self.fuelcost = float(fuelcost)
-        
+
         self.is_controllable = True
         self.is_stochastic = False
         self.commitment_problem = True
@@ -112,13 +112,6 @@ class Generator(OptimizationObject):
             previous_status = self.initial_status
         return self.status(times[t]) - previous_status
 
-    def power_change(self, t, times):
-        '''change in output between power between t and t-1'''
-        if t > 0:
-            previous_power = self.power(times[t - 1])
-        else:
-            previous_power = self.initial_power
-        return self.power(times[t]) - previous_power
 
     def cost(self, time, scenario=None, evaluate=False):
         '''total cost at time (operating + startup + shutdown)'''
@@ -188,8 +181,8 @@ class Generator(OptimizationObject):
 
         return hrs
 
-    def set_initial_condition(self, time=None,
-                              power=None, status=True, hoursinstatus=100):
+    def set_initial_condition(self, power=None, 
+        status=True, hoursinstatus=100):
         if power is None:
             # set default power as mean output
             power = (self.pmax - self.pmin) / 2
@@ -233,11 +226,12 @@ class Generator(OptimizationObject):
             # object
             min_power_bid = self.bid_points.power.min()
             max_power_bid = self.bid_points.power.max()
-            if min_power_bid > self.pmin:
+            
+            if min_power_bid > self.pmin:  # pragma: no cover
                 self.pmin = min_power_bid
                 logging.warning('{g} should have a min. power bid ({mpb}) <= to its min. power limit ({mpl})'.format(g=str(self), mpb=min_power_bid, mpl=self.pmin))
 
-            if max_power_bid < self.pmax:
+            if max_power_bid < self.pmax:  # pragma: no cover
                 self.pmax = max_power_bid
                 logging.warning('{g} should have a max. power bid ({mpb}) >= to its max. power limit ({mpl})'.format(g=str(self), mpb=max_power_bid, mpl=self.pmax))
 
@@ -282,7 +276,7 @@ class Generator(OptimizationObject):
         '''create the optimization constraints for a generator over all times'''
         def roundoff(n):
             m = int(n)
-            if n != m:
+            if n != m:  # pragma: no cover
                 raise ValueError('min up/down times must be integer number of intervals, not {}'.format(n))
             return m
 
@@ -324,7 +318,7 @@ class Generator(OptimizationObject):
             min_up_intervals = roundoff(self.minuptime / times.intervalhrs)
             min_down_intervals = roundoff(self.mindowntime / times.intervalhrs)
 
-            # reserve            
+            # reserve
             if self.reserve_required:
                 def reserve_req(model, t):
                     return self.power(t) <= self.power_available(t)
@@ -377,12 +371,12 @@ class Generator(OptimizationObject):
 #                def startupcostmax(model, t):
 #                    return self.cost_startup(t) <= self.startupcost * self.status(t)
 #                self.add_constraint_set('startup cost max', times.set, startupcostmax)
-#                
+#
 #                def startupcostmax_prev(model, t):
 #                    tPrev = get_tPrev(t, model, times)
 #                    return self.cost_startup(t) <= self.startupcost * (1 - self.status(tPrev))
 #                self.add_constraint_set('startup cost max prev', times.set, startupcostmax_prev)
-                                    
+
             if self.shutdowncost > 0:
                 def shutdowncost(model, t):
                     tPrev = get_tPrev(t, model, times)
@@ -412,7 +406,7 @@ class Generator(OptimizationObject):
                         tEnd - t, min_down_intervals)
                     E = sum([1 - self.status(times[s]) for s in no_start_up]) >= min_down_intervals_remaining * -1 * self.status_change(t, times)
                     self.add_constraint('min down time', time, E)
-                
+
 
 
         # min/max power limits
@@ -430,9 +424,6 @@ class Generator(OptimizationObject):
 
     def __str__(self):
         return 'g{ind}'.format(ind=self.index)
-
-    def __int__(self):
-        return self.index
 
 
 def get_tPrev(t, model, times):
@@ -489,8 +480,7 @@ class Generator_nonControllable(Generator):
             Pavail = value(Pavail)
         return Pavail - Pused
 
-    def set_initial_condition(self, time=None,
-                              power=None, status=None, hoursinstatus=None):
+    def set_initial_condition(self, power=None, status=None, hoursinstatus=None):  #pragma: no cover
         self.initial_power = 0
         self.initial_status = 1
         self.initial_status_hours = 0
@@ -608,7 +598,7 @@ class Generator_Stochastic(Generator_nonControllable):
     def create_variables(self, times):
         if self.shedding_mode:
             self.create_variables_shedding(times)
-        
+
         if self.is_stochastic:
             # initialize parameter set to first scenario value
             scenario_one = self._get_scenario_values(times, s=0)

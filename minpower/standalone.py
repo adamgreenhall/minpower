@@ -191,10 +191,10 @@ def load_state():
     status = correct_status(storage['status']).ix[t]
     for gen in generators:
         g = str(gen)
-        gen.set_initial_condition(t,
-                                  power=storage['power'][g][t],
-                                  status=status[g],
-                                  hoursinstatus=storage['hrsinstatus'][g][t])
+        gen.set_initial_condition(
+            power=storage['power'][g][t],
+            status=status[g],
+            hoursinstatus=storage['hrsinstatus'][g][t])
 
     return power_system, times, scenario_tree
 

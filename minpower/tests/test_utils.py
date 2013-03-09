@@ -94,9 +94,9 @@ def solve_problem(generators, loads=None, times=None,
         for g, gen in enumerate(generators):
             gen.index = g
             if gen_init is None:
-                gen.set_initial_condition(times.initialTime)
+                gen.set_initial_condition()
             else:
-                gen.set_initial_condition(times.initialTime, **gen_init[g])
+                gen.set_initial_condition(**gen_init[g])
 
 
     power_system = powersystems.PowerSystem(generators, loads, lines)

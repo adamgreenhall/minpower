@@ -215,12 +215,12 @@ def setup_initialcond(data, generators, times):
         logging.warning('''No generation initial conditions file found.
             Setting to defaults.''')
         for gen in generators:
-            gen.set_initial_condition(time=t_init)
+            gen.set_initial_condition()
         return
 
     # begin by setting initial condition for all generators to off
     for g in generators:
-        g.set_initial_condition(t_init, status=False, power=0)
+        g.set_initial_condition(status=False, power=0)
 
     names = [g.name for g in generators]
 
@@ -236,7 +236,7 @@ def setup_initialcond(data, generators, times):
     for i, row in data.iterrows():
         g = names.index(row['name'])
         kwds = row[fields_initial].dropna().to_dict()
-        generators[g].set_initial_condition(time=t_init, **kwds)
+        generators[g].set_initial_condition(**kwds)
     return
 
 

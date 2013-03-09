@@ -80,8 +80,6 @@ class Load(OptimizationObject):
     def __str__(self):
         return 'd{ind}'.format(ind=self.index)
 
-    def __int__(self):
-        return self.index
 
     def get_scheduled_output(self, time):
         return float(self.schedule.ix[time])
@@ -246,7 +244,7 @@ class PowerSystem(OptimizationProblem):
         self.reserve_required = (self.reserve_fixed > 0) or \
             (self.reserve_load_fraction > 0.0)
         
-        if lines is None:
+        if lines is None:  # pragma: no cover
             lines = []
 
         buses = self.make_buses_list(loads, generators)
@@ -393,10 +391,10 @@ class PowerSystem(OptimizationProblem):
     def get_generator_with_scenarios(self):
         gens = filter(lambda gen: getattr(gen, 'is_stochastic',
                       False), self.generators())
-        if len(gens) > 1:
+        if len(gens) > 1:  # pragma: no cover
             raise NotImplementedError(
                 'Dont handle the case of multiple stochastic generators')
-        elif len(gens) == 0:
+        elif len(gens) == 0:  # pragma: no cover
             return []
         else:
             return gens[0]
@@ -658,7 +656,7 @@ class PowerSystem(OptimizationProblem):
                 names.append(gen.power().name)
         self._fix_variables(names)
 
-    def debug_infeasible(self, times, resolve_sln=None):
+    def debug_infeasible(self, times, resolve_sln=None):  # pragma: no cover
         generators = self.generators()
         if resolve_sln:
             windgen = self.get_generator_with_observed()

@@ -325,7 +325,27 @@ def pmin_startup_limit():
     power = generators[1].values('power')
     status = generators[1].values('status')
     assert((power[status==1] >= pmin).all())
+    assert(generators[1].values('status')[times[4]] == 1)
     
+
+@istest
+def pmin_shutdown_limit():
+    '''
+    generators that have a pmin > -1 * rampratemin should be able to shutdown
+    '''
+    pmin = 185
+    generators=[
+        make_cheap_gen(pmin=0, pmax=200),
+        make_mid_gen(pmin=pmin, pmax=200, rampratemin=-10),
+        ]
+    initial = [{'power': 100}, {'power': 200}]
+    lts = make_loads_times(Pdt=[300, 250, 180])
+
+    power_system, times = solve_problem(generators, gen_init=initial, **lts)
+    
+    status = generators[1].values('status')
+    assert(status[times[2]] == 0)
+
         
 @istest
 def startupcost_can_shutdown():

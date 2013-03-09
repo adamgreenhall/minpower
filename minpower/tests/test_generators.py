@@ -9,7 +9,7 @@ import numpy as np
 from pandas.util.testing import assert_series_equal
 from minpower.generators import Generator_nonControllable, Generator_Stochastic
 from minpower.optimization import value
-
+from minpower.schedule import TimeIndex
 from test_utils import *
 
 
@@ -394,3 +394,30 @@ def setting_initial_conditions():
     # if status = 0, power must be zero
     gen.set_initial_condition(power=5.0, status=0)
     assert(gen.initial_power == 0)
+    
+    
+@istest
+def final_conditions():
+    '''make sure that Generator.gethrsinstatus calculates correctly'''
+    gen = make_cheap_gen()
+    gen.set_initial_condition(status=1, hoursinstatus=10)
+    
+    times = TimeIndex(pd.date_range(
+        '2010-01-01 00:00:00', '2010-01-01 5:00:00', freq='H'))
+    
+    # status varies
+    status = pd.Series([1, 0, 1, 0, 0, 0], index=times)
+    assert(gen.gethrsinstatus(times, status) == 3)
+
+    # status varies, equal to initial status
+    status = pd.Series([0, 0, 0, 1, 1, 1], index=times)
+    assert(gen.gethrsinstatus(times, status) == 3)
+
+    # status is all the same and equal to the initial status
+    status = pd.Series(1, index=times)
+    assert(gen.gethrsinstatus(times, status) == 16)
+    
+    # status is all the same and not equal to the initial status
+    status = pd.Series(0, index=times)
+    assert(gen.gethrsinstatus(times, status) == 6)
+    

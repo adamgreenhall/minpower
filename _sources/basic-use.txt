@@ -17,8 +17,4 @@ A full list of options is available by calling::
     
     minpower --help
 
-**Minpower** comes with many example cases built in. These cases can be used as templates, to test if your installation is working, or as learning tools. For quick reference, you can call any of the following to solve a simple test case problem::
-    
-    minpower ed
-    minpower opf
-    minpower uc
+There are many examples of **Minpower** problems in the `test folders on github   <https://github.com/adamgreenhall/minpower/tree/master/minpower/tests>`_.

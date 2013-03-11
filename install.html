@@ -50,7 +50,7 @@
 <div class="basic-installation container">
 <p>Basic full installation:</p>
 <ol class="arabic simple">
-<li><a class="reference external" href="http://activestate.com/activepython/downloads">ActivePython 2.7</a></li>
+<li><a class="reference external" href="https://store.continuum.io/cshop/anaconda">Anaconda Python</a></li>
 <li><tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">minpower</span></tt></li>
 <li><a class="reference external" href="http://www.gnu.org/s/glpk">GLPK</a> (<a class="reference external" href="http://gnuwin32.sourceforge.net/packages/glpk.htm">Win</a>, <a class="reference external" href="http://www.arnab-deka.com/posts/2010/02/installing-glpk-on-a-mac/">Mac</a>)</li>
 </ol>
@@ -59,17 +59,12 @@
 <h2>1. Get Python<a class="headerlink" href="#get-python" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="new-to-python">
 <h3>New to Python<a class="headerlink" href="#new-to-python" title="Permalink to this headline">¶</a></h3>
-<p>For new-to-Python folks, install <a class="reference external" href="http://activestate.com/activepython/downloads">ActivePython 2.7</a>. It makes the installation of a bunch of scientific <abbr title="add-ons in Python terms">packages</abbr> very easy - the way it should be. Note that the 32-bit version is free for Windows, while for the 64-bit version only the Business Edition has a package manager.</p>
-<p>For Windows users, add the following to the end of your PATH environment variable:</p>
-<div class="highlight-python"><pre>C:\Python27\;C:\Python27\Scripts\</pre>
-</div>
-<p>and create a new PYTHONPATH environment variable and set it to:</p>
-<div class="highlight-python"><pre>C:\Python27</pre>
-</div>
+<p>For new-to-Python folks, install the free <a class="reference external" href="https://store.continuum.io/cshop/anaconda">Anaconda Python</a>. It comes pre-loaded with all the  scientific <abbr title="add-ons in Python parlance">packages</abbr> you&#8217;ll need - just the way it should be. For more details see Anaconda&#8217;s <a class="reference external" href="http://docs.continuum.io/anaconda/install.html">install instruction</a>.</p>
+<p>Note for Mac/Linux folks: you should add the Anaconda directory to your path as instructed at the end of the install.</p>
 </div>
 <div class="section" id="old-python-user">
 <h3>Old Python User<a class="headerlink" href="#old-python-user" title="Permalink to this headline">¶</a></h3>
-<p>For experienced Python users, <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">minpower</span></tt> should work just fine. If that command doesn&#8217;t work, it is probably a failure to build scipy/numpy from source - try downloading the pre-built binary for your system from <a class="reference external" href="http://www.scipy.org/Download">SciPy</a>.</p>
+<p>For experienced Python users, <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">minpower</span></tt> should work just fine. If that command doesn&#8217;t work, it is probably a failure to build scipy/numpy from source. Try <tt class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">numpy;</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">minpower</span></tt> or try downloading the pre-built binary for your system from <a class="reference external" href="http://www.scipy.org/Download">SciPy</a>.</p>
 </div>
 </div>
 <div class="section" id="get-minpower">
@@ -119,6 +114,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="basic-use.html">Basic Use</a></li>
 <li class="toctree-l1"><a class="reference internal" href="creating-problems.html">Creating a Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="students.html">For Students</a></li>
@@ -129,8 +125,7 @@
 <li class="toctree-l1"><a class="reference internal" href="optimal-power-flow.html">Optimal Power Flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="unit-commitment.html">Unit Commitment</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api/index.html">Documentation</a></li>
+<ul class="simple">
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>

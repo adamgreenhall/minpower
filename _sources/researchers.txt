@@ -18,14 +18,16 @@ Because **Minpower** is written in Python, the code is easy to read and write. B
 Calling a procedure
 --------------------
 
-    #. Find the procedure you are looking for (use the search box on the sidebar or check the :doc:`api/index`)
-    #. Import the procedure into your own script, e.g.::
+    Minpower doesn't have a true API - it has been developed primarily as a research tool. But that doesn't mean you can't take only the pieces you need out of it. You can import any function (or class) into your own script, e.g.::
 
         from minpower.solve import create_problem
 
-    #. Use the procedure, e.g.::
+    and then call it, e.g.::
         
         create_problem(power_system=my_ERCOT_iso_model, times=year_2010_hourly_times)
+
+    Checking out how Minpower's `testing utilities <https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/>`_ work is one way to see how you can programmatically create/change/solve/test problems.
+
 
 .. _add-constraint:
 
@@ -90,7 +92,7 @@ Below is an example of the basic structure for an EV aggregator model::
 Wishlist
 """"""""""""""
 
-* stochastic wind    
+* demand response
 * storage
 * cascading hydro-systems
 
@@ -105,6 +107,6 @@ Help
 
 Perhaps you are unfamiliar with Python? Check out :doc:`python-intro` to get up to speed.
 
-Check out `Stackoverflow <http://stackoverflow.com/questions/tagged/python>`_ for general Python help. Hashtag any **Minpower** questions you post with `#minpower <http://stackoverflow.com/questions/tagged/minpower>`_
+Check out `Stackoverflow <http://stackoverflow.com/questions/tagged/python>`_ for general Python help. 
 
 If you find a bug, please report it on the `GitHub issue tracker <https://github.com/adamgreenhall/minpower/issues>`_.

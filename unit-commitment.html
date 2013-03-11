@@ -27,7 +27,7 @@
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="minpower" href="index.html" />
-    <link rel="next" title="Documentation" href="api/index.html" />
+    <link rel="next" title="Collaborate" href="collaborate.html" />
     <link rel="prev" title="Optimal Power Flow" href="optimal-power-flow.html" />
  
 <script type="text/javascript">
@@ -109,7 +109,7 @@ example,load-pattern.csv
 <h2>Example Solution<a class="headerlink" href="#example-solution" title="Permalink to this headline">¶</a></h2>
 <p>The result is a plot (<tt class="docutils literal"><span class="pre">commitment.png</span></tt>):</p>
 <blockquote>
-<div><img alt="_images/commitment.png" src="_images/commitment.png" style="width: 500px;" />
+<div><img alt="./_static/demos/commitment/commitment.png" src="./_static/demos/commitment/commitment.png" style="width: 500px;" />
 </div></blockquote>
 <p>This figure has two axes that share the same time axis. The top axes shows the <abbr title="The system price is generally determined by the dual of the energy constraint in the optimization problem and is in $/MWh.">price of energy</abbr> for the system. The bottom axes shows the energy that each generator produces.</p>
 <div class="admonition note">
@@ -121,10 +121,10 @@ example,load-pattern.csv
 <p>The data from the graph is also output in spreadsheet form (<tt class="docutils literal"><span class="pre">commitment.csv</span></tt>):</p>
 <blockquote>
 <div><div class="highlight-python"><pre>times,prices,status: g1,power: g1,status: g2,power: g2,status: g3,power: g3,status: g4,power: g4,status: g5,power: g5,load power: example
-2012-09-24 00:00:00,14.14,True,200.0,True,50.0,False,0.0,False,0.0,False,0.0,250
-2012-09-24 02:00:00,16.996,True,200.0,True,60.0,False,0.0,True,40.0,True,20.0,320
-2012-09-24 04:00:00,16.996,False,0.0,True,60.0,False,0.0,True,40.0,True,10.0,110
-2012-09-24 06:00:00,16.996,False,0.0,True,60.0,False,0.0,False,0.0,True,15.0,75
+2012-09-12 00:00:00,14.14,True,200.0,True,50.0,False,0.0,False,0.0,False,0.0,250
+2012-09-12 02:00:00,16.996,True,200.0,True,60.0,False,0.0,True,40.0,True,20.0,320
+2012-09-12 04:00:00,16.996,False,0.0,True,60.0,False,0.0,True,40.0,True,10.0,110
+2012-09-12 06:00:00,16.996,False,0.0,True,60.0,False,0.0,False,0.0,True,15.0,75
 </pre>
 </div>
 </div></blockquote>
@@ -154,6 +154,7 @@ example,load-pattern.csv
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="basic-use.html">Basic Use</a></li>
 <li class="toctree-l1"><a class="reference internal" href="creating-problems.html">Creating a Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="students.html">For Students</a></li>
@@ -170,8 +171,7 @@ example,load-pattern.csv
 </ul>
 </li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api/index.html">Documentation</a></li>
+<ul class="simple">
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>

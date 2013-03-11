@@ -27,6 +27,6 @@ Help
 ------
 Perhaps you are unfamiliar with Python? Check out :doc:`python-intro` to get up to speed.
 
-Check out `Stackoverflow <http://stackoverflow.com/questions/tagged/python>`_ for general Python help. Hashtag any **Minpower** questions you post with `#minpower <http://stackoverflow.com/questions/tagged/minpower>`_. 
+Check out `Stackoverflow <http://stackoverflow.com/questions/tagged/python>`_ for general Python help.
 
 If you find a bug, please report it on the `GitHub issue tracker <https://github.com/adamgreenhall/minpower/issues>`_.

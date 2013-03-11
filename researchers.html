@@ -59,20 +59,15 @@
 <div class="section" id="calling-a-procedure">
 <span id="procedure"></span><h2>Calling a procedure<a class="headerlink" href="#calling-a-procedure" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<div><ol class="arabic">
-<li><p class="first">Find the procedure you are looking for (use the search box on the sidebar or check the <a class="reference internal" href="api/index.html"><em>Documentation</em></a>)</p>
-</li>
-<li><p class="first">Import the procedure into your own script, e.g.:</p>
+<div><p>Minpower doesn&#8217;t have a true API - it has been developed primarily as a research tool. But that doesn&#8217;t mean you can&#8217;t take only the pieces you need out of it. You can import any function (or class) into your own script, e.g.:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">minpower.solve</span> <span class="kn">import</span> <span class="n">create_problem</span>
 </pre></div>
 </div>
-</li>
-<li><p class="first">Use the procedure, e.g.:</p>
+<p>and then call it, e.g.:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">create_problem</span><span class="p">(</span><span class="n">power_system</span><span class="o">=</span><span class="n">my_ERCOT_iso_model</span><span class="p">,</span> <span class="n">times</span><span class="o">=</span><span class="n">year_2010_hourly_times</span><span class="p">)</span>
 </pre></div>
 </div>
-</li>
-</ol>
+<p>Checking out how Minpower&#8217;s <a class="reference external" href="https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/">testing utilities</a> work is one way to see how you can programmatically create/change/solve/test problems.</p>
 </div></blockquote>
 </div>
 <div class="section" id="adding-a-constraint">
@@ -133,7 +128,7 @@
 <div class="section" id="wishlist">
 <h3>Wishlist<a class="headerlink" href="#wishlist" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li>stochastic wind</li>
+<li>demand response</li>
 <li>storage</li>
 <li>cascading hydro-systems</li>
 </ul>
@@ -146,7 +141,7 @@
 <div class="section" id="help">
 <h2>Help<a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h2>
 <p>Perhaps you are unfamiliar with Python? Check out <a class="reference internal" href="python-intro.html"><em>Intro to Python</em></a> to get up to speed.</p>
-<p>Check out <a class="reference external" href="http://stackoverflow.com/questions/tagged/python">Stackoverflow</a> for general Python help. Hashtag any <strong>Minpower</strong> questions you post with <a class="reference external" href="http://stackoverflow.com/questions/tagged/minpower">#minpower</a></p>
+<p>Check out <a class="reference external" href="http://stackoverflow.com/questions/tagged/python">Stackoverflow</a> for general Python help.</p>
 <p>If you find a bug, please report it on the <a class="reference external" href="https://github.com/adamgreenhall/minpower/issues">GitHub issue tracker</a>.</p>
 </div>
 </div>
@@ -166,6 +161,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="basic-use.html">Basic Use</a></li>
 <li class="toctree-l1"><a class="reference internal" href="creating-problems.html">Creating a Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="students.html">For Students</a></li>
@@ -186,8 +182,7 @@
 <li class="toctree-l1"><a class="reference internal" href="optimal-power-flow.html">Optimal Power Flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="unit-commitment.html">Unit Commitment</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="api/index.html">Documentation</a></li>
+<ul class="simple">
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>

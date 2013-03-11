@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>ERCOT Research Model &mdash; minpower</title>
+    <title>Configuration &mdash; minpower</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -27,6 +27,8 @@
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="minpower" href="index.html" />
+    <link rel="next" title="For Students" href="students.html" />
+    <link rel="prev" title="Creating a Problem" href="creating-problems.html" />
  
 <script type="text/javascript">
   var _gaq = _gaq || [];
@@ -43,10 +45,13 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="ercot-research-model">
-<h1>ERCOT Research Model<a class="headerlink" href="#ercot-research-model" title="Permalink to this headline">¶</a></h1>
-<p>The ERCOT research model is a realistic model of generators in the ERCOT ISO, which includes a single bus model of 251 thermal generators, with heat rates modeled by their hourly performance during 2010, as recorded in the EPA&#8217;s Clean Air Markets data. This model is publicly available for research use and as a benchmark for unit commitment performance.</p>
-<p>Coming soon.</p>
+  <div class="section" id="configuration">
+<h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
+<p>Minpower&#8217;s behavior is mostly configured by setting flags at runtime. For instance:</p>
+<div class="highlight-python"><pre>minpower unit_commitment_problem/ --solver cplex --breakpoints 5 --hours_overlap 12 --reserve_load_fraction 0.10</pre>
+</div>
+<p>solves the problem with the CPLEX solver, using 5 breakpoint bid curves, 12hrs of overlap between the commitments, and requires reserves equal to 10% of the load.</p>
+<p>If you find yourself always overriding certain defaults (like the default solver), you can also put configuration options in a .minpowerrc or minpower.cfg file in your home directory. These are standard .ini-style config files. The default is <a class="reference external" href="https://github.com/adamgreenhall/minpower/blob/master/minpower/configuration/minpower.cfg">here</a>.</p>
 </div>
 
 
@@ -61,10 +66,10 @@
 <li class="toctree-l1"><a class="reference internal" href="why-minpower.html">Why Minpower</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 </ul>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="basic-use.html">Basic Use</a></li>
 <li class="toctree-l1"><a class="reference internal" href="creating-problems.html">Creating a Problem</a></li>
-<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Configuration</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="students.html">For Students</a></li>

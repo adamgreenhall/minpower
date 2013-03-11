@@ -1,0 +1,172 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>minpower.tests.run_all_cases &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="top" title="minpower" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for minpower.tests.run_all_cases</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">Integration testing. Runs solve.problem() on all directories </span>
+<span class="sd">in the tests subpackage directory. These tests include ED,OPF,UC</span>
+<span class="sd">tests designed to ensure that inputs parse correctly, </span>
+<span class="sd">constraints are active, and vizualizations and solution</span>
+<span class="sd">output work.</span>
+
+<span class="sd">Chances are good that if you make major modifications </span>
+<span class="sd">to the Minpower code you will break something here. </span>
+<span class="sd">Just fix it before you push your change.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span><span class="nn">os</span><span class="o">,</span><span class="nn">glob</span><span class="o">,</span><span class="nn">traceback</span><span class="o">,</span><span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">minpower</span> <span class="kn">import</span> <span class="n">config</span>
+<span class="kn">from</span> <span class="nn">minpower.config</span> <span class="kn">import</span> <span class="n">user_config</span>
+<span class="kn">from</span> <span class="nn">minpower.commonscripts</span> <span class="kn">import</span> <span class="n">joindir</span><span class="p">,</span><span class="n">splitFilename</span>
+
+<div class="viewcode-block" id="wipeTestSlate"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.run_all_cases.wipeTestSlate">[docs]</a><span class="k">def</span> <span class="nf">wipeTestSlate</span><span class="p">(</span><span class="nb">dir</span><span class="p">):</span>
+    <span class="n">patterns</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;*.png&#39;</span><span class="p">,</span><span class="s">&#39;*.lp&#39;</span><span class="p">,</span><span class="s">&#39;commitment.csv&#39;</span><span class="p">,</span><span class="s">&#39;dispatch.csv&#39;</span><span class="p">,</span><span class="s">&#39;error.txt&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">pat</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">joindir</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="n">pat</span><span class="p">)):</span> <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="p">)</span></div>
+<div class="viewcode-block" id="hasPyscript"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.run_all_cases.hasPyscript">[docs]</a><span class="k">def</span> <span class="nf">hasPyscript</span><span class="p">(</span><span class="nb">dir</span><span class="p">):</span> <span class="k">return</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">joindir</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="s">&#39;*.py&#39;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.run_all_cases.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">user_config</span><span class="o">.</span><span class="n">solver</span><span class="p">):</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(levelname)s</span><span class="s">: </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">minpower</span> <span class="kn">import</span> <span class="n">solve</span>
+    
+    <span class="n">dirNm</span><span class="o">=</span><span class="n">splitFilename</span><span class="p">(</span><span class="n">__file__</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">dirNm</span><span class="o">==</span><span class="s">&#39;&#39;</span><span class="p">:</span> <span class="n">dirNm</span><span class="o">=</span><span class="s">&#39;.&#39;</span>
+    <span class="n">excludeL</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">fileNm</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dirNm</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">fileNm</span> <span class="ow">in</span> <span class="n">excludeL</span><span class="p">:</span> <span class="k">continue</span>
+        <span class="n">testDir</span> <span class="o">=</span> <span class="n">joindir</span><span class="p">(</span><span class="n">dirNm</span><span class="p">,</span> <span class="n">fileNm</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">testDir</span><span class="p">):</span> <span class="k">continue</span>
+        <span class="k">print</span> <span class="s">&#39;testing: &#39;</span><span class="p">,</span><span class="n">fileNm</span>
+        <span class="n">wipeTestSlate</span><span class="p">(</span><span class="n">testDir</span><span class="p">)</span>
+        <span class="n">fResults</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">joindir</span><span class="p">(</span><span class="n">testDir</span><span class="p">,</span><span class="s">&#39;results.txt&#39;</span><span class="p">),</span><span class="s">&#39;w+&#39;</span><span class="p">)</span>
+        <span class="n">fError</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">joindir</span><span class="p">(</span><span class="n">testDir</span><span class="p">,</span><span class="s">&#39;error.txt&#39;</span><span class="p">),</span><span class="s">&#39;w+&#39;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">=</span><span class="n">fResults</span> <span class="c">#switch output to results file </span>
+        <span class="k">if</span> <span class="n">hasPyscript</span><span class="p">(</span><span class="n">testDir</span><span class="p">):</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">__stdout__</span> <span class="c">#switch back to standard outputting</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s">&#39;python {s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">hasPyscript</span><span class="p">(</span><span class="n">testDir</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span> 
+                <span class="n">user_config</span><span class="o">.</span><span class="n">scenarios</span> <span class="o">=</span> <span class="mi">2</span>
+                <span class="n">solve</span><span class="o">.</span><span class="n">solve_problem</span><span class="p">(</span><span class="n">testDir</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">__stdout__</span> <span class="c">#switch back to standard outputting</span>
+                <span class="n">fError</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">joindir</span><span class="p">(</span><span class="n">testDir</span><span class="p">,</span><span class="s">&#39;error.txt&#39;</span><span class="p">))</span>
+            <span class="k">except</span><span class="p">:</span> <span class="c">#write the error to file</span>
+                <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">exc_traceback</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+                <span class="n">traceback</span><span class="o">.</span><span class="n">print_tb</span><span class="p">(</span><span class="n">exc_traceback</span><span class="p">,</span> <span class="nb">file</span><span class="o">=</span><span class="n">fError</span> <span class="p">)</span>
+                <span class="n">traceback</span><span class="o">.</span><span class="n">print_exception</span><span class="p">(</span><span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">exc_traceback</span><span class="p">,</span> <span class="nb">file</span><span class="o">=</span><span class="n">fError</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">__stdout__</span> <span class="c">#switch back to standard outputting</span>
+                <span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s"> had error&#39;</span> <span class="c">#note that this dir produced error</span>
+    <span class="k">else</span><span class="p">:</span> 
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">__stdout__</span> <span class="c">#switch back to standard outputting</span>
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span> <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../creating-problems.html">Creating a Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configuration.html">Configuration</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul class="simple">
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<!--<div class="social">-->
+<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
+<!--</div>-->
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    
+  })();
+</script>
+
+  </body>
+</html>

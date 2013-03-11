@@ -60,7 +60,7 @@
 <span class="kn">from</span> <span class="nn">commonscripts</span> <span class="kn">import</span> <span class="n">joindir</span><span class="p">,</span><span class="n">show_clock</span>
 
 
-<div class="viewcode-block" id="solve_problem"><a class="viewcode-back" href="../../api/solving.html#minpower.solve.solve_problem">[docs]</a><span class="k">def</span> <span class="nf">solve_problem</span><span class="p">(</span><span class="n">datadir</span><span class="o">=</span><span class="s">&#39;.&#39;</span><span class="p">,</span>
+<div class="viewcode-block" id="solve_problem"><a class="viewcode-back" href="../../api/minpower.html#minpower.solve.solve_problem">[docs]</a><span class="k">def</span> <span class="nf">solve_problem</span><span class="p">(</span><span class="n">datadir</span><span class="o">=</span><span class="s">&#39;.&#39;</span><span class="p">,</span>
         <span class="n">shell</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
         <span class="n">problemfile</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
         <span class="n">visualization</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
@@ -131,7 +131,7 @@
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;total time: {}s&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">timer</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">start_time</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">solution</span>
 </div>
-<div class="viewcode-block" id="create_solve_problem"><a class="viewcode-back" href="../../api/solving.html#minpower.solve.create_solve_problem">[docs]</a><span class="k">def</span> <span class="nf">create_solve_problem</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">,</span><span class="n">datadir</span><span class="p">,</span><span class="n">solver</span><span class="p">,</span>
+<div class="viewcode-block" id="create_solve_problem"><a class="viewcode-back" href="../../api/minpower.html#minpower.solve.create_solve_problem">[docs]</a><span class="k">def</span> <span class="nf">create_solve_problem</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">,</span><span class="n">datadir</span><span class="p">,</span><span class="n">solver</span><span class="p">,</span>
     <span class="n">scenario_tree</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">problemfile</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">get_duals</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
     <span class="n">stage_hours</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span><span class="n">overlap_hours</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">problemfile</span><span class="p">:</span> <span class="n">problemfile</span><span class="o">=</span><span class="n">joindir</span><span class="p">(</span><span class="n">datadir</span><span class="p">,</span><span class="s">&#39;problem-formulation.lp&#39;</span><span class="p">)</span>
@@ -153,7 +153,7 @@
     <span class="n">solution</span><span class="o">=</span><span class="n">results</span><span class="o">.</span><span class="n">make_solution</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">,</span><span class="n">datadir</span><span class="o">=</span><span class="n">datadir</span><span class="p">)</span>
         
     <span class="k">return</span> <span class="n">solution</span></div>
-<div class="viewcode-block" id="create_problem"><a class="viewcode-back" href="../../api/solving.html#minpower.solve.create_problem">[docs]</a><span class="k">def</span> <span class="nf">create_problem</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">):</span>
+<div class="viewcode-block" id="create_problem"><a class="viewcode-back" href="../../api/minpower.html#minpower.solve.create_problem">[docs]</a><span class="k">def</span> <span class="nf">create_problem</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create an optimization problem.</span>
 <span class="sd">    </span>
@@ -173,7 +173,7 @@
     <span class="k">return</span>
 
 </div>
-<div class="viewcode-block" id="solve_multistage"><a class="viewcode-back" href="../../api/solving.html#minpower.solve.solve_multistage">[docs]</a><span class="k">def</span> <span class="nf">solve_multistage</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">,</span><span class="n">datadir</span><span class="p">,</span>
+<div class="viewcode-block" id="solve_multistage"><a class="viewcode-back" href="../../api/minpower.html#minpower.solve.solve_multistage">[docs]</a><span class="k">def</span> <span class="nf">solve_multistage</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">,</span><span class="n">datadir</span><span class="p">,</span>
                               <span class="n">solver</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">optimization_solver</span><span class="p">,</span>
                               <span class="n">interval_hours</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
                               <span class="n">stage_hours</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">default_hours_commitment</span><span class="p">,</span>
@@ -264,7 +264,7 @@
     <span class="k">else</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span> <span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(levelname)s</span><span class="s">: </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../api/solving.html#minpower.solve.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../api/minpower.html#minpower.solve.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    The command line interface for minpower. Described by:</span>
 <span class="sd">    minpower --help</span>
@@ -348,6 +348,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../basic-use.html">Basic Use</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../creating-problems.html">Creating a Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuration</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../students.html">For Students</a></li>
@@ -358,8 +359,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../optimal-power-flow.html">Optimal Power Flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../unit-commitment.html">Unit Commitment</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">Documentation</a></li>
+<ul class="simple">
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../collaborate.html">Collaborate</a></li>

@@ -1,0 +1,218 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>minpower.tests.test_opf &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="top" title="minpower" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for minpower.tests.test_opf</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;Test the constraint behavior of an OPF&#39;&#39;&#39;</span>
+<span class="kn">from</span> <span class="nn">minpower</span> <span class="kn">import</span> <span class="n">powersystems</span>
+<span class="kn">from</span> <span class="nn">minpower.optimization</span> <span class="kn">import</span> <span class="n">value</span>
+<span class="kn">from</span> <span class="nn">minpower.commonscripts</span> <span class="kn">import</span> <span class="n">Series</span>
+<span class="kn">from</span> <span class="nn">minpower.config</span> <span class="kn">import</span> <span class="n">user_config</span>
+
+<span class="kn">from</span> <span class="nn">test_utils</span> <span class="kn">import</span> <span class="p">(</span><span class="n">istest</span><span class="p">,</span> <span class="n">get_duals</span><span class="p">,</span> <span class="n">with_setup</span><span class="p">,</span> <span class="n">reset_config</span><span class="p">,</span>
+    <span class="n">make_cheap_gen</span><span class="p">,</span> <span class="n">make_mid_gen</span><span class="p">,</span> <span class="n">make_expensive_gen</span><span class="p">,</span> 
+    <span class="n">singletime</span><span class="p">,</span> <span class="n">make_loads_times</span><span class="p">,</span> 
+    <span class="n">solve_problem</span><span class="p">)</span>
+
+<div class="viewcode-block" id="test_config"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_opf.test_config">[docs]</a><span class="k">def</span> <span class="nf">test_config</span><span class="p">():</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">user_config</span><span class="o">.</span><span class="n">duals</span> <span class="o">==</span> <span class="bp">False</span><span class="p">)</span>
+    </div>
+<span class="nd">@istest</span>
+<span class="nd">@with_setup</span><span class="p">(</span><span class="n">get_duals</span><span class="p">,</span> <span class="n">reset_config</span><span class="p">)</span>
+<div class="viewcode-block" id="line_limit_high"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_opf.line_limit_high">[docs]</a><span class="k">def</span> <span class="nf">line_limit_high</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create a two bus system</span>
+<span class="sd">        -cheap gen on busA</span>
+<span class="sd">        -expensive gen and load on busB, </span>
+<span class="sd">        -line limit lower than load</span>
+<span class="sd">    Ensure that: </span>
+<span class="sd">        - the line is at its limit </span>
+<span class="sd">        - the congestion price is equal to the diff. in LMPs</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">pmax</span><span class="o">=</span><span class="mi">100</span>
+    <span class="n">generators</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">make_cheap_gen</span><span class="p">(</span><span class="n">bus</span><span class="o">=</span><span class="s">&#39;A&#39;</span><span class="p">),</span>
+        <span class="n">make_expensive_gen</span><span class="p">(</span><span class="n">bus</span><span class="o">=</span><span class="s">&#39;B&#39;</span><span class="p">)</span>
+    <span class="p">]</span>
+    
+    <span class="n">lines</span><span class="o">=</span><span class="p">[</span><span class="n">powersystems</span><span class="o">.</span><span class="n">Line</span><span class="p">(</span><span class="n">pmax</span><span class="o">=</span><span class="n">pmax</span><span class="p">,</span> <span class="n">frombus</span><span class="o">=</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="n">tobus</span><span class="o">=</span><span class="s">&#39;B&#39;</span><span class="p">)]</span>
+    <span class="n">power_system</span><span class="p">,</span> <span class="n">times</span> <span class="o">=</span> <span class="n">solve_problem</span><span class="p">(</span><span class="n">generators</span><span class="p">,</span> <span class="n">do_reset_config</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">lines</span><span class="o">=</span><span class="n">lines</span><span class="p">,</span> <span class="o">**</span><span class="n">make_loads_times</span><span class="p">(</span><span class="n">Pd</span><span class="o">=</span><span class="mi">225</span><span class="p">,</span><span class="n">bus</span><span class="o">=</span><span class="s">&#39;B&#39;</span><span class="p">))</span>
+    <span class="n">Pline</span> <span class="o">=</span> <span class="n">value</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="n">lmps</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">price</span><span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">power_system</span><span class="o">.</span><span class="n">buses</span><span class="p">]</span>
+    <span class="n">congestion_price</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">price</span><span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">assert</span> <span class="n">Pline</span> <span class="o">==</span> <span class="n">pmax</span> <span class="ow">and</span> <span class="n">congestion_price</span> <span class="o">==</span> <span class="p">(</span><span class="n">lmps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">lmps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</div>
+<span class="nd">@istest</span>
+<span class="nd">@with_setup</span><span class="p">(</span><span class="n">get_duals</span><span class="p">,</span> <span class="n">reset_config</span><span class="p">)</span>
+<div class="viewcode-block" id="line_limit_low"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_opf.line_limit_low">[docs]</a><span class="k">def</span> <span class="nf">line_limit_low</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create a two bus system</span>
+<span class="sd">        -cheap gen on busA</span>
+<span class="sd">        -expensive gen and load on busB, </span>
+<span class="sd">        -line (from B to A) limit lower than load</span>
+<span class="sd">    Ensure that: </span>
+<span class="sd">        - the line is at its limit </span>
+<span class="sd">        - the congestion price is equal to the diff. in LMPs</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">pmin</span> <span class="o">=</span> <span class="o">-</span><span class="mi">100</span>
+    <span class="n">generators</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">make_cheap_gen</span><span class="p">(</span><span class="n">bus</span><span class="o">=</span><span class="s">&#39;A&#39;</span><span class="p">),</span>
+        <span class="n">make_expensive_gen</span><span class="p">(</span><span class="n">bus</span><span class="o">=</span><span class="s">&#39;B&#39;</span><span class="p">)</span>
+    <span class="p">]</span>    
+    <span class="n">lines</span><span class="o">=</span><span class="p">[</span><span class="n">powersystems</span><span class="o">.</span><span class="n">Line</span><span class="p">(</span><span class="n">pmin</span><span class="o">=</span><span class="n">pmin</span><span class="p">,</span> <span class="n">frombus</span><span class="o">=</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="n">tobus</span><span class="o">=</span><span class="s">&#39;A&#39;</span><span class="p">)]</span>
+    <span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="o">=</span><span class="n">solve_problem</span><span class="p">(</span><span class="n">generators</span><span class="p">,</span> <span class="n">do_reset_config</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">lines</span><span class="o">=</span><span class="n">lines</span><span class="p">,</span> <span class="o">**</span><span class="n">make_loads_times</span><span class="p">(</span><span class="n">Pd</span><span class="o">=</span><span class="mi">225</span><span class="p">,</span><span class="n">bus</span><span class="o">=</span><span class="s">&#39;B&#39;</span><span class="p">))</span>
+    <span class="n">Pline</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">lmps</span><span class="o">=</span><span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">price</span><span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">power_system</span><span class="o">.</span><span class="n">buses</span><span class="p">]</span>
+    <span class="n">congestion_price</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">price</span><span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">assert</span> <span class="n">Pline</span><span class="o">==</span><span class="n">pmin</span> <span class="ow">and</span> <span class="n">congestion_price</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="p">(</span><span class="n">lmps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">lmps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+</div>
+<span class="nd">@istest</span>
+<span class="nd">@with_setup</span><span class="p">(</span><span class="n">get_duals</span><span class="p">,</span> <span class="n">reset_config</span><span class="p">)</span>
+<div class="viewcode-block" id="three_buses"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_opf.three_buses">[docs]</a><span class="k">def</span> <span class="nf">three_buses</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create a three bus system</span>
+<span class="sd">        -cheap gen and load on busA</span>
+<span class="sd">        -mid gen and load on busB</span>
+<span class="sd">        -expensive gen and load on busC</span>
+<span class="sd">        -three lines connecting all three buses (triangle)</span>
+<span class="sd">        -create congestion by setting a line limit</span>
+<span class="sd">    Ensure that: </span>
+<span class="sd">        - the total load is met</span>
+<span class="sd">        - the lmps are different</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">pmax</span><span class="o">=</span><span class="mi">50</span>
+    <span class="n">Pd</span><span class="o">=</span><span class="p">[</span><span class="mi">105</span><span class="p">,</span><span class="mi">225</span><span class="p">,</span><span class="mi">302</span><span class="p">]</span>
+    <span class="n">generators</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">make_cheap_gen</span><span class="p">(</span><span class="n">bus</span><span class="o">=</span><span class="s">&#39;A&#39;</span><span class="p">),</span>
+        <span class="n">make_mid_gen</span><span class="p">(</span><span class="n">bus</span><span class="o">=</span><span class="s">&#39;B&#39;</span><span class="p">),</span>
+        <span class="n">make_expensive_gen</span><span class="p">(</span><span class="n">bus</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">),</span>
+        <span class="p">]</span>    
+    <span class="n">loads</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">powersystems</span><span class="o">.</span><span class="n">Load</span><span class="p">(</span><span class="n">schedule</span><span class="o">=</span><span class="n">Series</span><span class="p">(</span><span class="n">Pd</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">singletime</span><span class="p">),</span> <span class="n">bus</span><span class="o">=</span><span class="s">&#39;A&#39;</span><span class="p">),</span>
+        <span class="n">powersystems</span><span class="o">.</span><span class="n">Load</span><span class="p">(</span><span class="n">schedule</span><span class="o">=</span><span class="n">Series</span><span class="p">(</span><span class="n">Pd</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">singletime</span><span class="p">),</span> <span class="n">bus</span><span class="o">=</span><span class="s">&#39;B&#39;</span><span class="p">),</span>
+        <span class="n">powersystems</span><span class="o">.</span><span class="n">Load</span><span class="p">(</span><span class="n">schedule</span><span class="o">=</span><span class="n">Series</span><span class="p">(</span><span class="n">Pd</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">singletime</span><span class="p">),</span> <span class="n">bus</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
+        <span class="p">]</span>
+    <span class="n">lines</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">powersystems</span><span class="o">.</span><span class="n">Line</span><span class="p">(</span><span class="n">frombus</span><span class="o">=</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="n">tobus</span><span class="o">=</span><span class="s">&#39;B&#39;</span><span class="p">),</span>
+        <span class="n">powersystems</span><span class="o">.</span><span class="n">Line</span><span class="p">(</span><span class="n">frombus</span><span class="o">=</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="n">tobus</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">,</span> <span class="n">pmax</span><span class="o">=</span><span class="n">pmax</span><span class="p">),</span>
+        <span class="n">powersystems</span><span class="o">.</span><span class="n">Line</span><span class="p">(</span><span class="n">frombus</span><span class="o">=</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="n">tobus</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">,</span> <span class="n">pmax</span><span class="o">=</span><span class="n">pmax</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="o">=</span><span class="n">solve_problem</span><span class="p">(</span><span class="n">generators</span><span class="p">,</span> <span class="n">do_reset_config</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">times</span><span class="o">=</span><span class="n">singletime</span><span class="p">,</span><span class="n">loads</span><span class="o">=</span><span class="n">loads</span><span class="p">,</span><span class="n">lines</span><span class="o">=</span><span class="n">lines</span><span class="p">)</span>
+    <span class="n">num_lmps</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">price</span><span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">power_system</span><span class="o">.</span><span class="n">buses</span><span class="p">))</span>
+    <span class="n">total_load</span> <span class="o">=</span> <span class="n">value</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">Pload</span><span class="p">(</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">power_system</span><span class="o">.</span><span class="n">buses</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="n">total_load</span><span class="o">==</span><span class="nb">sum</span><span class="p">(</span><span class="n">Pd</span><span class="p">)</span> <span class="ow">and</span> <span class="n">num_lmps</span><span class="o">&gt;</span><span class="mi">1</span>
+</div>
+<div class="viewcode-block" id="test_config_cleared"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_opf.test_config_cleared">[docs]</a><span class="k">def</span> <span class="nf">test_config_cleared</span><span class="p">():</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">user_config</span><span class="o">.</span><span class="n">duals</span> <span class="o">==</span> <span class="bp">False</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../creating-problems.html">Creating a Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configuration.html">Configuration</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul class="simple">
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<!--<div class="social">-->
+<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
+<!--</div>-->
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    
+  })();
+</script>
+
+  </body>
+</html>

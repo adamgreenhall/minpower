@@ -1,0 +1,331 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>minpower.standalone &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="top" title="minpower" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for minpower.standalone</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A module to workaround a memory leak in coopr by saving the results</span>
+<span class="sd">of each day of a rolling unit commitment to disk (in HDF format)</span>
+<span class="sd">and reloading them to run the next day as a memory independent subprocess.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">Series</span><span class="p">,</span> <span class="n">DataFrame</span>
+<span class="kn">from</span> <span class="nn">commonscripts</span> <span class="kn">import</span> <span class="n">gen_time_dataframe</span><span class="p">,</span> <span class="n">correct_status</span><span class="p">,</span> <span class="n">debug_frame_unequal</span><span class="p">,</span> <span class="n">set_trace</span>
+<span class="kn">from</span> <span class="nn">config</span> <span class="kn">import</span> <span class="n">user_config</span>
+
+<span class="kn">from</span> <span class="nn">schedule</span> <span class="kn">import</span> <span class="n">TimeIndex</span>
+<span class="kn">from</span> <span class="nn">get_data</span> <span class="kn">import</span> <span class="n">parse_standalone</span>
+<span class="kn">import</span> <span class="nn">pkg_resources</span>
+
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">tables</span> <span class="kn">as</span> <span class="nn">tb</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;could not load pytables - cannot use standalone mode.&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="wipe_storage"><a class="viewcode-back" href="../../api/minpower.html#minpower.standalone.wipe_storage">[docs]</a><span class="k">def</span> <span class="nf">wipe_storage</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">user_config</span><span class="o">.</span><span class="n">store_filename</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;wipe storage&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="get_storage"><a class="viewcode-back" href="../../api/minpower.html#minpower.standalone.get_storage">[docs]</a><span class="k">def</span> <span class="nf">get_storage</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">HDFStore</span><span class="p">(</span><span class="n">user_config</span><span class="o">.</span><span class="n">store_filename</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="store_times"><a class="viewcode-back" href="../../api/minpower.html#minpower.standalone.store_times">[docs]</a><span class="k">def</span> <span class="nf">store_times</span><span class="p">(</span><span class="n">tstage</span><span class="p">,</span> <span class="n">storage</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">storage</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">storage</span> <span class="o">=</span> <span class="n">get_storage</span><span class="p">()</span>
+    <span class="n">storage</span><span class="p">[</span><span class="s">&#39;times&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tstage</span><span class="o">.</span><span class="n">strings</span>
+    <span class="k">return</span> <span class="n">storage</span>
+
+</div>
+<div class="viewcode-block" id="init_store"><a class="viewcode-back" href="../../api/minpower.html#minpower.standalone.init_store">[docs]</a><span class="k">def</span> <span class="nf">init_store</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;create the store before the first stage&#39;&#39;&#39;</span>
+    <span class="n">wipe_storage</span><span class="p">()</span>
+    <span class="n">storage</span> <span class="o">=</span> <span class="n">get_storage</span><span class="p">()</span>
+    <span class="n">generators</span> <span class="o">=</span> <span class="n">power_system</span><span class="o">.</span><span class="n">generators</span><span class="p">()</span>
+
+    <span class="c"># store the problem info read from the spreadsheets</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s">&#39;scenario_values&#39;</span><span class="p">:</span> 
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">dtypes</span> <span class="o">==</span> <span class="nb">object</span><span class="p">)</span><span class="o">.</span><span class="n">iterkv</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">v</span><span class="p">:</span> <span class="n">df</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+        
+        <span class="n">key</span> <span class="o">=</span> <span class="s">&#39;data_&#39;</span> <span class="o">+</span> <span class="n">key</span>
+        <span class="n">storage</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span>
+
+    <span class="n">stages</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>  <span class="c"># stage_times</span>
+    <span class="n">est_Nt</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;timeseries&#39;</span><span class="p">])</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="p">[</span><span class="n">times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">initialTime</span><span class="p">]</span>
+
+    <span class="c"># store first stage initial state</span>
+    <span class="n">storage</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;power&#39;</span><span class="p">,</span> 
+        <span class="n">gen_time_dataframe</span><span class="p">(</span><span class="n">generators</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span>
+            <span class="n">values</span><span class="o">=</span><span class="p">[[</span><span class="n">gen</span><span class="o">.</span><span class="n">initial_power</span> <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">generators</span><span class="p">]]),</span>
+        <span class="n">expectedrows</span><span class="o">=</span><span class="n">est_Nt</span><span class="p">)</span>
+        
+    <span class="n">storage</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;status&#39;</span><span class="p">,</span>
+        <span class="n">gen_time_dataframe</span><span class="p">(</span><span class="n">generators</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span>
+            <span class="n">values</span><span class="o">=</span><span class="p">[[</span><span class="n">gen</span><span class="o">.</span><span class="n">initial_status</span> <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">generators</span><span class="p">]]),</span>
+        <span class="n">expectedrows</span><span class="o">=</span><span class="n">est_Nt</span><span class="p">)</span>
+        
+    <span class="n">storage</span><span class="p">[</span><span class="s">&#39;hrsinstatus&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gen_time_dataframe</span><span class="p">(</span><span class="n">generators</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">[[</span><span class="n">gen</span><span class="o">.</span><span class="n">initial_status_hours</span> <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">generators</span><span class="p">]])</span>
+
+    <span class="c"># setup empty containers for variables</span>
+    <span class="n">storage</span><span class="p">[</span><span class="s">&#39;load_shed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Series</span><span class="p">()</span>
+    <span class="n">storage</span><span class="p">[</span><span class="s">&#39;gen_shed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Series</span><span class="p">()</span>
+    <span class="n">storage</span><span class="p">[</span><span class="s">&#39;expected_cost&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">()</span>
+    <span class="n">storage</span><span class="p">[</span><span class="s">&#39;observed_cost&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">()</span>
+    <span class="n">storage</span><span class="p">[</span><span class="s">&#39;expected_status&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">()</span>
+    <span class="n">storage</span><span class="p">[</span><span class="s">&#39;expected_power&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">()</span>
+    <span class="n">storage</span><span class="p">[</span><span class="s">&#39;expected_fuelcost&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">()</span>
+    <span class="n">storage</span><span class="p">[</span><span class="s">&#39;observed_fuelcost&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">()</span>
+
+    <span class="c"># setup one-per-stage results</span>
+    <span class="n">storage</span><span class="p">[</span><span class="s">&#39;solve_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Series</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">stages</span><span class="p">))</span>
+    <span class="n">storage</span><span class="p">[</span><span class="s">&#39;mipgap&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Series</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">stages</span><span class="p">))</span>
+
+    <span class="c"># store configuration</span>
+    <span class="n">storage</span><span class="p">[</span><span class="s">&#39;configuration&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Series</span><span class="p">(</span><span class="n">user_config</span><span class="p">)</span>
+
+    <span class="n">storage</span><span class="p">[</span><span class="s">&#39;version&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Series</span><span class="p">({</span>
+        <span class="s">&#39;minpower&#39;</span><span class="p">:</span> <span class="n">pkg_resources</span><span class="o">.</span><span class="n">get_distribution</span><span class="p">(</span><span class="s">&#39;minpower&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+        <span class="c"># try storing version number of the current working directory</span>
+        <span class="s">&#39;problem&#39;</span><span class="p">:</span> <span class="n">_get_problem_version</span><span class="p">(),</span>
+    <span class="p">})</span>
+
+    <span class="k">return</span> <span class="n">storage</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_get_problem_version</span><span class="p">():</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="n">possible_init</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">user_config</span><span class="o">.</span><span class="n">directory</span><span class="p">),</span> <span class="s">&#39;__init__.py&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">possible_init</span><span class="p">):</span>
+        <span class="n">vstr</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">possible_init</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="n">vstr</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;&quot;&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;&quot;&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">version</span>
+
+
+<div class="viewcode-block" id="store_state"><a class="viewcode-back" href="../../api/minpower.html#minpower.standalone.store_state">[docs]</a><span class="k">def</span> <span class="nf">store_state</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">sln</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">storage</span> <span class="o">=</span> <span class="n">get_storage</span><span class="p">()</span>
+    <span class="n">generators</span> <span class="o">=</span> <span class="n">power_system</span><span class="o">.</span><span class="n">generators</span><span class="p">()</span>
+
+    <span class="n">stg</span> <span class="o">=</span> <span class="n">sln</span><span class="o">.</span><span class="n">stage_number</span>
+    <span class="n">table_append</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s">&#39;power&#39;</span><span class="p">,</span> <span class="n">sln</span><span class="o">.</span><span class="n">generators_power</span><span class="p">)</span>
+    <span class="n">table_append</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s">&#39;status&#39;</span><span class="p">,</span> <span class="n">sln</span><span class="o">.</span><span class="n">generators_status</span><span class="p">)</span>
+    <span class="n">table_append</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s">&#39;load_shed&#39;</span><span class="p">,</span> <span class="n">sln</span><span class="o">.</span><span class="n">load_shed_timeseries</span><span class="p">)</span>
+    <span class="n">table_append</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s">&#39;gen_shed&#39;</span><span class="p">,</span> <span class="n">sln</span><span class="o">.</span><span class="n">gen_shed_timeseries</span><span class="p">)</span>
+
+    <span class="n">tEnd</span> <span class="o">=</span> <span class="n">times</span><span class="o">.</span><span class="n">last_non_overlap</span><span class="p">()</span>
+    <span class="n">storage</span><span class="p">[</span><span class="s">&#39;hrsinstatus&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gen_time_dataframe</span><span class="p">(</span><span class="n">generators</span><span class="p">,</span> <span class="p">[</span><span class="n">tEnd</span><span class="p">],</span>
+                                                <span class="n">values</span><span class="o">=</span><span class="p">[</span>
+                                                <span class="p">[</span><span class="n">gen</span><span class="o">.</span><span class="n">finalstatus</span><span class="p">[</span><span class="s">&#39;hoursinstatus&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">generators</span><span class="p">]</span>
+                                                <span class="p">])</span>
+
+    <span class="n">_add_tbl_val</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s">&#39;solve_time&#39;</span><span class="p">,</span> <span class="n">stg</span><span class="p">,</span> <span class="n">sln</span><span class="o">.</span><span class="n">solve_time</span><span class="p">)</span>
+    <span class="n">_add_tbl_val</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s">&#39;mipgap&#39;</span><span class="p">,</span> <span class="n">stg</span><span class="p">,</span> <span class="n">sln</span><span class="o">.</span><span class="n">mipgap</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">sln</span><span class="o">.</span><span class="n">_resolved</span><span class="p">:</span>
+        <span class="n">table_append</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s">&#39;observed_cost&#39;</span><span class="p">,</span> <span class="n">sln</span><span class="o">.</span><span class="n">observed_totalcost</span><span class="p">)</span>
+        <span class="n">table_append</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s">&#39;observed_fuelcost&#39;</span><span class="p">,</span> <span class="n">sln</span><span class="o">.</span><span class="n">observed_fuelcost</span><span class="p">)</span>
+        <span class="n">table_append</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s">&#39;expected_cost&#39;</span><span class="p">,</span> <span class="n">sln</span><span class="o">.</span><span class="n">expected_totalcost</span><span class="p">)</span>
+        <span class="n">table_append</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s">&#39;expected_fuelcost&#39;</span><span class="p">,</span> <span class="n">sln</span><span class="o">.</span><span class="n">expected_fuelcost</span><span class="p">)</span>
+        <span class="n">table_append</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s">&#39;expected_power&#39;</span><span class="p">,</span> <span class="n">sln</span><span class="o">.</span><span class="n">expected_power</span><span class="p">)</span>
+        <span class="n">table_append</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s">&#39;expected_status&#39;</span><span class="p">,</span> <span class="n">sln</span><span class="o">.</span><span class="n">expected_status</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">table_append</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s">&#39;expected_cost&#39;</span><span class="p">,</span> <span class="n">sln</span><span class="o">.</span><span class="n">totalcost_generation</span><span class="p">)</span>
+        <span class="n">table_append</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="s">&#39;expected_fuelcost&#39;</span><span class="p">,</span> <span class="n">sln</span><span class="o">.</span><span class="n">fuelcost</span><span class="p">)</span>
+
+<span class="c">#    # DEBUGGING</span>
+<span class="c">#    from pandas.util.testing import assert_frame_equal</span>
+<span class="c">#    try: </span>
+<span class="c">#        gens = storage[&#39;data_generators&#39;].copy()</span>
+<span class="c">#        gens.index = [&#39;g{}&#39;.format(g) for g in gens.index]</span>
+<span class="c">#        status = storage[&#39;status&#39;].ix[1:]</span>
+<span class="c">#        power = storage[&#39;power&#39;][status.columns].ix[status.index]</span>
+<span class="c">#        cost = storage[&#39;observed_cost&#39;][status.columns].ix[status.index]</span>
+<span class="c">#        fuelcost = storage[&#39;observed_fuelcost&#39;][status.columns].ix[status.index]</span>
+<span class="c">#        stcost = cost - fuelcost</span>
+
+<span class="c">#        </span>
+<span class="c">#        pcheck = (power * status)</span>
+<span class="c">#        ccheck = (cost * status)</span>
+<span class="c">#        stcheck = (stcost * status)</span>
+<span class="c">#        assert_frame_equal(pcheck, power)</span>
+<span class="c">#        assert_frame_equal(ccheck, cost)</span>
+<span class="c">#        assert_frame_equal(stcheck, stcost)</span>
+<span class="c">#        assert(((stcost &lt; gens.startupcost - 1e-5) &amp; (stcost &gt; 1e-5) ).sum().sum() == 0)</span>
+<span class="c">#        </span>
+<span class="c">#    except AssertionError:</span>
+<span class="c">#        raise</span>
+        
+    <span class="k">return</span> <span class="n">storage</span>
+
+</div>
+<div class="viewcode-block" id="load_state"><a class="viewcode-back" href="../../api/minpower.html#minpower.standalone.load_state">[docs]</a><span class="k">def</span> <span class="nf">load_state</span><span class="p">():</span>
+    <span class="n">storage</span> <span class="o">=</span> <span class="n">get_storage</span><span class="p">()</span>
+    <span class="n">user_config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="s">&#39;configuration&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+
+    <span class="c"># set up the times</span>
+    <span class="n">startidx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="s">&#39;times&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&#39;t&#39;</span><span class="p">))</span>
+    <span class="n">times</span> <span class="o">=</span> <span class="n">TimeIndex</span><span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="s">&#39;times&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">startidx</span><span class="p">)</span>
+    <span class="n">intervalhrs</span> <span class="o">=</span> <span class="p">(</span><span class="n">times</span><span class="o">.</span><span class="n">strings</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">times</span><span class="o">.</span><span class="n">strings</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                   <span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mf">3600.0</span>
+    <span class="n">times</span><span class="o">.</span><span class="n">_int_division</span> <span class="o">=</span> <span class="n">user_config</span><span class="o">.</span><span class="n">hours_commitment</span> <span class="o">/</span> <span class="n">intervalhrs</span>
+    <span class="n">times</span><span class="o">.</span><span class="n">_int_overlap</span> <span class="o">=</span> <span class="n">user_config</span><span class="o">.</span><span class="n">hours_overlap</span> <span class="o">/</span> <span class="n">intervalhrs</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">times</span><span class="o">.</span><span class="n">_int_division</span><span class="p">:</span>
+        <span class="c"># dont set overlap for last stage</span>
+        <span class="n">times</span><span class="o">.</span><span class="n">_int_overlap</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c"># create power_system</span>
+    <span class="n">power_system</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">scenario_tree</span> <span class="o">=</span> <span class="n">parse_standalone</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="n">times</span><span class="p">)</span>
+    <span class="n">generators</span> <span class="o">=</span> <span class="n">power_system</span><span class="o">.</span><span class="n">generators</span><span class="p">()</span>
+
+    <span class="c"># set up initial state</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">times</span><span class="o">.</span><span class="n">initialTime</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">correct_status</span><span class="p">(</span><span class="n">storage</span><span class="p">[</span><span class="s">&#39;status&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">generators</span><span class="p">:</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">gen</span><span class="p">)</span>
+        <span class="n">gen</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span>
+            <span class="n">power</span><span class="o">=</span><span class="n">storage</span><span class="p">[</span><span class="s">&#39;power&#39;</span><span class="p">][</span><span class="n">g</span><span class="p">][</span><span class="n">t</span><span class="p">],</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">[</span><span class="n">g</span><span class="p">],</span>
+            <span class="n">hoursinstatus</span><span class="o">=</span><span class="n">storage</span><span class="p">[</span><span class="s">&#39;hrsinstatus&#39;</span><span class="p">][</span><span class="n">g</span><span class="p">][</span><span class="n">t</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">power_system</span><span class="p">,</span> <span class="n">times</span><span class="p">,</span> <span class="n">scenario_tree</span>
+
+</div>
+<div class="viewcode-block" id="repack_storage"><a class="viewcode-back" href="../../api/minpower.html#minpower.standalone.repack_storage">[docs]</a><span class="k">def</span> <span class="nf">repack_storage</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;compress that ballooning storage&#39;&#39;&#39;</span>
+    <span class="c"># http://stackoverflow.com/questions/13089359/mystery-when-storing-a</span>
+    <span class="c"># -dataframe-containing-strings-in-hdf-with-pandas</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s">&#39;ptrepack {f} {f}.copy; mv {f}.copy {f};&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">f</span><span class="o">=</span><span class="n">user_config</span><span class="o">.</span><span class="n">store_filename</span><span class="p">))</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_add_tbl_val</span><span class="p">(</span><span class="n">storage</span><span class="p">,</span> <span class="n">tablename</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="n">tbl</span> <span class="o">=</span> <span class="n">storage</span><span class="p">[</span><span class="n">tablename</span><span class="p">]</span>
+    <span class="n">tbl</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="n">storage</span><span class="p">[</span><span class="n">tablename</span><span class="p">]</span> <span class="o">=</span> <span class="n">tbl</span>
+
+
+<div class="viewcode-block" id="table_append"><a class="viewcode-back" href="../../api/minpower.html#minpower.standalone.table_append">[docs]</a><span class="k">def</span> <span class="nf">table_append</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">newvals</span><span class="p">):</span>
+    <span class="n">store</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">store</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newvals</span><span class="p">)</span>
+    <span class="k">return</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../creating-problems.html">Creating a Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuration</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul class="simple">
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<!--<div class="social">-->
+<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
+<!--</div>-->
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    
+  })();
+</script>
+
+  </body>
+</html>

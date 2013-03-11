@@ -1,0 +1,1886 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>minpower Package &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="top" title="minpower" href="../index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="minpower-package">
+<h1>minpower Package<a class="headerlink" href="#minpower-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2><tt class="xref py py-mod docutils literal"><span class="pre">minpower</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-minpower.__init__"></span></div>
+<div class="section" id="module-minpower.bidding">
+<span id="bidding-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">bidding</span></tt> Module<a class="headerlink" href="#module-minpower.bidding" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="minpower.bidding.Bid">
+<em class="property">class </em><tt class="descclassname">minpower.bidding.</tt><tt class="descname">Bid</tt><big>(</big><em>polynomial='10P'</em>, <em>bid_points=None</em>, <em>constant_term=0</em>, <em>owner=None</em>, <em>times=None</em>, <em>input_variable=0</em>, <em>min_input=0</em>, <em>max_input=1000</em>, <em>num_breakpoints=11</em>, <em>status_variable=True</em>, <em>fixed_input=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#Bid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.Bid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.optimization.OptimizationObject" title="minpower.optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">minpower.optimization.OptimizationObject</span></tt></a></p>
+<p>A bid modeled by a polynomial or a set of piecewise points.</p>
+<dl class="method">
+<dt id="minpower.bidding.Bid.build_model">
+<tt class="descname">build_model</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#Bid.build_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.Bid.build_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.bidding.Bid.iden">
+<tt class="descname">iden</tt><big>(</big><em>*a</em>, <em>**k</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#Bid.iden"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.Bid.iden" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.bidding.Bid.output">
+<tt class="descname">output</tt><big>(</big><em>time=None</em>, <em>scenario=None</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#Bid.output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.Bid.output" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.bidding.Bid.output_incremental">
+<tt class="descname">output_incremental</tt><big>(</big><em>input_var</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#Bid.output_incremental"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.Bid.output_incremental" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.bidding.Bid.output_incremental_range">
+<tt class="descname">output_incremental_range</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#Bid.output_incremental_range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.Bid.output_incremental_range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.bidding.Bid.output_true">
+<tt class="descname">output_true</tt><big>(</big><em>input_var</em>, <em>force_linear=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#Bid.output_true"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.Bid.output_true" title="Permalink to this definition">¶</a></dt>
+<dd><p>true output value of bid</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.bidding.discretize_range">
+<tt class="descclassname">minpower.bidding.</tt><tt class="descname">discretize_range</tt><big>(</big><em>num_breakpoints</em>, <em>minimum</em>, <em>maximum</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#discretize_range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.discretize_range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.bidding.get_line_slope">
+<tt class="descclassname">minpower.bidding.</tt><tt class="descname">get_line_slope</tt><big>(</big><em>A</em>, <em>B</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#get_line_slope"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.get_line_slope" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.bidding.get_line_value">
+<tt class="descclassname">minpower.bidding.</tt><tt class="descname">get_line_value</tt><big>(</big><em>A</em>, <em>B</em>, <em>x</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#get_line_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.get_line_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>take a pair of points and make a linear function
+get the value of the function at x
+see <a class="reference external" href="http://bit.ly/Pd4z4l">http://bit.ly/Pd4z4l</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.bidding.is_linear">
+<tt class="descclassname">minpower.bidding.</tt><tt class="descname">is_linear</tt><big>(</big><em>coefs</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#is_linear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.is_linear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.bidding.parse_polynomial">
+<tt class="descclassname">minpower.bidding.</tt><tt class="descname">parse_polynomial</tt><big>(</big><em>s</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#parse_polynomial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.parse_polynomial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a string into a set of multipliers.
+Heavily adapted from <a class="reference external" href="http://bit.ly/polynomialParse">http://bit.ly/polynomialParse</a>.</p>
+<p>Can handle simple polynomials (addition and subtraction):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_polynomial</span><span class="p">(</span><span class="s">&#39;7x^2 + 6x - 5&#39;</span><span class="p">)</span>
+<span class="go">[-5, 6, 7]</span>
+</pre></div>
+</div>
+<p>or with the explicit * multiplier:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_polynomial</span><span class="p">(</span><span class="s">&#39;7*P^2 + 6*P - 5&#39;</span><span class="p">)</span>
+<span class="go">[-5, 6, 7]</span>
+</pre></div>
+</div>
+<p>or even with the terms in some random order:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_polynomial</span><span class="p">(</span><span class="s">&#39;6*P - 5 + 7*P^2&#39;</span><span class="p">)</span>
+<span class="go">[-5, 6, 7]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.bidding.polynomial_incremental_value">
+<tt class="descclassname">minpower.bidding.</tt><tt class="descname">polynomial_incremental_value</tt><big>(</big><em>multipliers</em>, <em>variable</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#polynomial_incremental_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.polynomial_incremental_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the incremental value of a polynomial</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.bidding.polynomial_value">
+<tt class="descclassname">minpower.bidding.</tt><tt class="descname">polynomial_value</tt><big>(</big><em>multipliers</em>, <em>variable</em><big>)</big><a class="reference internal" href="../_modules/minpower/bidding.html#polynomial_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.bidding.polynomial_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the value of a polynomial</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-minpower.commonscripts">
+<span id="commonscripts-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">commonscripts</span></tt> Module<a class="headerlink" href="#module-minpower.commonscripts" title="Permalink to this headline">¶</a></h2>
+<p>Short, commonly used scripts.
+Many of them are one liners.</p>
+<dl class="class">
+<dt id="minpower.commonscripts.DotDict">
+<em class="property">class </em><tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">DotDict</tt><a class="reference internal" href="../_modules/minpower/commonscripts.html#DotDict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.DotDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/release/2.7.1/library/stdtypes.html#dict" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></a></p>
+<p>a dict with dot notation access</p>
+<dl class="method">
+<dt id="minpower.commonscripts.DotDict.copy">
+<tt class="descname">copy</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#DotDict.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.DotDict.copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="minpower.commonscripts.StreamToLogger">
+<em class="property">class </em><tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">StreamToLogger</tt><big>(</big><em>logger=&lt;module 'logging' from '/home/adam/research/code/anaconda1.3/lib/python2.7/logging/__init__.pyc'&gt;</em>, <em>log_level=20</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#StreamToLogger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.StreamToLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Fake file-like stream object that redirects writes to a logger instance.</p>
+<dl class="method">
+<dt id="minpower.commonscripts.StreamToLogger.write">
+<tt class="descname">write</tt><big>(</big><em>buf</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#StreamToLogger.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.StreamToLogger.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.bool_to_int">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">bool_to_int</tt><big>(</big><em>x</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#bool_to_int"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.bool_to_int" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.convert_str2num">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">convert_str2num</tt><big>(</big><em>s</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#convert_str2num"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.convert_str2num" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.correct_status">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">correct_status</tt><big>(</big><em>status</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#correct_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.correct_status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.debug_frame_unequal">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">debug_frame_unequal</tt><big>(</big><em>left</em>, <em>right</em>, <em>tol=1e-05</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#debug_frame_unequal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.debug_frame_unequal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.drop_case_spaces">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">drop_case_spaces</tt><big>(</big><em>s</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#drop_case_spaces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.drop_case_spaces" title="Permalink to this definition">¶</a></dt>
+<dd><p>get rid of spaces in a string and make lower case. will also work with list of strings</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.elementwiseAdd">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">elementwiseAdd</tt><big>(</big><em>La</em>, <em>Lb</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#elementwiseAdd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.elementwiseAdd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.flatten">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">flatten</tt><big>(</big><em>listoflists</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#flatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flatten one level of nesting</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.gen_time_dataframe">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">gen_time_dataframe</tt><big>(</big><em>generators</em>, <em>times</em>, <em>values=()</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#gen_time_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.gen_time_dataframe" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.getattrL">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">getattrL</tt><big>(</big><em>L</em>, <em>attribute='name'</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#getattrL"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.getattrL" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the attribute of each class instance in a list</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.hours">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">hours</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#hours"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.hours" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.indexCaseSpaceInsensitive">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">indexCaseSpaceInsensitive</tt><big>(</big><em>L</em>, <em>s</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#indexCaseSpaceInsensitive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.indexCaseSpaceInsensitive" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.joindir">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">joindir</tt><big>(</big><em>dir</em>, <em>file</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#joindir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.joindir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.not_quiet">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">not_quiet</tt><big>(</big><em>*args</em>, <em>**kwds</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#not_quiet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.not_quiet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.pairwise">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">pairwise</tt><big>(</big><em>iterable</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#pairwise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.pairwise" title="Permalink to this definition">¶</a></dt>
+<dd><p>s -&gt; (s0,s1), (s1,s2), (s2, s3), ...</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.quiet">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">quiet</tt><big>(</big><em>*args</em>, <em>**kwds</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#quiet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.quiet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.replace_all">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">replace_all</tt><big>(</big><em>seq</em>, <em>obj</em>, <em>replacement</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#replace_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.replace_all" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.splitFilename">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">splitFilename</tt><big>(</big><em>fullPathFilenm</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#splitFilename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.splitFilename" title="Permalink to this definition">¶</a></dt>
+<dd><p>split a filename into its directory, filename, and extension</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.to_percent">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">to_percent</tt><big>(</big><em>val</em>, <em>digits=0</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#to_percent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.to_percent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.transpose">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">transpose</tt><big>(</big><em>listoflists</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#transpose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.transpose" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.ts_from_csv">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">ts_from_csv</tt><big>(</big><em>filename</em>, <em>index_col=0</em>, <em>squeeze=True</em>, <em>timezone=None</em>, <em>is_df=True</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#ts_from_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.ts_from_csv" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.update_attributes">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">update_attributes</tt><big>(</big><em>instance, variables, exclude=['self'], include=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#update_attributes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.update_attributes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update instance attributes</p>
+<p>For example, update(self, locals())</p>
+<p>instance: Instance to update via setattr()
+variables: Dictionary of variables
+exclude: Variables to explicitly exclude, defaults to [&#8216;self&#8217;].
+include: Variables to explicitly include. If set, include overides exclude.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.within">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">within</tt><big>(</big><em>x</em>, <em>val=0</em>, <em>eps=0.001</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#within"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.within" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.commonscripts.writeCSV">
+<tt class="descclassname">minpower.commonscripts.</tt><tt class="descname">writeCSV</tt><big>(</big><em>fields</em>, <em>data</em>, <em>filename</em><big>)</big><a class="reference internal" href="../_modules/minpower/commonscripts.html#writeCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.commonscripts.writeCSV" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-minpower.config">
+<span id="config-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">config</span></tt> Module<a class="headerlink" href="#module-minpower.config" title="Permalink to this headline">¶</a></h2>
+<p>Provide the defaults and configuration for other modules.
+<cite>user_config</cite> is treated as a global in minpower.</p>
+<dl class="function">
+<dt id="minpower.config.add_opt">
+<tt class="descclassname">minpower.config.</tt><tt class="descname">add_opt</tt><big>(</big><em>parser</em>, <em>name</em>, <em>shortcut=None</em>, <em>help=''</em><big>)</big><a class="reference internal" href="../_modules/minpower/config.html#add_opt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.config.add_opt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.config.filter_non_defaults">
+<tt class="descclassname">minpower.config.</tt><tt class="descname">filter_non_defaults</tt><big>(</big><em>x</em>, <em>defaults</em><big>)</big><a class="reference internal" href="../_modules/minpower/config.html#filter_non_defaults"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.config.filter_non_defaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.config.get_dir_config">
+<tt class="descclassname">minpower.config.</tt><tt class="descname">get_dir_config</tt><big>(</big><em>directory</em><big>)</big><a class="reference internal" href="../_modules/minpower/config.html#get_dir_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.config.get_dir_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>pull the config from a specific directory.
+this allows post-load updating of the user_config.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.config.parse_command_line_config">
+<tt class="descclassname">minpower.config.</tt><tt class="descname">parse_command_line_config</tt><big>(</big><em>parser</em>, <em>preparsed_args=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/config.html#parse_command_line_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.config.parse_command_line_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.config.parse_config">
+<tt class="descclassname">minpower.config.</tt><tt class="descname">parse_config</tt><big>(</big><em>parser</em><big>)</big><a class="reference internal" href="../_modules/minpower/config.html#parse_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.config.parse_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.config.parser_value">
+<tt class="descclassname">minpower.config.</tt><tt class="descname">parser_value</tt><big>(</big><em>parser</em>, <em>section</em>, <em>key</em>, <em>opt_type</em><big>)</big><a class="reference internal" href="../_modules/minpower/config.html#parser_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.config.parser_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.config.setup_parser_args">
+<tt class="descclassname">minpower.config.</tt><tt class="descname">setup_parser_args</tt><big>(</big><em>parser</em><big>)</big><a class="reference internal" href="../_modules/minpower/config.html#setup_parser_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.config.setup_parser_args" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-minpower.generators">
+<span id="generators-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">generators</span></tt> Module<a class="headerlink" href="#module-minpower.generators" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="minpower.generators.Generator">
+<em class="property">class </em><tt class="descclassname">minpower.generators.</tt><tt class="descname">Generator</tt><big>(</big><em>kind='generic'</em>, <em>pmin=0</em>, <em>pmax=500</em>, <em>minuptime=0</em>, <em>mindowntime=0</em>, <em>rampratemax=None</em>, <em>rampratemin=None</em>, <em>costcurveequation='20P'</em>, <em>heatrateequation=None</em>, <em>fuelcost=1</em>, <em>bid_points=None</em>, <em>noloadcost=0</em>, <em>startupcost=0</em>, <em>shutdowncost=0</em>, <em>startupramplimit=None</em>, <em>shutdownramplimit=None</em>, <em>faststart=False</em>, <em>mustrun=False</em>, <em>name=''</em>, <em>index=None</em>, <em>bus=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.optimization.OptimizationObject" title="minpower.optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">minpower.optimization.OptimizationObject</span></tt></a></p>
+<p>A generator model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pmin</strong> &#8211; minimum real power</li>
+<li><strong>pmax</strong> &#8211; maximum real power</li>
+<li><strong>minuptime</strong> &#8211; min. time after commitment in on status (hours)</li>
+<li><strong>mindowntime</strong> &#8211; min. time after de-commitment in off status (hours)</li>
+<li><strong>rampratemax</strong> &#8211; max. positive change in real power over 1hr (MW/hr)</li>
+<li><strong>rampratemin</strong> &#8211; max. negative change in real power over 1hr (MW/hr)</li>
+<li><strong>startupramplimit</strong> &#8211; max. positive change in real power over the
+first hour after startup (MW/hr)</li>
+<li><strong>shutdownramplimit</strong> &#8211; max. negative change in real power over the
+last hour before shutdown (MW/hr)</li>
+<li><strong>costcurveequation</strong> &#8211; text describing a polynomial cost curve ($/MWh)
+see <tt class="xref py py-meth docutils literal"><span class="pre">parsePolynomial()</span></tt> for more.</li>
+<li><strong>heatratestring</strong> &#8211; text describing a polynomial heat rate curve (MBTU/MW).
+converts to cost curve when multiplied by fuelcost.</li>
+<li><strong>fuelcost</strong> &#8211; cost of fuel ($/MBTU)</li>
+<li><strong>startupcost</strong> &#8211; cost to commit ($)</li>
+<li><strong>shutdowncost</strong> &#8211; cost to de-commit ($)</li>
+<li><strong>mustrun</strong> &#8211; flag that forces commimtent to be on</li>
+<li><strong>name</strong> &#8211; name of the generator</li>
+<li><strong>index</strong> &#8211; numbering of the generator</li>
+<li><strong>bus</strong> &#8211; bus name that the generator is connected to</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="minpower.generators.Generator.build_cost_model">
+<tt class="descname">build_cost_model</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.build_cost_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.build_cost_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>parse the coefficients for the polynomial bid curve
+or custom bid points definition</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.cost">
+<tt class="descname">cost</tt><big>(</big><em>time</em>, <em>scenario=None</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.cost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>total cost at time (operating + startup + shutdown)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.cost_first_stage">
+<tt class="descname">cost_first_stage</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.cost_first_stage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.cost_first_stage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.cost_second_stage">
+<tt class="descname">cost_second_stage</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.cost_second_stage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.cost_second_stage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.cost_shutdown">
+<tt class="descname">cost_shutdown</tt><big>(</big><em>time</em>, <em>scenario=None</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.cost_shutdown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.cost_shutdown" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.cost_startup">
+<tt class="descname">cost_startup</tt><big>(</big><em>time</em>, <em>scenario=None</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.cost_startup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.cost_startup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.create_constraints">
+<tt class="descname">create_constraints</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.create_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>create the optimization constraints for a generator over all times</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.create_objective">
+<tt class="descname">create_objective</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.create_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.create_objective" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.create_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the optimization variables for a generator over all times.
+Also create the <tt class="xref py py-class docutils literal"><span class="pre">bidding.Bid</span></tt> objects and their variables.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.gethrsinstatus">
+<tt class="descname">gethrsinstatus</tt><big>(</big><em>times</em>, <em>stat</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.gethrsinstatus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.gethrsinstatus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.getstatus">
+<tt class="descname">getstatus</tt><big>(</big><em>tend</em>, <em>times</em>, <em>status</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.getstatus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.getstatus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.incrementalcost">
+<tt class="descname">incrementalcost</tt><big>(</big><em>time</em>, <em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.incrementalcost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.incrementalcost" title="Permalink to this definition">¶</a></dt>
+<dd><p>change in cost with change in power at time (based on exact bid polynomial).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.operatingcost">
+<tt class="descname">operatingcost</tt><big>(</big><em>time=None</em>, <em>scenario=None</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.operatingcost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.operatingcost" title="Permalink to this definition">¶</a></dt>
+<dd><p>cost of real power production at time (based on bid model approximation).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.power">
+<tt class="descname">power</tt><big>(</big><em>time=None</em>, <em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.power"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.power" title="Permalink to this definition">¶</a></dt>
+<dd><p>real power output at time</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.power_available">
+<tt class="descname">power_available</tt><big>(</big><em>time=None</em>, <em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.power_available"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.power_available" title="Permalink to this definition">¶</a></dt>
+<dd><p>power availble (constrained by pmax, ramprate, ...) at time</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.set_initial_condition">
+<tt class="descname">set_initial_condition</tt><big>(</big><em>power=None</em>, <em>status=True</em>, <em>hoursinstatus=100</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.set_initial_condition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.set_initial_condition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.status">
+<tt class="descname">status</tt><big>(</big><em>time=None</em>, <em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>on/off status at time</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.status_change">
+<tt class="descname">status_change</tt><big>(</big><em>t</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.status_change"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.status_change" title="Permalink to this definition">¶</a></dt>
+<dd><p>is the unit changing status between t and t-1</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator.truecost">
+<tt class="descname">truecost</tt><big>(</big><em>time</em>, <em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator.truecost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator.truecost" title="Permalink to this definition">¶</a></dt>
+<dd><p>exact cost of real power production at time (based on exact bid polynomial).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="minpower.generators.Generator_Stochastic">
+<em class="property">class </em><tt class="descclassname">minpower.generators.</tt><tt class="descname">Generator_Stochastic</tt><big>(</big><em>scenario_values=None</em>, <em>costcurveequation='0'</em>, <em>fuelcost=1</em>, <em>bid_points=None</em>, <em>noloadcost=0</em>, <em>mustrun=False</em>, <em>faststart=False</em>, <em>pmin=0</em>, <em>pmax=None</em>, <em>name=''</em>, <em>index=None</em>, <em>bus=None</em>, <em>kind='wind'</em>, <em>observed_values=None</em>, <em>schedule=None</em>, <em>sheddingallowed=False</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_Stochastic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_Stochastic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.generators.Generator_nonControllable" title="minpower.generators.Generator_nonControllable"><tt class="xref py py-class docutils literal"><span class="pre">minpower.generators.Generator_nonControllable</span></tt></a></p>
+<p>A generator with a stochastic power output.</p>
+<dl class="method">
+<dt id="minpower.generators.Generator_Stochastic.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_Stochastic.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_Stochastic.create_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_Stochastic.power">
+<tt class="descname">power</tt><big>(</big><em>time</em>, <em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_Stochastic.power"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_Stochastic.power" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_Stochastic.power_available">
+<tt class="descname">power_available</tt><big>(</big><em>time=None</em>, <em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_Stochastic.power_available"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_Stochastic.power_available" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="minpower.generators.Generator_nonControllable">
+<em class="property">class </em><tt class="descclassname">minpower.generators.</tt><tt class="descname">Generator_nonControllable</tt><big>(</big><em>schedule=None</em>, <em>fuelcost=1</em>, <em>costcurveequation='0'</em>, <em>bid_points=None</em>, <em>noloadcost=0</em>, <em>mustrun=False</em>, <em>faststart=False</em>, <em>sheddingallowed=False</em>, <em>pmin=0</em>, <em>pmax=None</em>, <em>name=''</em>, <em>index=None</em>, <em>bus=None</em>, <em>kind='wind'</em>, <em>observed_values=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.generators.Generator" title="minpower.generators.Generator"><tt class="xref py py-class docutils literal"><span class="pre">minpower.generators.Generator</span></tt></a></p>
+<p>A generator with a fixed schedule.</p>
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.cost">
+<tt class="descname">cost</tt><big>(</big><em>time</em>, <em>scenario=None</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.cost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.cost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.cost_first_stage">
+<tt class="descname">cost_first_stage</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.cost_first_stage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.cost_first_stage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.cost_second_stage">
+<tt class="descname">cost_second_stage</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.cost_second_stage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.cost_second_stage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.cost_shutdown">
+<tt class="descname">cost_shutdown</tt><big>(</big><em>time</em>, <em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.cost_shutdown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.cost_shutdown" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.cost_startup">
+<tt class="descname">cost_startup</tt><big>(</big><em>time</em>, <em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.cost_startup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.cost_startup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.create_bids">
+<tt class="descname">create_bids</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.create_bids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.create_bids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.create_constraints">
+<tt class="descname">create_constraints</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.create_constraints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.create_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.create_variables_shedding">
+<tt class="descname">create_variables_shedding</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.create_variables_shedding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.create_variables_shedding" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.get_scheduled_ouput">
+<tt class="descname">get_scheduled_ouput</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.get_scheduled_ouput"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.get_scheduled_ouput" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.getstatus">
+<tt class="descname">getstatus</tt><big>(</big><em>tend</em>, <em>times=None</em>, <em>status=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.getstatus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.getstatus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.incrementalcost">
+<tt class="descname">incrementalcost</tt><big>(</big><em>time</em>, <em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.incrementalcost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.incrementalcost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.operatingcost">
+<tt class="descname">operatingcost</tt><big>(</big><em>time=None</em>, <em>scenario=None</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.operatingcost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.operatingcost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.power">
+<tt class="descname">power</tt><big>(</big><em>time</em>, <em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.power"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.power" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.power_available">
+<tt class="descname">power_available</tt><big>(</big><em>time=None</em>, <em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.power_available"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.power_available" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.set_initial_condition">
+<tt class="descname">set_initial_condition</tt><big>(</big><em>power=None</em>, <em>status=None</em>, <em>hoursinstatus=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.set_initial_condition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.set_initial_condition" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.set_power_to_observed">
+<tt class="descname">set_power_to_observed</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.set_power_to_observed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.set_power_to_observed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.shed">
+<tt class="descname">shed</tt><big>(</big><em>time</em>, <em>scenario=None</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.shed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.shed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.status">
+<tt class="descname">status</tt><big>(</big><em>time=None</em>, <em>scenarios=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.generators.Generator_nonControllable.truecost">
+<tt class="descname">truecost</tt><big>(</big><em>time</em>, <em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#Generator_nonControllable.truecost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.Generator_nonControllable.truecost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.generators.get_tPrev">
+<tt class="descclassname">minpower.generators.</tt><tt class="descname">get_tPrev</tt><big>(</big><em>t</em>, <em>model</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/generators.html#get_tPrev"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.generators.get_tPrev" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-minpower.get_data">
+<span id="get-data-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">get_data</span></tt> Module<a class="headerlink" href="#module-minpower.get_data" title="Permalink to this headline">¶</a></h2>
+<p>Get data from spreadsheet files and parse it into
+<tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt>, <tt class="xref py py-class docutils literal"><span class="pre">Load</span></tt>,
+<tt class="xref py py-class docutils literal"><span class="pre">Bus</span></tt>, and <tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt> objects.
+Also extract the time information and create all</p>
+<blockquote>
+<div><tt class="xref py py-class docutils literal"><span class="pre">Timelist</span></tt> objects.</div></blockquote>
+<dl class="function">
+<dt id="minpower.get_data.build_class_list">
+<tt class="descclassname">minpower.get_data.</tt><tt class="descname">build_class_list</tt><big>(</big><em>data</em>, <em>model</em>, <em>times=None</em>, <em>timeseries=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/get_data.html#build_class_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.get_data.build_class_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create list of class instances from the row of a DataFrame.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.get_data.nice_names">
+<tt class="descclassname">minpower.get_data.</tt><tt class="descname">nice_names</tt><big>(</big><em>df</em><big>)</big><a class="headerlink" href="#minpower.get_data.nice_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>drop the case and spaces from all column names</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.get_data.parse_standalone">
+<tt class="descclassname">minpower.get_data.</tt><tt class="descname">parse_standalone</tt><big>(</big><em>storage</em>, <em>times</em><big>)</big><a class="headerlink" href="#minpower.get_data.parse_standalone" title="Permalink to this definition">¶</a></dt>
+<dd><p>load problem info from a pandas.HDFStore</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.get_data.parsedir">
+<tt class="descclassname">minpower.get_data.</tt><tt class="descname">parsedir</tt><big>(</big><em>**filename_kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/get_data.html#parsedir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.get_data.parsedir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import data from spreadsheets and build lists of
+<tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt> classes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.get_data.read_bid_points">
+<tt class="descclassname">minpower.get_data.</tt><tt class="descname">read_bid_points</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#minpower.get_data.read_bid_points" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.get_data.setup_initialcond">
+<tt class="descclassname">minpower.get_data.</tt><tt class="descname">setup_initialcond</tt><big>(</big><em>data</em>, <em>generators</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/get_data.html#setup_initialcond"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.get_data.setup_initialcond" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a list of initial conditions parameters and
+add information to each <tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt> object.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.get_data.setup_scenarios">
+<tt class="descclassname">minpower.get_data.</tt><tt class="descname">setup_scenarios</tt><big>(</big><em>gen_data</em>, <em>generators</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/get_data.html#setup_scenarios"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.get_data.setup_scenarios" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.get_data.setup_times">
+<tt class="descclassname">minpower.get_data.</tt><tt class="descname">setup_times</tt><big>(</big><em>generators_data</em>, <em>loads_data</em><big>)</big><a class="reference internal" href="../_modules/minpower/get_data.html#setup_times"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.get_data.setup_times" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a <tt class="xref py py-class docutils literal"><span class="pre">TimeIndex</span></tt> object
+from the schedule files.</p>
+<p>Also create a unified DataFrame of all the schedules, <cite>timeseries</cite>.</p>
+<p>If there are no schedule files (as in ED,OPF),
+create an index with just a single time.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-minpower.optimization">
+<span id="optimization-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">optimization</span></tt> Module<a class="headerlink" href="#module-minpower.optimization" title="Permalink to this headline">¶</a></h2>
+<p>An optimization command library for Minpower.
+Basically a wrapper around Coopr&#8217;s <cite>pyomo.ConcreteModel</cite> class.</p>
+<dl class="exception">
+<dt id="minpower.optimization.NotInModelError">
+<em class="property">exception </em><tt class="descclassname">minpower.optimization.</tt><tt class="descname">NotInModelError</tt><big>(</big><em>ivalue</em><big>)</big><a class="headerlink" href="#minpower.optimization.NotInModelError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+<p>Error that occurs when trying to find
+a component in the optimization model.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="minpower.optimization.OptimizationError">
+<em class="property">exception </em><tt class="descclassname">minpower.optimization.</tt><tt class="descname">OptimizationError</tt><big>(</big><em>ivalue</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+<p>Error that occurs within solving an optimization problem.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="minpower.optimization.OptimizationObject">
+<em class="property">class </em><tt class="descclassname">minpower.optimization.</tt><tt class="descname">OptimizationObject</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>A base class for an optimization object.
+This also serves as a template for
+how :class:<a href="#id2"><span class="problematic" id="id3">`</span></a>~OptimizationObject`s are structured.</p>
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.add_children">
+<tt class="descname">add_children</tt><big>(</big><em>objects</em>, <em>name</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.add_children"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.add_children" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a child <tt class="xref py py-class docutils literal"><span class="pre">OptimizationObject</span></tt> to this object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.add_constraint">
+<tt class="descname">add_constraint</tt><big>(</big><em>name</em>, <em>time</em>, <em>expression</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.add_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.add_constraint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new constraint and add it to the object&#8217;s constraints and the model&#8217;s constraints.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.add_constraint_set">
+<tt class="descname">add_constraint_set</tt><big>(</big><em>name</em>, <em>index</em>, <em>expression</em><big>)</big><a class="headerlink" href="#minpower.optimization.OptimizationObject.add_constraint_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.add_parameter">
+<tt class="descname">add_parameter</tt><big>(</big><em>name</em>, <em>index=None</em>, <em>values=None</em>, <em>mutable=True</em>, <em>default=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.add_parameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.add_parameter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.add_variable">
+<tt class="descname">add_variable</tt><big>(</big><em>name</em>, <em>time=None</em>, <em>fixed_value=None</em>, <em>index=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.add_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.add_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new variable and add it to the object&#8217;s variables and the model&#8217;s variables.
+:param name: name of optimization variable.
+:param kind: type of variable, specified by string. {Continuous or Binary/Boolean}
+:param low: low limit of variable
+:param high: high limit of variable
+:param fixed_value: a fixed value for a variable (making it a parameter)
+:param time: a single time for a variable
+:param index: a <tt class="xref py py-class docutils literal"><span class="pre">pyomo.Set</span></tt> over which a variable is created</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.create_constraints">
+<tt class="descname">create_constraints</tt><big>(</big><em>times</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.create_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Individual class defined.
+Create the constraints in this method by using calls to
+<tt class="xref py py-meth docutils literal"><span class="pre">add_constraint()</span></tt>.
+Constraints will be accessible by using
+<tt class="xref py py-meth docutils literal"><span class="pre">get_constraint()</span></tt> (or by adding
+a shortcut methods, like <tt class="xref py py-meth docutils literal"><span class="pre">price()</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.create_objective">
+<tt class="descname">create_objective</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.create_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.create_objective" title="Permalink to this definition">¶</a></dt>
+<dd><p>Individual class defined.
+Return the contribution to the objective (cost) expression.
+:returns: an expression, the default is 0</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.create_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Individual class defined.
+Create the variables in this method by using calls to
+<tt class="xref py py-meth docutils literal"><span class="pre">add_variable()</span></tt>.
+Variables will be accessible by using
+<tt class="xref py py-meth docutils literal"><span class="pre">get_variable()</span></tt> (or by adding
+a shortcut methods, like <tt class="xref py py-meth docutils literal"><span class="pre">power()</span></tt>).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.get_child">
+<tt class="descname">get_child</tt><big>(</big><em>name</em>, <em>time=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.get_child"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.get_child" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a child <tt class="xref py py-class docutils literal"><span class="pre">OptimizationObject</span></tt>
+dependent on time from this object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.get_constraint">
+<tt class="descname">get_constraint</tt><big>(</big><em>name</em>, <em>time</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.get_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.get_constraint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.get_dual">
+<tt class="descname">get_dual</tt><big>(</big><em>cname</em>, <em>time=None</em><big>)</big><a class="headerlink" href="#minpower.optimization.OptimizationObject.get_dual" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the dual of a constraint of an LP problem</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.get_parameter">
+<tt class="descname">get_parameter</tt><big>(</big><em>name</em>, <em>time</em>, <em>indexed=False</em><big>)</big><a class="headerlink" href="#minpower.optimization.OptimizationObject.get_parameter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.get_variable">
+<tt class="descname">get_variable</tt><big>(</big><em>name</em>, <em>time=None</em>, <em>indexed=False</em>, <em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.get_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.get_variable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.iden">
+<tt class="descname">iden</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.iden"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.iden" title="Permalink to this definition">¶</a></dt>
+<dd><p>Individual class defined.
+Identifing string for the object, depending on time.
+Used to name variables and constraints for the object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.init_optimization">
+<tt class="descname">init_optimization</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationObject.init_optimization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationObject.init_optimization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize optimization components: add a container for children.
+If the index is not defined, make it a hash of the object
+to ensure the index is unique.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationObject.values">
+<tt class="descname">values</tt><big>(</big><em>name</em>, <em>reindex=None</em><big>)</big><a class="headerlink" href="#minpower.optimization.OptimizationObject.values" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the values of an indexed pyomo component as a Series</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="minpower.optimization.OptimizationProblem">
+<em class="property">class </em><tt class="descclassname">minpower.optimization.</tt><tt class="descname">OptimizationProblem</tt><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.optimization.OptimizationObject" title="minpower.optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">minpower.optimization.OptimizationObject</span></tt></a></p>
+<p>an optimization problem/model based on pyomo</p>
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.add_children">
+<tt class="descname">add_children</tt><big>(</big><em>objL</em>, <em>name</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.add_children"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.add_children" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a child <tt class="xref py py-class docutils literal"><span class="pre">OptimizationObject</span></tt> to this object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.add_component_to_problem">
+<tt class="descname">add_component_to_problem</tt><big>(</big><em>component</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.add_component_to_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.add_component_to_problem" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a optimization component to the model</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.add_constraint">
+<tt class="descname">add_constraint</tt><big>(</big><em>name</em>, <em>expression</em>, <em>time=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.add_constraint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.add_constraint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.add_objective">
+<tt class="descname">add_objective</tt><big>(</big><em>expression</em>, <em>sense=1</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.add_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.add_objective" title="Permalink to this definition">¶</a></dt>
+<dd><p>add an objective to the problem</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.add_set">
+<tt class="descname">add_set</tt><big>(</big><em>name</em>, <em>items</em>, <em>ordered=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.add_set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.add_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>add a <tt class="xref py py-class docutils literal"><span class="pre">pyomo.Set</span></tt> to the problem</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.add_suffix">
+<tt class="descname">add_suffix</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#minpower.optimization.OptimizationProblem.add_suffix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.add_variable">
+<tt class="descname">add_variable</tt><big>(</big><em>name</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.add_variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.add_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a new variable and add it to the root problem</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.fix_binary_variables">
+<tt class="descname">fix_binary_variables</tt><big>(</big><em>fix_offs=True</em><big>)</big><a class="headerlink" href="#minpower.optimization.OptimizationProblem.fix_binary_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.get_component">
+<tt class="descname">get_component</tt><big>(</big><em>name</em>, <em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.get_component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.get_component" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an optimization component</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.init_optimization">
+<tt class="descname">init_optimization</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.init_optimization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.init_optimization" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.reset_model">
+<tt class="descname">reset_model</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.reset_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.reset_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.reset_objective">
+<tt class="descname">reset_objective</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.optimization.OptimizationProblem.reset_objective" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.show_model">
+<tt class="descname">show_model</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.show_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.show_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.solve">
+<tt class="descname">solve</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send the optimization problem off to the solver.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.update_variables">
+<tt class="descname">update_variables</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.update_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.update_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace the variables with their numeric value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.optimization.OptimizationProblem.write_model">
+<tt class="descname">write_model</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#OptimizationProblem.write_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.OptimizationProblem.write_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="minpower.optimization.OptimizationResolveError">
+<em class="property">exception </em><tt class="descclassname">minpower.optimization.</tt><tt class="descname">OptimizationResolveError</tt><big>(</big><em>ivalue</em><big>)</big><a class="headerlink" href="#minpower.optimization.OptimizationResolveError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.optimization.OptimizationError" title="minpower.optimization.OptimizationError"><tt class="xref py py-class docutils literal"><span class="pre">minpower.optimization.OptimizationError</span></tt></a></p>
+<p>Error that occurs when re-solving an optimization problem.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.optimization.detect_status">
+<tt class="descclassname">minpower.optimization.</tt><tt class="descname">detect_status</tt><big>(</big><em>results</em>, <em>solver</em><big>)</big><a class="headerlink" href="#minpower.optimization.detect_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>decide between a solver success or failure</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.optimization.full_filename">
+<tt class="descclassname">minpower.optimization.</tt><tt class="descname">full_filename</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#minpower.optimization.full_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.optimization.get_objective">
+<tt class="descclassname">minpower.optimization.</tt><tt class="descname">get_objective</tt><big>(</big><em>results</em>, <em>name='objective'</em><big>)</big><a class="headerlink" href="#minpower.optimization.get_objective" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.optimization.value">
+<tt class="descclassname">minpower.optimization.</tt><tt class="descname">value</tt><big>(</big><em>variable</em><big>)</big><a class="reference internal" href="../_modules/minpower/optimization.html#value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.optimization.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Value of an optimization variable after the problem is solved.
+If passed a numeric value, will return the number.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-minpower.powersystems">
+<span id="powersystems-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">powersystems</span></tt> Module<a class="headerlink" href="#module-minpower.powersystems" title="Permalink to this headline">¶</a></h2>
+<p>Defines models for power systems components, including
+<tt class="xref py py-class docutils literal"><span class="pre">PowerSystem</span></tt>, <tt class="xref py py-class docutils literal"><span class="pre">Bus</span></tt>,
+<tt class="xref py py-class docutils literal"><span class="pre">Load</span></tt> and  <tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt>.
+<tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt> components can be found
+in the <a href="#id4"><span class="problematic" id="id5">:module:`~generators`</span></a>. Each of these objects inherits an
+optimization framework from <tt class="xref py py-class docutils literal"><span class="pre">OptimizationObject</span></tt>.</p>
+<dl class="class">
+<dt id="minpower.powersystems.Bus">
+<em class="property">class </em><tt class="descclassname">minpower.powersystems.</tt><tt class="descname">Bus</tt><big>(</big><em>name=None</em>, <em>index=None</em>, <em>isSwing=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Bus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Bus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.optimization.OptimizationObject" title="minpower.optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">minpower.optimization.OptimizationObject</span></tt></a></p>
+<p>A transmission bus bus (usually a substation where one or more
+tranmission lines start/end).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>isSwing</strong> &#8211; flag if the bus is the swing bus
+(sets the reference angle for the system)</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="minpower.powersystems.Bus.Pgen">
+<tt class="descname">Pgen</tt><big>(</big><em>t</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Bus.Pgen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Bus.Pgen" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Bus.Pload">
+<tt class="descname">Pload</tt><big>(</big><em>t</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Bus.Pload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Bus.Pload" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Bus.angle">
+<tt class="descname">angle</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Bus.angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Bus.angle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Bus.cost_first_stage">
+<tt class="descname">cost_first_stage</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Bus.cost_first_stage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Bus.cost_first_stage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Bus.cost_second_stage">
+<tt class="descname">cost_second_stage</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Bus.cost_second_stage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Bus.cost_second_stage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Bus.create_constraints">
+<tt class="descname">create_constraints</tt><big>(</big><em>times</em>, <em>Bmatrix</em>, <em>buses</em>, <em>include_children=True</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Bus.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Bus.create_constraints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Bus.create_objective">
+<tt class="descname">create_objective</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Bus.create_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Bus.create_objective" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Bus.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Bus.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Bus.create_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Bus.power_balance">
+<tt class="descname">power_balance</tt><big>(</big><em>t</em>, <em>Bmatrix</em>, <em>allBuses</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Bus.power_balance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Bus.power_balance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Bus.price">
+<tt class="descname">price</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Bus.price"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Bus.price" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="minpower.powersystems.Line">
+<em class="property">class </em><tt class="descclassname">minpower.powersystems.</tt><tt class="descname">Line</tt><big>(</big><em>name=''</em>, <em>index=None</em>, <em>frombus=None</em>, <em>tobus=None</em>, <em>reactance=0.05</em>, <em>pmin=None</em>, <em>pmax=9999</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.optimization.OptimizationObject" title="minpower.optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">minpower.optimization.OptimizationObject</span></tt></a></p>
+<p>A tranmission line. Currently the model
+only considers real power flow under normal conditions.</p>
+<dl class="method">
+<dt id="minpower.powersystems.Line.create_constraints">
+<tt class="descname">create_constraints</tt><big>(</big><em>times</em>, <em>buses</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Line.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Line.create_constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>create the constraints for a line over all times</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Line.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Line.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Line.create_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Line.power">
+<tt class="descname">power</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Line.power"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Line.power" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Line.price">
+<tt class="descname">price</tt><big>(</big><em>time</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Line.price"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Line.price" title="Permalink to this definition">¶</a></dt>
+<dd><p>congestion price on line</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="minpower.powersystems.Load">
+<em class="property">class </em><tt class="descclassname">minpower.powersystems.</tt><tt class="descname">Load</tt><big>(</big><em>name=''</em>, <em>index=None</em>, <em>bus=None</em>, <em>schedule=None</em>, <em>sheddingallowed=True</em>, <em>cost_shedding=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.optimization.OptimizationObject" title="minpower.optimization.OptimizationObject"><tt class="xref py py-class docutils literal"><span class="pre">minpower.optimization.OptimizationObject</span></tt></a></p>
+<p>Describes a power system load (demand).
+Currently only real power is considered.
+For OPF problems, the name of the bus can.
+For UC problems, schedules (pandas.Series objects) are used.
+By setting <cite>sheddingallowed</cite>, the amount of power can become a variable,</p>
+<blockquote>
+<div>(bounded to be at most the scheduled amount).</div></blockquote>
+<dl class="method">
+<dt id="minpower.powersystems.Load.cost">
+<tt class="descname">cost</tt><big>(</big><em>time</em>, <em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Load.cost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Load.cost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Load.cost_first_stage">
+<tt class="descname">cost_first_stage</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Load.cost_first_stage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Load.cost_first_stage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Load.cost_second_stage">
+<tt class="descname">cost_second_stage</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Load.cost_second_stage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Load.cost_second_stage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Load.create_constraints">
+<tt class="descname">create_constraints</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Load.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Load.create_constraints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Load.create_objective">
+<tt class="descname">create_objective</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Load.create_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Load.create_objective" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Load.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Load.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Load.create_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Load.get_scheduled_output">
+<tt class="descname">get_scheduled_output</tt><big>(</big><em>time</em><big>)</big><a class="headerlink" href="#minpower.powersystems.Load.get_scheduled_output" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Load.power">
+<tt class="descname">power</tt><big>(</big><em>time</em>, <em>scenario=None</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Load.power"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Load.power" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.Load.shed">
+<tt class="descname">shed</tt><big>(</big><em>time</em>, <em>scenario=None</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#Load.shed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.Load.shed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="minpower.powersystems.PowerSystem">
+<em class="property">class </em><tt class="descclassname">minpower.powersystems.</tt><tt class="descname">PowerSystem</tt><big>(</big><em>generators</em>, <em>loads</em>, <em>lines=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#PowerSystem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.PowerSystem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.optimization.OptimizationProblem" title="minpower.optimization.OptimizationProblem"><tt class="xref py py-class docutils literal"><span class="pre">minpower.optimization.OptimizationProblem</span></tt></a></p>
+<p>Power systems object which is the container for all other components.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>generators</strong> &#8211; list of <tt class="xref py py-class docutils literal"><span class="pre">Generator</span></tt> objects</li>
+<li><strong>loads</strong> &#8211; list of <tt class="xref py py-class docutils literal"><span class="pre">Load</span></tt> objects</li>
+<li><strong>lines</strong> &#8211; list of <tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt> objects</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Other settings are inherited from <cite>user_config</cite>.</p>
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.allow_shedding">
+<tt class="descname">allow_shedding</tt><big>(</big><em>times</em>, <em>resolve=False</em><big>)</big><a class="headerlink" href="#minpower.powersystems.PowerSystem.allow_shedding" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.cost_first_stage">
+<tt class="descname">cost_first_stage</tt><big>(</big><em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#PowerSystem.cost_first_stage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.PowerSystem.cost_first_stage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.cost_second_stage">
+<tt class="descname">cost_second_stage</tt><big>(</big><em>scenario=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#PowerSystem.cost_second_stage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.PowerSystem.cost_second_stage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.create_admittance_matrix">
+<tt class="descname">create_admittance_matrix</tt><big>(</big><em>buses</em>, <em>lines</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#PowerSystem.create_admittance_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.PowerSystem.create_admittance_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the admittance matrix (B),
+with elements = total admittance of line from bus i to j.
+Used in calculating the power balance for OPF problems.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>buses</strong> &#8211; list of <tt class="xref py py-class docutils literal"><span class="pre">Line</span></tt> objects</li>
+<li><strong>lines</strong> &#8211; list of <tt class="xref py py-class docutils literal"><span class="pre">Bus</span></tt> objects</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.create_constraints">
+<tt class="descname">create_constraints</tt><big>(</big><em>times</em>, <em>include_children=True</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#PowerSystem.create_constraints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.PowerSystem.create_constraints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.create_objective">
+<tt class="descname">create_objective</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#PowerSystem.create_objective"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.PowerSystem.create_objective" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.create_variables">
+<tt class="descname">create_variables</tt><big>(</big><em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#PowerSystem.create_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.PowerSystem.create_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.debug_infeasible">
+<tt class="descname">debug_infeasible</tt><big>(</big><em>times</em>, <em>resolve_sln=None</em><big>)</big><a class="headerlink" href="#minpower.powersystems.PowerSystem.debug_infeasible" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.disallow_shedding">
+<tt class="descname">disallow_shedding</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.powersystems.PowerSystem.disallow_shedding" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.generators">
+<tt class="descname">generators</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#PowerSystem.generators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.PowerSystem.generators" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.get_finalconditions">
+<tt class="descname">get_finalconditions</tt><big>(</big><em>sln</em><big>)</big><a class="headerlink" href="#minpower.powersystems.PowerSystem.get_finalconditions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.get_generator_with_observed">
+<tt class="descname">get_generator_with_observed</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.powersystems.PowerSystem.get_generator_with_observed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.get_generator_with_scenarios">
+<tt class="descname">get_generator_with_scenarios</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.powersystems.PowerSystem.get_generator_with_scenarios" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.get_generators_controllable">
+<tt class="descname">get_generators_controllable</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.powersystems.PowerSystem.get_generators_controllable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.get_generators_noncontrollable">
+<tt class="descname">get_generators_noncontrollable</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.powersystems.PowerSystem.get_generators_noncontrollable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.get_generators_without_scenarios">
+<tt class="descname">get_generators_without_scenarios</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.powersystems.PowerSystem.get_generators_without_scenarios" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.iden">
+<tt class="descname">iden</tt><big>(</big><em>time=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#PowerSystem.iden"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.PowerSystem.iden" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.loads">
+<tt class="descname">loads</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#PowerSystem.loads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.PowerSystem.loads" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.make_buses_list">
+<tt class="descname">make_buses_list</tt><big>(</big><em>loads</em>, <em>generators</em><big>)</big><a class="reference internal" href="../_modules/minpower/powersystems.html#PowerSystem.make_buses_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.powersystems.PowerSystem.make_buses_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create list of <tt class="xref py py-class docutils literal"><span class="pre">powersystems.Bus</span></tt> objects
+from the load and generator bus names. Otherwise
+(as in ED,UC) create just one (system)
+<tt class="xref py py-class docutils literal"><span class="pre">powersystems.Bus</span></tt> instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>loads</strong> &#8211; a list of <tt class="xref py py-class docutils literal"><span class="pre">powersystems.Load</span></tt> objects</li>
+<li><strong>generators</strong> &#8211; a list of <tt class="xref py py-class docutils literal"><span class="pre">powersystems.Generator</span></tt> objects</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a list of <tt class="xref py py-class docutils literal"><span class="pre">powersystems.Bus</span></tt> objects</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.resolve_determinisitc_with_observed">
+<tt class="descname">resolve_determinisitc_with_observed</tt><big>(</big><em>sln</em><big>)</big><a class="headerlink" href="#minpower.powersystems.PowerSystem.resolve_determinisitc_with_observed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.resolve_stochastic_with_observed">
+<tt class="descname">resolve_stochastic_with_observed</tt><big>(</big><em>instance</em>, <em>sln</em><big>)</big><a class="headerlink" href="#minpower.powersystems.PowerSystem.resolve_stochastic_with_observed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.set_initialconditions">
+<tt class="descname">set_initialconditions</tt><big>(</big><em>initTime</em><big>)</big><a class="headerlink" href="#minpower.powersystems.PowerSystem.set_initialconditions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.solve_problem">
+<tt class="descname">solve_problem</tt><big>(</big><em>times</em><big>)</big><a class="headerlink" href="#minpower.powersystems.PowerSystem.solve_problem" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.total_scheduled_generation">
+<tt class="descname">total_scheduled_generation</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.powersystems.PowerSystem.total_scheduled_generation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.powersystems.PowerSystem.total_scheduled_load">
+<tt class="descname">total_scheduled_load</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.powersystems.PowerSystem.total_scheduled_load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-minpower.results">
+<span id="results-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">results</span></tt> Module<a class="headerlink" href="#module-minpower.results" title="Permalink to this headline">¶</a></h2>
+<p>Solution models, output, and display for power system
+optimization problems. Matplotlib and networkx are used for
+visualization.</p>
+<dl class="class">
+<dt id="minpower.results.MultistageStandalone">
+<em class="property">class </em><tt class="descclassname">minpower.results.</tt><tt class="descname">MultistageStandalone</tt><big>(</big><em>power_system</em>, <em>stage_times</em>, <em>store</em><big>)</big><a class="headerlink" href="#minpower.results.MultistageStandalone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.results.Solution_UC_multistage" title="minpower.results.Solution_UC_multistage"><tt class="xref py py-class docutils literal"><span class="pre">minpower.results.Solution_UC_multistage</span></tt></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="minpower.results.Solution">
+<em class="property">class </em><tt class="descclassname">minpower.results.</tt><tt class="descname">Solution</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>datadir='.'</em>, <em>is_stochastic=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Solution information template for a power system over times.
+Each problem type has its own class for visualization and
+spreadsheet output, e.g. <tt class="xref py py-class docutils literal"><span class="pre">Solution_ED</span></tt>.</p>
+<dl class="method">
+<dt id="minpower.results.Solution.gen_time_df">
+<tt class="descname">gen_time_df</tt><big>(</big><em>method</em>, <em>non_overlap=True</em>, <em>evaluate=False</em>, <em>generators=None</em><big>)</big><a class="headerlink" href="#minpower.results.Solution.gen_time_df" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution.get_values">
+<tt class="descname">get_values</tt><big>(</big><em>items</em>, <em>method='power'</em>, <em>time=None</em>, <em>evaluate=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution.get_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution.get_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the attributes of all objects of a certain kind at a given time.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution.info_buses">
+<tt class="descname">info_buses</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution.info_buses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution.info_buses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution.info_cost">
+<tt class="descname">info_cost</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution.info_cost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution.info_cost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution.info_lines">
+<tt class="descname">info_lines</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution.info_lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution.info_lines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution.info_loads">
+<tt class="descname">info_loads</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution.info_loads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution.info_loads" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution.info_price">
+<tt class="descname">info_price</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution.info_price"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution.info_price" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution.info_status">
+<tt class="descname">info_status</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution.info_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution.info_status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution.savevisualization">
+<tt class="descname">savevisualization</tt><big>(</big><em>filename=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution.savevisualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution.savevisualization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the visualization to a file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution.show">
+<tt class="descname">show</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution.show"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the solution information to the terminal</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="minpower.results.Solution_ED">
+<em class="property">class </em><tt class="descclassname">minpower.results.</tt><tt class="descname">Solution_ED</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>datadir='.'</em>, <em>is_stochastic=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_ED"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_ED" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.results.Solution" title="minpower.results.Solution"><tt class="xref py py-class docutils literal"><span class="pre">minpower.results.Solution</span></tt></a></p>
+<dl class="method">
+<dt id="minpower.results.Solution_ED.info_buses">
+<tt class="descname">info_buses</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_ED.info_buses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_ED.info_buses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution_ED.info_lines">
+<tt class="descname">info_lines</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_ED.info_lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_ED.info_lines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution_ED.saveCSV">
+<tt class="descname">saveCSV</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_ED.saveCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_ED.saveCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>economic dispatch generator solution values in spreadsheet form</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution_ED.visualization">
+<tt class="descname">visualization</tt><big>(</big><em>show_cost_also=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_ED.visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_ED.visualization" title="Permalink to this definition">¶</a></dt>
+<dd><p>economic dispatch visualization of linearized incremental cost</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="minpower.results.Solution_OPF">
+<em class="property">class </em><tt class="descclassname">minpower.results.</tt><tt class="descname">Solution_OPF</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>datadir='.'</em>, <em>is_stochastic=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_OPF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_OPF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.results.Solution" title="minpower.results.Solution"><tt class="xref py py-class docutils literal"><span class="pre">minpower.results.Solution</span></tt></a></p>
+<dl class="method">
+<dt id="minpower.results.Solution_OPF.info_price">
+<tt class="descname">info_price</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_OPF.info_price"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_OPF.info_price" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution_OPF.saveCSV">
+<tt class="descname">saveCSV</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_OPF.saveCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_OPF.saveCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>OPF generator and line power values in spreadsheet form</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution_OPF.visualization">
+<tt class="descname">visualization</tt><big>(</big><em>filename=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_OPF.visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_OPF.visualization" title="Permalink to this definition">¶</a></dt>
+<dd><p>power flow visualization</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="minpower.results.Solution_SCUC">
+<em class="property">class </em><tt class="descclassname">minpower.results.</tt><tt class="descname">Solution_SCUC</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>datadir='.'</em>, <em>is_stochastic=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_SCUC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_SCUC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.results.Solution_UC" title="minpower.results.Solution_UC"><tt class="xref py py-class docutils literal"><span class="pre">minpower.results.Solution_UC</span></tt></a></p>
+<dl class="method">
+<dt id="minpower.results.Solution_SCUC.visualization">
+<tt class="descname">visualization</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_SCUC.visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_SCUC.visualization" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="minpower.results.Solution_Stochastic">
+<em class="property">class </em><tt class="descclassname">minpower.results.</tt><tt class="descname">Solution_Stochastic</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>datadir='.'</em>, <em>is_stochastic=True</em><big>)</big><a class="headerlink" href="#minpower.results.Solution_Stochastic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.results.Solution" title="minpower.results.Solution"><tt class="xref py py-class docutils literal"><span class="pre">minpower.results.Solution</span></tt></a></p>
+<dl class="method">
+<dt id="minpower.results.Solution_Stochastic.gen_time_df">
+<tt class="descname">gen_time_df</tt><big>(</big><em>method</em>, <em>scenario</em>, <em>non_overlap=True</em>, <em>evaluate=False</em>, <em>generators=None</em><big>)</big><a class="headerlink" href="#minpower.results.Solution_Stochastic.gen_time_df" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution_Stochastic.info_cost">
+<tt class="descname">info_cost</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.results.Solution_Stochastic.info_cost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution_Stochastic.show">
+<tt class="descname">show</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.results.Solution_Stochastic.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the solution information to the terminal</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution_Stochastic.stg_panel">
+<tt class="descname">stg_panel</tt><big>(</big><em>method</em>, <em>generators=None</em>, <em>no_overlap=True</em>, <em>evaluate=False</em><big>)</big><a class="headerlink" href="#minpower.results.Solution_Stochastic.stg_panel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="minpower.results.Solution_Stochastic_UC">
+<em class="property">class </em><tt class="descclassname">minpower.results.</tt><tt class="descname">Solution_Stochastic_UC</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>datadir='.'</em>, <em>is_stochastic=True</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_Stochastic_UC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_Stochastic_UC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.results.Solution_Stochastic" title="minpower.results.Solution_Stochastic"><tt class="xref py py-class docutils literal"><span class="pre">minpower.results.Solution_Stochastic</span></tt></a></p>
+<dl class="method">
+<dt id="minpower.results.Solution_Stochastic_UC.saveCSV">
+<tt class="descname">saveCSV</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_Stochastic_UC.saveCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_Stochastic_UC.saveCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>generator power and status values for stochastic unit commitment</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="minpower.results.Solution_UC">
+<em class="property">class </em><tt class="descclassname">minpower.results.</tt><tt class="descname">Solution_UC</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>datadir='.'</em>, <em>is_stochastic=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_UC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_UC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.results.Solution" title="minpower.results.Solution"><tt class="xref py py-class docutils literal"><span class="pre">minpower.results.Solution</span></tt></a></p>
+<dl class="method">
+<dt id="minpower.results.Solution_UC.info_buses">
+<tt class="descname">info_buses</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_UC.info_buses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_UC.info_buses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution_UC.info_lines">
+<tt class="descname">info_lines</tt><big>(</big><em>t</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_UC.info_lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_UC.info_lines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution_UC.saveCSV">
+<tt class="descname">saveCSV</tt><big>(</big><em>save_final_status=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_UC.saveCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_UC.saveCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>generator power values and statuses for unit commitment</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution_UC.visualization">
+<tt class="descname">visualization</tt><big>(</big><em>withPrices=True</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_UC.visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_UC.visualization" title="Permalink to this definition">¶</a></dt>
+<dd><p>generator output visualization for unit commitment</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="minpower.results.Solution_UC_multistage">
+<em class="property">class </em><tt class="descclassname">minpower.results.</tt><tt class="descname">Solution_UC_multistage</tt><big>(</big><em>power_system</em>, <em>stage_times</em>, <em>stage_solutions</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_UC_multistage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_UC_multistage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#minpower.results.Solution_UC" title="minpower.results.Solution_UC"><tt class="xref py py-class docutils literal"><span class="pre">minpower.results.Solution_UC</span></tt></a></p>
+<p>Muti-stage unit commitment. Each stage represents one optimization problem.
+Each element of the list :param:stage_solutions is a <tt class="xref py py-class docutils literal"><span class="pre">Solution_UC</span></tt> object.</p>
+<dl class="method">
+<dt id="minpower.results.Solution_UC_multistage.info_cost">
+<tt class="descname">info_cost</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_UC_multistage.info_cost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_UC_multistage.info_cost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution_UC_multistage.info_generators">
+<tt class="descname">info_generators</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_UC_multistage.info_generators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_UC_multistage.info_generators" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution_UC_multistage.info_loads">
+<tt class="descname">info_loads</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_UC_multistage.info_loads"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_UC_multistage.info_loads" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution_UC_multistage.info_shedding">
+<tt class="descname">info_shedding</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_UC_multistage.info_shedding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_UC_multistage.info_shedding" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution_UC_multistage.info_status">
+<tt class="descname">info_status</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_UC_multistage.info_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_UC_multistage.info_status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.results.Solution_UC_multistage.show">
+<tt class="descname">show</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#Solution_UC_multistage.show"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.Solution_UC_multistage.show" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.results.classify_problem">
+<tt class="descclassname">minpower.results.</tt><tt class="descname">classify_problem</tt><big>(</big><em>times</em>, <em>power_system</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#classify_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.classify_problem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Classify the type of problem: ED, OPF, UC, or SCUC.
+and if it is stochastic or not.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.results.full_filename">
+<tt class="descclassname">minpower.results.</tt><tt class="descname">full_filename</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#minpower.results.full_filename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.results.make_multistage_solution">
+<tt class="descclassname">minpower.results.</tt><tt class="descname">make_multistage_solution</tt><big>(</big><em>power_system</em>, <em>stage_times</em>, <em>stage_solutions</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#make_multistage_solution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.make_multistage_solution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a multi stage solution</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.results.make_solution">
+<tt class="descclassname">minpower.results.</tt><tt class="descname">make_solution</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#make_solution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.make_solution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a <tt class="xref py py-class docutils literal"><span class="pre">solution.Solution</span></tt> object for a power system over times.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.results.prettify_axes">
+<tt class="descclassname">minpower.results.</tt><tt class="descname">prettify_axes</tt><big>(</big><em>ax</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#prettify_axes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.prettify_axes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.results.shrink_axis">
+<tt class="descclassname">minpower.results.</tt><tt class="descname">shrink_axis</tt><big>(</big><em>ax</em>, <em>percent_horizontal=0.2</em>, <em>percent_vertical=0</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#shrink_axis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.shrink_axis" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.results.stack_plot_UC">
+<tt class="descclassname">minpower.results.</tt><tt class="descname">stack_plot_UC</tt><big>(</big><em>solution</em>, <em>generators</em>, <em>times</em>, <em>prices</em>, <em>withPrices=True</em>, <em>seperate_legend=False</em>, <em>hours_tick_interval=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/results.html#stack_plot_UC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.results.stack_plot_UC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-minpower.schedule">
+<span id="schedule-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">schedule</span></tt> Module<a class="headerlink" href="#module-minpower.schedule" title="Permalink to this headline">¶</a></h2>
+<p>Time and schedule related models.</p>
+<dl class="class">
+<dt id="minpower.schedule.TimeIndex">
+<em class="property">class </em><tt class="descclassname">minpower.schedule.</tt><tt class="descname">TimeIndex</tt><big>(</big><em>index</em>, <em>str_start=0</em><big>)</big><a class="headerlink" href="#minpower.schedule.TimeIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>a list of times (underlying model is pandas.Index)</p>
+<dl class="method">
+<dt id="minpower.schedule.TimeIndex.get_interval">
+<tt class="descname">get_interval</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.schedule.TimeIndex.get_interval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.schedule.TimeIndex.last">
+<tt class="descname">last</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.schedule.TimeIndex.last" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.schedule.TimeIndex.last_non_overlap">
+<tt class="descname">last_non_overlap</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.schedule.TimeIndex.last_non_overlap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.schedule.TimeIndex.non_overlap">
+<tt class="descname">non_overlap</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.schedule.TimeIndex.non_overlap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.schedule.TimeIndex.post_horizon">
+<tt class="descname">post_horizon</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.schedule.TimeIndex.post_horizon" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.schedule.TimeIndex.set_initial">
+<tt class="descname">set_initial</tt><big>(</big><em>initialTime=None</em><big>)</big><a class="headerlink" href="#minpower.schedule.TimeIndex.set_initial" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="minpower.schedule.TimeIndex.subdivide">
+<tt class="descname">subdivide</tt><big>(</big><em>division_hrs=24</em>, <em>overlap_hrs=0</em><big>)</big><a class="headerlink" href="#minpower.schedule.TimeIndex.subdivide" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.schedule.get_schedule">
+<tt class="descclassname">minpower.schedule.</tt><tt class="descname">get_schedule</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#minpower.schedule.get_schedule" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.schedule.is_init">
+<tt class="descclassname">minpower.schedule.</tt><tt class="descname">is_init</tt><big>(</big><em>time</em><big>)</big><a class="headerlink" href="#minpower.schedule.is_init" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.schedule.just_one_time">
+<tt class="descclassname">minpower.schedule.</tt><tt class="descname">just_one_time</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#just_one_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.just_one_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>make a TimeIndex with just one time in it</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.schedule.make_constant_schedule">
+<tt class="descclassname">minpower.schedule.</tt><tt class="descname">make_constant_schedule</tt><big>(</big><em>times</em>, <em>power=0</em><big>)</big><a class="headerlink" href="#minpower.schedule.make_constant_schedule" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.schedule.make_times_basic">
+<tt class="descclassname">minpower.schedule.</tt><tt class="descname">make_times_basic</tt><big>(</big><em>N</em><big>)</big><a class="reference internal" href="../_modules/minpower/schedule.html#make_times_basic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.schedule.make_times_basic" title="Permalink to this definition">¶</a></dt>
+<dd><p>make a <tt class="xref py py-class docutils literal"><span class="pre">schedule.TimeIndex</span></tt> of N times with hourly interval</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-minpower.solve">
+<span id="solve-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">solve</span></tt> Module<a class="headerlink" href="#module-minpower.solve" title="Permalink to this headline">¶</a></h2>
+<p>Power systems optimization problem solver
+for ED, OPF, UC, and SCUC problems. The <tt class="xref py py-mod docutils literal"><span class="pre">solve</span></tt>
+module contains the top-level commands for creating
+problems and solving them.</p>
+<dl class="function">
+<dt id="minpower.solve.create_problem">
+<tt class="descclassname">minpower.solve.</tt><tt class="descname">create_problem</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>scenario_tree=None</em>, <em>stage_number=None</em>, <em>rerun=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/solve.html#create_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.solve.create_problem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an optimization problem.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.solve.create_solve_problem">
+<tt class="descclassname">minpower.solve.</tt><tt class="descname">create_solve_problem</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>scenario_tree=None</em>, <em>stage_number=None</em>, <em>rerun=False</em><big>)</big><a class="reference internal" href="../_modules/minpower/solve.html#create_solve_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.solve.create_solve_problem" title="Permalink to this definition">¶</a></dt>
+<dd><p>create and solve an optimization problem.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.solve.main">
+<tt class="descclassname">minpower.solve.</tt><tt class="descname">main</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/solve.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.solve.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>The command line interface for minpower. For more info use:
+<tt class="docutils literal"><span class="pre">minpower</span> <span class="pre">--help</span></tt></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.solve.solve_multistage">
+<tt class="descclassname">minpower.solve.</tt><tt class="descname">solve_multistage</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>scenario_tree=None</em>, <em>data=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/solve.html#solve_multistage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.solve.solve_multistage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.solve.solve_multistage_standalone">
+<tt class="descclassname">minpower.solve.</tt><tt class="descname">solve_multistage_standalone</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>scenario_tree</em>, <em>data</em><big>)</big><a class="headerlink" href="#minpower.solve.solve_multistage_standalone" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.solve.solve_problem">
+<tt class="descclassname">minpower.solve.</tt><tt class="descname">solve_problem</tt><big>(</big><em>datadir='.'</em>, <em>shell=True</em>, <em>problemfile=False</em>, <em>csv=True</em><big>)</big><a class="reference internal" href="../_modules/minpower/solve.html#solve_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.solve.solve_problem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve a optimization problem specified by spreadsheets in a directory.
+Read in data, create and solve the problem, and return solution.
+The problem type is determined by the data.
+All options are set within <cite>user_config</cite>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.solve.standaloneUC">
+<tt class="descclassname">minpower.solve.</tt><tt class="descname">standaloneUC</tt><big>(</big><big>)</big><a class="headerlink" href="#minpower.solve.standaloneUC" title="Permalink to this definition">¶</a></dt>
+<dd><p>the hook for the <tt class="docutils literal"><span class="pre">standalone_minpower</span></tt> script</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-minpower.standalone">
+<span id="standalone-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">standalone</span></tt> Module<a class="headerlink" href="#module-minpower.standalone" title="Permalink to this headline">¶</a></h2>
+<p>A module to workaround a memory leak in coopr by saving the results
+of each day of a rolling unit commitment to disk (in HDF format)
+and reloading them to run the next day as a memory independent subprocess.</p>
+<dl class="function">
+<dt id="minpower.standalone.get_storage">
+<tt class="descclassname">minpower.standalone.</tt><tt class="descname">get_storage</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/standalone.html#get_storage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.standalone.get_storage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.standalone.init_store">
+<tt class="descclassname">minpower.standalone.</tt><tt class="descname">init_store</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>data</em><big>)</big><a class="reference internal" href="../_modules/minpower/standalone.html#init_store"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.standalone.init_store" title="Permalink to this definition">¶</a></dt>
+<dd><p>create the store before the first stage</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.standalone.load_state">
+<tt class="descclassname">minpower.standalone.</tt><tt class="descname">load_state</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/standalone.html#load_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.standalone.load_state" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.standalone.repack_storage">
+<tt class="descclassname">minpower.standalone.</tt><tt class="descname">repack_storage</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/standalone.html#repack_storage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.standalone.repack_storage" title="Permalink to this definition">¶</a></dt>
+<dd><p>compress that ballooning storage</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.standalone.store_state">
+<tt class="descclassname">minpower.standalone.</tt><tt class="descname">store_state</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>sln=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/standalone.html#store_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.standalone.store_state" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.standalone.store_times">
+<tt class="descclassname">minpower.standalone.</tt><tt class="descname">store_times</tt><big>(</big><em>tstage</em>, <em>storage=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/standalone.html#store_times"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.standalone.store_times" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.standalone.table_append">
+<tt class="descclassname">minpower.standalone.</tt><tt class="descname">table_append</tt><big>(</big><em>store</em>, <em>name</em>, <em>newvals</em><big>)</big><a class="reference internal" href="../_modules/minpower/standalone.html#table_append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.standalone.table_append" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.standalone.wipe_storage">
+<tt class="descclassname">minpower.standalone.</tt><tt class="descname">wipe_storage</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/standalone.html#wipe_storage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.standalone.wipe_storage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-minpower.stochastic">
+<span id="stochastic-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">stochastic</span></tt> Module<a class="headerlink" href="#module-minpower.stochastic" title="Permalink to this headline">¶</a></h2>
+<p>Stochastic scenario models for schedules.</p>
+<dl class="function">
+<dt id="minpower.stochastic.construct_simple_scenario_tree">
+<tt class="descclassname">minpower.stochastic.</tt><tt class="descname">construct_simple_scenario_tree</tt><big>(</big><em>power_system</em>, <em>times</em>, <em>time_stage=None</em><big>)</big><a class="reference internal" href="../_modules/minpower/stochastic.html#construct_simple_scenario_tree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.stochastic.construct_simple_scenario_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a simple scenario tree instance</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.stochastic.create_problem_with_scenarios">
+<tt class="descclassname">minpower.stochastic.</tt><tt class="descname">create_problem_with_scenarios</tt><big>(</big><em>power_system</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/stochastic.html#create_problem_with_scenarios"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.stochastic.create_problem_with_scenarios" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.stochastic.define_stage_variables">
+<tt class="descclassname">minpower.stochastic.</tt><tt class="descname">define_stage_variables</tt><big>(</big><em>power_system</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/stochastic.html#define_stage_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.stochastic.define_stage_variables" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.stochastic.get_scenario_based_costs">
+<tt class="descclassname">minpower.stochastic.</tt><tt class="descname">get_scenario_based_costs</tt><big>(</big><em>scenario_tree</em>, <em>scenario_instances</em><big>)</big><a class="reference internal" href="../_modules/minpower/stochastic.html#get_scenario_based_costs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.stochastic.get_scenario_based_costs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.stochastic.new_scenario_tree_model">
+<tt class="descclassname">minpower.stochastic.</tt><tt class="descname">new_scenario_tree_model</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/stochastic.html#new_scenario_tree_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.stochastic.new_scenario_tree_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.stochastic.update_variables">
+<tt class="descclassname">minpower.stochastic.</tt><tt class="descname">update_variables</tt><big>(</big><em>power_system</em>, <em>times</em><big>)</big><a class="reference internal" href="../_modules/minpower/stochastic.html#update_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.stochastic.update_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert all variables into dictionaries of their solved values, keyed by scenario</p>
+</dd></dl>
+
+</div>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="minpower.experiments.html">experiments Package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="minpower.experiments.html#module-minpower.experiments.ed_sweep"><tt class="docutils literal"><span class="pre">ed_sweep</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.experiments.html#module-minpower.experiments.formulation_speed_check"><tt class="docutils literal"><span class="pre">formulation_speed_check</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.experiments.html#module-minpower.experiments.get_initial_dispatch"><tt class="docutils literal"><span class="pre">get_initial_dispatch</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.experiments.html#module-minpower.experiments.scheduler_minpower"><tt class="docutils literal"><span class="pre">scheduler_minpower</span></tt> Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="minpower.tests.html">tests Package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.memory_leak_check"><tt class="docutils literal"><span class="pre">memory_leak_check</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.run_all_cases"><tt class="docutils literal"><span class="pre">run_all_cases</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_bidding"><tt class="docutils literal"><span class="pre">test_bidding</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_data_in"><tt class="docutils literal"><span class="pre">test_data_in</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_generators"><tt class="docutils literal"><span class="pre">test_generators</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_integration"><tt class="docutils literal"><span class="pre">test_integration</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_opf"><tt class="docutils literal"><span class="pre">test_opf</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_results"><tt class="docutils literal"><span class="pre">test_results</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_solvers"><tt class="docutils literal"><span class="pre">test_solvers</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_stochastic"><tt class="docutils literal"><span class="pre">test_stochastic</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_uc"><tt class="docutils literal"><span class="pre">test_uc</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_utils"><tt class="docutils literal"><span class="pre">test_utils</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../creating-problems.html">Creating a Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul class="simple">
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<!--<div class="social">-->
+<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
+<!--</div>-->
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    
+  })();
+</script>
+
+  </body>
+</html>

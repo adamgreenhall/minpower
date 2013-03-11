@@ -1,0 +1,421 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>minpower.config &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="top" title="minpower" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for minpower.config</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Provide the defaults and configuration for other modules.</span>
+<span class="sd">`user_config` is treated as a global in minpower.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">ConfigParser</span> <span class="kn">import</span> <span class="n">SafeConfigParser</span>
+<span class="kn">from</span> <span class="nn">commonscripts</span> <span class="kn">import</span> <span class="n">DotDict</span><span class="p">,</span> <span class="n">joindir</span>
+
+<span class="n">parser</span> <span class="o">=</span> <span class="n">SafeConfigParser</span><span class="p">()</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">read</span><span class="p">([</span>
+    <span class="c"># the minpower default set, from the minpower/configuration directory</span>
+    <span class="n">joindir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">__file__</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;configuration/minpower.cfg&#39;</span><span class="p">),</span>
+    <span class="c"># the user&#39;s global overrides, from the home directory</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/minpower.cfg&#39;</span><span class="p">),</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/.minpowerrc&#39;</span><span class="p">),</span>
+<span class="p">])</span>
+
+<span class="n">option_types</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">duals</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+    <span class="n">breakpoints</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+    <span class="n">hours_commitment</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+    <span class="n">hours_overlap</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+    
+    <span class="n">cost_load_shedding</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="n">cost_wind_shedding</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="n">economic_wind_shed</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+    <span class="n">dispatch_decommit_allowed</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+    <span class="n">solver</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">mipgap</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="n">solver_time_limit</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    
+    <span class="n">reserve_fixed</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="n">reserve_load_fraction</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+
+    <span class="n">faststart_resolve</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+
+    <span class="n">visualization</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+    <span class="n">logging_level</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+    <span class="n">problem_file</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+    <span class="n">output_prefix</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+    <span class="n">debugger</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+
+    <span class="n">scenarios</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+    <span class="n">deterministic_solve</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+    <span class="n">perfect_solve</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+    <span class="n">scenarios_directory</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+
+    <span class="n">standalone</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+    <span class="n">pid</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+
+    <span class="n">wind_forecast_adder</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="n">wind_multiplier</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="n">wind_capacity_factor</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="n">wind_error_multiplier</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+
+    <span class="n">load_multiplier</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="n">load_adder</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+
+    <span class="n">pmin_multiplier</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="n">ramp_limit_multiplier</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+
+    <span class="n">ignore_minhours_constraints</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+    <span class="n">ignore_ramping_constraints</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+    <span class="n">ignore_pmin_constraints</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+
+    <span class="n">on_complete_script</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+
+    <span class="n">file_gens</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">file_loads</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">file_lines</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">file_init</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+
+    <span class="c"># HACKs to help out resetting the config in testing</span>
+    <span class="n">directory</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+    <span class="n">store_filename</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span>
+
+<div class="viewcode-block" id="parser_value"><a class="viewcode-back" href="../../api/minpower.html#minpower.config.parser_value">[docs]</a><span class="k">def</span> <span class="nf">parser_value</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">opt_type</span><span class="p">):</span>
+    <span class="n">meth</span> <span class="o">=</span> <span class="s">&#39;get&#39;</span>
+    <span class="k">if</span> <span class="n">opt_type</span><span class="o">==</span><span class="nb">bool</span><span class="p">:</span>
+        <span class="n">meth</span> <span class="o">+=</span> <span class="s">&#39;boolean&#39;</span>
+    <span class="k">elif</span> <span class="n">opt_type</span><span class="o">==</span><span class="nb">str</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">meth</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">opt_type</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;&#39;&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">meth</span><span class="p">)(</span><span class="n">section</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="parse_config"><a class="viewcode-back" href="../../api/minpower.html#minpower.config.parse_config">[docs]</a><span class="k">def</span> <span class="nf">parse_config</span><span class="p">(</span><span class="n">parser</span><span class="p">):</span>
+    <span class="n">minpower_config</span> <span class="o">=</span> <span class="n">DotDict</span><span class="p">(</span>
+        <span class="nb">dict</span><span class="p">(</span> <span class="p">[(</span><span class="n">k</span><span class="p">,</span> <span class="n">parser_value</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s">&#39;minpower&#39;</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span> \
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">option_types</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()]))</span>
+    
+    <span class="n">s</span> <span class="o">=</span> <span class="s">&#39;scheduler&#39;</span>
+    <span class="n">scheduler_config</span> <span class="o">=</span> <span class="n">DotDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span>
+        <span class="n">email</span><span class="o">=</span><span class="n">parser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&#39;email&#39;</span><span class="p">),</span>
+        <span class="n">hours_limit</span><span class="o">=</span><span class="n">parser</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&#39;hours_limit&#39;</span><span class="p">),</span>
+        <span class="n">memory</span><span class="o">=</span><span class="n">parser</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&#39;memory&#39;</span><span class="p">),</span>
+        <span class="n">scheduler_mode</span><span class="o">=</span><span class="n">parser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&#39;scheduler_mode&#39;</span><span class="p">),</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="n">parser</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s">&#39;verbose&#39;</span><span class="p">),</span>
+        <span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">minpower_config</span><span class="p">,</span> <span class="n">scheduler_config</span>
+</div>
+<span class="n">user_config</span><span class="p">,</span> <span class="n">scheduler_config</span> <span class="o">=</span> <span class="n">parse_config</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+
+<span class="n">available_solvers</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">solver</span> <span class="ow">in</span> <span class="n">parser</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="s">&#39;available_solvers&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">parser</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s">&#39;available_solvers&#39;</span><span class="p">,</span> <span class="n">solver</span><span class="p">):</span>
+        <span class="n">available_solvers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">solver</span><span class="p">)</span>
+
+<div class="viewcode-block" id="filter_non_defaults"><a class="viewcode-back" href="../../api/minpower.html#minpower.config.filter_non_defaults">[docs]</a><span class="k">def</span> <span class="nf">filter_non_defaults</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">defaults</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> \
+        <span class="p">(</span><span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">defaults</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">v</span> <span class="o">!=</span> <span class="n">defaults</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+        <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="get_dir_config"><a class="viewcode-back" href="../../api/minpower.html#minpower.config.get_dir_config">[docs]</a><span class="k">def</span> <span class="nf">get_dir_config</span><span class="p">(</span><span class="n">directory</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    pull the config from a specific directory.</span>
+<span class="sd">    this allows post-load updating of the user_config.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">dirparser</span> <span class="o">=</span> <span class="n">SafeConfigParser</span><span class="p">()</span>
+    <span class="n">dirparser</span><span class="o">.</span><span class="n">read</span><span class="p">([</span>
+        <span class="c"># the minpower default set, from the minpower/configuration directory</span>
+        <span class="c"># need this to set the defaults</span>
+        <span class="n">joindir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">__file__</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&#39;configuration/minpower.cfg&#39;</span><span class="p">),</span>
+        <span class="c"># need the home directory overrides too</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/minpower.cfg&#39;</span><span class="p">),</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/.minpowerrc&#39;</span><span class="p">),</span>
+        <span class="c"># the directory&#39;s defaults</span>
+        <span class="n">joindir</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="s">&#39;minpower.cfg&#39;</span><span class="p">),</span>
+    <span class="p">])</span>
+    
+    <span class="n">new_user_config</span><span class="p">,</span> <span class="n">new_scheduler_conifg</span> <span class="o">=</span> <span class="n">parse_config</span><span class="p">(</span><span class="n">dirparser</span><span class="p">)</span>
+    <span class="c"># return (filter_non_defaults(new_user_config, user_config),</span>
+    <span class="c">#    filter_non_defaults(new_scheduler_conifg, scheduler_config))</span>
+    <span class="k">return</span> <span class="n">new_user_config</span><span class="p">,</span> <span class="n">new_scheduler_conifg</span>
+    </div>
+<div class="viewcode-block" id="parse_command_line_config"><a class="viewcode-back" href="../../api/minpower.html#minpower.config.parse_command_line_config">[docs]</a><span class="k">def</span> <span class="nf">parse_command_line_config</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">preparsed_args</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="c"># get the directory first</span>
+    
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">setup_parser_args</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+    
+    <span class="n">directory</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">preparsed_args</span><span class="p">)</span><span class="o">.</span><span class="n">directory</span>
+        
+    <span class="c"># an extra config parse to make sure that if you are calling a case but not </span>
+    <span class="c"># in the case directory, the case config gets used</span>
+    <span class="n">new_user_config</span><span class="p">,</span> <span class="n">new_scheduler_config</span> <span class="o">=</span> <span class="n">get_dir_config</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+    <span class="n">user_config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">new_user_config</span><span class="p">)</span>
+    <span class="n">scheduler_config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">new_scheduler_config</span><span class="p">)</span>
+    
+    <span class="n">parser</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="n">user_config</span><span class="p">))</span>
+
+    <span class="c">#figure out the command line arguments</span>
+    <span class="n">clargs</span> <span class="o">=</span> <span class="nb">vars</span><span class="p">(</span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">preparsed_args</span><span class="p">))</span>
+
+    <span class="n">user_config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">clargs</span><span class="p">)</span>
+
+    <span class="n">user_config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">directory</span><span class="o">=</span><span class="n">directory</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="n">clargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;show_config&#39;</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">pprint</span> <span class="kn">import</span> <span class="n">pprint</span>
+        <span class="n">pprint</span><span class="p">(</span><span class="n">user_config</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">clargs</span>
+</div>
+<div class="viewcode-block" id="add_opt"><a class="viewcode-back" href="../../api/minpower.html#minpower.config.add_opt">[docs]</a><span class="k">def</span> <span class="nf">add_opt</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">shortcut</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">):</span>
+    <span class="n">kwds</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">help</span><span class="o">=</span><span class="n">help</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">option_types</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="n">user_config</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+    <span class="n">callers</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;--{n}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">name</span><span class="p">)]</span>
+    
+    <span class="k">if</span> <span class="n">shortcut</span><span class="p">:</span>
+        <span class="n">callers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">shortcut</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">kwds</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">kwds</span><span class="p">[</span><span class="s">&#39;action&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;store_true&#39;</span>
+        <span class="n">kwds</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;type&#39;</span><span class="p">)</span>
+
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="o">*</span><span class="n">callers</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="setup_parser_args"><a class="viewcode-back" href="../../api/minpower.html#minpower.config.setup_parser_args">[docs]</a><span class="k">def</span> <span class="nf">setup_parser_args</span><span class="p">(</span><span class="n">parser</span><span class="p">):</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;directory&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;the direcory of the problem you want to solve&#39;</span><span class="p">)</span>
+
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s">&#39;solver&#39;</span><span class="p">,</span> <span class="s">&#39;-s&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;the solver name (e.g. cplex, gurobi, glpk)&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s">&#39;visualization&#39;</span><span class="p">,</span> <span class="s">&#39;-v&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;save a visualization of the solution&#39;</span><span class="p">)</span>
+        
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s">&#39;breakpoints&#39;</span><span class="p">,</span> <span class="s">&#39;-b&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;number of breakpoints to use in piecewise linearization of polynomial costs&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s">&#39;hours_commitment&#39;</span><span class="p">,</span><span class="s">&#39;-c&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;number hours per commitment in a rolling UC (exclusive of overlap)&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s">&#39;hours_overlap&#39;</span><span class="p">,</span><span class="s">&#39;-o&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;number hours to overlap commitments in a rolling UC&#39;</span><span class="p">)</span>
+
+
+    <span class="n">solver_opt</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s">&#39;Solver options&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">solver_opt</span><span class="p">,</span> <span class="s">&#39;mipgap&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;the MIP gap solution tolerence&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">solver_opt</span><span class="p">,</span> <span class="s">&#39;solver_time_limit&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;the MIP solver time limit (in seconds)&#39;</span><span class="p">)</span>
+
+        
+    <span class="n">reserve</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s">&#39;Reserve&#39;</span><span class="p">,</span>
+        <span class="s">&#39;Does the system require reserve? The default is no reserve.&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">reserve</span><span class="p">,</span> <span class="s">&#39;reserve_fixed&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;the static amount of reserve required at all times (in MW)&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">reserve</span><span class="p">,</span> <span class="s">&#39;reserve_load_fraction&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;fraction of the total system load which is required as reserve&#39;</span><span class="p">)</span>
+
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s">&#39;duals&#39;</span><span class="p">,</span> <span class="s">&#39;-d&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;flag to get the duals, or prices, of the optimization problem&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s">&#39;dispatch_decommit_allowed&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;flag to allow de-commitment of units in an ED -- useful for getting initial conditions for UCs&#39;</span><span class="p">)</span>
+    
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s">&#39;cost_load_shedding&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;the cost to the system to shed a MWh of load&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s">&#39;cost_wind_shedding&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;the cost to the system to shed a MWh of wind energy&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s">&#39;economic_wind_shed&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;is wind allowed to be shed for economic reasons &#39;</span> <span class="o">+</span> \
+        <span class="s">&#39;(default is to allow wind shedding only if infeasible)&#39;</span><span class="p">)</span>
+        
+    
+    <span class="n">stochastic</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s">&#39;Stochastic UC&#39;</span><span class="p">,</span>
+        <span class="s">&#39;options to modify the behavior of a stochastic problem&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">stochastic</span><span class="p">,</span> <span class="s">&#39;scenarios&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;limit the number of scenarios to N&#39;</span><span class="p">)</span>        
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">stochastic</span><span class="p">,</span> <span class="s">&#39;faststart_resolve&#39;</span><span class="p">,</span> <span class="s">&#39;-F&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;allow faststart units which are off to be</span>
+<span class="s">                started up during resolve with observed wind values&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">stochastic_mode</span> <span class="o">=</span> <span class="n">stochastic</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">()</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">stochastic_mode</span><span class="p">,</span> <span class="s">&#39;deterministic_solve&#39;</span><span class="p">,</span> <span class="s">&#39;-D&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;solve a stochastic problem deterministically using the forecast_filename paramter&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">stochastic_mode</span><span class="p">,</span> <span class="s">&#39;perfect_solve&#39;</span><span class="p">,</span> <span class="s">&#39;-P&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;solve a stochastic problem with perfect information&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">stochastic_mode</span><span class="p">,</span> <span class="s">&#39;scenarios_directory&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;override scenarios directory for stochastic problem&#39;</span><span class="p">)</span>
+        
+
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s">&#39;standalone&#39;</span><span class="p">,</span> <span class="s">&#39;-m&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Make each multi-day commitment its own subprocess (helps with memory issues).&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s">&#39;output_prefix&#39;</span><span class="p">,</span> <span class="s">&#39;-p&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Prefix all results files with the process id (for a record of simulataneous solves)&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s">&#39;pid&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Expicitly specify the standalone storage process id&#39;</span><span class="p">)</span>
+
+    <span class="n">debugging</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s">&#39;Debugging tools&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">debugging</span><span class="p">,</span> <span class="s">&#39;debugger&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;use pdb when an error is raised&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">debugging</span><span class="p">,</span> <span class="s">&#39;problem_file&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;flag to write the problem formulation to a problem.lp file&#39;</span><span class="p">)</span>        
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s">&#39;logging_level&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;set the level of detail for logging&#39;</span><span class="p">)</span>
+    <span class="n">debugging</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--profile&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;run cProfile and output to minpower.profile&#39;</span><span class="p">)</span>
+    <span class="n">debugging</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--show_config&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;just show the configuration and quit&#39;</span><span class="p">)</span>
+    <span class="n">debugging</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--keep_lp_files&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;keep a record of all of the solver lp files&#39;</span><span class="p">)</span>
+
+    
+    <span class="n">ts</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s">&#39;Timeseries modifiers&#39;</span><span class="p">,</span>
+        <span class="s">&#39;Alter the timeseries after parsing the data.&#39;</span><span class="p">)</span>
+    
+    <span class="n">wind_modifier</span> <span class="o">=</span> <span class="n">ts</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">()</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">wind_modifier</span><span class="p">,</span> <span class="s">&#39;wind_multiplier&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;scale the wind power by this factor&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">wind_modifier</span><span class="p">,</span> <span class="s">&#39;wind_capacity_factor&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;scale the wind power to match the capacity factor (as a percentage of peak load power)&#39;</span><span class="p">)</span>
+    
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="s">&#39;wind_error_multiplier&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;scale the wind power forecast error by this factor&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="s">&#39;wind_forecast_adder&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;add a fixed amount (e.g. bias) to the wind power forecast&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="s">&#39;load_multiplier&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;scale the load power by this factor&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="s">&#39;load_adder&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;add a fixed amount to the load power&#39;</span><span class="p">)</span>
+    
+    <span class="n">constraints</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s">&#39;Ignore/relax constraints&#39;</span><span class="p">,</span>
+        <span class="s">&#39;Ignore or relax sets of constraints to allow for feasible solutions.&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">constraints</span><span class="p">,</span> <span class="s">&#39;ignore_minhours_constraints&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;drop the min up/down time constraints on the generators&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">constraints</span><span class="p">,</span> <span class="s">&#39;ignore_ramping_constraints&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;drop the min ramping power constraints on the generators&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">constraints</span><span class="p">,</span> <span class="s">&#39;ignore_pmin_constraints&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;drop the min power constraints on the generators&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">constraints</span><span class="p">,</span> <span class="s">&#39;pmin_multiplier&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;scale the generator minimum power limits by this factor&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">constraints</span><span class="p">,</span> <span class="s">&#39;ramp_limit_multiplier&#39;</span><span class="p">,</span> 
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;scale the generator ramp power limits by this factor&#39;</span><span class="p">)</span>
+
+    <span class="n">filenames</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s">&#39;Filenames&#39;</span><span class="p">,</span>
+        <span class="s">&#39;Change the default filenames to use when loading data.&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">filenames</span><span class="p">,</span> <span class="s">&#39;file_gens&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">filenames</span><span class="p">,</span> <span class="s">&#39;file_loads&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">filenames</span><span class="p">,</span> <span class="s">&#39;file_lines&#39;</span><span class="p">)</span>
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">filenames</span><span class="p">,</span> <span class="s">&#39;file_init&#39;</span><span class="p">)</span>
+
+    <span class="n">add_opt</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="s">&#39;on_complete_script&#39;</span><span class="p">,</span>  
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;run a script on completion of the minpower script&#39;</span><span class="p">)</span>
+
+    <span class="c"># NOTE - don&#39;t let defaults creep into this defenition</span>
+    <span class="c"># that makes resetting the defaults during testing very hard </span>
+    
+    <span class="k">return</span> <span class="n">parser</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../creating-problems.html">Creating a Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuration</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul class="simple">
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<!--<div class="social">-->
+<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
+<!--</div>-->
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    
+  })();
+</script>
+
+  </body>
+</html>

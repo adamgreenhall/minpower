@@ -106,7 +106,7 @@
     <span class="n">times</span><span class="o">.</span><span class="n">setInitial</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">times</span>
 </div>
-<div class="viewcode-block" id="make_times_basic"><a class="viewcode-back" href="../../api/time.html#minpower.schedule.make_times_basic">[docs]</a><span class="k">def</span> <span class="nf">make_times_basic</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+<div class="viewcode-block" id="make_times_basic"><a class="viewcode-back" href="../../api/minpower.html#minpower.schedule.make_times_basic">[docs]</a><span class="k">def</span> <span class="nf">make_times_basic</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39; make a :class:`schedule.Timelist` of N times, assume hourly interval.&#39;&#39;&#39;</span>
     <span class="n">S</span><span class="o">=</span><span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;0:00&#39;</span><span class="p">)</span>
     <span class="n">I</span><span class="o">=</span><span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s">&#39;1:00&#39;</span><span class="p">)</span><span class="o">-</span><span class="n">S</span>
@@ -320,7 +320,7 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">times</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy</span><span class="o">=</span><span class="n">P</span>
 <div class="viewcode-block" id="FixedSchedule.get_energy"><a class="viewcode-back" href="../../api/time.html#minpower.schedule.FixedSchedule.get_energy">[docs]</a>    <span class="k">def</span> <span class="nf">get_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">timeperiod</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">energy</span></div>
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s">&#39;FixedSchedule&lt;energy={}&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">energy</span><span class="p">)</span></div>
-<div class="viewcode-block" id="just_one_time"><a class="viewcode-back" href="../../api/time.html#minpower.schedule.just_one_time">[docs]</a><span class="k">def</span> <span class="nf">just_one_time</span><span class="p">():</span>
+<div class="viewcode-block" id="just_one_time"><a class="viewcode-back" href="../../api/minpower.html#minpower.schedule.just_one_time">[docs]</a><span class="k">def</span> <span class="nf">just_one_time</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;For a single-time problem, generate a Timelist with just one time in it.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">Timelist</span><span class="p">([</span><span class="n">Time</span><span class="p">(</span><span class="n">Start</span><span class="o">=</span><span class="s">&#39;0:00&#39;</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">)])</span></div>
 <div class="viewcode-block" id="parse_timestrings"><a class="viewcode-back" href="../../api/time.html#minpower.schedule.parse_timestrings">[docs]</a><span class="k">def</span> <span class="nf">parse_timestrings</span><span class="p">(</span><span class="n">timestringsL</span><span class="p">):</span>
@@ -351,6 +351,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../basic-use.html">Basic Use</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../creating-problems.html">Creating a Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuration</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../students.html">For Students</a></li>
@@ -361,8 +362,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../optimal-power-flow.html">Optimal Power Flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../unit-commitment.html">Unit Commitment</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">Documentation</a></li>
+<ul class="simple">
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../collaborate.html">Collaborate</a></li>

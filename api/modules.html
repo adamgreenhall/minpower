@@ -1,0 +1,159 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>minpower &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="top" title="minpower" href="../index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="minpower">
+<h1>minpower<a class="headerlink" href="#minpower" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="minpower.html">minpower Package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="minpower.html#id1"><tt class="docutils literal"><span class="pre">minpower</span></tt> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.html#module-minpower.bidding"><tt class="docutils literal"><span class="pre">bidding</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.html#module-minpower.commonscripts"><tt class="docutils literal"><span class="pre">commonscripts</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.html#module-minpower.config"><tt class="docutils literal"><span class="pre">config</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.html#module-minpower.generators"><tt class="docutils literal"><span class="pre">generators</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.html#module-minpower.get_data"><tt class="docutils literal"><span class="pre">get_data</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.html#module-minpower.optimization"><tt class="docutils literal"><span class="pre">optimization</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.html#module-minpower.powersystems"><tt class="docutils literal"><span class="pre">powersystems</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.html#module-minpower.results"><tt class="docutils literal"><span class="pre">results</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.html#module-minpower.schedule"><tt class="docutils literal"><span class="pre">schedule</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.html#module-minpower.solve"><tt class="docutils literal"><span class="pre">solve</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.html#module-minpower.standalone"><tt class="docutils literal"><span class="pre">standalone</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.html#module-minpower.stochastic"><tt class="docutils literal"><span class="pre">stochastic</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minpower.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="minpower.experiments.html">experiments Package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="minpower.experiments.html#module-minpower.experiments.ed_sweep"><tt class="docutils literal"><span class="pre">ed_sweep</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="minpower.experiments.html#module-minpower.experiments.formulation_speed_check"><tt class="docutils literal"><span class="pre">formulation_speed_check</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="minpower.experiments.html#module-minpower.experiments.get_initial_dispatch"><tt class="docutils literal"><span class="pre">get_initial_dispatch</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="minpower.experiments.html#module-minpower.experiments.scheduler_minpower"><tt class="docutils literal"><span class="pre">scheduler_minpower</span></tt> Module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="minpower.tests.html">tests Package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.memory_leak_check"><tt class="docutils literal"><span class="pre">memory_leak_check</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.run_all_cases"><tt class="docutils literal"><span class="pre">run_all_cases</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_bidding"><tt class="docutils literal"><span class="pre">test_bidding</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_data_in"><tt class="docutils literal"><span class="pre">test_data_in</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_generators"><tt class="docutils literal"><span class="pre">test_generators</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_integration"><tt class="docutils literal"><span class="pre">test_integration</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_opf"><tt class="docutils literal"><span class="pre">test_opf</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_results"><tt class="docutils literal"><span class="pre">test_results</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_solvers"><tt class="docutils literal"><span class="pre">test_solvers</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_stochastic"><tt class="docutils literal"><span class="pre">test_stochastic</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_uc"><tt class="docutils literal"><span class="pre">test_uc</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="minpower.tests.html#module-minpower.tests.test_utils"><tt class="docutils literal"><span class="pre">test_utils</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../creating-problems.html">Creating a Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul class="simple">
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<!--<div class="social">-->
+<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
+<!--</div>-->
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    
+  })();
+</script>
+
+  </body>
+</html>

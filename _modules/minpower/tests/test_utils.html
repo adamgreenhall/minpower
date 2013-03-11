@@ -45,63 +45,133 @@
           <div class="body">
             
   <h1>Source code for minpower.tests.test_utils</h1><div class="highlight"><pre>
-<span class="kn">from</span> <span class="nn">minpower</span> <span class="kn">import</span> <span class="n">optimization</span><span class="p">,</span><span class="n">powersystems</span><span class="p">,</span><span class="n">schedule</span><span class="p">,</span><span class="n">solve</span><span class="p">,</span><span class="n">config</span>
-<span class="kn">from</span> <span class="nn">minpower.powersystems</span> <span class="kn">import</span> <span class="n">Generator</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">Series</span><span class="p">,</span> <span class="n">DataFrame</span>
+<span class="kn">from</span> <span class="nn">minpower.config</span> <span class="kn">import</span> <span class="n">user_config</span>
+<span class="kn">from</span> <span class="nn">minpower</span> <span class="kn">import</span> <span class="n">powersystems</span><span class="p">,</span> <span class="n">schedule</span><span class="p">,</span> <span class="n">solve</span>
+<span class="kn">from</span> <span class="nn">minpower.generators</span> <span class="kn">import</span> <span class="n">Generator</span>
+<span class="kn">from</span> <span class="nn">minpower.optimization</span> <span class="kn">import</span> <span class="n">value</span><span class="p">,</span> <span class="n">OptimizationError</span>
 
-<span class="n">singletime</span><span class="o">=</span><span class="n">schedule</span><span class="o">.</span><span class="n">just_one_time</span><span class="p">()</span>
+<span class="kn">import</span> <span class="nn">nose</span>
+<span class="kn">from</span> <span class="nn">nose.tools</span> <span class="kn">import</span> <span class="n">istest</span><span class="p">,</span> <span class="n">with_setup</span><span class="p">,</span> <span class="n">raises</span><span class="p">,</span> <span class="n">set_trace</span>
+<span class="kn">from</span> <span class="nn">nose.tools</span> <span class="kn">import</span> <span class="n">eq_</span> <span class="k">as</span> <span class="n">assert_equal</span>
 
 
-<span class="n">gen_costs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cheap</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">mid</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span><span class="n">expensive</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+    <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">,</span>
+    <span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(levelname)s</span><span class="s">: </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">)</span>
 
 
-<span class="c">#def make_single_bus(generators,loads):</span>
-    <span class="c">#singlebus=powersystems.Bus()</span>
-    <span class="c">#singlebus.generators=generators</span>
-    <span class="c">#singlebus.loads=loads</span>
-    <span class="c">#return [singlebus]    </span>
+<span class="n">default_config</span> <span class="o">=</span> <span class="n">user_config</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-<div class="viewcode-block" id="make_cheap_gen"><a class="viewcode-back" href="../../../auto-api/minpower.tests.html#minpower.tests.test_utils.make_cheap_gen">[docs]</a><span class="k">def</span> <span class="nf">make_cheap_gen</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">Generator</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;cheap gen&#39;</span><span class="p">,</span> <span class="n">costcurvestring</span><span class="o">=</span><span class="s">&#39;{}P&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gen_costs</span><span class="p">[</span><span class="s">&#39;cheap&#39;</span><span class="p">]),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-<div class="viewcode-block" id="make_mid_gen"><a class="viewcode-back" href="../../../auto-api/minpower.tests.html#minpower.tests.test_utils.make_mid_gen">[docs]</a><span class="k">def</span> <span class="nf">make_mid_gen</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">Generator</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;middle-range gen&#39;</span><span class="p">,</span> <span class="n">costcurvestring</span><span class="o">=</span><span class="s">&#39;{}P&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gen_costs</span><span class="p">[</span><span class="s">&#39;mid&#39;</span><span class="p">]),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>    </div>
-<div class="viewcode-block" id="make_expensive_gen"><a class="viewcode-back" href="../../../auto-api/minpower.tests.html#minpower.tests.test_utils.make_expensive_gen">[docs]</a><span class="k">def</span> <span class="nf">make_expensive_gen</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">Generator</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;expensive gen&#39;</span><span class="p">,</span> <span class="n">costcurvestring</span><span class="o">=</span><span class="s">&#39;{}P&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gen_costs</span><span class="p">[</span><span class="s">&#39;expensive&#39;</span><span class="p">]),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>    </div>
-<div class="viewcode-block" id="make_loads_times"><a class="viewcode-back" href="../../../auto-api/minpower.tests.html#minpower.tests.test_utils.make_loads_times">[docs]</a><span class="k">def</span> <span class="nf">make_loads_times</span><span class="p">(</span><span class="n">Pd</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span><span class="n">Pdt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">Pdt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">loads</span><span class="o">=</span><span class="p">[</span><span class="n">powersystems</span><span class="o">.</span><span class="n">Load_Fixed</span><span class="p">(</span><span class="n">P</span><span class="o">=</span><span class="n">Pd</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)]</span>
-        <span class="n">times</span><span class="o">=</span><span class="n">singletime</span>
-    <span class="k">else</span><span class="p">:</span> 
-        <span class="n">times</span> <span class="o">=</span> <span class="n">schedule</span><span class="o">.</span><span class="n">make_times_basic</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">Pdt</span><span class="p">))</span>
-        <span class="c">#logging.critical([unicode(t) for t in times])</span>
-        <span class="n">sched</span> <span class="o">=</span> <span class="n">schedule</span><span class="o">.</span><span class="n">Schedule</span><span class="p">(</span><span class="n">times</span><span class="o">=</span><span class="n">times</span><span class="p">,</span> <span class="n">P</span><span class="o">=</span><span class="n">Pdt</span><span class="p">)</span>
-        <span class="n">loads</span><span class="o">=</span><span class="p">[</span><span class="n">powersystems</span><span class="o">.</span><span class="n">Load</span><span class="p">(</span><span class="n">schedule</span><span class="o">=</span><span class="n">sched</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)]</span>
-    
-    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">loads</span><span class="o">=</span><span class="n">loads</span><span class="p">,</span><span class="n">times</span><span class="o">=</span><span class="n">times</span><span class="p">)</span>
+
+<div class="viewcode-block" id="get_duals"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_utils.get_duals">[docs]</a><span class="k">def</span> <span class="nf">get_duals</span><span class="p">():</span>
+    <span class="n">user_config</span><span class="o">.</span><span class="n">duals</span> <span class="o">=</span> <span class="bp">True</span>
+
 </div>
-<div class="viewcode-block" id="solve_problem"><a class="viewcode-back" href="../../../auto-api/minpower.tests.html#minpower.tests.test_utils.solve_problem">[docs]</a><span class="k">def</span> <span class="nf">solve_problem</span><span class="p">(</span><span class="n">generators</span><span class="p">,</span><span class="n">loads</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">times</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">gen_init</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
-                  <span class="n">solver</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">optimization_solver</span><span class="p">,</span><span class="n">load_shedding_allowed</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">problem_filename</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-                  <span class="n">get_duals</span><span class="o">=</span><span class="bp">False</span>
-                  <span class="p">):</span>
-    <span class="k">if</span> <span class="n">lines</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">lines</span><span class="o">=</span><span class="p">[]</span>
+<div class="viewcode-block" id="reset_config"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_utils.reset_config">[docs]</a><span class="k">def</span> <span class="nf">reset_config</span><span class="p">():</span>
+    <span class="c"># note - can&#39;t set a new user_config, because it would be a local variable</span>
+    <span class="c">#   instead, we update it with the defaults</span>
+    <span class="c">#   this only works if we aren&#39;t adding anything extra to the user_config</span>
+    <span class="n">user_config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">default_config</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">assert</span><span class="p">(</span><span class="n">user_config</span> <span class="o">==</span> <span class="n">default_config</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">DataFrame</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">=</span><span class="n">Series</span><span class="p">(</span><span class="n">user_config</span><span class="p">),</span>
+            <span class="n">default</span><span class="o">=</span><span class="n">Series</span><span class="p">(</span><span class="n">default_config</span><span class="p">)))</span>
+        <span class="k">raise</span>
+</div>
+<span class="n">singletime</span> <span class="o">=</span> <span class="n">schedule</span><span class="o">.</span><span class="n">just_one_time</span><span class="p">()</span>
 
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span> 
-        <span class="k">for</span> <span class="n">g</span><span class="p">,</span><span class="n">gen</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">generators</span><span class="p">):</span> 
-            <span class="n">gen</span><span class="o">.</span><span class="n">index</span><span class="o">=</span><span class="n">g</span>
-            <span class="k">if</span> <span class="n">gen_init</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">gen</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span><span class="n">times</span><span class="o">.</span><span class="n">initialTime</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>                <span class="n">gen</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span><span class="n">times</span><span class="o">.</span><span class="n">initialTime</span><span class="p">,</span> <span class="o">**</span><span class="n">gen_init</span><span class="p">[</span><span class="n">g</span><span class="p">])</span>
-            
-    
-    
-    <span class="n">power_system</span><span class="o">=</span><span class="n">powersystems</span><span class="o">.</span><span class="n">PowerSystem</span><span class="p">(</span><span class="n">generators</span><span class="p">,</span><span class="n">loads</span><span class="p">,</span><span class="n">lines</span><span class="p">,</span><span class="n">load_shedding_allowed</span><span class="o">=</span><span class="n">load_shedding_allowed</span><span class="p">)</span>
-    <span class="n">solve</span><span class="o">.</span><span class="n">create_problem</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span><span class="n">times</span><span class="p">)</span>
-    <span class="n">power_system</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">,</span><span class="n">problem_filename</span><span class="o">=</span><span class="n">problem_filename</span><span class="p">,</span><span class="n">get_duals</span><span class="o">=</span><span class="n">get_duals</span><span class="p">)</span>
+
+<span class="n">gen_costs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">cheap</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">mid</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">expensive</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="assertAlmostEqual"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_utils.assertAlmostEqual">[docs]</a><span class="k">def</span> <span class="nf">assertAlmostEqual</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">assert</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="c"># def make_single_bus(generators,loads):</span>
+    <span class="c"># singlebus=powersystems.Bus()</span>
+    <span class="c"># singlebus.generators=generators</span>
+    <span class="c"># singlebus.loads=loads</span>
+    <span class="c"># return [singlebus]</span>
+</div>
+<div class="viewcode-block" id="make_cheap_gen"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_utils.make_cheap_gen">[docs]</a><span class="k">def</span> <span class="nf">make_cheap_gen</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">Generator</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s">&#39;cheap gen&#39;</span><span class="p">,</span>
+        <span class="n">costcurveequation</span><span class="o">=</span><span class="s">&#39;{}P&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gen_costs</span><span class="p">[</span><span class="s">&#39;cheap&#39;</span><span class="p">]),</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="make_mid_gen"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_utils.make_mid_gen">[docs]</a><span class="k">def</span> <span class="nf">make_mid_gen</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">Generator</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s">&#39;middle-range gen&#39;</span><span class="p">,</span>
+        <span class="n">costcurveequation</span><span class="o">=</span><span class="s">&#39;{}P&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gen_costs</span><span class="p">[</span><span class="s">&#39;mid&#39;</span><span class="p">]),</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="make_expensive_gen"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_utils.make_expensive_gen">[docs]</a><span class="k">def</span> <span class="nf">make_expensive_gen</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="s">&#39;costcurveequation&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;costcurveequation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;{}P&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gen_costs</span><span class="p">[</span><span class="s">&#39;expensive&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">Generator</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;expensive gen&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="make_loads_times"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_utils.make_loads_times">[docs]</a><span class="k">def</span> <span class="nf">make_loads_times</span><span class="p">(</span><span class="n">Pd</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">Pdt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">Pdt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="n">singletime</span>
+        <span class="n">sched</span> <span class="o">=</span> <span class="n">Series</span><span class="p">(</span><span class="n">Pd</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">times</span><span class="p">)</span>
+        <span class="n">loads</span> <span class="o">=</span> <span class="p">[</span><span class="n">powersystems</span><span class="o">.</span><span class="n">Load</span><span class="p">(</span><span class="n">schedule</span><span class="o">=</span><span class="n">sched</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="n">schedule</span><span class="o">.</span><span class="n">make_times_basic</span><span class="p">(</span><span class="n">N</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">Pdt</span><span class="p">))</span>
+        <span class="n">sched</span> <span class="o">=</span> <span class="n">Series</span><span class="p">(</span><span class="n">Pdt</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">times</span><span class="p">)</span>
+        <span class="n">loads</span> <span class="o">=</span> <span class="p">[</span><span class="n">powersystems</span><span class="o">.</span><span class="n">Load</span><span class="p">(</span><span class="n">schedule</span><span class="o">=</span><span class="n">sched</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)]</span>
+
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">loads</span><span class="o">=</span><span class="n">loads</span><span class="p">,</span> <span class="n">times</span><span class="o">=</span><span class="n">times</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="solve_problem"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_utils.solve_problem">[docs]</a><span class="k">def</span> <span class="nf">solve_problem</span><span class="p">(</span><span class="n">generators</span><span class="p">,</span> <span class="n">loads</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">times</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                  <span class="n">gen_init</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">do_reset_config</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="n">lines</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">gen</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">generators</span><span class="p">):</span>
+            <span class="n">gen</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">g</span>
+            <span class="k">if</span> <span class="n">gen_init</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">gen</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">gen</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span><span class="o">**</span><span class="n">gen_init</span><span class="p">[</span><span class="n">g</span><span class="p">])</span>
+
+
+    <span class="n">power_system</span> <span class="o">=</span> <span class="n">powersystems</span><span class="o">.</span><span class="n">PowerSystem</span><span class="p">(</span><span class="n">generators</span><span class="p">,</span> <span class="n">loads</span><span class="p">,</span> <span class="n">lines</span><span class="p">)</span>
+    <span class="n">solve</span><span class="o">.</span><span class="n">create_problem</span><span class="p">(</span><span class="n">power_system</span><span class="p">,</span> <span class="n">times</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">instance</span> <span class="o">=</span> <span class="n">power_system</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">OptimizationError</span><span class="p">:</span>
+        <span class="c"># re-do stage, with load shedding allowed</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s">&#39;stage infeasible, re-running with load shedding.&#39;</span><span class="p">)</span>
+        <span class="n">power_system</span><span class="o">.</span><span class="n">allow_shedding</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">instance</span> <span class="o">=</span> <span class="n">power_system</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">OptimizationError</span><span class="p">:</span>
+            <span class="n">scheduled</span><span class="p">,</span> <span class="n">committed</span> <span class="o">=</span> <span class="n">power_system</span><span class="o">.</span><span class="n">debug_infeasibe</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
+            <span class="n">power_system</span><span class="o">.</span><span class="n">write_model</span><span class="p">(</span><span class="s">&#39;infeasible.lp&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">OptimizationError</span><span class="p">(</span>
+                <span class="s">&#39;failed to solve, even with load shedding.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">do_reset_config</span><span class="p">:</span>
+        <span class="n">reset_config</span><span class="p">()</span>
+
     <span class="k">if</span> <span class="n">power_system</span><span class="o">.</span><span class="n">solved</span><span class="p">:</span>
         <span class="n">power_system</span><span class="o">.</span><span class="n">update_variables</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="c">#logging.critical( [g.power[times.initialTime] for g in generators] )</span>
         <span class="n">power_system</span><span class="o">.</span><span class="n">write_model</span><span class="p">(</span><span class="s">&#39;problem.lp&#39;</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="n">optimization</span><span class="o">.</span><span class="n">OptimizationError</span><span class="p">(</span><span class="s">&#39;infeasible problem, wrote to problem.lp&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">power_system</span><span class="p">,</span><span class="n">times</span></div>
+        <span class="k">raise</span> <span class="n">OptimizationError</span><span class="p">(</span><span class="s">&#39;infeasible problem, wrote to problem.lp&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">power_system</span><span class="p">,</span> <span class="n">times</span></div>
 </pre></div>
 
           </div>
@@ -118,6 +188,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../basic-use.html">Basic Use</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../creating-problems.html">Creating a Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configuration.html">Configuration</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../students.html">For Students</a></li>
@@ -128,8 +199,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../optimal-power-flow.html">Optimal Power Flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../unit-commitment.html">Unit Commitment</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../api/index.html">Documentation</a></li>
+<ul class="simple">
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../collaborate.html">Collaborate</a></li>
@@ -162,6 +232,7 @@
     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    
   })();
 </script>
 

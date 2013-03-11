@@ -51,142 +51,17 @@
 <p>The following tables give details on how to describe each component using spreadsheet columns. (Column order does not matter. Capitalization, underscores, and spaces are all ignored in the header row column names.) Examples spreadsheets are given after each table.</p>
 <div class="section" id="generators">
 <h2>Generators<a class="headerlink" href="#generators" title="Permalink to this headline">¶</a></h2>
-<table border="1" class="docutils">
-<colgroup>
-<col width="12%" />
-<col width="75%" />
-<col width="7%" />
-<col width="7%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>Column Name</td>
-<td>Description</td>
-<td>Default</td>
-<td>Units</td>
-</tr>
-<tr class="row-even"><td>name</td>
-<td>generator name</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-odd"><td>P min</td>
-<td>min. power output</td>
-<td>0</td>
-<td>MW</td>
-</tr>
-<tr class="row-even"><td>P max</td>
-<td>max. power output</td>
-<td>500</td>
-<td>MW</td>
-</tr>
-<tr class="row-odd"><td>cost curve equation</td>
-<td>polynomial for the cost of fuel given a power output</td>
-<td>&nbsp;</td>
-<td>$/MWh</td>
-</tr>
-<tr class="row-even"><td>heat rate equation</td>
-<td>heat rate polynomial</td>
-<td>&nbsp;</td>
-<td>MMBtu/MWh</td>
-</tr>
-<tr class="row-odd"><td>fuel cost</td>
-<td>(if using a heat rate equation)</td>
-<td>1</td>
-<td>$/MMBtu</td>
-</tr>
-<tr class="row-even"><td>start up cost</td>
-<td>&nbsp;</td>
-<td>0</td>
-<td>$</td>
-</tr>
-<tr class="row-odd"><td>shut down cost</td>
-<td>&nbsp;</td>
-<td>0</td>
-<td>$</td>
-</tr>
-<tr class="row-even"><td>ramp rate min</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>MW/h</td>
-</tr>
-<tr class="row-odd"><td>ramp rate max</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-<td>MW/h</td>
-</tr>
-<tr class="row-even"><td>min up time</td>
-<td>&nbsp;</td>
-<td>0</td>
-<td>hours</td>
-</tr>
-<tr class="row-odd"><td>min down time</td>
-<td>&nbsp;</td>
-<td>0</td>
-<td>hours</td>
-</tr>
-<tr class="row-even"><td>must run</td>
-<td>unit status must remain ON</td>
-<td>0</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-odd"><td>fast start</td>
-<td>unit has the ability to start up without having been committed if needed to avoid load shedding (when minpower is run using the faststart option)</td>
-<td>False</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-even"><td>bus</td>
-<td>name of bus where gen. is connected</td>
-<td>single bus</td>
-<td>&nbsp;</td>
-</tr>
-</tbody>
-</table>
-<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;name&quot;</span><span class="p">;</span><span class="s">&quot;Pmin&quot;</span><span class="p">;</span><span class="s">&quot;Pmax&quot;</span><span class="p">;</span><span class="s">&quot;heat rate equation&quot;</span><span class="p">;</span><span class="s">&quot;fuel cost&quot;</span><span class="p">;</span><span class="s">&quot;start up cost&quot;</span><span class="p">;</span><span class="s">&quot;min up time&quot;</span><span class="p">;</span><span class="s">&quot;min down time&quot;</span>
-<span class="s">&quot;g1&quot;</span><span class="p">;</span><span class="mi">50</span><span class="p">;</span><span class="mi">200</span><span class="p">;</span><span class="s">&quot;220+9.9P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">560</span><span class="p">;</span><span class="mi">8</span><span class="p">;</span><span class="mi">8</span>
-<span class="s">&quot;g2&quot;</span><span class="p">;</span><span class="mi">15</span><span class="p">;</span><span class="mi">60</span><span class="p">;</span><span class="s">&quot;80+10.1P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">210</span><span class="p">;</span><span class="mi">8</span><span class="p">;</span><span class="mi">8</span>
-<span class="s">&quot;g3&quot;</span><span class="p">;</span><span class="mi">15</span><span class="p">;</span><span class="mi">50</span><span class="p">;</span><span class="s">&quot;60+10.8P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">147</span><span class="p">;</span><span class="mi">4</span><span class="p">;</span><span class="mi">4</span>
-<span class="s">&quot;g4&quot;</span><span class="p">;</span><span class="mi">5</span><span class="p">;</span><span class="mi">40</span><span class="p">;</span><span class="s">&quot;40+11.9P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">0</span><span class="p">;</span><span class="mi">4</span><span class="p">;</span><span class="mi">4</span>
-<span class="s">&quot;g5&quot;</span><span class="p">;</span><span class="mi">5</span><span class="p">;</span><span class="mi">25</span><span class="p">;</span><span class="s">&quot;34+12.14P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">0</span><span class="p">;</span><span class="mi">4</span><span class="p">;</span><span class="mi">4</span>
-</pre></div>
+<div class="highlight-python"><pre>name,Pmin,Pmax,heat rate equation,fuel cost,start up cost,min up time,min down time
+g1,50,200,220+9.9P,1.4,560,8,8
+g2,15,60,80+10.1P,1.4,210,8,8
+g3,15,50,60+10.8P,1.4,147,4,4
+g4,5,40,40+11.9P,1.4,0,4,4
+g5,5,25,34+12.14P,1.4,0,4,4
+</pre>
 </div>
 </div>
 <div class="section" id="initial-conditions">
 <h2>Initial Conditions<a class="headerlink" href="#initial-conditions" title="Permalink to this headline">¶</a></h2>
-<table border="1" class="docutils">
-<colgroup>
-<col width="24%" />
-<col width="44%" />
-<col width="21%" />
-<col width="11%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>Column Name</td>
-<td>Description</td>
-<td>Default</td>
-<td>Units</td>
-</tr>
-<tr class="row-even"><td>name</td>
-<td>generator name</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-odd"><td>power</td>
-<td>output at initial time</td>
-<td>(Pmax-Pmin)/2</td>
-<td>MW</td>
-</tr>
-<tr class="row-even"><td>status</td>
-<td>status (1 or 0) at initial time</td>
-<td>1</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-odd"><td>hours in status</td>
-<td>&nbsp;</td>
-<td>100</td>
-<td>hrs</td>
-</tr>
-</tbody>
-</table>
 <div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="s">&quot;power&quot;</span><span class="p">,</span><span class="s">&quot;status&quot;</span><span class="p">,</span><span class="s">&quot;hours in status&quot;</span>
 <span class="n">g1</span><span class="p">,</span><span class="mi">250</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span>
 <span class="n">g2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">8</span>
@@ -198,41 +73,6 @@
 </div>
 <div class="section" id="loads">
 <h2>Loads<a class="headerlink" href="#loads" title="Permalink to this headline">¶</a></h2>
-<table border="1" class="docutils">
-<colgroup>
-<col width="18%" />
-<col width="61%" />
-<col width="12%" />
-<col width="8%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>Column Name</td>
-<td>Description</td>
-<td>Default</td>
-<td>Units</td>
-</tr>
-<tr class="row-even"><td>name</td>
-<td>load name</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-odd"><td>power</td>
-<td>load power (a single number for ED problems or base load)</td>
-<td>&nbsp;</td>
-<td>MW</td>
-</tr>
-<tr class="row-even"><td>schedule filename</td>
-<td>spreadsheet filename describing the predicted load power over time</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-odd"><td>bus</td>
-<td>name of bus where load is connected</td>
-<td>single bus</td>
-<td>&nbsp;</td>
-</tr>
-</tbody>
-</table>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">name</span><span class="p">,</span><span class="n">schedulefilename</span>
 <span class="n">Ireland</span><span class="p">,</span><span class="n">ireland_load_fewdays</span><span class="o">.</span><span class="n">csv</span>
 </pre></div>
@@ -240,46 +80,6 @@
 </div>
 <div class="section" id="lines">
 <h2>Lines<a class="headerlink" href="#lines" title="Permalink to this headline">¶</a></h2>
-<table border="1" class="docutils">
-<colgroup>
-<col width="21%" />
-<col width="52%" />
-<col width="15%" />
-<col width="12%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>Column Name</td>
-<td>Description</td>
-<td>Default</td>
-<td>Units</td>
-</tr>
-<tr class="row-even"><td>name</td>
-<td>line name</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-odd"><td>to</td>
-<td>name of bus where line originates</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-even"><td>from</td>
-<td>name of bus where line terminates</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-odd"><td>reactance</td>
-<td>total electrical reactance of line</td>
-<td>0.05</td>
-<td>p.u.</td>
-</tr>
-<tr class="row-even"><td>P max</td>
-<td>maximum power limit of line</td>
-<td>&nbsp;</td>
-<td>MW</td>
-</tr>
-</tbody>
-</table>
 <div class="highlight-python"><pre>from bus,to bus,Pmax
 Seattle,Tacoma,3
 Olympia,Tacoma,10000
@@ -289,31 +89,6 @@ Olympia,Seattle,10000
 </div>
 <div class="section" id="schedules">
 <h2>Schedules<a class="headerlink" href="#schedules" title="Permalink to this headline">¶</a></h2>
-<table border="1" class="docutils">
-<colgroup>
-<col width="16%" />
-<col width="64%" />
-<col width="11%" />
-<col width="9%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>Column Name</td>
-<td>Description</td>
-<td>Default</td>
-<td>Units</td>
-</tr>
-<tr class="row-even"><td>time</td>
-<td>time and date (if applicable) for the start of the period</td>
-<td>&nbsp;</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-odd"><td>power</td>
-<td>energy scheduled (or predicted) for the period</td>
-<td>&nbsp;</td>
-<td>MWh</td>
-</tr>
-</tbody>
-</table>
 <div class="highlight-python"><pre>time,power
 0:00,250
 2:00,320

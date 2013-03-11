@@ -88,7 +88,7 @@
     <span class="s">&#39;hoursinstatus&#39;</span><span class="p">:</span><span class="s">&#39;hoursinstatus&#39;</span><span class="p">,</span>
     <span class="s">&#39;ic&#39;</span><span class="p">:</span><span class="bp">None</span><span class="p">}</span>
     
-<div class="viewcode-block" id="parsedir"><a class="viewcode-back" href="../../api/getting-data.html#minpower.get_data.parsedir">[docs]</a><span class="k">def</span> <span class="nf">parsedir</span><span class="p">(</span><span class="n">datadir</span><span class="o">=</span><span class="s">&#39;.&#39;</span><span class="p">,</span>
+<div class="viewcode-block" id="parsedir"><a class="viewcode-back" href="../../api/minpower.html#minpower.get_data.parsedir">[docs]</a><span class="k">def</span> <span class="nf">parsedir</span><span class="p">(</span><span class="n">datadir</span><span class="o">=</span><span class="s">&#39;.&#39;</span><span class="p">,</span>
         <span class="n">file_gens</span><span class="o">=</span><span class="s">&#39;generators.csv&#39;</span><span class="p">,</span>
         <span class="n">file_loads</span><span class="o">=</span><span class="s">&#39;loads.csv&#39;</span><span class="p">,</span>
         <span class="n">file_lines</span><span class="o">=</span><span class="s">&#39;lines.csv&#39;</span><span class="p">,</span>
@@ -136,7 +136,7 @@
     <span class="n">scenario_tree</span><span class="o">=</span><span class="n">setup_scenarios</span><span class="p">(</span><span class="n">generators</span><span class="p">,</span><span class="n">times</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">generators</span><span class="p">,</span><span class="n">loads</span><span class="p">,</span><span class="n">lines</span><span class="p">,</span><span class="n">times</span><span class="p">,</span><span class="n">scenario_tree</span>
 </div>
-<div class="viewcode-block" id="setup_initialcond"><a class="viewcode-back" href="../../api/getting-data.html#minpower.get_data.setup_initialcond">[docs]</a><span class="k">def</span> <span class="nf">setup_initialcond</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">generators</span><span class="p">,</span><span class="n">times</span><span class="p">):</span>
+<div class="viewcode-block" id="setup_initialcond"><a class="viewcode-back" href="../../api/minpower.html#minpower.get_data.setup_initialcond">[docs]</a><span class="k">def</span> <span class="nf">setup_initialcond</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">generators</span><span class="p">,</span><span class="n">times</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Take a list of initial conditions parameters and</span>
 <span class="sd">    add information to each :class:`~powersystems.Generator` </span>
@@ -163,7 +163,7 @@
         <span class="n">generators</span><span class="p">[</span><span class="n">g</span><span class="p">]</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">t_init</span><span class="p">,</span><span class="o">**</span><span class="n">row</span><span class="p">)</span>        
     <span class="k">return</span> <span class="n">generators</span>
 </div>
-<div class="viewcode-block" id="build_class_list"><a class="viewcode-back" href="../../api/getting-data.html#minpower.get_data.build_class_list">[docs]</a><span class="k">def</span> <span class="nf">build_class_list</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">model</span><span class="p">,</span><span class="n">datadir</span><span class="p">,</span><span class="n">times</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">model_schedule</span><span class="o">=</span><span class="n">schedule</span><span class="o">.</span><span class="n">make_schedule</span><span class="p">):</span>
+<div class="viewcode-block" id="build_class_list"><a class="viewcode-back" href="../../api/minpower.html#minpower.get_data.build_class_list">[docs]</a><span class="k">def</span> <span class="nf">build_class_list</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">model</span><span class="p">,</span><span class="n">datadir</span><span class="p">,</span><span class="n">times</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">model_schedule</span><span class="o">=</span><span class="n">schedule</span><span class="o">.</span><span class="n">make_schedule</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create list of class instances from data in a spreadsheet.</span>
 <span class="sd">    </span>
@@ -217,7 +217,7 @@
         <span class="n">index</span><span class="o">+=</span><span class="mi">1</span>
     <span class="k">return</span> <span class="n">all_models</span>
 </div>
-<div class="viewcode-block" id="setup_times"><a class="viewcode-back" href="../../api/getting-data.html#minpower.get_data.setup_times">[docs]</a><span class="k">def</span> <span class="nf">setup_times</span><span class="p">(</span><span class="n">generators_data</span><span class="p">,</span><span class="n">loads_data</span><span class="p">,</span><span class="n">datadir</span><span class="p">):</span>
+<div class="viewcode-block" id="setup_times"><a class="viewcode-back" href="../../api/minpower.html#minpower.get_data.setup_times">[docs]</a><span class="k">def</span> <span class="nf">setup_times</span><span class="p">(</span><span class="n">generators_data</span><span class="p">,</span><span class="n">loads_data</span><span class="p">,</span><span class="n">datadir</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">    Create list of :class:`~schedule.Time` objects </span>
 <span class="sd">    from the schedule files. If there are no schedule</span>
@@ -264,7 +264,7 @@
         <span class="n">time_dates</span><span class="o">=</span><span class="nb">sorted</span><span class="p">(</span><span class="n">unique</span><span class="p">(</span><span class="n">time_dates</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">schedule</span><span class="o">.</span><span class="n">make_times</span><span class="p">(</span><span class="n">time_dates</span><span class="p">)</span>
 </div>
-<div class="viewcode-block" id="setup_scenarios"><a class="viewcode-back" href="../../api/getting-data.html#minpower.get_data.setup_scenarios">[docs]</a><span class="k">def</span> <span class="nf">setup_scenarios</span><span class="p">(</span><span class="n">generators</span><span class="p">,</span><span class="n">times</span><span class="p">):</span>
+<div class="viewcode-block" id="setup_scenarios"><a class="viewcode-back" href="../../api/minpower.html#minpower.get_data.setup_scenarios">[docs]</a><span class="k">def</span> <span class="nf">setup_scenarios</span><span class="p">(</span><span class="n">generators</span><span class="p">,</span><span class="n">times</span><span class="p">):</span>
     <span class="c"># no_scenario_indexes=[]</span>
     <span class="n">has_scenarios</span><span class="o">=</span><span class="p">[]</span>
     <span class="k">for</span> <span class="n">gen</span> <span class="ow">in</span> <span class="n">generators</span><span class="p">:</span>
@@ -301,6 +301,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../basic-use.html">Basic Use</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../creating-problems.html">Creating a Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuration</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../students.html">For Students</a></li>
@@ -311,8 +312,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../optimal-power-flow.html">Optimal Power Flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../unit-commitment.html">Unit Commitment</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">Documentation</a></li>
+<ul class="simple">
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../collaborate.html">Collaborate</a></li>

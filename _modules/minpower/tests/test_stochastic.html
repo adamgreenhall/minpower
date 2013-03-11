@@ -1,0 +1,242 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>minpower.tests.test_stochastic &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="top" title="minpower" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for minpower.tests.test_stochastic</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">nose</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">minpower.tests.test_utils</span> <span class="kn">import</span> <span class="n">istest</span>
+<span class="kn">from</span> <span class="nn">minpower.tests.test_integration</span> <span class="kn">import</span> <span class="n">run_case</span><span class="p">,</span> <span class="n">assert_series_equal</span>
+
+<span class="n">mipgap</span> <span class="o">=</span> <span class="mf">0.0001</span>
+
+
+<span class="nd">@istest</span>
+<div class="viewcode-block" id="run_basic_checks"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_stochastic.run_basic_checks">[docs]</a><span class="k">def</span> <span class="nf">run_basic_checks</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    solutions should all make sense (cost=0 and power=0 if status=0)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">run_case</span><span class="p">(</span><span class="s">&#39;stochastic_short_case&#39;</span><span class="p">,</span> <span class="n">deterministic_solve</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+</div>
+<span class="nd">@istest</span>
+<div class="viewcode-block" id="mock_stochastic"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_stochastic.mock_stochastic">[docs]</a><span class="k">def</span> <span class="nf">mock_stochastic</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    the solution to the stochastic problem with only two scenarios,</span>
+<span class="sd">    both with values equal to the deterministic forecast and prob=0.5,</span>
+<span class="sd">    should have a total cost equal (within solver tolerance) to</span>
+<span class="sd">    the deterministic forecat solution total cost</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">slnS</span> <span class="o">=</span> <span class="n">run_case</span><span class="p">(</span><span class="s">&#39;stochastic_mock_case&#39;</span><span class="p">,</span>
+        <span class="n">scenarios_directory</span><span class="o">=</span><span class="s">&#39;scenarios/&#39;</span><span class="p">)</span>
+    <span class="n">slnD</span> <span class="o">=</span> <span class="n">run_case</span><span class="p">(</span><span class="s">&#39;stochastic_mock_case&#39;</span><span class="p">,</span>
+        <span class="n">deterministic_solve</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">costS</span> <span class="o">=</span> <span class="n">slnS</span><span class="o">.</span><span class="n">observed_cost</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">costD</span> <span class="o">=</span> <span class="n">slnD</span><span class="o">.</span><span class="n">observed_cost</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+    <span class="n">diffpercent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">costS</span> <span class="o">-</span> <span class="n">costD</span><span class="p">)</span> <span class="o">/</span> <span class="n">costD</span><span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">diffpercent</span> <span class="o">&lt;</span> <span class="n">mipgap</span><span class="p">)</span>
+
+</div>
+<span class="nd">@istest</span>
+<div class="viewcode-block" id="standalone"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_stochastic.standalone">[docs]</a><span class="k">def</span> <span class="nf">standalone</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">tables</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">nose</span><span class="o">.</span><span class="n">SkipTest</span><span class="p">(</span><span class="s">&#39;standalone mode requires pytables&#39;</span><span class="p">)</span>
+
+    <span class="n">slnA</span> <span class="o">=</span> <span class="n">run_case</span><span class="p">(</span><span class="s">&#39;stochastic_short_case&#39;</span><span class="p">,</span> <span class="n">deterministic_solve</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">slnB</span> <span class="o">=</span> <span class="n">run_case</span><span class="p">(</span><span class="s">&#39;stochastic_short_case&#39;</span><span class="p">,</span> <span class="n">deterministic_solve</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">assert</span><span class="p">(</span><span class="n">slnA</span><span class="o">.</span><span class="n">observed_cost</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="n">slnB</span><span class="o">.</span><span class="n">observed_cost</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+    
+
+
+    </div>
+<span class="nd">@istest</span>
+<div class="viewcode-block" id="expected_cost_case"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_stochastic.expected_cost_case">[docs]</a><span class="k">def</span> <span class="nf">expected_cost_case</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    ensure that a under-forecast wind case has</span>
+<span class="sd">    an expected cost &gt; observed cost</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c"># this is a short and simple case with 4hrs, but make it into two UC days</span>
+    <span class="n">hrs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">hours_commitment</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">hours_overlap</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">slnD</span> <span class="o">=</span> <span class="n">run_case</span><span class="p">(</span><span class="s">&#39;expected_observed_cost&#39;</span><span class="p">,</span> <span class="n">deterministic_solve</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">hrs</span><span class="p">)</span>
+    
+    <span class="k">assert</span><span class="p">(</span><span class="n">slnD</span><span class="o">.</span><span class="n">expected_cost</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">slnD</span><span class="o">.</span><span class="n">observed_cost</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+
+</div>
+<span class="nd">@istest</span>
+<div class="viewcode-block" id="designed_diff_case"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_stochastic.designed_diff_case">[docs]</a><span class="k">def</span> <span class="nf">designed_diff_case</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    ensure that a simple case designed to produce a more expensive </span>
+<span class="sd">    deterministic forecast solution has a cheaper perfect forecast</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c"># this is a short and simple case with 4hrs, but make it into two UC days</span>
+    <span class="n">hrs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">hours_commitment</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">hours_overlap</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">slnP</span> <span class="o">=</span> <span class="n">run_case</span><span class="p">(</span><span class="s">&#39;deterministic_perfect_difference&#39;</span><span class="p">,</span> <span class="n">perfect_solve</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">hrs</span><span class="p">)</span>
+    <span class="n">slnD</span> <span class="o">=</span> <span class="n">run_case</span><span class="p">(</span><span class="s">&#39;deterministic_perfect_difference&#39;</span><span class="p">,</span> <span class="n">deterministic_solve</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">hrs</span><span class="p">)</span>
+    
+    <span class="k">assert</span> <span class="p">(</span><span class="n">slnP</span><span class="o">.</span><span class="n">generators_power</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> \
+        <span class="n">slnD</span><span class="o">.</span><span class="n">generators_power</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">slnP</span><span class="o">.</span><span class="n">observed_cost</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">slnD</span><span class="o">.</span><span class="n">observed_cost</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    
+    </div>
+<span class="nd">@istest</span>
+<div class="viewcode-block" id="stochastic_load_shedding"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_stochastic.stochastic_load_shedding">[docs]</a><span class="k">def</span> <span class="nf">stochastic_load_shedding</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create a sheddable wind generator and one scenario that requires load shedding.</span>
+<span class="sd">    Ensure that wind is shed in one scenario but not the other.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="n">sln</span> <span class="o">=</span> <span class="n">run_case</span><span class="p">(</span><span class="s">&#39;stochastic_shedding_case&#39;</span><span class="p">)</span>
+    
+    <span class="n">epower</span> <span class="o">=</span> <span class="n">sln</span><span class="o">.</span><span class="n">generators_power_scenarios</span>
+    <span class="n">load_sched</span> <span class="o">=</span> <span class="n">sln</span><span class="o">.</span><span class="n">loads</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">schedule</span>
+    
+    <span class="k">assert</span><span class="p">((</span><span class="n">epower</span><span class="p">[</span><span class="s">&#39;s0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">load_sched</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+    <span class="k">assert</span><span class="p">((</span><span class="n">epower</span><span class="p">[</span><span class="s">&#39;s1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">load_sched</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+    </div>
+<span class="nd">@istest</span>
+<div class="viewcode-block" id="stochastic_gen_shedding"><a class="viewcode-back" href="../../../api/minpower.tests.html#minpower.tests.test_stochastic.stochastic_gen_shedding">[docs]</a><span class="k">def</span> <span class="nf">stochastic_gen_shedding</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create a sheddable wind generator and one scenario that requires wind shedding.</span>
+<span class="sd">    Ensure that wind is shed in one scenario but not the other.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="n">sln</span> <span class="o">=</span> <span class="n">run_case</span><span class="p">(</span><span class="s">&#39;stochastic_shedding_wind_case&#39;</span><span class="p">)</span>
+    
+    
+    <span class="n">epower</span> <span class="o">=</span> <span class="n">sln</span><span class="o">.</span><span class="n">generators_power_scenarios</span>
+    <span class="n">load_sched</span> <span class="o">=</span> <span class="n">sln</span><span class="o">.</span><span class="n">loads</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">schedule</span>
+    <span class="n">load_sched</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">epower</span><span class="o">.</span><span class="n">major_axis</span>
+    <span class="c"># check that generation meets the load for all scenarios</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">epower</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">load_sched</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+
+    <span class="c"># get wind power scenarios</span>
+    <span class="n">scenario_values</span> <span class="o">=</span> <span class="n">sln</span><span class="o">.</span><span class="n">generators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scenario_values</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span>
+        <span class="s">&#39;probability&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">scenario_values</span> <span class="o">=</span> <span class="n">scenario_values</span><span class="p">[</span>
+        <span class="n">scenario_values</span><span class="o">.</span><span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">ix</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">epower</span><span class="o">.</span><span class="n">major_axis</span><span class="p">)</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> \
+        <span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">epower</span><span class="o">.</span><span class="n">major_axis</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+            <span class="n">columns</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sln</span><span class="o">.</span><span class="n">scenarios</span><span class="p">)),</span> <span class="n">sln</span><span class="o">.</span><span class="n">scenarios</span><span class="p">)))</span>
+    <span class="c"># calculate wind shed per scenario</span>
+    <span class="n">wind_shed</span> <span class="o">=</span> <span class="n">scenario_values</span> <span class="o">-</span> <span class="n">epower</span><span class="o">.</span><span class="n">minor_xs</span><span class="p">(</span><span class="s">&#39;g0&#39;</span><span class="p">)</span>
+    
+    <span class="n">assert_series_equal</span><span class="p">(</span>
+        <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">s0</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">s1</span><span class="o">=</span><span class="bp">True</span><span class="p">)),</span> 
+        <span class="p">(</span><span class="n">wind_shed</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../creating-problems.html">Creating a Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configuration.html">Configuration</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul class="simple">
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<!--<div class="social">-->
+<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
+<!--</div>-->
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    
+  })();
+</script>
+
+  </body>
+</html>

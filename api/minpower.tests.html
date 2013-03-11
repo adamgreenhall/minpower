@@ -1,0 +1,679 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tests Package &mdash; minpower</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="top" title="minpower" href="../index.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-24659622-2']);
+  _gaq.push(['_trackPageview']);
+</script>
+
+  </head>
+  <body>  
+
+    <div class="document">
+
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="tests-package">
+<h1>tests Package<a class="headerlink" href="#tests-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-minpower.tests.memory_leak_check">
+<span id="memory-leak-check-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">memory_leak_check</span></tt> Module<a class="headerlink" href="#module-minpower.tests.memory_leak_check" title="Permalink to this headline">¶</a></h2>
+<p>Test for memory leaks</p>
+<dl class="function">
+<dt id="minpower.tests.memory_leak_check.get_counts">
+<tt class="descclassname">minpower.tests.memory_leak_check.</tt><tt class="descname">get_counts</tt><big>(</big><em>prefix=''</em><big>)</big><a class="reference internal" href="../_modules/minpower/tests/memory_leak_check.html#get_counts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.memory_leak_check.get_counts" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.memory_leak_check.leak_on_reset">
+<tt class="descclassname">minpower.tests.memory_leak_check.</tt><tt class="descname">leak_on_reset</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/memory_leak_check.html#leak_on_reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.memory_leak_check.leak_on_reset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.memory_leak_check.leak_on_stochastic_reset">
+<tt class="descclassname">minpower.tests.memory_leak_check.</tt><tt class="descname">leak_on_stochastic_reset</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/memory_leak_check.html#leak_on_stochastic_reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.memory_leak_check.leak_on_stochastic_reset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.memory_leak_check.show_memory_backrefs">
+<tt class="descclassname">minpower.tests.memory_leak_check.</tt><tt class="descname">show_memory_backrefs</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="../_modules/minpower/tests/memory_leak_check.html#show_memory_backrefs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.memory_leak_check.show_memory_backrefs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.memory_leak_check.show_memory_growth">
+<tt class="descclassname">minpower.tests.memory_leak_check.</tt><tt class="descname">show_memory_growth</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/memory_leak_check.html#show_memory_growth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.memory_leak_check.show_memory_growth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.memory_leak_check.show_memory_refs">
+<tt class="descclassname">minpower.tests.memory_leak_check.</tt><tt class="descname">show_memory_refs</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="../_modules/minpower/tests/memory_leak_check.html#show_memory_refs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.memory_leak_check.show_memory_refs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-minpower.tests.run_all_cases">
+<span id="run-all-cases-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">run_all_cases</span></tt> Module<a class="headerlink" href="#module-minpower.tests.run_all_cases" title="Permalink to this headline">¶</a></h2>
+<p>Integration testing. Runs solve.problem() on all directories 
+in the tests subpackage directory. These tests include ED,OPF,UC
+tests designed to ensure that inputs parse correctly, 
+constraints are active, and vizualizations and solution
+output work.</p>
+<p>Chances are good that if you make major modifications 
+to the Minpower code you will break something here. 
+Just fix it before you push your change.</p>
+<dl class="function">
+<dt id="minpower.tests.run_all_cases.hasPyscript">
+<tt class="descclassname">minpower.tests.run_all_cases.</tt><tt class="descname">hasPyscript</tt><big>(</big><em>dir</em><big>)</big><a class="reference internal" href="../_modules/minpower/tests/run_all_cases.html#hasPyscript"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.run_all_cases.hasPyscript" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.run_all_cases.main">
+<tt class="descclassname">minpower.tests.run_all_cases.</tt><tt class="descname">main</tt><big>(</big><em>solver='gurobi'</em><big>)</big><a class="reference internal" href="../_modules/minpower/tests/run_all_cases.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.run_all_cases.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.run_all_cases.wipeTestSlate">
+<tt class="descclassname">minpower.tests.run_all_cases.</tt><tt class="descname">wipeTestSlate</tt><big>(</big><em>dir</em><big>)</big><a class="reference internal" href="../_modules/minpower/tests/run_all_cases.html#wipeTestSlate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.run_all_cases.wipeTestSlate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-minpower.tests.test_bidding">
+<span id="test-bidding-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">test_bidding</span></tt> Module<a class="headerlink" href="#module-minpower.tests.test_bidding" title="Permalink to this headline">¶</a></h2>
+<p>Test the constraint behavior of the bids</p>
+<dl class="function">
+<dt id="minpower.tests.test_bidding.coverage">
+<tt class="descclassname">minpower.tests.test_bidding.</tt><tt class="descname">coverage</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_bidding.html#coverage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_bidding.coverage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure that the bid range covers the whole pmin-pmax range</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_bidding.cubic_convex">
+<tt class="descclassname">minpower.tests.test_bidding.</tt><tt class="descname">cubic_convex</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_bidding.html#cubic_convex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_bidding.cubic_convex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a cubic, convex bid curve for one generators.
+Ensure that linearized cost is within +5% of the true cost</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_bidding.cubic_non_convex">
+<tt class="descclassname">minpower.tests.test_bidding.</tt><tt class="descname">cubic_non_convex</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_bidding.html#cubic_non_convex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_bidding.cubic_non_convex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a cubic, but non-convex (negative cubic term) bid curve for one generators.
+Ensure that linearized cost is within +5% of the true cost</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_bidding.fixed_costs_when_off">
+<tt class="descclassname">minpower.tests.test_bidding.</tt><tt class="descname">fixed_costs_when_off</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_bidding.html#fixed_costs_when_off"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_bidding.fixed_costs_when_off" title="Permalink to this definition">¶</a></dt>
+<dd><p>ensure that generator with fixed cost 
+only charges fixed cost when on</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_bidding.linear">
+<tt class="descclassname">minpower.tests.test_bidding.</tt><tt class="descname">linear</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_bidding.html#linear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_bidding.linear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a linear bid curve for one generators.
+Ensure that correct cost is valued for the load.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_bidding.parser">
+<tt class="descclassname">minpower.tests.test_bidding.</tt><tt class="descname">parser</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_bidding.html#parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_bidding.parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-minpower.tests.test_data_in">
+<span id="test-data-in-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">test_data_in</span></tt> Module<a class="headerlink" href="#module-minpower.tests.test_data_in" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="minpower.tests.test_data_in.check_pmin">
+<tt class="descclassname">minpower.tests.test_data_in.</tt><tt class="descname">check_pmin</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_data_in.html#check_pmin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_data_in.check_pmin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-minpower.tests.test_generators">
+<span id="test-generators-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">test_generators</span></tt> Module<a class="headerlink" href="#module-minpower.tests.test_generators" title="Permalink to this headline">¶</a></h2>
+<p>Test the constraint behavior of the generators</p>
+<dl class="function">
+<dt id="minpower.tests.test_generators.cold_ramp_up">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">cold_ramp_up</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#cold_ramp_up"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.cold_ramp_up" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create three generators, one that must ramp up from cold. 
+Ensure that the generator ramps at within its limit.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.final_conditions">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">final_conditions</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#final_conditions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.final_conditions" title="Permalink to this definition">¶</a></dt>
+<dd><p>make sure that Generator.gethrsinstatus calculates correctly</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.hot_shut_down">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">hot_shut_down</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#hot_shut_down"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.hot_shut_down" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create three generators, one that must shut down from hot. 
+Ensure that the generator ramps within its limit.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.min_down_time">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">min_down_time</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#min_down_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.min_down_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create three generators: 
+* cheap with max power limit
+* with min down time
+* expensive
+Create load that is higher than the cheap limit all but t1.
+Ensure that the mid generator is OFF at t1 and t2, then turns on again.
+Ensure that the hi generator is ON for t2 to make up the difference.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.min_up_time">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">min_up_time</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#min_up_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.min_up_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create two generators: cheap with max power limit, exp. with min up time and min power limits.
+Create load that increases over the cheap limit at t1 and then reduces back to constant.
+Ensure that the expensive generator is on at t1 and t2, then turns off.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.min_up_time_longer">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">min_up_time_longer</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#min_up_time_longer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.min_up_time_longer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create two generators: cheap with max power limit, exp. with min up time and min power limits.
+Create load that increases over the cheap limit at t1 and then reduces back to constant.
+Ensure that the expensive generator is on at t1 and t2, then turns off.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.pmin_shutdown_limit">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">pmin_shutdown_limit</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#pmin_shutdown_limit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.pmin_shutdown_limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>generators that have a pmin &gt; -1 * rampratemin should be able to shutdown</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.pmin_startup_limit">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">pmin_startup_limit</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#pmin_startup_limit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.pmin_startup_limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>generators that have a pmin &gt; rampratemax should be able to startup to pmin</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.power_maximum">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">power_maximum</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#power_maximum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.power_maximum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create two generators, one cheap and one expensive. 
+Give the cheap one a maximum power limit lower than the load.
+Ensure that the cheaper unit is at its limit.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.power_minimum">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">power_minimum</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#power_minimum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.power_minimum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create two generators, one cheap and one expensive, status on for both.
+Give the expensive one a min power limit.
+Ensure that the exp. unit is at its limit.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.ramp_down">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">ramp_down</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#ramp_down"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.ramp_down" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create 2 gen, expensive one with ramp down limit. 
+Create load that ramps down faster than limit at t1.
+Ensure that exp. unit is at its limit.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.ramp_down_initial">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">ramp_down_initial</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#ramp_down_initial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.ramp_down_initial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create 2 gen, expensive one with ramp down limit. 
+Create load that ramps down faster than limit, at t0.
+Ensure that exp. unit is at its limit.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.ramp_up">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">ramp_up</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#ramp_up"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.ramp_up" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create 2 gen, cheaper one with ramp up limit. 
+Create load that ramps up faster than limit, at t1.
+Ensure that cheaper unit is at its limit.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.ramp_up_initial">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">ramp_up_initial</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#ramp_up_initial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.ramp_up_initial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create 2 gen, cheaper one with ramp up limit. 
+Create load that ramps up faster than limit, at t0.
+Ensure that cheaper unit is at its limit.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.setting_initial_conditions">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">setting_initial_conditions</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#setting_initial_conditions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.setting_initial_conditions" title="Permalink to this definition">¶</a></dt>
+<dd><p>make sure that power and status get properly set (even if numpy values)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.shut_down_cost">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">shut_down_cost</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#shut_down_cost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.shut_down_cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create two generators, both on:
+* cheap with a max power
+* expensive with a start down cost and a min power.
+Create an decreasing load.
+Ensure that the objective includes the shutdown cost.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.start_up_cost">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">start_up_cost</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#start_up_cost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.start_up_cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create two generators:
+* cheap with a max power
+* expensive with a start up cost.
+Create an increasing load.
+Ensure that the objective includes the startup cost.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.startupcost_can_shutdown">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">startupcost_can_shutdown</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#startupcost_can_shutdown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.startupcost_can_shutdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generators with a startup cost must be able to shut down.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_generators.wind_shedding">
+<tt class="descclassname">minpower.tests.test_generators.</tt><tt class="descname">wind_shedding</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_generators.html#wind_shedding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_generators.wind_shedding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a sheddable wind generator and a situation that requires shedding.
+Ensure that the minimum power is shed.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-minpower.tests.test_integration">
+<span id="test-integration-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">test_integration</span></tt> Module<a class="headerlink" href="#module-minpower.tests.test_integration" title="Permalink to this headline">¶</a></h2>
+<p>A selection of integration tests. These are designed to find failures that
+the unit tests don&#8217;t pick up.</p>
+<dl class="function">
+<dt id="minpower.tests.test_integration.basic_checks">
+<tt class="descclassname">minpower.tests.test_integration.</tt><tt class="descname">basic_checks</tt><big>(</big><em>sln</em><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_integration.html#basic_checks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_integration.basic_checks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_integration.ed_visualization">
+<tt class="descclassname">minpower.tests.test_integration.</tt><tt class="descname">ed_visualization</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_integration.html#ed_visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_integration.ed_visualization" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_integration.opf_visualization">
+<tt class="descclassname">minpower.tests.test_integration.</tt><tt class="descname">opf_visualization</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_integration.html#opf_visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_integration.opf_visualization" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_integration.run_case">
+<tt class="descclassname">minpower.tests.test_integration.</tt><tt class="descname">run_case</tt><big>(</big><em>name</em>, <em>basedir='/home/adam/minpower/minpower/tests'</em>, <em>**kwds</em><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_integration.html#run_case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_integration.run_case" title="Permalink to this definition">¶</a></dt>
+<dd><p>a programatic way to do (nearly) the same thing
+as calling the minpower script
+(nearly: because prepends basedir to the directory name you are solving)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_integration.run_ed">
+<tt class="descclassname">minpower.tests.test_integration.</tt><tt class="descname">run_ed</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_integration.html#run_ed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_integration.run_ed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_integration.run_opf">
+<tt class="descclassname">minpower.tests.test_integration.</tt><tt class="descname">run_opf</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_integration.html#run_opf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_integration.run_opf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_integration.run_uc">
+<tt class="descclassname">minpower.tests.test_integration.</tt><tt class="descname">run_uc</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_integration.html#run_uc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_integration.run_uc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_integration.run_uc_rolling">
+<tt class="descclassname">minpower.tests.test_integration.</tt><tt class="descname">run_uc_rolling</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_integration.html#run_uc_rolling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_integration.run_uc_rolling" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_integration.uc_visualization">
+<tt class="descclassname">minpower.tests.test_integration.</tt><tt class="descname">uc_visualization</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_integration.html#uc_visualization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_integration.uc_visualization" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-minpower.tests.test_opf">
+<span id="test-opf-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">test_opf</span></tt> Module<a class="headerlink" href="#module-minpower.tests.test_opf" title="Permalink to this headline">¶</a></h2>
+<p>Test the constraint behavior of an OPF</p>
+<dl class="function">
+<dt id="minpower.tests.test_opf.line_limit_high">
+<tt class="descclassname">minpower.tests.test_opf.</tt><tt class="descname">line_limit_high</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_opf.html#line_limit_high"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_opf.line_limit_high" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Create a two bus system</dt>
+<dd>-cheap gen on busA
+-expensive gen and load on busB, 
+-line limit lower than load</dd>
+<dt>Ensure that: </dt>
+<dd><ul class="first last simple">
+<li>the line is at its limit</li>
+<li>the congestion price is equal to the diff. in LMPs</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_opf.line_limit_low">
+<tt class="descclassname">minpower.tests.test_opf.</tt><tt class="descname">line_limit_low</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_opf.html#line_limit_low"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_opf.line_limit_low" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Create a two bus system</dt>
+<dd>-cheap gen on busA
+-expensive gen and load on busB, 
+-line (from B to A) limit lower than load</dd>
+<dt>Ensure that: </dt>
+<dd><ul class="first last simple">
+<li>the line is at its limit</li>
+<li>the congestion price is equal to the diff. in LMPs</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_opf.test_config">
+<tt class="descclassname">minpower.tests.test_opf.</tt><tt class="descname">test_config</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_opf.html#test_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_opf.test_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_opf.test_config_cleared">
+<tt class="descclassname">minpower.tests.test_opf.</tt><tt class="descname">test_config_cleared</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_opf.html#test_config_cleared"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_opf.test_config_cleared" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_opf.three_buses">
+<tt class="descclassname">minpower.tests.test_opf.</tt><tt class="descname">three_buses</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_opf.html#three_buses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_opf.three_buses" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Create a three bus system</dt>
+<dd>-cheap gen and load on busA
+-mid gen and load on busB
+-expensive gen and load on busC
+-three lines connecting all three buses (triangle)
+-create congestion by setting a line limit</dd>
+<dt>Ensure that: </dt>
+<dd><ul class="first last simple">
+<li>the total load is met</li>
+<li>the lmps are different</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-minpower.tests.test_results">
+<span id="test-results-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">test_results</span></tt> Module<a class="headerlink" href="#module-minpower.tests.test_results" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="minpower.tests.test_results.check_power_status">
+<tt class="descclassname">minpower.tests.test_results.</tt><tt class="descname">check_power_status</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_results.html#check_power_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_results.check_power_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure that the solution generator_status and generator_power attributes
+match with the optimization values returned.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-minpower.tests.test_solvers">
+<span id="test-solvers-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">test_solvers</span></tt> Module<a class="headerlink" href="#module-minpower.tests.test_solvers" title="Permalink to this headline">¶</a></h2>
+<p>Test the all of the solver links</p>
+<dl class="function">
+<dt id="minpower.tests.test_solvers.cplex">
+<tt class="descclassname">minpower.tests.test_solvers.</tt><tt class="descname">cplex</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_solvers.html#cplex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_solvers.cplex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test each available solver on a simple problem</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_solvers.glpk">
+<tt class="descclassname">minpower.tests.test_solvers.</tt><tt class="descname">glpk</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_solvers.html#glpk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_solvers.glpk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the glpk solver on a simple problem</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_solvers.gurobi">
+<tt class="descclassname">minpower.tests.test_solvers.</tt><tt class="descname">gurobi</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_solvers.html#gurobi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_solvers.gurobi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test the gurobi solver on a simple problem</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_solvers.run_one_solver">
+<tt class="descclassname">minpower.tests.test_solvers.</tt><tt class="descname">run_one_solver</tt><big>(</big><em>solver_name</em><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_solvers.html#run_one_solver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_solvers.run_one_solver" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_solvers.simple_problem">
+<tt class="descclassname">minpower.tests.test_solvers.</tt><tt class="descname">simple_problem</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_solvers.html#simple_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_solvers.simple_problem" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-minpower.tests.test_stochastic">
+<span id="test-stochastic-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">test_stochastic</span></tt> Module<a class="headerlink" href="#module-minpower.tests.test_stochastic" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="minpower.tests.test_stochastic.designed_diff_case">
+<tt class="descclassname">minpower.tests.test_stochastic.</tt><tt class="descname">designed_diff_case</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_stochastic.html#designed_diff_case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_stochastic.designed_diff_case" title="Permalink to this definition">¶</a></dt>
+<dd><p>ensure that a simple case designed to produce a more expensive 
+deterministic forecast solution has a cheaper perfect forecast</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_stochastic.expected_cost_case">
+<tt class="descclassname">minpower.tests.test_stochastic.</tt><tt class="descname">expected_cost_case</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_stochastic.html#expected_cost_case"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_stochastic.expected_cost_case" title="Permalink to this definition">¶</a></dt>
+<dd><p>ensure that a under-forecast wind case has
+an expected cost &gt; observed cost</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_stochastic.mock_stochastic">
+<tt class="descclassname">minpower.tests.test_stochastic.</tt><tt class="descname">mock_stochastic</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_stochastic.html#mock_stochastic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_stochastic.mock_stochastic" title="Permalink to this definition">¶</a></dt>
+<dd><p>the solution to the stochastic problem with only two scenarios,
+both with values equal to the deterministic forecast and prob=0.5,
+should have a total cost equal (within solver tolerance) to
+the deterministic forecat solution total cost</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_stochastic.run_basic_checks">
+<tt class="descclassname">minpower.tests.test_stochastic.</tt><tt class="descname">run_basic_checks</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_stochastic.html#run_basic_checks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_stochastic.run_basic_checks" title="Permalink to this definition">¶</a></dt>
+<dd><p>solutions should all make sense (cost=0 and power=0 if status=0)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_stochastic.standalone">
+<tt class="descclassname">minpower.tests.test_stochastic.</tt><tt class="descname">standalone</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_stochastic.html#standalone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_stochastic.standalone" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_stochastic.stochastic_gen_shedding">
+<tt class="descclassname">minpower.tests.test_stochastic.</tt><tt class="descname">stochastic_gen_shedding</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_stochastic.html#stochastic_gen_shedding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_stochastic.stochastic_gen_shedding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a sheddable wind generator and one scenario that requires wind shedding.
+Ensure that wind is shed in one scenario but not the other.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_stochastic.stochastic_load_shedding">
+<tt class="descclassname">minpower.tests.test_stochastic.</tt><tt class="descname">stochastic_load_shedding</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_stochastic.html#stochastic_load_shedding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_stochastic.stochastic_load_shedding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a sheddable wind generator and one scenario that requires load shedding.
+Ensure that wind is shed in one scenario but not the other.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-minpower.tests.test_uc">
+<span id="test-uc-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">test_uc</span></tt> Module<a class="headerlink" href="#module-minpower.tests.test_uc" title="Permalink to this headline">¶</a></h2>
+<p>Test the higher level behavior of the unit commitment</p>
+<dl class="function">
+<dt id="minpower.tests.test_uc.load_shedding">
+<tt class="descclassname">minpower.tests.test_uc.</tt><tt class="descname">load_shedding</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_uc.html#load_shedding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_uc.load_shedding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a single generator with a high limit.
+Create a load that exceeds that limit at t1.
+Ensure that:
+* Pdt1=Pgmax
+* Pshedt1 = Pdt1 - pmax
+* pricet1 = cost of load shedding</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_uc.prices">
+<tt class="descclassname">minpower.tests.test_uc.</tt><tt class="descname">prices</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_uc.html#prices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_uc.prices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a basic unit commitment. 
+Ensure that the correct LMPs are returned for all times.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_uc.reserve_fixed_amount">
+<tt class="descclassname">minpower.tests.test_uc.</tt><tt class="descname">reserve_fixed_amount</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_uc.html#reserve_fixed_amount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_uc.reserve_fixed_amount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create two generators, the cheaper one with a limit near the load.
+Require 50MW of reserve (which exceeds pmax of cheap)
+Ensure that: g2 is turned on to meet reserve req.</p>
+<p>Pg1+Pg2 = load
+Pavail1 + Pavail2 = load + reserve</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_uc.rolling">
+<tt class="descclassname">minpower.tests.test_uc.</tt><tt class="descname">rolling</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_uc.html#rolling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_uc.rolling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a basic unit commitment over 72hrs
+Ensure that the generation meets the load for each time.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_uc.startup_ramprate_default">
+<tt class="descclassname">minpower.tests.test_uc.</tt><tt class="descname">startup_ramprate_default</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_uc.html#startup_ramprate_default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_uc.startup_ramprate_default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create two generators with a high limit,
+one limited by Pmax, the other by rampratemax.
+Ensure that the second gen. is started up to its limit to minimize shed.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-minpower.tests.test_utils">
+<span id="test-utils-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">test_utils</span></tt> Module<a class="headerlink" href="#module-minpower.tests.test_utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="minpower.tests.test_utils.assertAlmostEqual">
+<tt class="descclassname">minpower.tests.test_utils.</tt><tt class="descname">assertAlmostEqual</tt><big>(</big><em>x</em>, <em>y</em><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_utils.html#assertAlmostEqual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_utils.assertAlmostEqual" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_utils.get_duals">
+<tt class="descclassname">minpower.tests.test_utils.</tt><tt class="descname">get_duals</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_utils.html#get_duals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_utils.get_duals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_utils.make_cheap_gen">
+<tt class="descclassname">minpower.tests.test_utils.</tt><tt class="descname">make_cheap_gen</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_utils.html#make_cheap_gen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_utils.make_cheap_gen" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_utils.make_expensive_gen">
+<tt class="descclassname">minpower.tests.test_utils.</tt><tt class="descname">make_expensive_gen</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_utils.html#make_expensive_gen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_utils.make_expensive_gen" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_utils.make_loads_times">
+<tt class="descclassname">minpower.tests.test_utils.</tt><tt class="descname">make_loads_times</tt><big>(</big><em>Pd=200</em>, <em>Pdt=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_utils.html#make_loads_times"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_utils.make_loads_times" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_utils.make_mid_gen">
+<tt class="descclassname">minpower.tests.test_utils.</tt><tt class="descname">make_mid_gen</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_utils.html#make_mid_gen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_utils.make_mid_gen" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_utils.reset_config">
+<tt class="descclassname">minpower.tests.test_utils.</tt><tt class="descname">reset_config</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_utils.html#reset_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_utils.reset_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="minpower.tests.test_utils.solve_problem">
+<tt class="descclassname">minpower.tests.test_utils.</tt><tt class="descname">solve_problem</tt><big>(</big><em>generators</em>, <em>loads=None</em>, <em>times=None</em>, <em>gen_init=None</em>, <em>lines=None</em>, <em>do_reset_config=True</em><big>)</big><a class="reference internal" href="../_modules/minpower/tests/test_utils.html#solve_problem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#minpower.tests.test_utils.solve_problem" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">minpower</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../why-minpower.html">Why Minpower</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../basic-use.html">Basic Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../creating-problems.html">Creating a Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../students.html">For Students</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../researchers.html">For Researchers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../economic-dispatch.html">Economic Dispatch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimal-power-flow.html">Optimal Power Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit-commitment.html">Unit Commitment</a></li>
+</ul>
+<ul class="simple">
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../collaborate.html">Collaborate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About minpower</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<!--<div class="social">-->
+<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
+<!--</div>-->
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    
+  })();
+</script>
+
+  </body>
+</html>

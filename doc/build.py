@@ -1,6 +1,7 @@
 import os, sys, shutil, glob
 
 build_dir = os.path.expanduser('~/research/minpower-doc/')
+project_dir = os.path.expanduser('~/minpower/')
 
 
 
@@ -18,10 +19,16 @@ def css():
         raise SystemExit('building css failed')
     os.system('cp source/_static/default.css {bd}_static/default.css'.format(bd=build_dir))
 
+def api():
+    print('autogenerating API')
+    os.system('rm {proj}/doc/source/api/*.rst'.format(proj=project_dir))
+    os.system('sphinx-apidoc {proj}/minpower -o {proj}/doc/source/api'.format(proj=project_dir))
+
 def html():
     print 'building to',build_dir
     css()
     check_build()
+    api()
     
     if os.system('sphinx-build -P -b html -d {build_dir}doctrees  source {build_dir}'.format(build_dir=build_dir)):
         raise SystemExit("Building HTML failed.")

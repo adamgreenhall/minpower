@@ -210,7 +210,6 @@ def setup_initialcond(data, generators, times):
     if len(times) <= 1:
         return  # for UC,ED no need to set initial status
 
-    t_init = times.initialTime
     if len(data) == 0:
         logging.warning('''No generation initial conditions file found.
             Setting to defaults.''')
@@ -441,17 +440,21 @@ def setup_times(generators_data, loads_data):
             raise NotImplementedError(
                 'wind capacity factor only works with one wind generator')
             
-        max_load = timeseries[filter(lambda col: col.startswith('d'),
-            timeseries.columns)].sum(axis=1).max()
-        capf_current = timeseries[obs_name].max() / max_load
+        all_loads = timeseries[filter(lambda col: col.startswith('d'),
+            timeseries.columns)]
+
+        capf_current = timeseries[obs_name].sum() / all_loads.sum(axis=1).sum()
         
         wind_mult = user_config.wind_capacity_factor / capf_current
         user_config.wind_multiplier = wind_mult
 
+        logging.info('scaling wind from a c.f. of {} to a c.f. of {}'.format(
+            capf_current, user_config.wind_capacity_factor
+            ))
         timeseries[obs_name] *= wind_mult
         if fcst_name:
-            timeseries[fcst_name] *= wind_mult
-
+            timeseries[fcst_name] *= wind_mult        
+        
     return timeseries, times, generators_data, loads_data
 
 

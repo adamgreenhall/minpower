@@ -268,7 +268,7 @@ def setup_parser_args(parser):
     add_opt(wind_modifier, 'wind_multiplier', 
         help='scale the wind power by this factor')
     add_opt(wind_modifier, 'wind_capacity_factor', 
-        help='scale the wind power to match the capacity factor (as a percentage of peak load power)')
+        help='scale the wind power to match a given energy capacity factor (defined as a toal wind over total load energy for the timeseries)')
     
     add_opt(ts, 'wind_error_multiplier', 
         help='scale the wind power forecast error by this factor')

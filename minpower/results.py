@@ -20,21 +20,21 @@ from schedule import TimeIndex
 from optimization import value
 from config import user_config
 
-for_publication = True
-
-try:
-    import matplotlib
-    import matplotlib.pyplot as plot
-    do_plotting = True
-    # prettify plots
+def prettify_plots(for_publication=True):
     plot.rc("xtick", direction="out")
     plot.rc("ytick", direction="out")
     plot.rc("ytick", labelsize='small')
     plot.rc("xtick", labelsize='small')
     plot.rc("legend", fancybox=True)
+    plot.rc("font", family="serif")
     if for_publication:
         plot.rc("font", size=16)
-        plot.rc("font", family="serif")
+        
+
+try:
+    import matplotlib
+    import matplotlib.pyplot as plot
+    do_plotting = True
 except ImportError:
     logging.warning("Can't import matplotlib -- skipping plotting.")
     do_plotting = False
@@ -76,12 +76,16 @@ def make_solution(power_system, times, **kwargs):
         SCUC=Solution_SCUC,
         stochastic_UC=Solution_Stochastic_UC
     )
+    if do_plotting:
+        prettify_plots()
     kind = classify_problem(times, power_system)
     return problem_type[kind](power_system, times, **kwargs)
 
 
 def make_multistage_solution(power_system, stage_times, stage_solutions):
     '''Create a multi stage solution'''
+    if do_plotting:
+        prettify_plots()
     if power_system.lines:
         logging.warning('no visualization for multistage SCUC yet')
     klass = MultistageStandalone if getattr(

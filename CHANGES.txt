@@ -1,5 +1,20 @@
 ----
 
+Version 4.3.7, Thu 14 Mar 2013
+===============================
+
+6d2400ea04	TEST: add tests for min up/down times at t_0 and t_final (Adam Greenhall)
+35b58eb65b	defined wind capacity factor by energy over the entire timeseries (sum rather than max) (Adam Greenhall)
+9ee70e2d9b	results - cleanup pretty plots calls (Adam Greenhall)
+27696da4ce	autogenerate api (Adam Greenhall)
+03c3ee317f	label for no cover (Adam Greenhall)
+8ebd8eb077	add test for Generator.gethrsinstatus (Adam Greenhall)
+ce69c753bd	cleanup and test Generator.set_initial_conditions (Adam Greenhall)
+b19049e3cf	add test for shutdown ramp limit (Adam Greenhall)
+5a52b6a133	test for parse_polynomial (Adam Greenhall)
+45f9175f3a	fix infeasible deterministic resolve. fix commonscripts.quiet function for ipython notebook import. move correct_status to commonscripts (Adam Greenhall)
+
+
 Version 4.3.6, Wed 06 Mar 2013
 ===============================
 

@@ -674,7 +674,7 @@ class PowerSystem(OptimizationProblem):
 
             if self.is_stochastic:
                 gen = self.get_generator_with_scenarios()
-                scenarios = gen.scenario_values[times.Start].drop('probability', axis=1).T
+                scenarios = gen.scenario_values[times.Start.date()].drop('probability', axis=1).T
                 scenarios.index = scheduled.index
                 
                 scheduled['net_load'] = scheduled['load'] - sum(

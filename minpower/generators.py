@@ -594,11 +594,11 @@ class Generator_Stochastic(Generator_nonControllable):
         # with axes: day, scenario, {prob, [hours]}
         # the panel has items which are dates 
         return self.scenario_values[times.Start.date()][
-            range(len(times))].ix[s].values.tolist()
+            range(len(times))].ix[s].dropna().values.tolist()
     
     def _get_scenario_probabilities(self, times):
         return self.scenario_values[
-            times.Start.date()].probability
+            times.Start.date()].dropna().probability
     
     def create_variables(self, times):
         if self.shedding_mode:

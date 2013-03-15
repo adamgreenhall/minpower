@@ -11,7 +11,7 @@ def construct_simple_scenario_tree(power_system, times, time_stage=None):
     '''Construct a simple scenario tree instance'''
 
     gen = power_system.get_generator_with_scenarios()    
-    probabilities = gen.scenario_values[times.Start].probability.dropna().values.tolist()
+    probabilities = gen._get_scenario_probabilities(times).values.tolist()
 
     tree = new_scenario_tree_model()
 

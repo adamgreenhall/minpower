@@ -646,8 +646,7 @@ class Solution_Stochastic(Solution):
         try:  # single stage setup
             self.probability = gen.scenario_values.probability.dropna()
         except AttributeError:  # staged setup
-            self.probability = gen.scenario_values[
-                self.stage_start].probability.dropna()
+            self.probability = gen._get_scenario_probabilities(times)
 
         self.probability.index = self.scenarios
 

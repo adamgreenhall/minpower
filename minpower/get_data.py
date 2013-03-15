@@ -501,9 +501,9 @@ def setup_scenarios(gen_data, generators, times):
     alldata = OrderedDict()
     for i, f in enumerate(filenames):
         data = _parse_scenario_day(f)
-        # label scenarios for day with the first timestamp
-        day = Timestamp(data.columns.drop('probability')[0])
-        alldata[day] = data
+        # label scenarios for the day with the date
+        date = Timestamp(data.columns.drop('probability')[0]).date()
+        alldata[date] = data
 
     # TODO - assumes one hour intervals!!
     hrs = user_config.hours_commitment + user_config.hours_overlap

@@ -55,7 +55,8 @@ def main():
     
     # subprocess style
     minpower_args['standalone'] = True
-    minpower_args['pid'] = os.getpid()
+    minpower_args['pid'] = minpower_args['pid'] \
+        if minpower_args['pid'] else os.getpid()
 
     if args.scheduler_mode == 'qsub':
         # qsub makes all of its script calls from the home directory

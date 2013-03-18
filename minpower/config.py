@@ -48,6 +48,7 @@ option_types = dict(
 
     standalone=bool,
     pid=str,
+    standalone_restart=bool,
 
     wind_forecast_adder=float,
     wind_multiplier=float,
@@ -251,17 +252,16 @@ def setup_parser_args(parser):
         help='use pdb when an error is raised')
     add_opt(debugging, 'problem_file',
         help='flag to write the problem formulation to a problem.lp file')        
-    add_opt(parser, 'logging_level', 
+    add_opt(debugging, 'logging_level', 
         help='set the level of detail for logging')
+    add_opt(debugging, 'standalone_restart', 
+        help='restart a multi-stage standalone problem from where it failed')
     debugging.add_argument('--profile', action="store_true", default=False,
         help='run cProfile and output to minpower.profile')
     debugging.add_argument('--show_config', action='store_true', default=False,
         help='just show the configuration and quit')
     debugging.add_argument('--keep_lp_files', action='store_true', default=False,
         help='keep a record of all of the solver lp files')
-    debugging.add_argument('--standalone_restart', 
-        action='store_true', default=False, 
-        help='restart a multi-stage standalone problem from where it failed')
 
 
     ts = parser.add_argument_group('Timeseries modifiers',

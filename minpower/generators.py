@@ -597,8 +597,9 @@ class Generator_Stochastic(Generator_nonControllable):
             range(len(times))].ix[s].dropna().values.tolist()
     
     def _get_scenario_probabilities(self, times):
+        # if any of the scenario values are defined, we want them
         return self.scenario_values[
-            times.Start.date()].dropna().probability
+            times.Start.date()].dropna(how='all').probability
     
     def create_variables(self, times):
         if self.shedding_mode:

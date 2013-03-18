@@ -12,7 +12,7 @@ import argparse
 import pdb
 
 from config import user_config, parse_command_line_config
-from commonscripts import joindir, StreamToLogger
+from commonscripts import joindir, StreamToLogger, set_trace
 import powersystems, get_data, stochastic, results
 from standalone import store_times, init_store, get_storage, repack_storage
 
@@ -28,18 +28,27 @@ def solve_multistage_standalone(power_system, times, scenario_tree, data):
     stage_times = times.subdivide(
         user_config.hours_commitment, user_config.hours_overlap)
 
-    storage = init_store(power_system, stage_times, data)
     pid = user_config.pid if user_config.pid else os.getpid()
     has_pid = user_config.output_prefix or user_config.pid
+
+    if user_config.standalone_restart:
+        # get the last stage in storage
+        storage = get_storage()
+        stg_start = len(storage['solve_time'].dropna())        
+        stage_times_remaining = stage_times[stg_start:]
+    else:
+        storage = init_store(power_system, stage_times, data)
+        stage_times_remaining = stage_times
+        stg_start = 0
     
-    for stg,t_stage in enumerate(stage_times):
+    for stg, t_stage in enumerate(stage_times_remaining):
         logging.info('Stage starting at {}'.format(t_stage.Start.date()))
         # store current stage times
         storage = store_times(t_stage, storage)
         storage.close()
         storage = None
         command = 'standalone_minpower {dir} {stg} {pid} {db}'.format(
-                dir=user_config.directory, stg=stg,
+                dir=user_config.directory, stg=stg + stg_start,
                 pid='--pid {}'.format(pid) if has_pid else '',
                 db='--debugger' if user_config.debugger else '')
         try: subprocess.check_call(command, shell=True, stdout=sys.stdout)
@@ -111,6 +120,12 @@ def solve_problem(datadir='.',
     _set_store_filename(pid)
     _setup_logging(pid)
 
+    if user_config.standalone_restart:
+        store = get_storage()
+        debugger = user_config.debugger  # preserve debugger state
+        user_config.update(store['configuration'])
+        user_config.debugger = debugger
+        store.close()
 
     logging.debug(dict(user_config))
     

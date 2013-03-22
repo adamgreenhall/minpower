@@ -4,6 +4,7 @@ Stochastic scenario models for schedules.
 from coopr.pyomo import AbstractModel, Set, Param, Boolean, Var
 from coopr.pysp.scenariotree import ScenarioTree
 from coopr.pysp.ef import create_ef_instance
+from config import user_config
 import gc
 import logging
 
@@ -123,15 +124,19 @@ def create_problem_with_scenarios(power_system, times):
 
     gc.enable()
     scenario_tree.defineVariableIndexSets(power_system._model)
-    full_problem_instance = create_ef_instance(
-        scenario_tree, scenario_instances)
-#        generate_weighted_cvar = generate_weighted_cvar,
-#        cvar_weight = cvar_weight,
-#        risk_alpha = risk_alpha,
-#        cc_indicator_var_name = cc_indicator_var_name,
-#        cc_alpha = cc_alpha)
         
-    # could generate cvar here
+    cvar_params = {}
+    if user_config.cvar_weight > 0:
+        cvar_params = dict(
+            generate_weighted_cvar = True,
+            cvar_weight = user_config.cvar_weight,
+            risk_alpha = user_config.cvar_confidence_level,
+            )
+    
+    full_problem_instance = create_ef_instance(
+        scenario_tree, scenario_instances, **cvar_params)
+
+
     # full_problem_instance.pprint()
 
     # relax the non-anticipatory constraints on the generator status variables

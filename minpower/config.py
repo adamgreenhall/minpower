@@ -45,7 +45,10 @@ option_types = dict(
     deterministic_solve=bool,
     perfect_solve=bool,
     scenarios_directory=str,
-
+    cvar_weight=float,
+    cvar_confidence_level=float,
+        
+    
     standalone=bool,
     pid=str,
     standalone_restart=bool,
@@ -238,7 +241,12 @@ def setup_parser_args(parser):
         help='solve a stochastic problem with perfect information')
     add_opt(stochastic_mode, 'scenarios_directory', 
         help='override scenarios directory for stochastic problem')
-        
+    
+    add_opt(stochastic, 'cvar_weight',
+        help='weighting term for CVaR. The default 0 -- this corresponds to an expected value objective function')
+    add_opt(stochastic, 'cvar_confidence_level',
+        help='confidence level term for a CVaR objective formulation')
+    
 
     add_opt(parser, 'standalone', '-m', 
         help='Make each multi-day commitment its own subprocess (helps with memory issues).')

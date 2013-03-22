@@ -4,8 +4,11 @@ logging.basicConfig(level=logging.ERROR)
 import nose
 import numpy as np
 import pandas as pd
+from minpower.commonscripts import set_trace, debug_frame_unequal
 from minpower.tests.test_utils import istest
-from minpower.tests.test_integration import run_case, assert_series_equal
+from minpower.tests.test_integration import (run_case, 
+    assert_series_equal, assert_frame_equal)
+
 
 mipgap = 0.0001
 
@@ -127,3 +130,27 @@ def stochastic_gen_shedding():
     assert_series_equal(
         pd.Series(dict(s0=False, s1=True)), 
         (wind_shed > 0).all())
+        
+@istest
+def cvar_objective():
+    '''
+    Set up an either-or two gen case: g1 cheap, g2 expensive,
+    with two wind senarios: 
+        s0 - high prob., use cheap gen
+        s1 - very low prob. (below conf. limit), expensive gen needed
+    
+    CVaR should heavily weight the unlikely but more expensive scenario.
+    EV must consider it, but weights it less.
+    The result should be a more expensive CVaR objective.
+    '''
+    slnEV = run_case('stochastic_cvar_case')
+    slnCV = run_case('stochastic_cvar_case', 
+        cvar_weight=1.0, # very risk averse
+        cvar_confidence_level=0.9999)  # very long tail
+    
+    
+    assert(slnCV.objective > slnEV.objective)
+#    try: 
+    assert_frame_equal(slnCV.expected_totalcost, slnEV.expected_totalcost)
+#    except:
+#        debug_frame_unequal(slnCV.expected_totalcost, slnEV.expected_totalcost)

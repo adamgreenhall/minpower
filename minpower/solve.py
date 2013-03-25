@@ -34,7 +34,8 @@ def solve_multistage_standalone(power_system, times, scenario_tree, data):
     if user_config.standalone_restart:
         # get the last stage in storage
         storage = get_storage()
-        stg_start = len(storage['solve_time'].dropna())        
+        stg_start = len(storage['solve_time'].dropna())
+        logging.info('Restarting on stage {}'.format(stg_start))
         stage_times_remaining = stage_times[stg_start:]
     else:
         storage = init_store(power_system, stage_times, data)
@@ -125,6 +126,7 @@ def solve_problem(datadir='.',
         debugger = user_config.debugger  # preserve debugger state
         user_config.update(store['configuration'])
         user_config.debugger = debugger
+        user_config.standalone_restart = True  # preserve restart state
         store.close()
 
     logging.debug(dict(user_config))

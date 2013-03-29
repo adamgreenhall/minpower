@@ -270,10 +270,6 @@ def setup_parser_args(parser):
         help='just show the configuration and quit')
     debugging.add_argument('--keep_lp_files', action='store_true', default=False,
         help='keep a record of all of the solver lp files')
-    debugging.add_argument('--standalone_restart', 
-        action='store_true', default=False, 
-        help='restart a multi-stage standalone problem from where it failed')
-
 
     ts = parser.add_argument_group('Timeseries modifiers',
         'Alter the timeseries after parsing the data.')

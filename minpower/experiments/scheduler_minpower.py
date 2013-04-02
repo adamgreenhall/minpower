@@ -120,16 +120,33 @@ def main():
                 '-M {e}'.format(e=args.email)
                 ])
 
-        # there should be a better way than having to call a script on disk
-        script_name = './{}.sh'.format(os.getpid())
+        # need to write a script to disk to call with qsub
+        if minpower_args['standalone_restart']:
+            # write to the same script, but comment out the original call
+            script_name = './{}.sh'.format(minpower_args['pid'])
+            if args.dry_run:
+                print('would have commented out the original call in {}'.format(script_name))
+            else:
+                with open(script_name, 'r') as f:
+                    old_script = '\n'.join(
+                        ['# original call'] + \
+                        ['#' + ln for ln in f.readlines()] + \
+                        ['', ''])
+                with open(script_name, 'w') as f:
+                    f.write(old_script)
+            script_mode = 'a'
+        else:
+            script_name = './{}.sh'.format(os.getpid())
+            script_mode = 'w+'
         if args.dry_run:
             print('would have written script {f}: \n{c}'.format(
                 f=script_name,
                 c=' '.join(minpower_call)))
         else:
-            with open(script_name, 'w+') as f:
+            with open(script_name, script_mode) as f:
                 f.write(' '.join(minpower_call))
         minpower_call = [script_name]
+
 
     # actually make the call
     if args.dry_run:

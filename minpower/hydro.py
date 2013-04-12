@@ -1,17 +1,13 @@
-import pandas as pd
-import logging
-from config import user_config
 from commonscripts import update_attributes, bool_to_int, set_trace
 from generators import Generator
-from optimization import value
-from schedule import is_init
 import bidding
 
 
 class HydroGenerator(Generator):
     """
     A hydro plant model, including the upstream reservoir.
-    Has constraints and variables which are significantly different from conventional generators.
+    Has constraints and variables which are significantly
+    different from conventional generators.
     """
     def __init__(self,
                  name, bus=None, index=None,
@@ -38,10 +34,11 @@ class HydroGenerator(Generator):
         self.is_controllable = True
         self.is_stochastic = False
         if self.outflow_initial is None:
-            self.outflow_initial = (self.outflow_max - self.outflow_min) / 2.0
-        
+            self.outflow_initial = \
+                (self.outflow_max - self.outflow_min) / 2.0
+
         self.build_cost_model()
-        
+
     def build_cost_model(self):
 
         self.coefs_production = bidding.parse_polynomial(
@@ -53,23 +50,26 @@ class HydroGenerator(Generator):
             polynomial=self.coefs_production,
             min_input=self.outflow_min,
             max_input=self.outflow_max
-            )
-        
+        )
+        self.params_correction = self.params_production.copy()
+        self.params_correction.update(
+            {'polynomial': self.coefs_correction})
 
-        self.params_correction = self.params_production.copy(
-            ).update({'polynomial': self.coefs_correction})
-        
     def outflow(self, time=None, scenario=None):
-        return self.get_variable('outflow', time, scenario=scenario, indexed=True)
+        return self.get_variable('outflow', time,
+            scenario=scenario, indexed=True)
 
     def spill(self, time=None, scenario=None):
-        return self.get_variable('spill', time, scenario=scenario, indexed=True)
+        return self.get_variable('spill', time,
+            scenario=scenario, indexed=True)
 
     def volume(self, time=None, scenario=None):
-        return self.get_variable('volume', time, scenario=scenario, indexed=True)
+        return self.get_variable('volume', time,
+            scenario=scenario, indexed=True)
 
     def outflow_total(self, time=None, scenario=None):
-        return self.outflow(time, scenario) + self.spill(time, scenario)
+        return self.outflow(time, scenario)\
+               + self.spill(time, scenario)
 
     def volume_change(self, t, times):
         '''change in volume between t and t-1'''
@@ -97,7 +97,8 @@ class HydroGenerator(Generator):
         return self.get_child('production_corrections', time)
 
     def head_correction(self, time):
-        return self.head_correction_constant * self.outflow(time) * self.volume(time)
+        return self.head_correction_constant * self.outflow(time) \
+            * self.volume(time)
 
     def cost(self, *a, **k):
         return 0
@@ -131,15 +132,15 @@ class HydroGenerator(Generator):
 
     def create_variables(self, times):
         self.add_variable('power', index=times.set,
-                          low=self.power_min, high=self.power_max)
+            low=self.power_min, high=self.power_max)
         self.add_variable('outflow', index=times.set,
-                          low=self.outflow_min, high=self.outflow_max)
+            low=self.outflow_min, high=self.outflow_max)
         self.add_variable('spill', index=times.set,
-                          low=self.spill_min, high=self.spill_max)
+            low=self.spill_min, high=self.spill_max)
         self.add_variable('volume', index=times.set,
-                          low=self.volume_min, high=self.volume_max)
-
-        self.production_model = bidding.Bid(times, **self.params_production)
+            low=self.volume_min, high=self.volume_max)
+        self.production_model = bidding.Bid(
+            **self.params_production)
         self.production_correction_model = \
             bidding.Bid(times, **self.params_correction)
 
@@ -148,27 +149,33 @@ class HydroGenerator(Generator):
         self.add_constraint('volume final', times[-1], self.volume(
             times[-1]) >= self.volume_final)
 
-        other_hydro_generators = filter(lambda gen: gen.is_hydro, generators)
+        other_hydro_generators = filter(
+            lambda gen: gen.is_hydro, generators)
 
         def upstream_unit_outflow(h, t):
-            upstream_gen = getclass_inlist(other_hydro_generators, h, 'index')
+            upstream_gen = getclass_inlist(
+                other_hydro_generators, h, 'index')
             outflow_time = times[t].Start - hours(
                 upstream_gen.delay_downstream)
             if outflow_time < times.Start:
                 return upstream_gen.outflow_initial + upstream_gen.spill_initial
             else:
-                outflow_time = times.get_time_by_start(outflow_time)
+                outflow_time = times.get_time_by_start(
+                    outflow_time)
                 return upstream_gen.outflow_total(outflow_time)
         for t, time in enumerate(times):
             # network balance
             upstream_inflow = sum(
                 upstream_unit_outflow(r, t) for r in self.upstream_reservoirs)
             natural_inflow = self.inflow_schedule.get_amount(time)
-            self.add_constraint('water balance', time, self.volume_change(t, times) == upstream_inflow + natural_inflow - self.outflow_total(time))
+            self.add_constraint('water balance', time,
+                self.volume_change(t, times) == upstream_inflow +\
+                natural_inflow - self.outflow_total(time))
 
             # production
             self.add_constraint(
-                'production', time, self.power(time) == self.production(time))
+                'production', time,
+                self.power(time) == self.production(time))
             # self.production_curve(time).create_constraints()
             # self.production_correction(time).create_constraints()
 

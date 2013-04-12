@@ -55,26 +55,28 @@ fields = dict(
 
     Load = ['name', 'bus', 'power'],
 
-    HydroGenerator = [
-        'name',
-        'bus',
-        'downstream_reservoir',
-        'delay_downstream',
-        'volume_min',
-        'volume_max',
-        'volume_initial',
-        'volume_final',
-        'outflow_min',
-        'outflow_max',
-        'outflow_initial',
-        'power_min',
-        'power_max',
-        'power_initial',
-        'spill_initial',
-        'production_curve_equation',
-        'production_curve_correction_equation',
-        'head_correction_constant',
-    ],
+    HydroGenerator = ['name', 'bus'],
+)
+
+field_rename = dict(
+    HydroGenerator = {
+    'downstreamreservoir': 'downstream_reservoir',
+    'delaydownstream':'delay_downstream',
+    'volumemin':'volume_min',
+    'volumemax':'volume_max',
+    'volumeinitial':'volume_initial',
+    'volumefinal':'volume_final',
+    'outflowmin':'outflow_min',
+    'outflowmax':'outflow_max',
+    'outflowinitial':'outflow_initial',
+    'powermin':'power_min',
+    'powermax':'power_max',
+    'powerinitial':'power_initial',
+    'spillinitial':'spill_initial',
+    'productioncurve':'production_curve_equation',
+    'productioncurvecorrection':'production_curve_correction_equation',
+    'headcorrectionconstant':'head_correction_constant',
+    }
 )
 
 # extra fields for generator scheduling and bid specification
@@ -162,9 +164,6 @@ def _load_raw_data():
     except Exception:
         hydro_data = DataFrame()
 
-    #create times
-    timeseries, times, generators_data, loads_data = \
-        setup_times(generators_data, loads_data, file_timeseries)
     return generators_data, loads_data, lines_data, init_data, hydro_data
 
 
@@ -173,7 +172,6 @@ def _parse_raw_data(generators_data, loads_data,
     # create times
     timeseries, times, generators_data, loads_data = setup_times(
         generators_data, loads_data)
-
     # add loads
     loads = build_class_list(
         loads_data, powersystems.Load, times, timeseries)
@@ -237,7 +235,7 @@ def parsedir(**filename_kwargs):
     Import data from spreadsheets and build lists of
     :mod:`powersystems` classes.
     """
-    return _parse_raw_data(**_load_raw_data(**filename_kwargs))
+    return _parse_raw_data(*_load_raw_data(**filename_kwargs))
 
 
 def setup_initialcond(data, generators, times):
@@ -474,6 +472,7 @@ def setup_times(generators_data, loads_data):
     timeseries = DataFrame(timeseries)
 
     hs_file = joindir(user_config.directory, 'hydro_schedule.csv')
+
     if os.path.exists(hs_file):
         hydro_ts = read_csv(hs_file, index_col=0, parse_dates=True)
         timeseries = timeseries.join(hydro_ts)
@@ -500,7 +499,6 @@ def setup_times(generators_data, loads_data):
         timeseries[obs_name] *= wind_mult
         if fcst_name:
             timeseries[fcst_name] *= wind_mult
-
     return timeseries, times, generators_data, loads_data
 
 
@@ -592,19 +590,17 @@ def _has_valid_attr(obj, name):
 def setup_hydro(data, ts):
     hydro_generators = []
     if len(data) == 0: return hydro_generators
-    inflow_name = data.pop('inflowschedulename')
 
+    inflow_name = data.pop('inflowschedulename')
     data = data.rename(columns=field_rename['HydroGenerator'])
 
     for i, row in data.iterrows():
-        row = row.dropna()
-        hg = HydroGenerator(index=i, **row)
+        hg = HydroGenerator(index=i, **row.dropna())
         hg.inflow_schedule = ts[inflow_name.ix[i]]
         hydro_generators.append(hg)
 
     #label upstream reservoir generator indexes
     names = [gen.name for gen in hydro_generators]
-    set_trace()
     for gen in hydro_generators:
         down_name = gen.downstream_reservoir
         if down_name is not None:

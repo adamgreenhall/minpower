@@ -122,7 +122,8 @@ class OptimizationObject(object):
                 var = pyomo.Var(name=name, **map_args(**kwargs))
                 self._parent_problem().add_component_to_problem(var)
             else:
-                var = pyomo.Param(name=name, default=fixed_value)
+                var = pyomo.Param(name=name,
+                    default=fixed_value, mutable=True)
                 # add var
                 self._parent_problem().add_component_to_problem(var)
                 # and set value
@@ -135,7 +136,8 @@ class OptimizationObject(object):
                 var = pyomo.Var(index, name=name, **map_args(**kwargs))
                 self._parent_problem().add_component_to_problem(var)
             else:
-                var = pyomo.Param(index, name=name, default=fixed_value)
+                var = pyomo.Param(index, name=name,
+                    default=fixed_value, mutable=True)
                 self._parent_problem().add_component_to_problem(var)
                 var = self._parent_problem().get_component(name)
                 for i in index:
@@ -163,15 +165,15 @@ class OptimizationObject(object):
         cname = self._id(name)
         self._parent_problem().add_component_to_problem(
             pyomo.Constraint(index, name=cname, rule=expression))
-    
+
     def get_dual(self, cname, time=None):
-        '''get the dual of a constraint of an LP problem''' 
+        '''get the dual of a constraint of an LP problem'''
         if user_config.duals:
             return self._parent_problem()._model.dual.getValue(
                 self.get_constraint(cname, time))
         else:
             return None
-    
+
     def get_variable(self, name, time=None, indexed=False, scenario=None):
         if indexed:
             var_name = self._id(name)
@@ -312,7 +314,7 @@ class OptimizationProblem(OptimizationObject):
                                    pyomo.Constraint(name=name, rule=expression))
 
     def add_suffix(self, name):
-        self._model.add_component(name, 
+        self._model.add_component(name,
             pyomo.Suffix(direction=pyomo.Suffix.IMPORT))
 
 
@@ -343,10 +345,10 @@ class OptimizationProblem(OptimizationObject):
         key = self._t_id(name, time) if time is not None else name
         delattr(self._model, key)
 
-    
+
     def reset_objective(self):
         delattr(self._model, 'objective')
-    
+
     def reset_model(self):
         instances = [self._model]
         if self.stochastic_formulation:
@@ -496,14 +498,14 @@ class OptimizationProblem(OptimizationObject):
         return 'system'
 
     def _solve_instance(self, instance,
-        solver=user_config.solver, 
+        solver=user_config.solver,
         get_duals=False,
         keepfiles=False,
         ):
-        
-        if user_config.keep_lp_files: 
+
+        if user_config.keep_lp_files:
             keepfiles = True
-        
+
         suffixes = ['dual'] if get_duals else []
 
         if not hasattr(self, '_opt_solver'):
@@ -519,13 +521,13 @@ class OptimizationProblem(OptimizationObject):
 
             self._opt_solver = cooprsolver.SolverFactory(solver, **kwds)
             self._opt_solver.options.mipgap = user_config.mipgap
-            
+
 
             if self._opt_solver is None:
                 msg = 'solver "{}" not found by coopr'.format(solver)
                 raise OptimizationError(msg)
 
-        if user_config.solver_time_limit: 
+        if user_config.solver_time_limit:
             self._opt_solver.options.timelimit = user_config.solver_time_limit
 
 
@@ -533,13 +535,13 @@ class OptimizationProblem(OptimizationObject):
         show_solver_output = user_config.logging_level <= 10
 
         start = time.time()
-         
+
         quiet_fn = not_quiet if keepfiles or show_solver_output else quiet
-        
+
         with quiet_fn():
-            results = self._opt_solver.solve(instance, 
-                suffixes=suffixes, 
-                keepfiles=keepfiles, 
+            results = self._opt_solver.solve(instance,
+                suffixes=suffixes,
+                keepfiles=keepfiles,
                 tee=show_solver_output,
                 )
         try:

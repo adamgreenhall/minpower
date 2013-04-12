@@ -1,5 +1,23 @@
 ----
 
+Version 4.3.10, Fri 12 Apr 2013
+================================
+
+fb4d26ebe7	update gitignore (Adam Greenhall)
+33f6985307	standalone restart maintains the same pid (Adam Greenhall)
+00f709106c	fix: remove duplicate standalone_restart argument from config (Adam Greenhall)
+20039e0d67	fix: restart standalone needs to get state preserved after updating from original config (Adam Greenhall)
+2d2fcf5015	add CVaR as an option for stochastic UC. add test case (need to get it passing). (Adam Greenhall)
+90e12991f2	gitmerge (Adam Greenhall)
+9a468bd293	fix: scenario probabilities should be taken on last (no overlap) day (Adam Greenhall)
+360bb68067	fix: pid can be specified for scheduler (allows standalone_restart to work) (Adam Greenhall)
+e08692333d	fix: make standalone_restart interact with the scheduler correctly (Adam Greenhall)
+da0157aee7	standalone_restart -- add ability to restart standalone problems (Adam Greenhall)
+674ead17b7	standalone_restart -- add ability to restart standalone problems (Adam Greenhall)
+86e1dadeed	fix: only use scenarios that exist (ignore the nan scenarios in the panel) (Adam Greenhall)
+b4e54d4f80	fix: scenario values have items keyed by date - fix for timezone problems (Adam Greenhall)
+
+
 Version 4.3.9, Thu 14 Mar 2013
 ===============================
 

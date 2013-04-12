@@ -1,0 +1,4 @@
+name,pmin,pmax,cost_curve_equation,forecast_filename,observed_filename,scenarios_directory
+wind,,,0,wind_forecast.csv,wind_observed.csv,scenarios
+cheap,800,900,20P,,,
+expensive,700,5000,50P + 0.2P^2,,,

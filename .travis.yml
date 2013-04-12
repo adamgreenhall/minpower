@@ -1,6 +1,7 @@
 language: python
 python:
   - 2.7
+
 env:
     global: 
         - # need at least this so travis page will show env column
@@ -8,7 +9,6 @@ matrix:
     include:
         - python: 2.7
           env: FULL_DEPS=true
-
 before_install: 
     - sudo apt-get update
 install: 

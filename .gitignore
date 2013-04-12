@@ -1,4 +1,3 @@
-minpower/configuration/minpower.cfg
 error.txt
 out.txt
 results.txt
@@ -8,6 +7,7 @@ results.txt
 *.jpg
 *.profile
 .*
+coverage.txt
 *.css
 MANIFEST
 doc/publish.py

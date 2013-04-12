@@ -1,0 +1,5 @@
+name,pmin,pmax,costcurveequation,forecast filename,observed filename
+wind,,,,wind_forecast.csv,wind_observed.csv
+base,0,100,20P,,
+mid small,20,50,3000+30P,,
+high big,20,200,6000+50P,,

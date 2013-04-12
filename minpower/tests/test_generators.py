@@ -4,10 +4,12 @@ import logging
 logging.basicConfig( level=logging.CRITICAL, format='%(levelname)s: %(message)s')
 
 import pandas as pd
+import numpy as np
+
+from pandas.util.testing import assert_series_equal
 from minpower.generators import Generator_nonControllable, Generator_Stochastic
 from minpower.optimization import value
-from minpower import results
-
+from minpower.schedule import TimeIndex
 from test_utils import *
 
 
@@ -304,3 +306,229 @@ def wind_shedding():
     assert generators[0].power(times[2]) == 80
     assert generators[0].power(times[3]) == 60
     assert sum(generators[1].power(t).value for t in times) == 25 + 10 + 20
+    
+    
+@istest
+def pmin_startup_limit():
+    '''
+    generators that have a pmin > rampratemax should be able to startup to pmin
+    '''
+    pmin = 185
+    generators=[
+        make_cheap_gen(pmin=0, pmax=100),
+        make_mid_gen(pmin=pmin, pmax=200, rampratemax=10),
+        make_expensive_gen(pmin=0, pmax=200)
+        ]
+    initial = [{'power': 100}, {'status': 0}, {'power': 85}]
+    lts = make_loads_times(Pdt=[185, 210, 250, 285, 290])
+
+    power_system, times = solve_problem(generators, gen_init=initial, **lts)
+    
+    power = generators[1].values('power')
+    status = generators[1].values('status')
+    assert((power[status==1] >= pmin).all())
+    assert(generators[1].values('status')[times[4]] == 1)
+    
+
+@istest
+def pmin_shutdown_limit():
+    '''
+    generators that have a pmin > -1 * rampratemin should be able to shutdown
+    '''
+    pmin = 185
+    generators=[
+        make_cheap_gen(pmin=0, pmax=200),
+        make_mid_gen(pmin=pmin, pmax=200, rampratemin=-10),
+        ]
+    initial = [{'power': 100}, {'power': 200}]
+    lts = make_loads_times(Pdt=[300, 250, 180])
+
+    power_system, times = solve_problem(generators, gen_init=initial, **lts)
+    
+    status = generators[1].values('status')
+    assert(status[times[2]] == 0)
+
+        
+@istest
+def startupcost_can_shutdown():
+    '''
+    Generators with a startup cost must be able to shut down.
+    '''
+    pmax = 100
+    startupcost = 100
+    generators = [
+        make_cheap_gen(pmax=pmax),
+        make_expensive_gen(startupcost=startupcost, pmin=20)
+        ]
+    initial = [{'power': 90}, {'status': 0}]
+    Pdt = [90, 120, 90]
+    power_system, times = solve_problem(
+        generators, gen_init=initial, **make_loads_times(Pdt=Pdt))
+
+    # the expensive unit turns on and back off
+    assert_series_equal(pd.Series([0.0, 1.0, 0.0], index=times.strings),
+        generators[1].values('status'))
+        
+    assert_series_equal(pd.Series([0.0, startupcost, 0.0], index=times.strings),
+        generators[1].values('startupcost'))
+
+
+@istest
+def setting_initial_conditions():
+    '''
+    make sure that power and status get properly set (even if numpy values)
+    '''
+    gen = make_cheap_gen()
+    
+    # numpy values should be converted to floats
+    gen.set_initial_condition(power=np.float64(5.0), status=1)
+    assert(gen.initial_power == 5.0)
+    assert(type(gen.initial_power) == float)
+    
+    # status must get conveted to int
+    gen.set_initial_condition(status=True)
+    assert(gen.initial_status == 1)
+    assert(type(gen.initial_status) == int)
+
+
+    # if status = 0, power must be zero
+    gen.set_initial_condition(power=5.0, status=0)
+    assert(gen.initial_power == 0)
+    
+    
+@istest
+def final_conditions():
+    '''make sure that Generator.gethrsinstatus calculates correctly'''
+    gen = make_cheap_gen()
+    gen.set_initial_condition(status=1, hoursinstatus=10)
+    
+    times = TimeIndex(pd.date_range(
+        '2010-01-01 00:00:00', '2010-01-01 5:00:00', freq='H'))
+    
+    # status varies
+    status = pd.Series([1, 0, 1, 0, 0, 0], index=times)
+    assert(gen.gethrsinstatus(times, status) == 3)
+
+    # status varies, equal to initial status
+    status = pd.Series([0, 0, 0, 1, 1, 1], index=times)
+    assert(gen.gethrsinstatus(times, status) == 3)
+
+    # status is all the same and equal to the initial status
+    status = pd.Series(1, index=times)
+    assert(gen.gethrsinstatus(times, status) == 16)
+    
+    # status is all the same and not equal to the initial status
+    status = pd.Series(0, index=times)
+    assert(gen.gethrsinstatus(times, status) == 6)
+
+
+@istest
+def initial_min_up_time():
+    '''ensure the generator meets its minuptime limit at t0'''
+    pmax = 100
+    generators = [
+        make_cheap_gen(pmax=pmax),
+        make_expensive_gen(minuptime=2, pmin=10)
+        ]
+    initial = [
+        {'power': 90}, 
+        {'power': 10, 'hoursinstatus': 1},        
+        ]
+    Pdt = [90, 90]
+    power_system, times = solve_problem(
+        generators, gen_init=initial, **make_loads_times(Pdt=Pdt))
+
+    # the expensive unit can't turn off in the first hour
+    # but it can turn off in the second hour
+    assert_series_equal(pd.Series([1, 0], index=times.strings),
+        generators[1].values('status').astype(int))
+        
+
+@istest
+def initial_min_down_time():
+    '''ensure the generator meets its mindowntime limit at t0'''
+    pmax = 100
+    generators = [
+        make_cheap_gen(pmax=pmax),
+        make_mid_gen(mindowntime=2),
+        make_expensive_gen(pmin=1)
+        ]
+    initial = [
+        {'power': 90}, 
+        {'status': 0, 'hoursinstatus': 1},
+        {'power': 10},
+        ]
+    Pdt = [110, 120]
+    power_system, times = solve_problem(
+        generators, gen_init=initial, **make_loads_times(Pdt=Pdt))
+
+    # the expensive unit can't turn on in the first hour
+    # but it can turn on in the second hour
+    assert_series_equal(pd.Series([0, 1], index=times.strings),
+        generators[1].values('status').astype(int))
+        
+    # the first hr difference has to be picked up by the more expensive unit
+    assert_series_equal(pd.Series([1, 0], index=times.strings),
+        generators[2].values('status').astype(int))
+    
+
+@istest
+def final_min_up_time():
+    '''ensure the generator meets its minuptime limit at t_final'''
+    pmax = 100
+    generators = [
+        make_cheap_gen(pmax=pmax),
+        make_expensive_gen(minuptime=6, pmin=10)
+        ]
+    initial = [
+        {'power': 90}, 
+        {'power': 10, 'hoursinstatus': 3},
+        ]
+    Pdt = [90, 90, 90]
+    power_system, times = solve_problem(
+        generators, gen_init=initial, **make_loads_times(Pdt=Pdt))
+
+    # the expensive unit can't turn off
+    assert_series_equal(pd.Series([1, 1, 1], index=times.strings),
+        generators[1].values('status').astype(int))
+
+    # now, set the limit to 5hrs
+    generators[1].minuptime = 5
+    power_system, times = solve_problem(
+        generators, gen_init=initial, **make_loads_times(Pdt=Pdt))
+
+    # and the expensive unit can turn off in the last hour
+    assert_series_equal(pd.Series([1, 1, 0], index=times.strings),
+        generators[1].values('status').astype(int))
+
+
+@istest
+def final_min_down_time():
+    '''ensure the generator meets its minuptime limit at t_final'''
+    pmax = 100
+    generators = [
+        make_cheap_gen(pmax=pmax),
+        make_mid_gen(mindowntime=6),
+        make_expensive_gen(pmin=1)
+        ]
+    initial = [
+        {'power': 90}, 
+        {'status': 0, 'hoursinstatus': 3},
+        {'power': 10},
+        ]
+    Pdt = [110, 110, 110]
+    power_system, times = solve_problem(
+        generators, gen_init=initial, **make_loads_times(Pdt=Pdt))
+
+    # the mid unit can't turn on
+    assert_series_equal(pd.Series([0, 0, 0], index=times.strings),
+        generators[1].values('status').astype(int))
+
+    # now, set the limit to 5hrs
+    generators[1].mindowntime = 5
+    power_system, times = solve_problem(
+        generators, gen_init=initial, **make_loads_times(Pdt=Pdt))
+
+    # and the mid unit can turn on in the last hour
+    assert_series_equal(pd.Series([0, 0, 1], index=times.strings),
+        generators[1].values('status').astype(int))

@@ -1,5 +1,244 @@
 ----
 
+Version 4.3.10, Fri 12 Apr 2013
+================================
+
+fb4d26ebe7	update gitignore (Adam Greenhall)
+33f6985307	standalone restart maintains the same pid (Adam Greenhall)
+00f709106c	fix: remove duplicate standalone_restart argument from config (Adam Greenhall)
+20039e0d67	fix: restart standalone needs to get state preserved after updating from original config (Adam Greenhall)
+2d2fcf5015	add CVaR as an option for stochastic UC. add test case (need to get it passing). (Adam Greenhall)
+90e12991f2	gitmerge (Adam Greenhall)
+9a468bd293	fix: scenario probabilities should be taken on last (no overlap) day (Adam Greenhall)
+360bb68067	fix: pid can be specified for scheduler (allows standalone_restart to work) (Adam Greenhall)
+e08692333d	fix: make standalone_restart interact with the scheduler correctly (Adam Greenhall)
+da0157aee7	standalone_restart -- add ability to restart standalone problems (Adam Greenhall)
+674ead17b7	standalone_restart -- add ability to restart standalone problems (Adam Greenhall)
+86e1dadeed	fix: only use scenarios that exist (ignore the nan scenarios in the panel) (Adam Greenhall)
+b4e54d4f80	fix: scenario values have items keyed by date - fix for timezone problems (Adam Greenhall)
+
+
+Version 4.3.9, Thu 14 Mar 2013
+===============================
+
+
+
+Version 4.3.8, Thu 14 Mar 2013
+===============================
+
+
+
+Version 4.3.7, Thu 14 Mar 2013
+===============================
+
+6d2400ea04	TEST: add tests for min up/down times at t_0 and t_final (Adam Greenhall)
+35b58eb65b	defined wind capacity factor by energy over the entire timeseries (sum rather than max) (Adam Greenhall)
+9ee70e2d9b	results - cleanup pretty plots calls (Adam Greenhall)
+27696da4ce	autogenerate api (Adam Greenhall)
+03c3ee317f	label for no cover (Adam Greenhall)
+8ebd8eb077	add test for Generator.gethrsinstatus (Adam Greenhall)
+ce69c753bd	cleanup and test Generator.set_initial_conditions (Adam Greenhall)
+b19049e3cf	add test for shutdown ramp limit (Adam Greenhall)
+5a52b6a133	test for parse_polynomial (Adam Greenhall)
+45f9175f3a	fix infeasible deterministic resolve. fix commonscripts.quiet function for ipython notebook import. move correct_status to commonscripts (Adam Greenhall)
+
+
+Version 4.3.6, Wed 06 Mar 2013
+===============================
+
+be51e3ad8c	add solver timelimit option (and allow use of incomplete solutions). better debugging (show solver output, don't log to files, set logging level to debug) (Adam Greenhall)
+353c98fdae	clean WW UC example (Adam Greenhall)
+
+
+Version 4.3.5, Mon 04 Mar 2013
+===============================
+
+deed307369	get rid of ipdb in tests (Adam Greenhall)
+5549e18383	log solver output if debugging. try to get pyomo to import quietly (Adam Greenhall)
+
+
+Version 4.3.4, Mon 04 Mar 2013
+===============================
+
+ecd0cf5504	update to coopr 3.3 (Adam Greenhall)
+
+
+Version 4.3.3, Mon 04 Mar 2013
+===============================
+
+d8b0e89112	drop startup cost tightening constraints (Adam Greenhall)
+
+
+Version 4.3.2, Fri 22 Feb 2013
+===============================
+
+b17e3b7d27	fix plotting and add visualizations to testing (Adam Greenhall)
+
+
+Version 4.3.1, Thu 21 Feb 2013
+===============================
+
+9c11413ffe	BUGFIX - round all binary variables before fixing (Adam Greenhall)
+41a20f93e3	BUGFIX - correct tiny status values before setting initial status (Adam Greenhall)
+987dfbe723	added csvs for stochastic wind shedding case (Adam Greenhall)
+faa10a7239	add test for stochastic wind shedding (Adam Greenhall)
+
+
+Version 4.3.0, Wed 20 Feb 2013
+===============================
+
+eb6d17bc37	better standalone inline debugging check (Adam Greenhall)
+4efa001a0d	constraint list formulations of most constraints (Adam Greenhall)
+b68d419993	allow different numbers of scenarios per day. record expected shed for stochastic problems. (Adam Greenhall)
+
+
+Version 4.2.16, Wed 20 Feb 2013
+================================
+
+79f31bb5ba	fix status variable precision on resolve problems. scaffold constraint lists (Adam Greenhall)
+afeec5f9ab	autopep8 (Adam Greenhall)
+
+
+Version 4.2.15, Thu 14 Feb 2013
+================================
+
+d2fa296d4c	enforce max startup cost constraints to get correct results for large problems (Adam Greenhall)
+
+
+Version 4.2.14, Wed 13 Feb 2013
+================================
+
+9e47a64ca3	BUG-FIX: allow shutdowns for generators with startupcosts (Adam Greenhall)
+
+
+Version 4.2.13, Tue 12 Feb 2013
+================================
+
+4ba79a3262	ensure that at least one faststart unit is available before resolving with faststarters (Adam Greenhall)
+8884e65172	use assert_series_equal (Adam Greenhall)
+695f63edf8	only create power_available variable if there is a reserve requirement (Adam Greenhall)
+e7eba65012	add commandline opt to keep lp files (Adam Greenhall)
+8278fb4989	ed_sweep: add committed unit name information (Adam Greenhall)
+
+
+Version 4.2.12, Mon 11 Feb 2013
+================================
+
+22246a7659	BUG: set startup shutdown ramp limit defaults properly. The formulation requires they be set. Added test for this case. (Adam Greenhall)
+a62d2a02aa	fix cost_load_shedding default (can't be in __init__ definition, has to be looked up on creation) (Adam Greenhall)
+
+
+Version 4.2.11, Thu 07 Feb 2013
+================================
+
+4b92b32fb9	much better process based naming of scheduled tasks via --pid option (Adam Greenhall)
+489d87e9e7	fix schedule.post_horizon for end of times (Adam Greenhall)
+07097dc264	cleanup (Adam Greenhall)
+5b1aa10f08	fix logging in standalone. allow debugging of standalone. (Adam Greenhall)
+95fef5c177	get economic_wind_shed working. add test (Adam Greenhall)
+d76ba67434	add economic_wind_shed option. improve stochastic shedding. (Adam Greenhall)
+7e592cc6f6	scheduler: don't change the default (empty) scenario directory (Adam Greenhall)
+a7b952bb16	debugging mode carries down to standalone mode (Adam Greenhall)
+
+
+Version 4.2.10, Mon 04 Feb 2013
+================================
+
+4ac1777837	make scenarios directory absolute path for scheduler (Adam Greenhall)
+eae088cfc7	allow wind shedding for stochastic problems (Adam Greenhall)
+6fb6032f41	cleanup config by adding some custom methods that make setting up options with both ConfigParser and argparse much less repetitive (Adam Greenhall)
+92469e1dea	autopep8 (Adam Greenhall)
+d1700bee63	cleanup stochastic (Adam Greenhall)
+562687656e	store wind_capacity_factor multiplier as wind_multiplier for use in scenario value multiplication (Adam Greenhall)
+e02f947579	remove inline testing (Adam Greenhall)
+db7221594d	cleanup startup ramp limit. cleanup sheddding logging (Adam Greenhall)
+b6a3d5c455	add values method to get values of pyomo components as a Series (Adam Greenhall)
+6f0c0d2e38	add test for startup case when when pmin > rampratemax (Adam Greenhall)
+d2ff79ae65	better columns selection for initial dispatch problem (Adam Greenhall)
+60bfc8c0dd	parse home dir defaults with case directory overrides (Adam Greenhall)
+662ea6ef28	make initial_dispatch take minpower arguments and an output filename argument (Adam Greenhall)
+f0a56bfada	scheduler script can handle the current directory case. allow for debugging of scheduler script (Adam Greenhall)
+
+
+Version 4.2.9, Thu 31 Jan 2013
+===============================
+
+def044c0f7	rewrite minpower scheduler to make more robust and configurable (same defaults, home dir, case dir setup as user_config) (Adam Greenhall)
+
+
+Version 4.2.8, Thu 31 Jan 2013
+===============================
+
+0171ae9485	add filenames options. use one parser and update its defaults (otherwise --help isn't very usefull) (Adam Greenhall)
+022fe984e1	use a minpower.cfg file from the case directory to override defaults (Adam Greenhall)
+efc239a66a	show_config passes all arguments through scheduler (Adam Greenhall)
+3fa35423dc	add show_config option for debugging (Adam Greenhall)
+adec965496	simplify ef_sweep default parameter calc. cleanup initial_dispatch results. (Adam Greenhall)
+e309a427f7	add wind_capacity_factor option (Adam Greenhall)
+3731760deb	make sure polynomial cost coefs and fuelcosts are floats (Adam Greenhall)
+ca686cc1f7	correct and warn if fcst < 0 (Adam Greenhall)
+3ec9685481	setup fail on < 7, not <= (Adam Greenhall)
+d2d9b37182	dont support python 2.6 (Adam Greenhall)
+408f20a0ca	cleanup install requirements (Adam Greenhall)
+a9d228caf9	make OrderedDict accessible to python 2.6 (Adam Greenhall)
+cb69eaa422	autopep8 (Adam Greenhall)
+c7f3f61ead	test python 2.6 (Adam Greenhall)
+
+
+Version 4.2.7, Fri 25 Jan 2013
+===============================
+
+d790ec1218	fix deterministic solve mode (forcast was getting overwritten with observed). add test (Adam Greenhall)
+eae524fe15	add another user config override in the working directory (Adam Greenhall)
+401d200ff7	add initial_dispatch script to find a starting state for unit commitments" (Adam Greenhall)
+ecb3c47866	add wind error multiplier to on-load data modifiers (Adam Greenhall)
+2e62bd73e6	dont scale pmin above pmax (Adam Greenhall)
+694bc238cb	add load adder to the on-load data modifiers (Adam Greenhall)
+
+
+Version 4.2.6, Thu 24 Jan 2013
+===============================
+
+3c4b0022db	Version bump to 4.2.6 and updating CHANGES.txt (Adam Greenhall)
+47102e95f1	add runtime generator constraint modifiers (Adam Greenhall)
+77f6254279	add manifest.in back - was loosing the config file (Adam Greenhall)
+b0c0aeb4f3	check if problem has a version number and record it in standlone storage (Adam Greenhall)
+1e802ec568	ed_sweep tool - allow no display of number of units committed, change default start to min(Pmin) (Adam Greenhall)
+a69b6ea880	add generation shed for stochastic problems (on resolve) (Adam Greenhall)
+27268fd7c8	record generation shed (Adam Greenhall)
+e74e503c0d	cleanup bidpoints handling - keep dataframe as the data structure and use .values.tolist to get (non-numpy) float values (Adam Greenhall)
+c95ca4f5e3	cleanup bidpoints handling - keep dataframe as the data structure and use .values.tolist to get (non-numpy) float values (Adam Greenhall)
+91c605bb8b	add cost of wind shedding option (Adam Greenhall)
+d704110349	add load_multiplier option (Adam Greenhall)
+e4ca786293	added a wind_forecast_adder option (Adam Greenhall)
+dd81dc724a	record fuelcost for multistage standalone solutions. don't write csvs for these solutions. (Adam Greenhall)
+c20f1c1f67	only travis the master branch (Adam Greenhall)
+e1413f697a	make perfect solve do resolves also (Adam Greenhall)
+9e056edba8	record mipgap on resolve seperately from main solution mipgap (Adam Greenhall)
+763b9f2a27	add a on_complete_script option (Adam Greenhall)
+
+
+Version 4.2.6, Thu 24 Jan 2013
+===============================
+
+47102e95f1	add runtime generator constraint modifiers (Adam Greenhall)
+77f6254279	add manifest.in back - was loosing the config file (Adam Greenhall)
+b0c0aeb4f3	check if problem has a version number and record it in standlone storage (Adam Greenhall)
+1e802ec568	ed_sweep tool - allow no display of number of units committed, change default start to min(Pmin) (Adam Greenhall)
+a69b6ea880	add generation shed for stochastic problems (on resolve) (Adam Greenhall)
+27268fd7c8	record generation shed (Adam Greenhall)
+e74e503c0d	cleanup bidpoints handling - keep dataframe as the data structure and use .values.tolist to get (non-numpy) float values (Adam Greenhall)
+c95ca4f5e3	cleanup bidpoints handling - keep dataframe as the data structure and use .values.tolist to get (non-numpy) float values (Adam Greenhall)
+91c605bb8b	add cost of wind shedding option (Adam Greenhall)
+d704110349	add load_multiplier option (Adam Greenhall)
+e4ca786293	added a wind_forecast_adder option (Adam Greenhall)
+dd81dc724a	record fuelcost for multistage standalone solutions. don't write csvs for these solutions. (Adam Greenhall)
+c20f1c1f67	only travis the master branch (Adam Greenhall)
+e1413f697a	make perfect solve do resolves also (Adam Greenhall)
+9e056edba8	record mipgap on resolve seperately from main solution mipgap (Adam Greenhall)
+763b9f2a27	add a on_complete_script option (Adam Greenhall)
+
+
 Version 4.2.5, Thu 17 Jan 2013
 ===============================
 

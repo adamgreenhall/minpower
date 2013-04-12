@@ -4,12 +4,13 @@ the unit tests don't pick up.
 """
 import os
 import pandas as pd
+import nose
 from nose.tools import istest
-from pandas.util.testing import assert_frame_equal
+from pandas.util.testing import assert_frame_equal, assert_series_equal
 
 from minpower.solve import solve_problem as solve_dir
 from minpower.config import user_config
-
+from test_utils import reset_config, with_setup
 
 
 def basic_checks(sln):
@@ -39,9 +40,21 @@ def basic_checks(sln):
         scheduled = scheduled.ix[scheduled.index[:len(shed)]]
         scheduled.index = shed.index
 
-    assert_frame_equal(
-        pd.DataFrame(scheduled - shed),
-        pd.DataFrame(power.sum(axis=1)))
+    assert_series_equal(scheduled - shed, power.sum(axis=1))
+
+#    except:
+#        wind_gen = sln.power_system.get_generator_with_observed()
+#        gen_scheduled = pd.DataFrame(dict(
+#            wind_obs=wind_gen.observed_values,
+#            other_sched=sum(gen.schedule \
+#                for gen in sln.power_system.generators() \
+#                if not gen.is_controllable and gen != wind_gen)
+#            )).ix[:len(shed.index)]  
+#        gen_scheduled.index = shed.index
+#        
+#        print('controllable_requirement')
+#        print(scheduled - gen_scheduled.sum(axis=1))
+#        raise
 
 
 this_directory = os.path.dirname(__file__)
@@ -78,3 +91,40 @@ def run_ed():
 @istest
 def run_opf():
     run_case('opf')
+    
+
+# just test that the visulizations all work
+# if matplotlib is installed
+@istest
+@with_setup(teardown=reset_config)
+def ed_visualization():
+    try:
+        import matplotlib
+    except ImportError:
+        raise nose.SkipTest('visualizations require matplotlib')
+
+    run_case('ed', visualization=True)
+
+
+@istest
+@with_setup(teardown=reset_config)
+def opf_visualization():
+    try:
+        import matplotlib
+    except ImportError:
+        raise nose.SkipTest('visualizations require matplotlib')
+
+    run_case('opf', visualization=True)
+
+
+@istest
+@with_setup(teardown=reset_config)
+def uc_visualization():
+    try:
+        import matplotlib
+    except ImportError:
+        raise nose.SkipTest('visualizations require matplotlib')
+
+    duals = user_config.solver != 'glpk'
+
+    run_case('uc-rolling', visualization=True, duals=duals)

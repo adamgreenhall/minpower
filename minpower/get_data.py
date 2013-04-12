@@ -9,9 +9,10 @@ import pandas as pd
 from pandas import DataFrame, Timestamp, read_csv
 from glob import glob
 from collections import OrderedDict
+
 import powersystems
-from schedule import (just_one_time, get_schedule, 
-    TimeIndex, make_constant_schedule)
+from schedule import (just_one_time, get_schedule,
+                      TimeIndex, make_constant_schedule)
 from commonscripts import (joindir, drop_case_spaces, set_trace)
 
 from powersystems import PowerSystem
@@ -20,79 +21,80 @@ from generators import (Generator,
 from hydro import HydroGenerator
 from config import user_config
 
-import os, logging
+import os
+import logging
 
 fields = dict(
     Line=[
-    'name',
-    'tobus',
-    'frombus',
-    'reactance',
-    'pmax'
+        'name',
+        'tobus',
+        'frombus',
+        'reactance',
+        'pmax'
     ],
 
     Generator=[
-    'name',
-    'kind',
-    'bus',
-    'pmin', 'pmax',
-    'power',  # for a non-controllable gen in an ED
-    'rampratemin', 'rampratemax',
-    'minuptime', 'mindowntime',
-    'startupramplimit', 'shutdownramplimit',
-    #for a bid points defined gen, noloadcost replaces the constant polynomial
-    'noloadcost',
-    'costcurveequation', 'heatrateequation',
-    'fuelcost',
-    'startupcost', 'shutdowncost',
-    'faststart',
-    'mustrun',
-    'sheddingallowed',
+        'name',
+        'kind',
+        'bus',
+        'pmin', 'pmax',
+        'power',  # for a non-controllable gen in an ED
+        'rampratemin', 'rampratemax',
+        'minuptime', 'mindowntime',
+        'startupramplimit', 'shutdownramplimit',
+        # for a bid points defined gen, noloadcost replaces the constant
+        # polynomial
+        'noloadcost',
+        'costcurveequation', 'heatrateequation',
+        'fuelcost',
+        'startupcost', 'shutdowncost',
+        'faststart',
+        'mustrun',
+        'sheddingallowed',
     ],
 
     Load = ['name', 'bus', 'power'],
-    
-    HydroGenerator = ['name', 'bus'],
-)
 
-field_rename = dict(
-    HydroGenerator = {
-    'downstreamreservoir': 'downstream_reservoir',
-    'delaydownstream':'delay_downstream',
-    'volumemin':'volume_min',
-    'volumemax':'volume_max',
-    'volumeinitial':'volume_initial',
-    'volumefinal':'volume_final',
-    'outflowmin':'outflow_min',
-    'outflowmax':'outflow_max',
-    'outflowinitial':'outflow_initial',    
-    'powermin':'power_min',
-    'powermax':'power_max',
-    'powerinitial':'power_initial',
-    'spillinitial':'spill_initial',
-    'productioncurve':'production_curve_equation',
-    'productioncurvecorrection':'production_curve_correction_equation',
-    'headcorrectionconstant':'head_correction_constant',
-    }
-
+    HydroGenerator = [
+        'name',
+        'bus',
+        'downstream_reservoir',
+        'delay_downstream',
+        'volume_min',
+        'volume_max',
+        'volume_initial',
+        'volume_final',
+        'outflow_min',
+        'outflow_max',
+        'outflow_initial',
+        'power_min',
+        'power_max',
+        'power_initial',
+        'spill_initial',
+        'production_curve_equation',
+        'production_curve_correction_equation',
+        'head_correction_constant',
+    ],
 )
 
 # extra fields for generator scheduling and bid specification
 # these fields require parsing of additional files
 # and result in additional objects being added
-# to the Generator after creation 
-gen_extra_fields = ['observedname', 'forecastname', 'scenariosfilename', 
-    'scenariosdirectory', 'costcurvepointsfilename']
+# to the Generator after creation
+gen_extra_fields = ['observedname', 'forecastname', 'scenariosfilename',
+                    'scenariosdirectory', 'costcurvepointsfilename']
 
 fields_initial = [
     'status',
     'power',
     'hoursinstatus']
 
+
 def nice_names(df):
     '''drop the case and spaces from all column names'''
     return df.rename(columns=
-        dict([(col, drop_case_spaces(col)) for col in df.columns]))
+                     dict([(col, drop_case_spaces(col)) for col in df.columns]))
+
 
 def parse_standalone(storage, times):
     '''load problem info from a pandas.HDFStore'''
@@ -100,15 +102,15 @@ def parse_standalone(storage, times):
     # filter timeseries data to only this stage
     timeseries = storage['data_timeseries'].ix[times.strings.values]
 
-    #add loads
+    # add loads
     loads = build_class_list(storage['data_loads'], powersystems.Load,
-        times, timeseries)
-    #add generators
+                             times, timeseries)
+    # add generators
     generators = build_class_list(storage['data_generators'], Generator,
-        times, timeseries)
-    #add lines
+                                  times, timeseries)
+    # add lines
     lines = build_class_list(storage['data_lines'], powersystems.Line,
-        times, timeseries)
+                             times, timeseries)
 
     power_system = PowerSystem(generators, loads, lines)
 
@@ -123,26 +125,24 @@ def parse_standalone(storage, times):
     return power_system, times, scenario_values
 
 
-def parsedir(
-        file_gens='generators.csv',
-        file_loads='loads.csv',
-        file_lines='lines.csv',
-        file_init='initial.csv',
-        file_hydro='hydro.csv',
-        file_timeseries='timeseries.csv'
-        ):
     """
     Import data from spreadsheets and build lists of
     :mod:`powersystems` classes.
     """
 
+def _load_raw_data():
+    """import data from spreadsheets"""
     datadir = user_config.directory
 
     if not os.path.isdir(datadir):
         raise OSError('data directory "{d}" does not exist'.format(d=datadir))
-    [file_gens, file_loads, file_lines, file_init, file_timeseries] = \
-        [joindir(datadir,filename) for filename in
-            (file_gens,file_loads,file_lines,file_init, file_timeseries)]
+    [file_gens, file_loads, file_lines, file_init, file_hydro] = \
+        [joindir(datadir, filename) for filename in (
+            user_config.file_gens,
+            user_config.file_loads,
+            user_config.file_lines,
+            user_config.file_init,
+            user_config.file_hydro)]
 
     generators_data = nice_names(read_csv(file_gens))
     loads_data = nice_names(read_csv(file_loads))
@@ -157,7 +157,7 @@ def parsedir(
     except Exception:
         init_data = DataFrame()
 
-    try: 
+    try:
         hydro_data = nice_names(read_csv(file_hydro))
     except Exception:
         hydro_data = DataFrame()
@@ -165,11 +165,34 @@ def parsedir(
     #create times
     timeseries, times, generators_data, loads_data = \
         setup_times(generators_data, loads_data, file_timeseries)
+    return generators_data, loads_data, lines_data, init_data, hydro_data
 
-    #add loads
-    loads = build_class_list(loads_data, powersystems.Load, times, timeseries)
 
-    #add generators
+def _parse_raw_data(generators_data, loads_data,
+        lines_data, init_data, hydro_data):
+    # create times
+    timeseries, times, generators_data, loads_data = setup_times(
+        generators_data, loads_data)
+
+    # add loads
+    loads = build_class_list(
+        loads_data, powersystems.Load, times, timeseries)
+
+    # data modifiers
+    if user_config.pmin_multiplier != 1.0:
+        generators_data['pmin'] *= user_config.pmin_multiplier
+        invalid_pmin = (generators_data.pmin > generators_data.pmax)
+        if invalid_pmin.any():
+            logging.warning('Pmin scaling resulted in Pmin>Pmax. ' +
+                'Setting Pmin=Pmax for these {} generators.'.format(
+                invalid_pmin.sum()))
+            generators_data.ix[invalid_pmin, 'pmin'] = \
+                generators_data.ix[invalid_pmin, 'pmax']
+
+    if user_config.ramp_limit_multiplier != 1.0:
+        generators_data['rampratemin'] *= user_config.ramp_limit_multiplier
+        generators_data['rampratemax'] *= user_config.ramp_limit_multiplier
+
     if user_config.ignore_minhours_constraints:
         generators_data['minuptime'] = 0
         generators_data['mindowntime'] = 0
@@ -178,17 +201,19 @@ def parsedir(
         generators_data['rampratemin'] = None
     if user_config.ignore_pmin_constraints:
         generators_data['pmin'] = 0
-                
-    generators = build_class_list(generators_data, Generator, times, timeseries)
 
-    #add lines
+    # add generators
+    generators = build_class_list(
+        generators_data, Generator, times, timeseries)
+
+    # add lines
     lines = build_class_list(lines_data, powersystems.Line)
-    #add initial conditions
+    # add initial conditions
     setup_initialcond(init_data, generators, times)
 
-    #get scenario values (if applicable)
+    # get scenario values (if applicable)
     scenario_values = setup_scenarios(generators_data, generators, times)
-    
+
     #setup hydro if applicable
     hydro_generators = setup_hydro(hydro_data, timeseries)
     generators.extend(hydro_generators)
@@ -206,24 +231,33 @@ def parsedir(
 
     return generators, loads, lines, times, scenario_values, data
 
+
+def parsedir(**filename_kwargs):
+    """
+    Import data from spreadsheets and build lists of
+    :mod:`powersystems` classes.
+    """
+    return _parse_raw_data(**_load_raw_data(**filename_kwargs))
+
+
 def setup_initialcond(data, generators, times):
     '''
     Take a list of initial conditions parameters and
     add information to each :class:`~Generator` object.
     '''
-    if len(times) <= 1: return #for UC,ED no need to set initial status
+    if len(times) <= 1:
+        return  # for UC,ED no need to set initial status
 
-    t_init = times.initialTime
     if len(data) == 0:
         logging.warning('''No generation initial conditions file found.
             Setting to defaults.''')
         for gen in generators:
-            gen.set_initial_condition(time=t_init)
+            gen.set_initial_condition()
         return
 
-    #begin by setting initial condition for all generators to off
+    # begin by setting initial condition for all generators to off
     for g in generators:
-        g.set_initial_condition(t_init, status=False, power=0)
+        g.set_initial_condition(status=False, power=0)
 
     names = [g.name for g in generators]
 
@@ -239,7 +273,7 @@ def setup_initialcond(data, generators, times):
     for i, row in data.iterrows():
         g = names.index(row['name'])
         kwds = row[fields_initial].dropna().to_dict()
-        generators[g].set_initial_condition(time=t_init, **kwds)
+        generators[g].set_initial_condition(**kwds)
     return
 
 
@@ -274,19 +308,19 @@ def build_class_list(data, model, times=None, timeseries=None):
                 # override the scenarios directory with the one \
                 # specified in the commandline options
                 scenariosdirectory = user_config.scenarios_directory
-                data.ix[i, 'scenariosdirectory'] = user_config.scenarios_directory
-            
-            bid_points_filename = row.get('costcurvepointsfilename')
+                data.ix[i,
+                        'scenariosdirectory'] = user_config.scenarios_directory
 
+            bid_points_filename = row.get('costcurvepointsfilename')
 
         if is_generator:
             if schedulename or power or \
                 (forecast_name and user_config.deterministic_solve) or \
-                (observed_name and user_config.perfect_solve):
+                    (observed_name and user_config.perfect_solve):
                 row_model = Generator_nonControllable
             elif scenariosdirectory or scenariosfilename:
                 row_model = Generator_Stochastic
-        
+
         # warn about fields not in model
         valid_fields = pd.Index(fields[model.__name__] + ['schedulename'])
         if is_generator:
@@ -337,7 +371,7 @@ def build_class_list(data, model, times=None, timeseries=None):
             print '{} model got unexpected parameter'.format(model)
             raise
 
-        all_models.append( obj )
+        all_models.append(obj)
 
     return all_models
 
@@ -348,7 +382,7 @@ def read_bid_points(filename):
     return bid_points[['power', 'cost']].astype(float)
 
 
-def setup_times(generators_data, loads_data, filename_timeseries):
+def setup_times(generators_data, loads_data):
     """
     Create a :class:`~schedule.TimeIndex` object
     from the schedule files.
@@ -380,7 +414,7 @@ def setup_times(generators_data, loads_data, filename_timeseries):
         name = 'd{}'.format(i)
         loads_data.ix[i, ncol] = name
         timeseries[name] = get_schedule(joindir(datadir, load[fcol])) * \
-            user_config.load_multiplier
+            user_config.load_multiplier + user_config.load_adder
 
     for i, gen in filter_notnull(generators_data, fcol).iterrows():
         name = 'g{}'.format(i)
@@ -395,46 +429,79 @@ def setup_times(generators_data, loads_data, filename_timeseries):
     ffcstcol = 'forecastfilename'
     fcstcol = 'forecastname'
 
+    obs_name = None
     if fobscol in generators_data:
         generators_data[obscol] = None
         for i, gen in filter_notnull(generators_data, fobscol).iterrows():
-            name = 'g{}_observations'.format(i)
-            generators_data.ix[i, obscol] = name
-            timeseries[name] = get_schedule(joindir(datadir, gen[fobscol])) * \
-                user_config.wind_multiplier
+            obs_name = 'g{}_observations'.format(i)
+            generators_data.ix[i, obscol] = obs_name
+            timeseries[obs_name] = get_schedule(joindir(datadir, gen[fobscol]))
+            if user_config.wind_multiplier != 1.0:
+                timeseries[obs_name] *= user_config.wind_multiplier
+
         generators_data = generators_data.drop(fobscol, axis=1)
 
+    fcst_name = None
     if ffcstcol in generators_data:
         generators_data[fcstcol] = None
         for i, gen in filter_notnull(generators_data, ffcstcol).iterrows():
-            name = 'g{}_forecast'.format(i)
-            generators_data.ix[i, fcstcol] = name
-            timeseries[name] = get_schedule(joindir(datadir, gen[ffcstcol])) * \
+            fcst_name = 'g{}_forecast'.format(i)
+            generators_data.ix[i, fcstcol] = fcst_name
+            timeseries[fcst_name] = get_schedule(joindir(datadir, gen[ffcstcol])) * \
                 user_config.wind_multiplier + user_config.wind_forecast_adder
-            if (timeseries[name]<0).any():
-                print timeseries[name].describe()
-                raise ValueError('wind forecast must always be at least zero')
+
+            if user_config.wind_error_multiplier != 1.0:
+                logging.debug('scaling wind forecast error')
+                obs_name = 'g{}_observations'.format(i)
+                error = timeseries[fcst_name] - timeseries[obs_name]
+                timeseries[fcst_name] = timeseries[obs_name] + \
+                    error * user_config.wind_error_multiplier
+
+            if (timeseries[fcst_name] < 0).any():
+                print timeseries[fcst_name].describe()
+                logging.warning('Wind forecast must always be at least zero.')
+                timeseries[fcst_name][timeseries[fcst_name] < 0] = 0
+
         generators_data = generators_data.drop(ffcstcol, axis=1)
 
     generators_data = generators_data.drop(fcol, axis=1)
     loads_data = loads_data.drop(fcol, axis=1)
 
     if len(timeseries) == 0:
-        #this is a ED or OPF problem - only one time
+        # this is a ED or OPF problem - only one time
         return DataFrame(), just_one_time(), generators_data, loads_data
 
     timeseries = DataFrame(timeseries)
-    
+
     hs_file = joindir(user_config.directory, 'hydro_schedule.csv')
     if os.path.exists(hs_file):
         hydro_ts = read_csv(hs_file, index_col=0, parse_dates=True)
         timeseries = timeseries.join(hydro_ts)
-    
+
     times = TimeIndex(timeseries.index)
     timeseries.index = times.strings.values
 
-    return timeseries, times, generators_data, loads_data
+    if user_config.wind_capacity_factor != 0:
+        if len(filter_notnull(generators_data, obscol)) != 1:
+            raise NotImplementedError(
+                'wind capacity factor only works with one wind generator')
 
+        all_loads = timeseries[filter(lambda col: col.startswith('d'),
+            timeseries.columns)]
+
+        capf_current = timeseries[obs_name].sum() / all_loads.sum(axis=1).sum()
+
+        wind_mult = user_config.wind_capacity_factor / capf_current
+        user_config.wind_multiplier = wind_mult
+
+        logging.info('scaling wind from a c.f. of {} to a c.f. of {}'.format(
+            capf_current, user_config.wind_capacity_factor
+            ))
+        timeseries[obs_name] *= wind_mult
+        if fcst_name:
+            timeseries[fcst_name] *= wind_mult
+
+    return timeseries, times, generators_data, loads_data
 
 
 def _parse_scenario_day(filename):
@@ -444,8 +511,8 @@ def _parse_scenario_day(filename):
     # select subset of scenarios
     Nscenarios = user_config.scenarios
     if Nscenarios:
-        data = data[ data.index<Nscenarios ]
-        data['probability'] = data['probability']/sum( data['probability'] )
+        data = data[data.index < Nscenarios]
+        data['probability'] = data['probability'] / sum(data['probability'])
 
     # return the data with probability column first
     return data[data.columns.drop('probability').insert(0, 'probability')]
@@ -456,12 +523,12 @@ def setup_scenarios(gen_data, generators, times):
     col = 'scenariosdirectory'
     scenario_values = pd.Panel()
     if user_config.deterministic_solve or user_config.perfect_solve or \
-        (not col in gen_data.columns):
+            (not col in gen_data.columns):
         # a deterministic problem
         return scenario_values
 
     gen_params = gen_data[gen_data[col].notnull()]
-    if len(gen_params)>1:
+    if len(gen_params) > 1:
         raise NotImplementedError('more than one generator with scenarios.')
 
     gen = generators[gen_params.index[0]]
@@ -469,20 +536,20 @@ def setup_scenarios(gen_data, generators, times):
 
     # directory of scenario values where each file is one day
     scenarios_directory = gen_params['scenariosdirectory'].values[0]
-        
+
     searchstr = "*.csv"
 
     filenames = sorted(glob(joindir(user_config.directory,
-        joindir(scenarios_directory, searchstr))))
+                                    joindir(scenarios_directory, searchstr))))
     if not filenames:
         raise IOError('no scenario files in "{}"'.format(scenarios_directory))
 
     alldata = OrderedDict()
-    for i,f in enumerate(filenames):
+    for i, f in enumerate(filenames):
         data = _parse_scenario_day(f)
-        # label scenarios for day with the first timestamp
-        day = Timestamp(data.columns.drop('probability')[0])
-        alldata[day] = data
+        # label scenarios for the day with the date
+        date = Timestamp(data.columns.drop('probability')[0]).date()
+        alldata[date] = data
 
     # TODO - assumes one hour intervals!!
     hrs = user_config.hours_commitment + user_config.hours_overlap
@@ -490,9 +557,9 @@ def setup_scenarios(gen_data, generators, times):
     # make scenarios into a pd.Panel with axes: day, scenario, {prob, [hours]}
     scenario_values = pd.Panel(
         items=alldata.keys(),
-        major_axis=range(len(data)),
+        major_axis=range(max([len(dat) for dat in alldata.values()])),
         minor_axis=['probability'] + range(hrs)
-        )
+    )
 
     for day, scenarios in alldata.iteritems():
         if 'probability' == scenarios.columns[-1]:
@@ -500,20 +567,19 @@ def setup_scenarios(gen_data, generators, times):
             scenarios = scenarios[
                 scenarios.columns[:-1].insert(0, 'probability')]
         # rename the times into just hour offsets
-        scenarios = scenarios.rename(columns=
-            dict(zip(scenarios.columns,
+        scenarios = scenarios.rename(columns=dict(zip(scenarios.columns,
             ['probability'] + range(len(scenarios.columns) - 1))))
 
         # and take the number of hours needed
-        scenarios = scenarios[scenarios.columns[:1+hrs]]
+        scenarios = scenarios[scenarios.columns[:1 + hrs]]
 
         scenario_values[day] = scenarios
-    
+
     if user_config.wind_multiplier != 1.0:
         scenario_values *= user_config.wind_multiplier
-        svt = scenario_values.transpose(2,1,0)
+        svt = scenario_values.transpose(2, 1, 0)
         svt['probability'] *= 1 / user_config.wind_multiplier
-        scenario_values = svt.transpose(2,1,0)
+        scenario_values = svt.transpose(2, 1, 0)
 
     gen.scenario_values = scenario_values
     # defer scenario tree construction until actual time stage starts
@@ -522,24 +588,24 @@ def setup_scenarios(gen_data, generators, times):
 
 def _has_valid_attr(obj, name):
     return getattr(obj, name, None) is not None
-    
+
 def setup_hydro(data, ts):
     hydro_generators = []
     if len(data) == 0: return hydro_generators
     inflow_name = data.pop('inflowschedulename')
-    
+
     data = data.rename(columns=field_rename['HydroGenerator'])
-    
+
     for i, row in data.iterrows():
         row = row.dropna()
         hg = HydroGenerator(index=i, **row)
         hg.inflow_schedule = ts[inflow_name.ix[i]]
         hydro_generators.append(hg)
-    
+
     #label upstream reservoir generator indexes
     names = [gen.name for gen in hydro_generators]
     set_trace()
-    for gen in hydro_generators: 
+    for gen in hydro_generators:
         down_name = gen.downstream_reservoir
         if down_name is not None:
             down_gen = hydro_generators[names.index(down_name)]

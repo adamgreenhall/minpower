@@ -1,6 +1,8 @@
 '''Test the higher level behavior of the unit commitment'''
 import random
 from minpower.generators import Generator
+import pandas as pd
+from pandas.util.testing import assert_frame_equal, assert_series_equal
 from test_utils import *
 
 @istest
@@ -16,7 +18,7 @@ def prices():
         make_expensive_gen()
     ]
 
-    power_system, times = solve_problem(generators, 
+    power_system, times = solve_problem(generators, do_reset_config=False,
         **make_loads_times(Pdt=[80,110,130]))
     lmps = [power_system.buses[0].price(t) for t in times]
     
@@ -53,8 +55,8 @@ def load_shedding():
     Pdt1=211
     generators=[make_cheap_gen(pmax=pmax)]
     Pdt=[110,Pdt1,110]
-    power_system, times = solve_problem(
-        generators, **make_loads_times(Pdt=Pdt))
+    power_system, times = solve_problem(generators, do_reset_config=False,
+        **make_loads_times(Pdt=Pdt))
     load=power_system.loads()[0]
     load_t1=load.power(times[1], evaluate=True)
     load_t1_shed=load.shed(times[1], evaluate=True)
@@ -62,7 +64,6 @@ def load_shedding():
     assert load_t1==pmax 
     assert load_t1_shed==Pdt1-pmax
     assert price_t1 == user_config.cost_load_shedding
-
 
 
 @istest
@@ -97,3 +98,33 @@ def reserve_fixed_amount():
     
     assert Pdt == total_power
     assert total_available_power >= [reserve_req + Pd for Pd in Pdt]
+
+
+@istest
+@with_setup(teardown=reset_config)
+def startup_ramprate_default():
+    '''
+    Create two generators with a high limit,
+    one limited by Pmax, the other by rampratemax.
+    Ensure that the second gen. is started up to its limit to minimize shed.
+    '''
+    
+    pmax = 100
+    Pdt1 = 210
+    generators = [
+        make_cheap_gen(pmax=pmax),
+        make_expensive_gen(rampratemax=100, 
+            rampratemin=-200, pmin=95, pmax=200)
+        ]
+    initial = [{'power': 90}, {'status': 0}]
+    Pdt = [90, Pdt1, 90]
+    power_system, times = solve_problem(
+        generators, gen_init=initial, **make_loads_times(Pdt=Pdt))
+
+    # the expensive unit turns on
+    assert_series_equal(pd.Series([0.0, 1.0, 0.0], index=times.times),
+        generators[1].values('status', times.times))
+    
+    # the minimum load was shed
+    assert_series_equal(pd.Series([0.0, 100.0, 0.0], index=times.times),
+        generators[1].values('power', times.times))

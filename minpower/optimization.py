@@ -5,7 +5,8 @@ Basically a wrapper around Coopr's `pyomo.ConcreteModel` class.
 import logging
 import time
 import weakref
-from commonscripts import quiet, not_quiet, set_trace
+from commonscripts import (quiet, not_quiet, 
+    update_attributes, joindir, set_trace)
 
 with quiet():
     # FIXME - cplex ilog manager is making noise
@@ -26,7 +27,6 @@ variable_kinds = dict(
     Boolean=pyomo.Boolean)
 
 from config import user_config
-from commonscripts import update_attributes, joindir, set_trace
 
 
 def full_filename(filename):
@@ -324,9 +324,8 @@ class OptimizationProblem(OptimizationObject):
             try:
                 return getattr(self._model, name)
             except (AttributeError, KeyError) as NotInModelError:
-                print 'error getting ', name
-                self.show_model()
-                raise
+                # self.show_model()
+                raise AttributeError('error getting {}'.format(name))
         else:
             try:
                 return getattr(self._scenario_instances[scenario], name)
@@ -337,7 +336,7 @@ class OptimizationProblem(OptimizationObject):
 
     def write_model(self, filename):
         try:
-            self._model.write(filename)
+            self._model.write(filename, symbolic_solver_labels=True)
         except:
             self._model.pprint(filename)
 

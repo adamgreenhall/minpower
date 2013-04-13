@@ -131,7 +131,8 @@ def stochastic_gen_shedding():
         pd.Series(dict(s0=False, s1=True)), 
         (wind_shed > 0).all())
         
-@istest
+# @istest
+# FIXME - disabled test for now
 def cvar_objective():
     '''
     Set up an either-or two gen case: g1 cheap, g2 expensive,

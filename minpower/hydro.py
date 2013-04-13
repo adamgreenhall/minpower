@@ -1,4 +1,4 @@
-from commonscripts import update_attributes, bool_to_int, set_trace
+from commonscripts import update_attributes, hours, set_trace
 from generators import Generator
 import bidding
 
@@ -18,7 +18,8 @@ class HydroGenerator(Generator):
                  volume_final=None,
                  outflow_min=0, outflow_max=None,
                  outflow_initial=None,
-                 power_min=0, power_max=None,
+                 pmin=0, pmax=None,
+                 rampratemin=None, rampratemax=None,
                  power_initial=0,
                  spill_min=0, spill_max=None,
                  spill_initial=0,
@@ -28,17 +29,18 @@ class HydroGenerator(Generator):
                  inflow_schedule=None
                  ):
         update_attributes(self, locals())  # load in inputs
-        self.init_optimization()
+        
         self.upstream_reservoirs = []
         self.is_hydro = True
         self.is_controllable = True
         self.is_stochastic = False
+        self.initial_status = True
         if self.outflow_initial is None:
             self.outflow_initial = \
                 (self.outflow_max - self.outflow_min) / 2.0
 
         self.build_cost_model()
-
+        self.init_optimization()
     def build_cost_model(self):
 
         self.coefs_production = bidding.parse_polynomial(
@@ -49,7 +51,10 @@ class HydroGenerator(Generator):
         self.params_production = dict(
             polynomial=self.coefs_production,
             min_input=self.outflow_min,
-            max_input=self.outflow_max
+            max_input=self.outflow_max,
+            owner=self,
+            status_variable=lambda *args: True,
+            input_variable=self.power            
         )
         self.params_correction = self.params_production.copy()
         self.params_correction.update(
@@ -86,15 +91,18 @@ class HydroGenerator(Generator):
         the volume correction (based on volume),
         and the head correction (based on outflow and volume)
         '''
-        return self.production_curve(time).output() + \
-            self.production_correction(time).output() + \
+        return self.production_curve(time) + \
+            self.production_correction(time) + \
             self.head_correction(time)
 
-    def production_curve(self, time):
-        return self.get_child('production_curves', time)
+    def production_curve(self, time, scenario=None, evaluate=False):
+        return self.production_model.output(time,
+            scenario=scenario, evaluate=evaluate)
 
-    def production_correction(self, time):
-        return self.get_child('production_corrections', time)
+
+    def production_correction(self, time, scenario=None, evaluate=False):
+        return self.production_correction_model.output(time,
+            scenario=scenario, evaluate=evaluate)
 
     def head_correction(self, time):
         return self.head_correction_constant * self.outflow(time) \
@@ -132,7 +140,7 @@ class HydroGenerator(Generator):
 
     def create_variables(self, times):
         self.add_variable('power', index=times.set,
-            low=self.power_min, high=self.power_max)
+            low=self.pmin, high=self.pmax)
         self.add_variable('outflow', index=times.set,
             low=self.outflow_min, high=self.outflow_max)
         self.add_variable('spill', index=times.set,
@@ -140,34 +148,35 @@ class HydroGenerator(Generator):
         self.add_variable('volume', index=times.set,
             low=self.volume_min, high=self.volume_max)
         self.production_model = bidding.Bid(
-            **self.params_production)
-        self.production_correction_model = \
-            bidding.Bid(times, **self.params_correction)
+            times=times, **self.params_production)
+        self.production_correction_model = bidding.Bid(
+            times=times, **self.params_correction)
 
-    def create_constraints(self, times, generators):
+    def create_constraints(self, times):
+        hydro_gens = filter(
+            lambda gen: getattr(gen,'is_hydro', False), 
+            self._parent_problem().generators())
+        
         # initial and final volumes
-        self.add_constraint('volume final', times[-1], self.volume(
-            times[-1]) >= self.volume_final)
+        self.add_constraint('volume final', times.last(), 
+            self.volume(times.last()) >= self.volume_final)
 
-        other_hydro_generators = filter(
-            lambda gen: gen.is_hydro, generators)
 
         def upstream_unit_outflow(h, t):
-            upstream_gen = getclass_inlist(
-                other_hydro_generators, h, 'index')
-            outflow_time = times[t].Start - hours(
-                upstream_gen.delay_downstream)
+            upstream_gen = hydro_gens[h]
+            outflow_time = times.times[t] - \
+                hours(upstream_gen.delay_downstream)
             if outflow_time < times.Start:
-                return upstream_gen.outflow_initial + upstream_gen.spill_initial
+                out = upstream_gen.outflow_initial + upstream_gen.spill_initial
             else:
-                outflow_time = times.get_time_by_start(
-                    outflow_time)
-                return upstream_gen.outflow_total(outflow_time)
+                tm_up = times[times.times.indexer_at_time(outflow_time)[0]]
+                out = upstream_gen.outflow_total(tm_up)
+            return out
         for t, time in enumerate(times):
             # network balance
             upstream_inflow = sum(
                 upstream_unit_outflow(r, t) for r in self.upstream_reservoirs)
-            natural_inflow = self.inflow_schedule.get_amount(time)
+            natural_inflow = self.inflow_schedule[time]
             self.add_constraint('water balance', time,
                 self.volume_change(t, times) == upstream_inflow +\
                 natural_inflow - self.outflow_total(time))
@@ -176,8 +185,6 @@ class HydroGenerator(Generator):
             self.add_constraint(
                 'production', time,
                 self.power(time) == self.production(time))
-            # self.production_curve(time).create_constraints()
-            # self.production_correction(time).create_constraints()
 
     def __str__(self):
         return 'h{ind}'.format(ind=self.index)

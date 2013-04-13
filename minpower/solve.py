@@ -259,7 +259,7 @@ def main():
     The command line interface for minpower. For more info use:
     ``minpower --help``
     '''
-
+            
     args = parse_command_line_config(
         argparse.ArgumentParser(description='Minpower command line interface'))
     
@@ -275,16 +275,16 @@ def main():
         prof = cProfile.Profile()
         prof.runcall(solve_problem, directory)
         prof.dump_stats('minpower.profile')
+        return
+    
+    # open IPython on exception
+    if args['debugger']:
+        from IPython.core import ultratb
+        sys.excepthook = ultratb.FormattedTB(mode='Verbose',
+            color_scheme='Linux', call_pdb=1)
 
-    else:
-        #solve the problem with those arguments
-        try: solve_problem(directory)
-        except:
-            if args['debugger']:
-                __, __, tb = sys.exc_info()
-                traceback.print_exc()
-                pdb.post_mortem(tb)
-            else: raise
+    #solve the problem with those arguments
+    solve_problem(directory)
 
 # for use in dev
 if __name__=='__main__': main()

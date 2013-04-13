@@ -4,17 +4,11 @@
     visualization.
 """
 import logging
-import os
 import pandas as pd
 import numpy as np
 
-try: 
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
-
 from commonscripts import (update_attributes, gen_time_dataframe, joindir,
-    replace_all, getattrL, writeCSV, transpose, within, correct_status,
+    getattrL, writeCSV, transpose, within, correct_status,
     set_trace)
 from schedule import TimeIndex
 from optimization import value
@@ -146,12 +140,16 @@ class Solution(object):
             self.mipgap = None
 
     def _get_outputs(self):
-        if self.power_system.has_hydro:
-            volumes=[getattr(gen, 'volume',None) for gen in self.generators()]
-            outflows=[getattr(gen, 'outflow',None) for gen in self.generators()]
-            self.generators_volumes=[[(value(v(t)) if v is not None else None) for v in volumes] for t in self.times]
-            self.generators_outflows=[[(value(o(t)) if o is not None else None) for o in outflows] for t in self.times]
+        hydro_gens = filter(
+            lambda gen: getattr(gen,'is_hydro', False), 
+            self.generators)
 
+        if hydro_gens:
+            self.generators_volumes = \
+                self.gen_time_df('volume', generators=hydro_gens)
+            self.generators_outflows = \
+                self.gen_time_df('outflow', generators=hydro_gens)
+                
         self.generators_power = self.gen_time_df('power')
         self.generators_status = correct_status(self.gen_time_df('status'))
 
@@ -838,8 +836,8 @@ def stack_plot_UC(solution, generators, times, prices,
     ax.yaxis.set_label_coords(**yLabel_pos)
     prettify_axes(ax)
 
-    T = times.times.values
-    bar_width = times.intervalhrs / 24.0  # maplotlib dates have base of 1day
+    # T = times.times.values
+    # bar_width = times.intervalhrs / 24.0  # maplotlib dates have base of 1day
 
     convert_to_GW = solution.generators_power.max().sum() > 20e3
     

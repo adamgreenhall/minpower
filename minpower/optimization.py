@@ -107,14 +107,15 @@ class OptimizationObject(object):
         Create a new variable and add it to the object's variables and the model's variables.
         :param name: name of optimization variable.
         :param kind: type of variable, specified by string. {Continuous or Binary/Boolean}
-        :param low: low limit of variable
-        :param high: high limit of variable
+        :param low: low limit of variable. Can be a scalar or a Series.
+        :param high: high limit of variable. Can be a scalar or a Series.
         :param fixed_value: a fixed value for a variable (making it a parameter)
         :param time: a single time for a variable
         :param index: a :class:`pyomo.Set` over which a variable is created
         '''
         def map_args(kind='Continuous', low=None, high=None):
             return dict(bounds=(low, high), domain=variable_kinds[kind])
+
         orig_name = name
         if index is None:
             name = self._t_id(name, time)
@@ -131,6 +132,19 @@ class OptimizationObject(object):
                 var[None] = fixed_value
         else:
             name = self._id(name)
+            low_limit_series = None
+            high_limit_series = None
+            def get_varying_lim(limname='low'):
+                if limname in kwargs and hasattr(kwargs[limname], 'index'):
+                    unq = kwargs[limname].unique()
+                    if len(unq) == 1: 
+                        kwargs[limname] = unq[0]
+                        return None
+                    return kwargs.pop(limname)
+                else: return None
+                    
+            low_limit_series = get_varying_lim('low')
+            high_limit_series = get_varying_lim('high')
 
             if fixed_value is None:
                 var = pyomo.Var(index, name=name, **map_args(**kwargs))
@@ -143,6 +157,13 @@ class OptimizationObject(object):
                 for i in index:
                     var[i] = fixed_value
 
+            if low_limit_series is not None:
+                self.add_constraint_set('{}_min'.format(name), index, 
+                    lambda model, t: var[t] >= low_limit_series[t])
+            if high_limit_series is not None:
+                self.add_constraint_set('{}_max'.format(name), index, 
+                    lambda model, t: var[t] <= high_limit_series[t])
+                
     def add_parameter(self, name, index=None, values=None, mutable=True, default=None, **kwargs):
         name = self._id(name)
         self._parent_problem().add_component_to_problem(

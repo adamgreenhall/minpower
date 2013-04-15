@@ -1,4 +1,4 @@
-"name","downstream reservoir","delay downstream","volume min","volume max","volume initial","volume final","outflow min","outflow max","outflow initial","power max","production curve","inflow schedule name"
-alpha,"junction dam",1,80,150,100,120,5,15,10,500,"-50+10Q","inflow_h0"
+"name","downstream reservoir","delay downstream","volume min","volume max","volume initial","volume final","outflow min","outflow max","outflow initial","power max","production curve","inflow schedule"
+alpha,"junction dam",1,volume_min_h0,150,100,120,5,15,10,500,"-50+10Q","inflow_h0"
 beta,"junction dam",1,60,120,80,70,6,15,10,500,"-70+9.5Q","inflow_h1"
 "junction dam",,,70,160,120,140,13,25,20,500,"-90+14Q","inflow_h3"

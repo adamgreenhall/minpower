@@ -16,8 +16,8 @@ from schedule import (just_one_time, get_schedule,
 from commonscripts import (joindir, drop_case_spaces, set_trace)
 
 from powersystems import PowerSystem
-from generators import (Generator,
-    Generator_Stochastic, Generator_nonControllable)
+from generators import (Generator, Generator_Stochastic,
+    Generator_nonControllable)
 from hydro import HydroGenerator
 from config import user_config
 
@@ -76,8 +76,21 @@ field_rename = dict(
     'productioncurve':'production_curve_equation',
     'productioncurvecorrection':'production_curve_correction_equation',
     'headcorrectionconstant':'head_correction_constant',
+    'inflowschedule':'inflow_schedule',
     }
 )
+
+hydro_schedule_cols = [
+    'volume_min',
+    'volume_max',
+    'outflow_min',
+    'outflow_max',
+    'spill_min',
+    'spill_max',
+    'pmin',
+    'pmax',
+    'inflow_schedule',
+]
 
 # extra fields for generator scheduling and bid specification
 # these fields require parsing of additional files
@@ -587,16 +600,26 @@ def setup_scenarios(gen_data, generators, times):
 def _has_valid_attr(obj, name):
     return getattr(obj, name, None) is not None
 
+
+def get_sched(val, ts):
+    if val in ts.keys():
+        return ts[val]
+    else:
+        return pd.Series(val, ts.index).astype(float)
+    
 def setup_hydro(data, ts):
     hydro_generators = []
     if len(data) == 0: return hydro_generators
 
-    inflow_name = data.pop('inflowschedulename')
+    # inflow_name = data.pop('inflowschedulename')
     data = data.rename(columns=field_rename['HydroGenerator'])
 
     for i, row in data.iterrows():
-        hg = HydroGenerator(index=i, **row.dropna())
-        hg.inflow_schedule = ts[inflow_name.ix[i]]
+        row = row.dropna().to_dict()
+        for key in row.keys():
+            if key in hydro_schedule_cols:
+                row[key] = get_sched(row[key], ts)
+        hg = HydroGenerator(index=i, **row)
         hydro_generators.append(hg)
 
     #label upstream reservoir generator indexes

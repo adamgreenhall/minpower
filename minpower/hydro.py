@@ -10,7 +10,7 @@ class HydroGenerator(Generator):
     different from conventional generators.
     """
     def __init__(self,
-                 name, bus=None, index=None,
+                 name, bus='system', index=None,
                  downstream_reservoir=None,
                  delay_downstream=0,
                  volume_min=0, volume_max=None,

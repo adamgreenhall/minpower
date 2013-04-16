@@ -75,6 +75,7 @@ option_types = dict(
     file_lines=str,
     file_init=str,
     file_hydro=str,
+    file_exports=str,
 
     # HACKs to help out resetting the config in testing
     directory=str,
@@ -310,6 +311,7 @@ def setup_parser_args(parser):
     add_opt(filenames, 'file_lines')
     add_opt(filenames, 'file_init')
     add_opt(filenames, 'file_hydro')
+    add_opt(filenames, 'file_exports')
 
 
     add_opt(parser, 'on_complete_script',

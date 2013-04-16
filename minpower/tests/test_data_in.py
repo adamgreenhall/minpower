@@ -10,7 +10,9 @@ basedir = os.path.split(__file__)[0]
 @with_setup(teardown=reset_config)
 def check_pmin():
     user_config.directory = os.path.join(basedir, 'uc')
-    generators, loads, _, times, _, data = parsedir()
+    data_tup = parsedir()
+    generators = data_tup[0]
+    data = data_tup[-1]
     
     assert(data['generators'].pmin.tolist() == \
         map(lambda gen: gen.pmin, generators))

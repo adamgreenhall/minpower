@@ -149,7 +149,14 @@ class Solution(object):
                 self.gen_time_df('volume', generators=hydro_gens)
             self.generators_outflows = \
                 self.gen_time_df('outflow', generators=hydro_gens)
-                
+
+        if self.power_system.has_exports:
+            self.power_exports = self.gen_time_df(
+                'Pexport', generators=self.power_system.buses)
+            self.power_imports = self.gen_time_df(
+                'Pimport', generators=self.power_system.buses)
+            self.net_exports = self.power_exports - self.power_imports                
+
         self.generators_power = self.gen_time_df('power')
         self.generators_status = correct_status(self.gen_time_df('status'))
 
@@ -167,7 +174,7 @@ class Solution(object):
         self.gen_shed_timeseries = self.gen_time_df('shed', evaluate=True,
             generators=self.power_system.get_generators_noncontrollable()
             ).sum(axis=1)
-
+            
         self.load_shed = self.load_shed_timeseries.sum()
         self.gen_shed = self.gen_shed_timeseries.sum()
 
@@ -175,6 +182,14 @@ class Solution(object):
             logging.debug('generation shed: {}MW'.format(self.gen_shed))
         if self.load_shed > 0.01:
             logging.debug('load shed: {}MW'.format(self.load_shed))
+        if self.power_system.has_exports:
+            export_prices = pd.DataFrame({str(bus): bus.exports.priceexport
+                for bus in self.power_system.buses})
+            import_prices = pd.DataFrame({str(bus): bus.exports.priceimport 
+                for bus in self.power_system.buses})
+            import_prices.index = export_prices.index = self.times.times
+            self.net_export_income = self.power_exports * export_prices - \
+                self.power_imports * import_prices
         self._get_cost_error()
 
     def _get_cost_error(self):
@@ -262,16 +277,22 @@ class Solution(object):
                 'price={}'.format(self.line_prices[str(t)])]
 
     def info_cost(self):
-        return ['objective cost={}'.format(self.objective),
-                'total cost of generation={}'.format(
+        info = ['objective cost={}'.format(self.objective),
+                'total cost of generation={:0.2f}'.format(
                     self.totalcost_generation.sum().sum()),
-                'linearized fuel cost of generation={}'.format(
+                'linearized fuel cost of generation={:0.2f}'.format(
                     self.fuelcost.sum().sum()),
-                'polynomial fuel cost of generation={}'.format(
+                'polynomial fuel cost of generation={:0.2f}'.format(
                     self.fuelcost_true),
                 'percentage difference\t\t={diff:.2%}'.format(
                     diff=self.costerror),
                 ]
+        if self.power_system.has_exports:
+            info.append('net exports = {:0.2f}'.format(
+                self.net_exports.sum().sum()))
+            info.append('net export income = {:0.2f}'.format(
+                self.net_export_income.sum().sum()))
+        return info
 
 
 class Solution_ED(Solution):

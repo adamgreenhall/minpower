@@ -6,6 +6,7 @@ Also extract the time information and create all
     :class:`~schedule.Timelist` objects.
 """
 import pandas as pd
+import numpy as np
 from pandas import DataFrame, Timestamp, read_csv
 from glob import glob
 from collections import OrderedDict
@@ -56,6 +57,12 @@ fields = dict(
     Load = ['name', 'bus', 'power'],
 
     HydroGenerator = ['name', 'bus'],
+    
+    ExportSchedule = [
+        'priceimport','priceexport', 
+        'exportmin', 'exportmax',
+        'importmin', 'importmax'
+        ]
 )
 
 field_rename = dict(
@@ -140,10 +147,16 @@ def parse_standalone(storage, times):
     return power_system, times, scenario_values
 
 
-    """
-    Import data from spreadsheets and build lists of
-    :mod:`powersystems` classes.
-    """
+data_files = dict(
+    generators_data= 'file_gens',
+    loads_data= 'file_loads',
+    lines_data= 'file_lines',
+    init_data= 'file_init',
+    hydro_data= 'file_hydro',
+    exports_data= 'file_exports',
+)
+required_data_names = ['generators_data', 'loads_data']
+
 
 def _load_raw_data():
     """import data from spreadsheets"""
@@ -151,37 +164,26 @@ def _load_raw_data():
 
     if not os.path.isdir(datadir):
         raise OSError('data directory "{d}" does not exist'.format(d=datadir))
-    [file_gens, file_loads, file_lines, file_init, file_hydro] = \
-        [joindir(datadir, filename) for filename in (
-            user_config.file_gens,
-            user_config.file_loads,
-            user_config.file_lines,
-            user_config.file_init,
-            user_config.file_hydro)]
+    data = {} 
+    data_filenames = {key: joindir(datadir, user_config[nm]) for key, nm in data_files.iteritems()}
+    for nm, filenm in data_filenames.iteritems():
+        if not os.path.exists(filenm) and nm in required_data_names:
+            raise OSError('file for {nm} does not exist in directory {d}'.format(
+                nm=nm, d=datadir))
+        elif not os.path.exists(filenm):
+            data[nm] = pd.DataFrame()
+        else:
+            data[nm] = nice_names(read_csv(filenm))
 
-    generators_data = nice_names(read_csv(file_gens))
-    loads_data = nice_names(read_csv(file_loads))
-
-    try:
-        lines_data = nice_names(read_csv(file_lines))
-    except Exception:
-        lines_data = DataFrame()
-
-    try:
-        init_data = nice_names(read_csv(file_init))
-    except Exception:
-        init_data = DataFrame()
-
-    try:
-        hydro_data = nice_names(read_csv(file_hydro))
-    except Exception:
-        hydro_data = DataFrame()
-
-    return generators_data, loads_data, lines_data, init_data, hydro_data
+    return data
 
 
 def _parse_raw_data(generators_data, loads_data,
-        lines_data, init_data, hydro_data):
+        lines_data, init_data, hydro_data, exports_data):
+    """
+    Build lists of :mod:`powersystems` classes from DataFrame objects.
+    """
+
     # create times
     timeseries, times, generators_data, loads_data = setup_times(
         generators_data, loads_data)
@@ -229,6 +231,9 @@ def _parse_raw_data(generators_data, loads_data,
     hydro_generators = setup_hydro(hydro_data, timeseries)
     generators.extend(hydro_generators)
 
+    
+    exports = setup_exports(exports_data, times)
+    
     # also return the raw DataFrame objects
     data = dict(
         generators=generators_data,
@@ -238,17 +243,18 @@ def _parse_raw_data(generators_data, loads_data,
         timeseries=timeseries,
         scenario_values=scenario_values,
         hydro=hydro_data,
+        exports=exports_data,
         )
 
-    return generators, loads, lines, times, scenario_values, data
+    return generators, loads, lines, times, scenario_values, exports, data
 
 
-def parsedir(**filename_kwargs):
+def parsedir():
     """
     Import data from spreadsheets and build lists of
     :mod:`powersystems` classes.
     """
-    return _parse_raw_data(*_load_raw_data(**filename_kwargs))
+    return _parse_raw_data(**_load_raw_data())
 
 
 def setup_initialcond(data, generators, times):
@@ -631,3 +637,23 @@ def setup_hydro(data, ts):
             down_gen.upstream_reservoirs.append(gen.index)
             gen.downstream_reservoir=down_gen.index
     return hydro_generators
+
+
+def setup_exports(data, times):
+    """
+    A MultiIndex DataFrame, by bus and time.
+    """
+    if len(data) == 0: return data
+    if 'bus' not in data.columns:
+        data['bus'] = 'system'
+
+    data['time'] = data.time.apply(pd.Timestamp)    
+    data = data.sort(['bus', 'time'])
+    data['time'] = np.repeat(times, data.bus.nunique())
+    data = data.set_index(['bus', 'time'])
+    
+    for col in ['exportmin', 'importmin']:
+        if col not in data.columns: data[col] = 0
+    for col in ['exportmax', 'importmax']:
+        if col not in data.columns: data[col] = 1e9
+    return data[fields['ExportSchedule']]

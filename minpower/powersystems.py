@@ -32,7 +32,7 @@ class Load(OptimizationObject):
         (bounded to be at most the scheduled amount).
     """
     def __init__(self,
-                 name='', index=None, bus=None, schedule=None,
+                 name='', index=None, bus='system', schedule=None,
                  sheddingallowed=True,
                  cost_shedding=None,
                  ):
@@ -137,7 +137,7 @@ class Bus(OptimizationObject):
     :param isSwing: flag if the bus is the swing bus
       (sets the reference angle for the system)
     """
-    def __init__(self, name=None, index=None, isSwing=False):
+    def __init__(self, name=None, index=None, isSwing=False, exports=None):
         update_attributes(self, locals())  # load in inputs
         self.generators, self.loads = [], []
         self.init_optimization()
@@ -160,34 +160,46 @@ class Bus(OptimizationObject):
         else:
             return sum(ld.power(t) for ld in self.loads)
 
+    def Pexport(self, t, evaluate=False):
+        P = self.get_variable('power_export', t, indexed=True)
+        return value(P) if evaluate else P
+
+    def Pimport(self, t, evaluate=False):
+        P = self.get_variable('power_import', t, indexed=True)
+        return value(P) if evaluate else P
+
     def power_balance(self, t, Bmatrix, allBuses):
         if len(allBuses) == 1:
             lineFlowsFromBus = 0
         else:
-            lineFlowsFromBus = sum([Bmatrix[self.index][otherBus.index] * otherBus.angle(t) for otherBus in allBuses])  # P_{ij}=sum_{i} B_{ij}*theta_j ???
-        return sum([-lineFlowsFromBus, -self.Pload(t), self.Pgen(t)])
+            lineFlowsFromBus = sum([
+                Bmatrix[self.index][otherBus.index] * otherBus.angle(t)
+                for otherBus in allBuses])  # P_{ij}=sum_{i} B_{ij}*theta_j ???
+        if self.exports is not None:
+            lineFlowsFromBus += self.Pexport(t) - self.Pimport(t)
+        
+        return self.Pgen(t) - self.Pload(t) - lineFlowsFromBus
 
     def create_variables(self, times):
         self.add_children(self.generators, 'generators')
         self.add_children(self.loads, 'loads')
         logging.debug('added bus {} components - generators and loads'.format(
             self.name))
-#        if len(self.generators)<50:
         for gen in self.generators:
             gen.create_variables(times)
-#        else:
-#            for gen in self.generators:
-#                threading.Thread(target=_call_generator_create_variables,args=(gen,times)).start()
-#            else:
-#                for th in threading.enumerate():
-#                    if th is threading.current_thread(): continue
-#                    else: th.join()
 
         logging.debug('created generator variables')
         for load in self.loads:
             load.create_variables(times)
         logging.debug('created load variables')
         self.add_variable('angle', index=times.set)
+        if self.exports is not None:
+            self.add_variable('power_import', index=times.set,
+                low=self.exports['importmin'],
+                high=self.exports['importmax'])
+            self.add_variable('power_export', index=times.set,
+                low=self.exports['exportmin'],
+                high=self.exports['exportmax'])
         logging.debug('created bus variables ... returning')
         return
 
@@ -199,8 +211,12 @@ class Bus(OptimizationObject):
             sum(load.cost_first_stage(times) for load in self.loads)
 
     def cost_second_stage(self, times):
-        return sum(gen.cost_second_stage(times) for gen in self.generators) + \
+        cost = sum(gen.cost_second_stage(times) for gen in self.generators) + \
             sum(load.cost_second_stage(times) for load in self.loads)
+        if self.exports is not None: 
+            cost += sum(self.Pimport(t) * self.exports.priceimport[t] for t in times)
+            cost -= sum(self.Pexport(t) * self.exports.priceexport[t] for t in times)
+        return cost
 
     def create_constraints(self, times, Bmatrix, buses, include_children=True):
         if include_children:
@@ -235,7 +251,7 @@ class PowerSystem(OptimizationProblem):
 
     Other settings are inherited from `user_config`.
     '''
-    def __init__(self, generators, loads, lines=None):
+    def __init__(self, generators, loads, lines=None, exports=None):
         # load in inputs
         update_attributes(self, locals(),
                           exclude=['generators', 'loads', 'lines'])
@@ -243,11 +259,13 @@ class PowerSystem(OptimizationProblem):
         self.reserve_load_fraction = user_config.reserve_load_fraction
         self.reserve_required = (self.reserve_fixed > 0) or \
             (self.reserve_load_fraction > 0.0)
-
+        self.has_exports = exports is not None and len(exports) > 0
+        
         if lines is None:  # pragma: no cover
             lines = []
-
-        buses = self.make_buses_list(loads, generators)
+        
+        buses = self.make_buses_list(loads, generators, exports)
+        
         self.create_admittance_matrix(buses, lines)
         self.init_optimization()
 
@@ -260,8 +278,10 @@ class PowerSystem(OptimizationProblem):
             sum(map(lambda gen:
                 getattr(gen, 'is_hydro', False), generators)) > 0
         self.shedding_mode = False
+        
+        
 
-    def make_buses_list(self, loads, generators):
+    def make_buses_list(self, loads, generators, exports=None):
         """
         Create list of :class:`powersystems.Bus` objects
         from the load and generator bus names. Otherwise
@@ -278,7 +298,7 @@ class PowerSystem(OptimizationProblem):
         busNameL = pd.Series(pd.unique(busNameL)).dropna().tolist()
 
         if len(busNameL) == 0:
-            busNameL = [None]
+            busNameL = ['system']
 
         buses = []
         swingHasBeenSet = False
@@ -293,6 +313,8 @@ class PowerSystem(OptimizationProblem):
             for ld in loads:
                 if ld.bus == newBus.name:
                     newBus.loads.append(ld)
+            if self.has_exports and busNm in exports.index.levels[0]:
+                newBus.exports = exports.ix[busNm]
             buses.append(newBus)
         return buses
 

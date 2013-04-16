@@ -133,9 +133,9 @@ def solve_problem(datadir='.',
     
     start_time = timer.time()
     logging.debug('Minpower reading {}'.format(datadir))
-    generators, loads, lines, times, scenario_tree, data = get_data.parsedir()
+    generators, loads, lines, times, scenario_tree, exports, data = get_data.parsedir()
     logging.debug('data read')
-    power_system = powersystems.PowerSystem(generators,loads,lines)
+    power_system = powersystems.PowerSystem(generators, loads, lines, exports)
 
     logging.debug('power system initialized')
     if times.spanhrs <= user_config.hours_commitment + user_config.hours_overlap:

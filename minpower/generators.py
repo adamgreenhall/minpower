@@ -49,7 +49,7 @@ class Generator(OptimizationObject):
                  shutdownramplimit=None,
                  faststart=False,
                  mustrun=False,
-                 name='', index=None, bus=None):
+                 name='', bus='system', index=None):
 
         update_attributes(self, locals())  # load in inputs
 
@@ -444,7 +444,7 @@ class Generator_nonControllable(Generator):
                  faststart=False,
                  sheddingallowed=False,
                  pmin=0, pmax=None,
-                 name='', index=None, bus=None, kind='wind',
+                 name='', index=None, bus='system', kind='wind',
                  observed_values=None,
                  **kwargs):
 
@@ -563,7 +563,7 @@ class Generator_Stochastic(Generator_nonControllable):
                  mustrun=False,
                  faststart=False,
                  pmin=0, pmax=None,
-                 name='', index=None, bus=None, kind='wind',
+                 name='', index=None, bus='system', kind='wind',
                  observed_values=None,
                  schedule=None,
                  sheddingallowed=False,

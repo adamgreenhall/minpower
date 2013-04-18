@@ -32,7 +32,7 @@ hydro_schedule_cols = [
     'pmin', 'pmax',
     'elevation_ramp_min', 'elevation_ramp_max',
     'outflow_ramp_min', 'outflow_ramp_max',
-    
+
     'inflow_schedule',
 ]
 
@@ -75,16 +75,16 @@ fields = dict(
     Load = ['name', 'bus', 'power'],
 
     HydroGenerator = [
-        'name', 'bus', 
+        'name', 'bus',
         'downstream_reservoir',
         'delay_downstream',
         'elevation_initial',
         'outflow_initial',
         'power_initial',
         ] + hydro_schedule_cols + hydro_pw_cols,
-    
+
     ExportSchedule = [
-        'priceimport','priceexport', 
+        'priceimport','priceexport',
         'exportmin', 'exportmax',
         'importmin', 'importmax'
         ]
@@ -156,7 +156,7 @@ def _load_raw_data():
 
     if not os.path.isdir(datadir):
         raise OSError('data directory "{d}" does not exist'.format(d=datadir))
-    data = {} 
+    data = {}
     data_filenames = {key: joindir(datadir, user_config[nm]) for key, nm in data_files.iteritems()}
     for nm, filenm in data_filenames.iteritems():
         if not os.path.exists(filenm) and nm in required_data_names:
@@ -223,9 +223,9 @@ def _parse_raw_data(generators_data, loads_data,
     hydro_generators = setup_hydro(hydro_data, timeseries)
     generators.extend(hydro_generators)
 
-    
+
     exports = setup_exports(exports_data, times)
-    
+
     # also return the raw DataFrame objects
     data = dict(
         generators=generators_data,
@@ -388,7 +388,10 @@ def build_class_list(data, model, times=None, timeseries=None):
 def read_bid_points(filename, depvar='power', indvar='cost'):
     bid_points = read_csv(filename)
     # return a dataframe of bidpoints
-    return bid_points[[depvar, indvar]].astype(float)
+    return bid_points[[depvar, indvar]].rename(columns={
+        depvar: 'depvar',
+        indvar: 'indvar'
+        }).astype(float)
 
 
 def setup_times(generators_data, loads_data):
@@ -604,14 +607,23 @@ def get_sched(val, ts):
         return ts[val]
     else:
         return pd.Series(val, ts.index).astype(float)
-    
-_hydro_rename = {f.replace('_', ''): f for f in fields['HydroGenerator']}
+
+_hydro_rename = {f.replace('_', ''): f
+    for f in fields['HydroGenerator']}
+_hydro_pw_nms = {
+    'flow_to_forebay_elevation':
+        dict(indvar='flow', depvar='elevation_fb'),
+    'flow_to_tailwater_elevation':
+        dict(indvar='flow', depvar='elevation_tw'),
+    'head_to_production_coefficient':
+        dict(indvar='head', depvar='outflow_coef'),
+}
 def setup_hydro(data, ts):
     hydro_generators = []
     if len(data) == 0: return hydro_generators
 
     # inflow_name = data.pop('inflowschedulename')
-    
+
     data = data.rename(columns=_hydro_rename)
 
     for i, row in data.iterrows():
@@ -621,7 +633,8 @@ def setup_hydro(data, ts):
                 row[key] = get_sched(row[key], ts)
             if key in hydro_pw_cols:
                 row[key] = read_bid_points(
-                    joindir(user_config.directory, row[key]))
+                    joindir(user_config.directory, row[key]),
+                    **_hydro_pw_nms[key])
         hg = HydroGenerator(index=i, **row)
         hydro_generators.append(hg)
 
@@ -644,11 +657,11 @@ def setup_exports(data, times):
     if 'bus' not in data.columns:
         data['bus'] = 'system'
 
-    data['time'] = data.time.apply(pd.Timestamp)    
+    data['time'] = data.time.apply(pd.Timestamp)
     data = data.sort(['bus', 'time'])
     data['time'] = np.repeat(times, data.bus.nunique())
     data = data.set_index(['bus', 'time'])
-    
+
     for col in ['exportmin', 'importmin']:
         if col not in data.columns: data[col] = 0
     for col in ['exportmax', 'importmax']:

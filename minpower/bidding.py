@@ -72,10 +72,10 @@ class Bid(OptimizationObject):
             self.is_linear = False
             self.is_pwl = True
             self.add_variable('cost', index=self.times.set, low=0)
-            self.discrete_input_points = self.bid_points.power.values.tolist()
+            self.discrete_input_points = self.bid_points.indvar.values.tolist()
             in_pts = dict(
                 (t, self.discrete_input_points) for t in self.times.set)
-            mapping = self.bid_points.set_index('power').to_dict()['cost']
+            mapping = self.bid_points.set_index('indvar').to_dict()['depvar']
 
             def pw_rule_points(model, time, input_var):
                 # just the input->output points mapping in this case

@@ -25,6 +25,24 @@ from config import user_config
 import os
 import logging
 
+hydro_schedule_cols = [
+    'elevation_min', 'elevation_max',
+    'outflow_min', 'outflow_max',
+    'spill_min', 'spill_max',
+    'pmin', 'pmax',
+    'elevation_ramp_min', 'elevation_ramp_max',
+    'outflow_ramp_min', 'outflow_ramp_max',
+    
+    'inflow_schedule',
+]
+
+hydro_pw_cols = [
+    'flow_to_forebay_elevation',
+    'flow_to_tailwater_elevation',
+    'head_to_production_coefficient',
+]
+
+
 fields = dict(
     Line=[
         'name',
@@ -56,7 +74,14 @@ fields = dict(
 
     Load = ['name', 'bus', 'power'],
 
-    HydroGenerator = ['name', 'bus'],
+    HydroGenerator = [
+        'name', 'bus', 
+        'downstream_reservoir',
+        'delay_downstream',
+        'elevation_initial',
+        'outflow_initial',
+        'power_initial',
+        ] + hydro_schedule_cols + hydro_pw_cols,
     
     ExportSchedule = [
         'priceimport','priceexport', 
@@ -65,39 +90,6 @@ fields = dict(
         ]
 )
 
-field_rename = dict(
-    HydroGenerator = {
-    'downstreamreservoir': 'downstream_reservoir',
-    'delaydownstream':'delay_downstream',
-    'volumemin':'volume_min',
-    'volumemax':'volume_max',
-    'volumeinitial':'volume_initial',
-    'volumefinal':'volume_final',
-    'outflowmin':'outflow_min',
-    'outflowmax':'outflow_max',
-    'outflowinitial':'outflow_initial',
-    'powermin':'pmin',
-    'powermax':'pmax',
-    'powerinitial':'power_initial',
-    'spillinitial':'spill_initial',
-    'productioncurve':'production_curve_equation',
-    'productioncurvecorrection':'production_curve_correction_equation',
-    'headcorrectionconstant':'head_correction_constant',
-    'inflowschedule':'inflow_schedule',
-    }
-)
-
-hydro_schedule_cols = [
-    'volume_min',
-    'volume_max',
-    'outflow_min',
-    'outflow_max',
-    'spill_min',
-    'spill_max',
-    'pmin',
-    'pmax',
-    'inflow_schedule',
-]
 
 # extra fields for generator scheduling and bid specification
 # these fields require parsing of additional files
@@ -393,10 +385,10 @@ def build_class_list(data, model, times=None, timeseries=None):
     return all_models
 
 
-def read_bid_points(filename):
+def read_bid_points(filename, depvar='power', indvar='cost'):
     bid_points = read_csv(filename)
     # return a dataframe of bidpoints
-    return bid_points[['power', 'cost']].astype(float)
+    return bid_points[[depvar, indvar]].astype(float)
 
 
 def setup_times(generators_data, loads_data):
@@ -613,18 +605,23 @@ def get_sched(val, ts):
     else:
         return pd.Series(val, ts.index).astype(float)
     
+_hydro_rename = {f.replace('_', ''): f for f in fields['HydroGenerator']}
 def setup_hydro(data, ts):
     hydro_generators = []
     if len(data) == 0: return hydro_generators
 
     # inflow_name = data.pop('inflowschedulename')
-    data = data.rename(columns=field_rename['HydroGenerator'])
+    
+    data = data.rename(columns=_hydro_rename)
 
     for i, row in data.iterrows():
         row = row.dropna().to_dict()
         for key in row.keys():
             if key in hydro_schedule_cols:
                 row[key] = get_sched(row[key], ts)
+            if key in hydro_pw_cols:
+                row[key] = read_bid_points(
+                    joindir(user_config.directory, row[key]))
         hg = HydroGenerator(index=i, **row)
         hydro_generators.append(hg)
 

@@ -10,24 +10,24 @@ class HydroGenerator(Generator):
     different from conventional generators.
     """
     def __init__(self,
-                 name, bus='system', index=None,
-                 downstream_reservoir=None,
-                 delay_downstream=0,
-                 volume_min=0, volume_max=None,
-                 volume_initial=0,
-                 volume_final=None,
-                 outflow_min=0, outflow_max=None,
-                 outflow_initial=None,
-                 pmin=0, pmax=None,
-                 rampratemin=None, rampratemax=None,
-                 power_initial=0,
-                 spill_min=0, spill_max=None,
-                 spill_initial=0,
-                 production_curve_equation='10Q',
-                 production_curve_correction_equation='0',
-                 head_correction_constant=0,
-                 inflow_schedule=None
-                 ):
+            name, bus='system', index=None,
+            downstream_reservoir=None,
+            delay_downstream=0,
+            elevation_min=0, elevation_max=None,
+            outflow_min=0, outflow_max=None,
+            spill_min=0, spill_max=None,
+            pmin=0, pmax=None,
+            rampratemin=None, rampratemax=None,
+            elevation_ramp_min=None, elevation_ramp_max=None,
+            outflow_ramp_min=None, outflow_ramp_max=None,
+            elevation_initial=0, elevation_final=None,
+            outflow_initial=None,
+            power_initial=0,
+            inflow_schedule=None,
+            flow_to_forebay_elevation=None,
+            flow_to_tailwater_elevation=None,
+            head_to_production_coefficient=None
+            ):
         update_attributes(self, locals())  # load in inputs
         
         self.upstream_reservoirs = []
@@ -39,118 +39,97 @@ class HydroGenerator(Generator):
             self.outflow_initial = \
                 (self.outflow_max - self.outflow_min) / 2.0
 
-        self.build_cost_model()
+        self.build_pw_models()
         self.init_optimization()
-    def build_cost_model(self):
-
-        self.coefs_production = bidding.parse_polynomial(
-            self.production_curve_equation)
-        self.coefs_correction = bidding.parse_polynomial(
-            self.production_curve_correction_equation)
-
-        self.params_production = dict(
-            polynomial=self.coefs_production,
-            min_input=self.outflow_min,
-            max_input=self.outflow_max,
-            owner=self,
-            status_variable=lambda *args: True,
-            input_variable=self.power            
+    def build_pw_models(self):
+        '''
+        take sets of PWL points and make models for the 
+        three different hydro PWL functions.
+        '''
+        self.PWparams = dict(
+            flow_to_forebay_elevation= {
+                'bid_points': self.flow_to_forebay_elevation,
+                'input_variable': self.net_flow,
+            },
+            flow_to_tailwater_elevation={
+                'bid_points': self.flow_to_forebay_elevation,
+                'input_variable': self.net_outflow,
+            },
+            head_to_production_coefficient={
+                'bid_points': self.head_to_production_coefficient,
+                'input_variable': self.head,
+            }       
         )
-        self.params_correction = self.params_production.copy()
-        self.params_correction.update(
-            {'polynomial': self.coefs_correction})
-
-    def outflow(self, time=None, scenario=None):
-        return self.get_variable('outflow', time,
-            scenario=scenario, indexed=True)
+        for k in self.PWparams.keys():
+            self.PWparams[k].update(dict(
+                owner= self,
+                status_variable= self.status,
+                polynomial= None,
+                ))
+        
+#    def outflow(self, time=None, scenario=None):
+#        return self.get_variable('outflow', time,
+#            scenario=scenario, indexed=True)
 
     def spill(self, time=None, scenario=None):
         return self.get_variable('spill', time,
             scenario=scenario, indexed=True)
 
-    def volume(self, time=None, scenario=None):
-        return self.get_variable('volume', time,
+    def elevation(self, time=None, scenario=None):
+        return self.get_variable('elevation', time,
             scenario=scenario, indexed=True)
 
-    def outflow_total(self, time=None, scenario=None):
+    def elevation_tailwater(self, time=None, scenario=None):
+        return self.PWmodels['flow_to_tailwater_elevation'].output(time)
+
+    def head(self, time=None, scenario=None):
+        return self.elevation(time, scenario)\
+            - self.elevation_tailwater(time, scenario)
+
+    def net_outflow(self, time=None, scenario=None):
         return self.outflow(time, scenario)\
                + self.spill(time, scenario)
 
-    def volume_change(self, t, times):
-        '''change in volume between t and t-1'''
-        if t > 0:
-            previous_vol = self.volume(times[t - 1])
+    def net_inflow(self, t, times, other_hydro):
+        return self.inflow_schedule[times[t]] + sum(
+            self.upstream_unit_outflow(
+                times, t, other_hydro[r]) for r in self.upstream_reservoirs)
+
+    def net_flow(self, time=None, scenario=None):
+        return self.PWmodels['flow_to_forebay_elevation'].output(
+            time, scenario)
+
+    def elevation_change(self, t, times):
+        '''change in elevation between t and t-1'''
+        prev = self.elevation(times[t - 1]) if t > 1 else self.volume_initial
+        return self.elevation(times[t]) - prev
+        
+    def upstream_unit_outflow(self, times, t, upstream_gen):
+        outflow_time = times.times[t] - \
+            hours(upstream_gen.delay_downstream)
+        if outflow_time < times.Start:
+            out = upstream_gen.outflow_initial + upstream_gen.spill_initial
         else:
-            previous_vol = self.volume_initial
-        return self.volume(times[t]) - previous_vol
-
-    def production(self, time):
-        '''
-        total power production is the sum of:
-        the production curve (based on outflow),
-        the volume correction (based on volume),
-        and the head correction (based on outflow and volume)
-        '''
-        return self.production_curve(time) + \
-            self.production_correction(time) + \
-            self.head_correction(time)
-
-    def production_curve(self, time, scenario=None, evaluate=False):
-        return self.production_model.output(time,
-            scenario=scenario, evaluate=evaluate)
-
-
-    def production_correction(self, time, scenario=None, evaluate=False):
-        return self.production_correction_model.output(time,
-            scenario=scenario, evaluate=evaluate)
-
-    def head_correction(self, time):
-        return self.head_correction_constant * self.outflow(time) \
-            * self.volume(time)
-
-    def cost(self, *a, **k):
-        return 0
-
-    def operatingcost(self, *a, **k):
-        return 0
-
-    def incrementalcost(self, *a, **k):
-        return 0
-
-    def truecost(self, *a, **k):
-        return 0
-
-    def cost_first_stage(self, *a, **k):
-        return 0
-
-    def cost_second_stage(self, *a, **k):
-        return 0
-
-    def status(self, *a, **k):
-        return True
-
-    def cost_startup(self, *a, **k):
-        return 0
-
-    def cost_shutdown(self, *a, **k):
-        return 0
-
-    def getstatus(self, *a, **k):
-        return {}
+            tm_up = times[times.times.indexer_at_time(outflow_time)[0]]
+            out = upstream_gen.net_outflow(tm_up)
+        return out
+    
+    def outflow(self, time):
+        '''flow output through turbine'''
+        return self.PWmodel['head_to_production_coefficient'].output(time) * self.power(time)
 
     def create_variables(self, times):
         self.add_variable('power', index=times.set,
             low=self.pmin, high=self.pmax)
+        self.add_variable('elevation', index=times.set,
+            low=self.elevation_min, high=self.elevation_max)
         self.add_variable('outflow', index=times.set,
             low=self.outflow_min, high=self.outflow_max)
         self.add_variable('spill', index=times.set,
             low=self.spill_min, high=self.spill_max)
-        self.add_variable('volume', index=times.set,
-            low=self.volume_min, high=self.volume_max)
-        self.production_model = bidding.Bid(
-            times=times, **self.params_production)
-        self.production_correction_model = bidding.Bid(
-            times=times, **self.params_correction)
+        self.PWmodels = {
+            key: bidding.Bid(times=times, **self.PWparams[key]) 
+            for key in self.PWparams.keys()}
 
     def create_constraints(self, times):
         hydro_gens = filter(
@@ -158,33 +137,31 @@ class HydroGenerator(Generator):
             self._parent_problem().generators())
         
         # initial and final volumes
-        self.add_constraint('volume final', times.last(), 
-            self.volume(times.last()) >= self.volume_final)
+        self.add_constraint('elevation final', times.last(), 
+            self.elevation(times.last()) >= self.elevation_final)
 
-
-        def upstream_unit_outflow(h, t):
-            upstream_gen = hydro_gens[h]
-            outflow_time = times.times[t] - \
-                hours(upstream_gen.delay_downstream)
-            if outflow_time < times.Start:
-                out = upstream_gen.outflow_initial + upstream_gen.spill_initial
-            else:
-                tm_up = times[times.times.indexer_at_time(outflow_time)[0]]
-                out = upstream_gen.outflow_total(tm_up)
-            return out
         for t, time in enumerate(times):
             # network balance
-            upstream_inflow = sum(
-                upstream_unit_outflow(r, t) for r in self.upstream_reservoirs)
-            natural_inflow = self.inflow_schedule[time]
             self.add_constraint('water balance', time,
-                self.volume_change(t, times) == upstream_inflow +\
-                natural_inflow - self.outflow_total(time))
+                self.elevation_change(t, times) == \
+                    self.net_inflow(t, times, hydro_gens) - \
+                    self.net_outflow(time))
+#            # production
+#            self.add_constraint(
+#                'outflow', time,
+#                self.outflow(time) == self.outflow_modeled(time))
 
-            # production
-            self.add_constraint(
-                'production', time,
-                self.power(time) == self.production(time))
 
     def __str__(self):
         return 'h{ind}'.format(ind=self.index)
+        
+    def cost(self, *a, **k): return 0
+    def operatingcost(self, *a, **k): return 0
+    def incrementalcost(self, *a, **k): return 0
+    def truecost(self, *a, **k): return 0
+    def cost_first_stage(self, *a, **k): return 0
+    def cost_second_stage(self, *a, **k): return 0
+    def status(self, *a, **k): return True
+    def cost_startup(self, *a, **k): return 0
+    def cost_shutdown(self, *a, **k): return 0
+    def getstatus(self, *a, **k): return {}        

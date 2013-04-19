@@ -215,7 +215,7 @@ def splitFilename(fullPathFilenm):
 
 
 def joindir(dir, file):
-    return os.path.join(dir, file)
+    return os.path.join(dir, str(file))
 
 ################### time stuff ###########################
 

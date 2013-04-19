@@ -41,6 +41,12 @@ hydro_pw_cols = [
     'flow_to_tailwater_elevation',
     'head_to_production_coefficient',
 ]
+hydro_initial_cols = [
+    'elevation',
+    'outflow',
+    'power',
+    'spill',
+]
 
 
 fields = dict(
@@ -78,9 +84,6 @@ fields = dict(
         'name', 'bus',
         'downstream_reservoir',
         'delay_downstream',
-        'elevation_initial',
-        'outflow_initial',
-        'power_initial',
         ] + hydro_schedule_cols + hydro_pw_cols,
 
     ExportSchedule = [
@@ -220,7 +223,14 @@ def _parse_raw_data(generators_data, loads_data,
     scenario_values = setup_scenarios(generators_data, generators, times)
 
     #setup hydro if applicable
-    hydro_generators = setup_hydro(hydro_data, timeseries, times)
+
+    hinit_file = joindir(user_config.directory, 'hydro_initial.csv')
+    if os.path.exists(hinit_file):
+        hydro_init_data = pd.read_csv(hinit_file, index_col=0)[hydro_initial_cols]
+    elif len(hydro_data) > 0:
+        hydro_init_data = pd.DataFrame(columns=hydro_initial_cols, index=hydro_data.index)
+
+    hydro_generators = setup_hydro(hydro_data, hydro_init_data, timeseries, times)
     generators.extend(hydro_generators)
 
 
@@ -504,6 +514,8 @@ def setup_times(generators_data, loads_data):
         timeseries = timeseries.join(hydro_ts)\
             .fillna(method='bfill').fillna(method='ffill')
 
+
+
     times = TimeIndex(timeseries.index)
     timeseries.index = times.strings.values
 
@@ -631,13 +643,14 @@ _hydro_pw_nms = {
     'head_to_production_coefficient':
         dict(indvar='head', depvar='outflow_coef'),
 }
-def setup_hydro(data, ts, times):
+def setup_hydro(data, hydro_init_data, ts, times):
     hydro_generators = []
     if len(data) == 0: return hydro_generators
 
-    # inflow_name = data.pop('inflowschedulename')
-
-    data = data.rename(columns=_hydro_rename)
+    data = data.rename(columns=_hydro_rename).join(
+        hydro_init_data.rename(columns={
+            col: col+'_initial' for col in hydro_init_data.columns}),
+        on='name')
 
     for i, row in data.iterrows():
         row = row.dropna().to_dict()

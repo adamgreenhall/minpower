@@ -13,6 +13,7 @@ class Bid(OptimizationObject):
     def __init__(self,
                  polynomial='10P',
                  bid_points=None,
+                 output_name='cost',
                  constant_term=0,
                  owner=None,
                  times=None,
@@ -45,7 +46,7 @@ class Bid(OptimizationObject):
             # use constant term in place of the 0th order term
             polynomial[0] = 0
 
-            self.add_variable('cost', index=self.times.set, low=0)
+            self.add_variable(self.output_name, index=self.times.set, low=0)
 
             def pw_rule(model, time, input_var):
                 return polynomial_value(polynomial, input_var)
@@ -56,7 +57,7 @@ class Bid(OptimizationObject):
 
             pw_representation = Piecewise(
                 self.times.set,
-                self.get_variable('cost', time=None, indexed=True),
+                self.get_variable(self.output_name, time=None, indexed=True),
                 self.input_variable(),
                 f_rule=pw_rule,
                 pw_pts=in_pts,
@@ -71,7 +72,9 @@ class Bid(OptimizationObject):
             # custom bid points
             self.is_linear = False
             self.is_pwl = True
-            self.add_variable('cost', index=self.times.set, low=0)
+            self.max_input = self.bid_points.indvar.max()
+            self.min_input = self.bid_points.indvar.min()
+            self.add_variable(self.output_name, index=self.times.set, low=0)
             self.discrete_input_points = self.bid_points.indvar.values.tolist()
             in_pts = dict(
                 (t, self.discrete_input_points) for t in self.times.set)
@@ -83,14 +86,13 @@ class Bid(OptimizationObject):
                 return mapping[input_var]
 
             pw_representation = Piecewise(self.times.set,
-                                          self.get_variable(
-                                          'cost', time=None, indexed=True),
-                                          self.input_variable(),
-                                          pw_pts=in_pts,
-                                          pw_constr_type='LB',
-                                          pw_repn='DCC',  # the disagregated convex combination method
-                                          f_rule=pw_rule_points,
-                                          warn_domain_coverage=False)
+                self.get_variable(self.output_name, time=None, indexed=True),
+                self.input_variable(),
+                pw_pts=in_pts,
+                pw_constr_type='LB',
+                pw_repn='DCC',  # the disagregated convex combination method
+                f_rule=pw_rule_points,
+                warn_domain_coverage=False)
 
         pw_representation.name = self.iden()
         self.max_output = pw_representation._f_rule(None, None, self.max_input)
@@ -106,8 +108,8 @@ class Bid(OptimizationObject):
         if self.is_linear:
             out = self.polynomial[1] * power
         else:
-            out = self.get_variable('cost',
-                                    time=time, scenario=scenario, indexed=True)
+            out = self.get_variable(self.output_name,
+                time=time, scenario=scenario, indexed=True)
             if evaluate:
                 out = value(out)
 
@@ -156,10 +158,10 @@ class Bid(OptimizationObject):
         return input_range, output_range
 
     def __str__(self):
-        return 'bid_{}'.format(self.owner_id)
+        return 'curve_{}_{}'.format(self.output_name, self.owner_id)
 
     def iden(self, *a, **k):
-        return 'bid_{}'.format(self.owner_id)
+        return 'curve_{}_{}'.format(self.output_name, self.owner_id)
 
 
 def is_linear(coefs):

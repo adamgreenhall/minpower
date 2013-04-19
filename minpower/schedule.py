@@ -66,6 +66,7 @@ class TimeIndex(object):
         else:
             self.interval = self.times[1] - self.times[0]
             self.intervalhrs = self.interval.total_seconds() / 3600.0
+        self.is_hourly = self.intervalhrs == 1
         return
 
     def __contains__(self, item):

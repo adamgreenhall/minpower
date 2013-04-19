@@ -1,5 +1,7 @@
+import pandas as pd
 from commonscripts import update_attributes, hours, set_trace
 from generators import Generator
+from schedule import is_init
 import bidding
 
 
@@ -21,8 +23,9 @@ class HydroGenerator(Generator):
             elevation_ramp_min=None, elevation_ramp_max=None,
             outflow_ramp_min=None, outflow_ramp_max=None,
             elevation_initial=0, elevation_final=None,
-            outflow_initial=None,
+            outflow_initial=0,
             power_initial=0,
+            spill_initial=0,
             inflow_schedule=None,
             flow_to_forebay_elevation=None,
             flow_to_tailwater_elevation=None,
@@ -37,6 +40,10 @@ class HydroGenerator(Generator):
         self.initial_status = True
 
         self.build_pw_models()
+        if self.outflow_max is None:
+            self.outflow_max = pd.Series(
+                self.flow_to_tailwater_elevation.indvar.max(),
+                index=self.inflow_schedule.index)
         self.init_optimization()
     def build_pw_models(self):
         '''
@@ -47,14 +54,17 @@ class HydroGenerator(Generator):
             flow_to_forebay_elevation= {
                 'bid_points': self.flow_to_forebay_elevation,
                 'input_variable': self.net_flow,
+                'output_name': 'el_fb'
             },
             flow_to_tailwater_elevation={
                 'bid_points': self.flow_to_forebay_elevation,
                 'input_variable': self.net_outflow,
+                'output_name': 'el_tw'
             },
             head_to_production_coefficient={
                 'bid_points': self.head_to_production_coefficient,
                 'input_variable': self.head,
+                'output_name': 'prod_coeff'
             }
         )
         for k in self.PWparams.keys():
@@ -63,47 +73,58 @@ class HydroGenerator(Generator):
                 status_variable= self.status,
                 polynomial= None,
                 ))
+    def power(self, time=None, scenario=None):
+        if time is not None and is_init(time):
+            return self.initial_power
+        return self.get_var('power', time, scenario)
 
-#    def outflow(self, time=None, scenario=None):
-#        return self.get_variable('outflow', time,
-#            scenario=scenario, indexed=True)
-
-    def spill(self, time=None, scenario=None):
-        return self.get_variable('spill', time,
-            scenario=scenario, indexed=True)
+    def outflow(self, time=None, scenario=None):
+        if time is not None and is_init(time):
+            return self.initial_outflow
+        return self.get_var('outflow', time, scenario)
 
     def elevation(self, time=None, scenario=None):
-        return self.get_variable('elevation', time,
-            scenario=scenario, indexed=True)
+        if time is not None and is_init(time):
+            return self.initial_elevation
+        return self.get_var('elevation', time, scenario)
+
+    def spill(self, time=None, scenario=None):
+        return self.get_var('spill', time, scenario)
+
+    def head(self, time=None, scenario=None):
+        return self.get_var('head', time, scenario)
+
+    def net_outflow(self, time=None, scenario=None):
+        return self.get_var('outflow', time, scenario)
 
     def elevation_tailwater(self, time=None, scenario=None):
         return self.PWmodels['flow_to_tailwater_elevation'].output(time)
 
-    def head(self, time=None, scenario=None):
-        return self.get_variable('head', time,
-            scenario=scenario, indexed=True)
-
-    def net_outflow(self, time=None, scenario=None):
-        return self.outflow(time, scenario)\
-               + self.spill(time, scenario)
+    def net_flow(self, time=None, scenario=None):
+        return self.get_var('net_flow', time, scenario)
 
     def net_inflow(self, t, times, other_hydro):
         return self.inflow_schedule[times[t]] + sum(
             self.upstream_unit_outflow(
                 times, t, other_hydro[r]) for r in self.upstream_reservoirs)
 
-    def net_flow(self, time=None, scenario=None):
-        return self.PWmodels['flow_to_forebay_elevation'].output(
-            time, scenario)
+    def modeled_net_flow(self, t, times, other_hydro):
+        return self.net_inflow(t, times, other_hydro) - \
+               self.net_outflow(times[t])
 
     def elevation_change(self, t, times):
         '''change in elevation between t and t-1'''
-        prev = self.elevation(times[t - 1]) if t > 1 else self.volume_initial
+        prev = self.elevation(times[t - 1]) if t > 1 else self.elevation_initial
         return self.elevation(times[t]) - prev
 
     def upstream_unit_outflow(self, times, t, upstream_gen):
         outflow_time = times.times[t] - \
             hours(upstream_gen.delay_downstream)
+        if times.is_hourly:
+            # HACK: use hour start
+            outflow_time = pd.Timestamp(outflow_time) + \
+                pd.DateOffset(minute=0)
+
         if outflow_time < times.Start:
             out = upstream_gen.outflow_initial + upstream_gen.spill_initial
         else:
@@ -111,13 +132,23 @@ class HydroGenerator(Generator):
             out = upstream_gen.net_outflow(tm_up)
         return out
 
-    def outflow(self, time):
-        '''flow output through turbine'''
-        return self.PWmodel['head_to_production_coefficient'].output(time) * self.power(time)
+    def modeled_outflow(self, time, scenario=None):
+        '''
+        flow output through turbine as modeled by the
+        head dependent production equation
+        '''
+        return self.PWmodels['head_to_production_coefficient'].output(
+            time, scenario) * self.power(time, scenario)
 
-    def head_modeled(self, time=None, scenario=None):
+    def modeled_head(self, time=None, scenario=None):
         return self.elevation(time, scenario)\
             - self.elevation_tailwater(time, scenario)
+
+    def modeled_net_outflow(self, time=None, scenario=None):
+        return self.outflow(time, scenario)\
+               + self.spill(time, scenario)
+
+
 
     def create_variables(self, times):
         self.add_variable('power', index=times.set,
@@ -126,7 +157,16 @@ class HydroGenerator(Generator):
             low=self.elevation_min, high=self.elevation_max)
         self.add_variable('outflow', index=times.set,
             low=self.outflow_min, high=self.outflow_max)
-        self.add_variable('head', index=times.set)
+
+        self.add_variable('net_outflow', index=times.set,
+            low= self.outflow_min + self.spill_min,
+            # high= self.outflow_max + self.spill_max)
+            )
+        self.add_variable('net_flow', index=times.set,
+            low=-1e9, high=1e9)
+        self.add_variable('head', index=times.set,
+            low=0,
+            high=self.head_to_production_coefficient.indvar.max())
         self.add_variable('spill', index=times.set,
             low=self.spill_min, high=self.spill_max)
         self.PWmodels = {
@@ -138,9 +178,10 @@ class HydroGenerator(Generator):
             lambda gen: getattr(gen,'is_hydro', False),
             self._parent_problem().generators())
 
-        # initial and final volumes
-        self.add_constraint('elevation final', times.last(),
-            self.elevation(times.last()) >= self.elevation_final)
+        # initial and final elevations
+        if self.elevation_final is not None:
+            self.add_constraint('elevation final', times.last(),
+                self.elevation(times.last()) >= self.elevation_final)
 
         for t, time in enumerate(times):
             # network balance
@@ -148,13 +189,18 @@ class HydroGenerator(Generator):
                 self.elevation_change(t, times) == \
                     self.net_inflow(t, times, hydro_gens) - \
                     self.net_outflow(time))
+            self.add_constraint('modeled net flow', time,
+                self.net_flow(times[t]) == \
+                self.modeled_net_flow(t, times, hydro_gens))
 
-        self.add_constraint_set('head modeled', times.set, lambda model, t:
-            self.head(t) == self.head_modeled(t))
-#            # production
-#            self.add_constraint(
-#                'outflow', time,
-#                self.outflow(time) == self.outflow_modeled(time))
+        self.add_constraint_set('modeled outflow', times.set, lambda model, t:
+            self.outflow(t) == self.modeled_outflow(t))
+
+        self.add_constraint_set('modeled head', times.set, lambda model, t:
+            self.head(t) == self.modeled_head(t))
+
+        self.add_constraint_set('modeled net outflow', times.set, lambda model, t:
+            self.net_outflow(t) == self.modeled_net_outflow(t))
 
 
     def __str__(self):

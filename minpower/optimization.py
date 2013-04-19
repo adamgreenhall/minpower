@@ -5,7 +5,7 @@ Basically a wrapper around Coopr's `pyomo.ConcreteModel` class.
 import logging
 import time
 import weakref
-from commonscripts import (quiet, not_quiet, 
+from commonscripts import (quiet, not_quiet,
     update_attributes, joindir, set_trace)
 
 with quiet():
@@ -137,12 +137,12 @@ class OptimizationObject(object):
             def get_varying_lim(limname='low'):
                 if limname in kwargs and hasattr(kwargs[limname], 'index'):
                     unq = kwargs[limname].unique()
-                    if len(unq) == 1: 
+                    if len(unq) == 1:
                         kwargs[limname] = unq[0]
                         return None
                     return kwargs.pop(limname)
                 else: return None
-                    
+
             low_limit_series = get_varying_lim('low')
             high_limit_series = get_varying_lim('high')
 
@@ -158,12 +158,12 @@ class OptimizationObject(object):
                     var[i] = fixed_value
 
             if low_limit_series is not None:
-                self.add_constraint_set('{}_min'.format(name), index, 
+                self.add_constraint_set('{}_min'.format(name), index,
                     lambda model, t: var[t] >= low_limit_series[t])
             if high_limit_series is not None:
-                self.add_constraint_set('{}_max'.format(name), index, 
+                self.add_constraint_set('{}_max'.format(name), index,
                     lambda model, t: var[t] <= high_limit_series[t])
-                
+
     def add_parameter(self, name, index=None, values=None, mutable=True, default=None, **kwargs):
         name = self._id(name)
         self._parent_problem().add_component_to_problem(
@@ -194,6 +194,9 @@ class OptimizationObject(object):
                 self.get_constraint(cname, time))
         else:
             return None
+
+    def get_var(self, name, time=None, scenario=None):
+        return self.get_variable(name, time, indexed=True, scenario=scenario)
 
     def get_variable(self, name, time=None, indexed=False, scenario=None):
         if indexed:

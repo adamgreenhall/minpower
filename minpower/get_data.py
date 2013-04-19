@@ -220,7 +220,7 @@ def _parse_raw_data(generators_data, loads_data,
     scenario_values = setup_scenarios(generators_data, generators, times)
 
     #setup hydro if applicable
-    hydro_generators = setup_hydro(hydro_data, timeseries)
+    hydro_generators = setup_hydro(hydro_data, timeseries, times)
     generators.extend(hydro_generators)
 
 
@@ -386,12 +386,19 @@ def build_class_list(data, model, times=None, timeseries=None):
 
 
 def read_bid_points(filename, depvar='power', indvar='cost'):
-    bid_points = read_csv(filename)
-    # return a dataframe of bidpoints
-    return bid_points[[depvar, indvar]].rename(columns={
+    '''read a DataFrame of PWL points'''
+    bid_points = read_csv(filename)[[depvar, indvar]].rename(columns={
         depvar: 'depvar',
         indvar: 'indvar'
         }).astype(float)
+
+    # combine segments with same slope
+    # bid_points = bid_points.ix[[0]].append(
+    #    bid_points.groupby(
+    #        bid_points.depvar.diff() / bid_points.indvar.diff()
+    #        ).last()).reset_index(drop=True)
+    return bid_points[['indvar', 'depvar']]\
+        .sort('indvar').reset_index(drop=True)
 
 
 def setup_times(generators_data, loads_data):
@@ -489,7 +496,10 @@ def setup_times(generators_data, loads_data):
 
     if os.path.exists(hs_file):
         hydro_ts = read_csv(hs_file, index_col=0, parse_dates=True)
-        timeseries = timeseries.join(hydro_ts)
+        # if hydro data is at a lower freq
+        # pad the hydro data to get a ts without nans
+        timeseries = timeseries.join(hydro_ts)\
+            .fillna(method='bfill').fillna(method='ffill')
 
     times = TimeIndex(timeseries.index)
     timeseries.index = times.strings.values
@@ -618,7 +628,7 @@ _hydro_pw_nms = {
     'head_to_production_coefficient':
         dict(indvar='head', depvar='outflow_coef'),
 }
-def setup_hydro(data, ts):
+def setup_hydro(data, ts, times):
     hydro_generators = []
     if len(data) == 0: return hydro_generators
 

@@ -464,8 +464,6 @@ class PowerSystem(OptimizationProblem):
         except OptimizationError:
             # re-do stage, with load shedding allowed
             logging.critical('stage infeasible, re-run with shedding.')
-            if user_config.debugger:
-                set_trace()
             self.allow_shedding(times)
             try:
                 instance = self.solve()

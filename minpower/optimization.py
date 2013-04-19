@@ -2,6 +2,7 @@
 An optimization command library for Minpower.
 Basically a wrapper around Coopr's `pyomo.ConcreteModel` class.
 """
+import os
 import logging
 import time
 import weakref
@@ -347,7 +348,7 @@ class OptimizationProblem(OptimizationObject):
         if scenario is None:
             try:
                 return getattr(self._model, name)
-            except (AttributeError, KeyError) as NotInModelError:
+            except (AttributeError, KeyError):
                 # self.show_model()
                 raise AttributeError('error getting {}'.format(name))
         else:
@@ -483,8 +484,6 @@ class OptimizationProblem(OptimizationObject):
             logging.info('Problem solved in {}s.'.format(self.solution_time))
 
         if user_config.problem_file:
-            if user_config.debugger:
-                set_trace()
             self.write_model(full_filename('problem.lp'))
 
         if not self.solved:
@@ -583,7 +582,8 @@ class OptimizationProblem(OptimizationObject):
                 logging.debug('solution gap={}'.format(self.mipgap))
             except AttributeError:
                 self.mipgap = None
-
+        if not self.solved and keepfiles and user_config.debugger:
+            debug_infeasible(self._opt_solver)
         return results, elapsed
 
     def fix_binary_variables(self, fix_offs=True):
@@ -725,3 +725,22 @@ class NotInModelError(Exception):
 
     def __str__(self):
         return self.value
+
+def debug_infeasible(opt_solver):
+    logging.info('opening solver files for inspection')
+    prob_filename = opt_solver._problem_files[0]
+    if user_config.solver == 'gurobi':
+        infeas_fnm = joindir(user_config.directory, 'infeasibility.ilp')
+        script_fnm = joindir(user_config.directory, 'gurobi_script.py')
+        with open(script_fnm, 'w+') as f:
+            f.write('\n'.join([
+                'from gurobipy import read',
+                'model = read("{}")'.format(prob_filename),
+                'model.computeIIS()',
+                'model.write("{}")'.format(infeas_fnm)]))
+        errcode = os.system('gurobi.sh < {}'.format(script_fnm))
+        if errcode == 0:
+            os.system('sleep -2; vim -p {}'.format(infeas_fnm))
+    else:
+        os.system('sleep 2; vim -p {} {}'.format(opt_solver.log_file, prob_filename))
+    set_trace()

@@ -5,6 +5,9 @@ from generators import Generator
 from schedule import is_init
 import bidding
 
+default_max=dict(
+    flow= 1e9,
+    elevation= 1e6)
 
 class HydroGenerator(Generator):
     """
@@ -45,7 +48,7 @@ class HydroGenerator(Generator):
             try:
                 self.outflow_max = self.flow_to_tailwater_elevation.indvar.max()
             except AttributeError:
-                self.outflow_max = 1e9
+                self.outflow_max = default_max['flow']
         self.init_optimization()
     def build_pw_models(self):
         '''
@@ -76,7 +79,7 @@ class HydroGenerator(Generator):
                 self.net_flow,
                 output_name='el_fb'),
             flow_to_tailwater_elevation= pw_or_poly(
-                self.flow_to_forebay_elevation,
+                self.flow_to_tailwater_elevation,
                 self.net_outflow,
                 output_name= 'el_tw'),
             head_to_production_coefficient=pw_or_poly(
@@ -111,10 +114,7 @@ class HydroGenerator(Generator):
         return self.get_var('head', time, scenario)
 
     def net_outflow(self, time=None, scenario=None):
-        return self.get_var('outflow', time, scenario)
-
-    def elevation_tailwater(self, time=None, scenario=None):
-        return self.PWmodels['flow_to_tailwater_elevation'].output(time)
+        return self.get_var('net_outflow', time, scenario)
 
     def net_flow(self, time=None, scenario=None):
         return self.get_var('net_flow', time, scenario)
@@ -123,15 +123,6 @@ class HydroGenerator(Generator):
         return self.inflow_schedule[times[t]] + sum(
             self.upstream_unit_outflow(
                 times, t, other_hydro[r]) for r in self.upstream_reservoirs)
-
-    def modeled_net_flow(self, t, times, other_hydro):
-        return self.net_inflow(t, times, other_hydro) - \
-               self.net_outflow(times[t])
-
-    def elevation_change(self, t, times):
-        '''change in elevation between t and t-1'''
-        prev = self.elevation(times[t - 1]) if t > 1 else self.elevation_initial
-        return self.elevation(times[t]) - prev
 
     def upstream_unit_outflow(self, times, t, upstream_gen):
         outflow_time = times.times[t] - \
@@ -148,24 +139,6 @@ class HydroGenerator(Generator):
             out = upstream_gen.net_outflow(tm_up)
         return out
 
-    def modeled_outflow(self, time, scenario=None):
-        '''
-        flow output through turbine as modeled by the
-        head dependent production equation
-        '''
-        return self.PWmodels['head_to_production_coefficient'].output(
-            time, scenario) * self.power(time, scenario)
-
-    def modeled_head(self, time=None, scenario=None):
-        return self.elevation(time, scenario)\
-            - self.elevation_tailwater(time, scenario)
-
-    def modeled_net_outflow(self, time=None, scenario=None):
-        return self.outflow(time, scenario)\
-               + self.spill(time, scenario)
-
-
-
     def create_variables(self, times):
         self.add_variable('power', index=times.set,
             low=self.pmin, high=self.pmax)
@@ -174,16 +147,14 @@ class HydroGenerator(Generator):
         self.add_variable('outflow', index=times.set,
             low=self.outflow_min, high=self.outflow_max)
 
-        self.add_variable('net_outflow', index=times.set,
-            low= self.outflow_min + self.spill_min,
-            # high= self.outflow_max + self.spill_max)
-            )
-        self.add_variable('net_flow', index=times.set,
-            low=-1e9, high=1e9)
+        self.add_variable('net_outflow', index=times.set, low= 0, high= default_max['flow'])
+        self.add_variable('net_flow', index=times.set, 
+            low= -1*default_max['flow'],
+            high= default_max['flow'])
         try:
             max_head = self.head_to_production_coefficient.indvar.max()
         except AttributeError:
-            max_head = 1e5
+            max_head = default_max['elevation']
         self.add_variable('head', index=times.set,
             low=0,
             high=max_head)
@@ -205,22 +176,26 @@ class HydroGenerator(Generator):
 
         for t, time in enumerate(times):
             # network balance
-            self.add_constraint('water balance', time,
-                self.elevation_change(t, times) == \
-                    self.net_inflow(t, times, hydro_gens) - \
-                    self.net_outflow(time))
+            if t < len(times) - 1:
+                self.add_constraint('water balance', time,
+                    self.elevation(times[t+1]) - self.elevation(time) == \
+                    self.PWmodels['flow_to_forebay_elevation'].output(time))
+
             self.add_constraint('modeled net flow', time,
                 self.net_flow(times[t]) == \
-                self.modeled_net_flow(t, times, hydro_gens))
+                self.net_inflow(t, times, hydro_gens) - \
+                self.net_outflow(time))
 
         self.add_constraint_set('modeled outflow', times.set, lambda model, t:
-            self.outflow(t) == self.modeled_outflow(t))
+            self.outflow(t) == \
+            self.PWmodels['head_to_production_coefficient'].output(t) * self.power(t)
+            )
 
         self.add_constraint_set('modeled head', times.set, lambda model, t:
-            self.head(t) == self.modeled_head(t))
+            self.head(t) == self.elevation(t) - self.PWmodels['flow_to_tailwater_elevation'].output(t))
 
         self.add_constraint_set('modeled net outflow', times.set, lambda model, t:
-            self.net_outflow(t) == self.modeled_net_outflow(t))
+            self.net_outflow(t) == self.outflow(t) + self.spill(t))
 
 
     def __str__(self):

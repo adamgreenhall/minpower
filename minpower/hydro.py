@@ -1,4 +1,5 @@
 import pandas as pd
+from config import user_config
 from commonscripts import update_attributes, hours, set_trace
 from generators import Generator
 from schedule import is_init
@@ -41,37 +42,52 @@ class HydroGenerator(Generator):
 
         self.build_pw_models()
         if self.outflow_max is None:
-            self.outflow_max = pd.Series(
-                self.flow_to_tailwater_elevation.indvar.max(),
-                index=self.inflow_schedule.index)
+            try:
+                self.outflow_max = self.flow_to_tailwater_elevation.indvar.max()
+            except AttributeError:
+                self.outflow_max = 1e9
         self.init_optimization()
     def build_pw_models(self):
         '''
         take sets of PWL points and make models for the
         three different hydro PWL functions.
         '''
+        def pw_or_poly(obj, input_variable, output_name='cost'):
+            params = dict(
+                input_variable=input_variable,
+                output_name=output_name,
+                )
+            if type(obj) == pd.DataFrame:
+                # PWL model
+                params.update(dict(
+                    bid_points= obj,
+                    polynomial= None))
+            else:
+                cost_coeffs = bidding.parse_polynomial(obj)
+                params.update(dict(
+                    polynomial= cost_coeffs,
+                    constant_term= cost_coeffs[0],
+                    num_breakpoints= user_config.breakpoints))
+            return params
+
         self.PWparams = dict(
-            flow_to_forebay_elevation= {
-                'bid_points': self.flow_to_forebay_elevation,
-                'input_variable': self.net_flow,
-                'output_name': 'el_fb'
-            },
-            flow_to_tailwater_elevation={
-                'bid_points': self.flow_to_forebay_elevation,
-                'input_variable': self.net_outflow,
-                'output_name': 'el_tw'
-            },
-            head_to_production_coefficient={
-                'bid_points': self.head_to_production_coefficient,
-                'input_variable': self.head,
-                'output_name': 'prod_coeff'
-            }
+            flow_to_forebay_elevation= pw_or_poly(
+                self.flow_to_forebay_elevation,
+                self.net_flow,
+                output_name='el_fb'),
+            flow_to_tailwater_elevation= pw_or_poly(
+                self.flow_to_forebay_elevation,
+                self.net_outflow,
+                output_name= 'el_tw'),
+            head_to_production_coefficient=pw_or_poly(
+                self.head_to_production_coefficient,
+                self.head,
+                output_name= 'prod_coeff')
         )
         for k in self.PWparams.keys():
             self.PWparams[k].update(dict(
                 owner= self,
                 status_variable= self.status,
-                polynomial= None,
                 ))
     def power(self, time=None, scenario=None):
         if time is not None and is_init(time):
@@ -164,9 +180,13 @@ class HydroGenerator(Generator):
             )
         self.add_variable('net_flow', index=times.set,
             low=-1e9, high=1e9)
+        try:
+            max_head = self.head_to_production_coefficient.indvar.max()
+        except AttributeError:
+            max_head = 1e5
         self.add_variable('head', index=times.set,
             low=0,
-            high=self.head_to_production_coefficient.indvar.max())
+            high=max_head)
         self.add_variable('spill', index=times.set,
             low=self.spill_min, high=self.spill_max)
         self.PWmodels = {

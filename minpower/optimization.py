@@ -483,6 +483,8 @@ class OptimizationProblem(OptimizationObject):
             logging.info('Problem solved in {}s.'.format(self.solution_time))
 
         if user_config.problem_file:
+            if user_config.debugger:
+                set_trace()
             self.write_model(full_filename('problem.lp'))
 
         if not self.solved:
@@ -566,6 +568,7 @@ class OptimizationProblem(OptimizationObject):
                 suffixes=suffixes,
                 keepfiles=keepfiles,
                 tee=show_solver_output,
+                symbolic_solver_labels=keepfiles,
                 )
         try:
             self._opt_solver._symbol_map = None  # this should mimic the memory leak bugfix at: software.sandia.gov/trac/coopr/changeset/5449

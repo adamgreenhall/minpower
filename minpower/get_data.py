@@ -387,7 +387,10 @@ def build_class_list(data, model, times=None, timeseries=None):
 
 def read_bid_points(filename, depvar='power', indvar='cost'):
     '''read a DataFrame of PWL points'''
-    bid_points = read_csv(filename)[[depvar, indvar]].rename(columns={
+    try: bid_points = read_csv(filename)
+    except Exception, msg:
+        raise OSError(str(msg))
+    bid_points = bid_points[[depvar, indvar]].rename(columns={
         depvar: 'depvar',
         indvar: 'indvar'
         }).astype(float)
@@ -642,9 +645,11 @@ def setup_hydro(data, ts, times):
             if key in hydro_schedule_cols:
                 row[key] = get_sched(row[key], ts)
             if key in hydro_pw_cols:
-                row[key] = read_bid_points(
-                    joindir(user_config.directory, row[key]),
-                    **_hydro_pw_nms[key])
+                try:
+                    row[key] = read_bid_points(
+                        joindir(user_config.directory, row[key]),
+                        **_hydro_pw_nms[key])
+                except OSError: pass
         hg = HydroGenerator(index=i, **row)
         hydro_generators.append(hg)
 

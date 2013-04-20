@@ -141,7 +141,8 @@ class OptimizationObject(object):
                     if len(unq) == 1:
                         kwargs[limname] = unq[0]
                         return None
-                    return kwargs.pop(limname)
+                    else:
+                        return kwargs.pop(limname)
                 else: return None
 
             low_limit_series = get_varying_lim('low')
@@ -741,6 +742,13 @@ def debug_infeasible(opt_solver):
         errcode = os.system('gurobi.sh < {}'.format(script_fnm))
         if errcode == 0:
             os.system('sleep -2; vim -p {}'.format(infeas_fnm))
+    # elif cplex
+        # read /tmp/tmpqKUijC.pyomo.lp
+        # optimize
+        # conflict
+        # display conflict all 
+        # write???
+        # quit
     else:
         os.system('sleep 2; vim -p {} {}'.format(opt_solver.log_file, prob_filename))
     set_trace()

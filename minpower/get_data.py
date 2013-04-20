@@ -37,7 +37,7 @@ hydro_schedule_cols = [
 ]
 
 hydro_pw_cols = [
-    'flow_to_forebay_elevation',
+    'volume_to_forebay_elevation',
     'flow_to_tailwater_elevation',
     'head_to_production_coefficient',
 ]
@@ -636,8 +636,8 @@ def get_sched(val, ts):
 _hydro_rename = {f.replace('_', ''): f
     for f in fields['HydroGenerator']}
 _hydro_pw_nms = {
-    'flow_to_forebay_elevation':
-        dict(indvar='flow', depvar='elevation_fb'),
+    'volume_to_forebay_elevation':
+        dict(indvar='volume', depvar='elevation_fb'),
     'flow_to_tailwater_elevation':
         dict(indvar='flow', depvar='elevation_tw'),
     'head_to_production_coefficient':

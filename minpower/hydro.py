@@ -7,7 +7,8 @@ import bidding
 
 default_max=dict(
     flow= 1e9,
-    elevation= 1e6)
+    elevation= 1e6,
+    volume= 1e9)
 
 class HydroGenerator(Generator):
     """
@@ -31,7 +32,7 @@ class HydroGenerator(Generator):
             power_initial=0,
             spill_initial=0,
             inflow_schedule=None,
-            flow_to_forebay_elevation=None,
+            volume_to_forebay_elevation=None,
             flow_to_tailwater_elevation=None,
             head_to_production_coefficient=None
             ):
@@ -74,9 +75,9 @@ class HydroGenerator(Generator):
             return params
 
         self.PWparams = dict(
-            flow_to_forebay_elevation= pw_or_poly(
-                self.flow_to_forebay_elevation,
-                self.net_flow,
+            volume_to_forebay_elevation= pw_or_poly(
+                self.volume_to_forebay_elevation,
+                self.volume,
                 output_name='el_fb'),
             flow_to_tailwater_elevation= pw_or_poly(
                 self.flow_to_tailwater_elevation,
@@ -106,6 +107,9 @@ class HydroGenerator(Generator):
         if time is not None and is_init(time):
             return self.initial_elevation
         return self.get_var('elevation', time, scenario)
+
+    def volume(self, time=None, scenario=None):
+        return self.get_var('volume', time, scenario)
 
     def spill(self, time=None, scenario=None):
         return self.get_var('spill', time, scenario)
@@ -144,6 +148,8 @@ class HydroGenerator(Generator):
             low=self.pmin, high=self.pmax)
         self.add_variable('elevation', index=times.set,
             low=self.elevation_min, high=self.elevation_max)
+        self.add_variable('volume', index=times.set,
+            low=0, high=default_max['volume'])
         self.add_variable('outflow', index=times.set,
             low=self.outflow_min, high=self.outflow_max)
 
@@ -178,13 +184,17 @@ class HydroGenerator(Generator):
             # network balance
             if t < len(times) - 1:
                 self.add_constraint('water balance', time,
-                    self.elevation(times[t+1]) - self.elevation(time) == \
-                    self.PWmodels['flow_to_forebay_elevation'].output(time))
+                    self.volume(times[t+1]) - self.volume(time) == \
+                    self.net_flow(time))
 
             self.add_constraint('modeled net flow', time,
                 self.net_flow(times[t]) == \
                 self.net_inflow(t, times, hydro_gens) - \
                 self.net_outflow(time))
+
+
+        self.add_constraint_set('modeled elevation', times.set, lambda model, t:
+            self.elevation(t) == self.PWmodels['volume_to_forebay_elevation'].output(t))
 
         self.add_constraint_set('modeled outflow', times.set, lambda model, t:
             self.outflow(t) == \

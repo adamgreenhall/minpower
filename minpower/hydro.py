@@ -196,9 +196,9 @@ class HydroGenerator(Generator):
         self.add_constraint_set('modeled elevation', times.set, lambda model, t:
             self.elevation(t) == self.PWmodels['volume_to_forebay_elevation'].output(t))
 
-        self.add_constraint_set('modeled outflow', times.set, lambda model, t:
-            self.outflow(t) == \
-            self.PWmodels['head_to_production_coefficient'].output(t) * self.power(t)
+        self.add_constraint_set('power production', times.set, lambda model, t:
+            self.power(t) == \
+            self.PWmodels['head_to_production_coefficient'].output(t) * self.outflow(t)
             )
 
         self.add_constraint_set('modeled head', times.set, lambda model, t:

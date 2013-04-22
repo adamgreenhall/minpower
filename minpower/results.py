@@ -183,9 +183,9 @@ class Solution(object):
         if self.load_shed > 0.01:
             logging.debug('load shed: {}MW'.format(self.load_shed))
         if self.power_system.has_exports:
-            export_prices = pd.DataFrame({str(bus): bus.exports.priceexport
+            export_prices = pd.DataFrame({str(bus): bus.exports.priceexport.ix[self.times]
                 for bus in self.power_system.buses})
-            import_prices = pd.DataFrame({str(bus): bus.exports.priceimport 
+            import_prices = pd.DataFrame({str(bus): bus.exports.priceimport.ix[self.times] 
                 for bus in self.power_system.buses})
             import_prices.index = export_prices.index = self.times.times
             self.net_export_income = self.power_exports * export_prices - \

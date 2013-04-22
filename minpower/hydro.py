@@ -1,6 +1,7 @@
 import pandas as pd
 from config import user_config
 from commonscripts import update_attributes, hours, set_trace
+from optimization import value
 from generators import Generator
 from schedule import is_init, get_tPrev
 import bidding
@@ -56,6 +57,16 @@ class HydroGenerator(Generator):
             outflow=outflow,
             spill=spill)
         self.initial_status = True
+
+    def getstatus(self, tend, *a, **kw):
+        return dict(
+            status=self.status(tend),
+            power= value(self.power(tend)),
+            elevation= value(self.elevation(tend)),
+            outflow= value(self.outflow(tend)),
+            spill= value(self.spill(tend)),
+            )
+
     def _set_derived_init(self):
         '''after models have been built, set derived initial vars'''
         self.initial['head'] = \

@@ -528,7 +528,7 @@ class OptimizationProblem(OptimizationObject):
         keepfiles=False,
         ):
 
-        if user_config.keep_lp_files:
+        if user_config.keep_lp_files or user_config.debugger:
             keepfiles = True
 
         suffixes = ['dual'] if get_duals else []
@@ -557,7 +557,7 @@ class OptimizationProblem(OptimizationObject):
 
 
         # if we are debugging, show the solver output
-        show_solver_output = user_config.logging_level <= 10
+        show_solver_output = user_config.logging_level <= 10 or user_config.debugger
 
         start = time.time()
 

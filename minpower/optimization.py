@@ -741,7 +741,7 @@ def debug_infeasible(opt_solver):
                 'model.write("{}")'.format(infeas_fnm)]))
         errcode = os.system('gurobi.sh < {}'.format(script_fnm))
         if errcode == 0:
-            os.system('sleep -2; vim -p {}'.format(infeas_fnm))
+            os.system('sleep 2; vim -p {}'.format(infeas_fnm))
     # elif cplex
         # read /tmp/tmpqKUijC.pyomo.lp
         # optimize

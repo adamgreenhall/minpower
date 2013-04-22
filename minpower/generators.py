@@ -4,7 +4,8 @@ from config import user_config
 from commonscripts import update_attributes, bool_to_int, set_trace
 
 from optimization import value, OptimizationObject
-from schedule import is_init
+from schedule import is_init, get_tPrev
+
 import bidding
 
 
@@ -424,10 +425,6 @@ class Generator(OptimizationObject):
 
     def __str__(self):
         return 'g{ind}'.format(ind=self.index)
-
-
-def get_tPrev(t, model, times):
-    return model.times.prev(t) if t != model.times.first() else times.initialTime
 
 
 class Generator_nonControllable(Generator):

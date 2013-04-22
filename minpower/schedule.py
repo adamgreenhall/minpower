@@ -129,3 +129,6 @@ class TimeIndex(object):
 
 def is_init(time):
     return getattr(time, 'index', None) == 'Init'
+
+def get_tPrev(t, model, times):
+    return model.times.prev(t) if t != model.times.first() else times.initialTime

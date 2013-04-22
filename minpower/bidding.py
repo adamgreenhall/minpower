@@ -1,5 +1,6 @@
+import pandas as pd
 import numpy as np
-from commonscripts import update_attributes, pairwise
+from commonscripts import update_attributes, pairwise, set_trace
 from optimization import value, OptimizationObject
 from config import user_config
 import re
@@ -74,6 +75,7 @@ class Bid(OptimizationObject):
             self.is_pwl = True
             self.max_input = self.bid_points.indvar.max()
             self.min_input = self.bid_points.indvar.min()
+            self.bid_points = drop_dup_slopes(self.bid_points)
             self.add_variable(self.output_name, index=self.times.set, low=0)
             self.discrete_input_points = self.bid_points.indvar.values.tolist()
             in_pts = dict(
@@ -133,6 +135,9 @@ class Bid(OptimizationObject):
             for A, B in pairwise(self.bid_points.values.tolist()):
                 if A[0] <= input_val <= B[0]:
                     return get_line_value(A, B, input_val) + self.constant_term
+            raise ValueError(
+                'value {} was not within piecewise specification.\n{}'.format(
+                input_val, self.bid_points))
         else:
             return polynomial_value(self.polynomial, input_val)
 
@@ -282,3 +287,16 @@ def get_line_value(A, B, x):
     xA, yA = A
     slope = get_line_slope(A, B)
     return slope * (value(x) - xA) + yA
+
+def drop_dup_slopes(df):
+    slopes = pd.Series(df.depvar.diff() / df.indvar.diff(), name='slope')
+    if len(slopes.unique()) == len(df): return df
+    out = df.ix[[0]].copy()
+    for i, row in df.iterrows():
+        if i == 0: continue
+        if slopes[i] != slopes[i - 1]:
+            out = out.append(row)
+    else:
+        if slopes[i] == slopes[i-1]:
+            out = out.append(row)
+    return out

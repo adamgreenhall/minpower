@@ -228,7 +228,8 @@ def _parse_raw_data(generators_data, loads_data,
     if os.path.exists(hinit_file):
         hydro_init_data = pd.read_csv(hinit_file, index_col=0)[hydro_initial_cols]
     elif len(hydro_data) > 0:
-        hydro_init_data = pd.DataFrame(columns=hydro_initial_cols, index=hydro_data.index)
+        logging.warning('no hydro_initial.csv file found')
+        hydro_init_data = pd.DataFrame(0, columns=hydro_initial_cols, index=hydro_data.index)
 
     hydro_generators = setup_hydro(hydro_data, hydro_init_data, timeseries, times)
     generators.extend(hydro_generators)
@@ -647,10 +648,7 @@ def setup_hydro(data, hydro_init_data, ts, times):
     hydro_generators = []
     if len(data) == 0: return hydro_generators
 
-    data = data.rename(columns=_hydro_rename).join(
-        hydro_init_data.rename(columns={
-            col: col+'_initial' for col in hydro_init_data.columns}),
-        on='name')
+    data = data.rename(columns=_hydro_rename)
 
     for i, row in data.iterrows():
         row = row.dropna().to_dict()
@@ -664,6 +662,10 @@ def setup_hydro(data, hydro_init_data, ts, times):
                         **_hydro_pw_nms[key])
                 except OSError: pass
         hg = HydroGenerator(index=i, **row)
+        # set initial data
+        hg.set_initial_condition(
+            **hydro_init_data.ix[i].to_dict()
+            )
         hydro_generators.append(hg)
 
     #label upstream reservoir generator indexes

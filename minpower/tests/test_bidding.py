@@ -1,8 +1,12 @@
 '''Test the constraint behavior of the bids'''
+import nose
+from minpower.config import user_config
 from minpower.generators import Generator
 from minpower.optimization import value
 from minpower.bidding import parse_polynomial
-from test_utils import *
+from test_utils import (istest, with_setup, make_loads_times, solve_problem,
+    reset_config, set_trace, make_cheap_gen, make_expensive_gen, make_mid_gen)
+
 
 @istest
 def parser():
@@ -44,7 +48,8 @@ def cubic_convex():
     user_config.breakpoints = 10
     
     generators=[ Generator(costcurveequation='{}+{}P+{}P^2+{}P^3'.format(a,b,c,d)) ]
-    _,times=solve_problem(generators,**make_loads_times(Pd))#,problem_filename='bidproblem.lp')
+    power_system, times = solve_problem(
+        generators,**make_loads_times(Pd))
     cost = value(generators[0].bids.output(times[0], evaluate=True))
     actual_cost = a+ b*Pd+ c*Pd**2 + d*Pd**3
     assert actual_cost <= cost and cost <= 1.05*actual_cost

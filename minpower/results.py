@@ -82,8 +82,8 @@ def make_multistage_solution(power_system, stage_times, stage_solutions):
         prettify_plots()
     if power_system.lines:
         logging.warning('no visualization for multistage SCUC yet')
-    klass = MultistageStandalone if getattr(
-        stage_solutions, 'path', False) else Solution_UC_multistage
+    klass = MultistageStandalone if (
+        type(stage_solutions) == pd.HDFStore) else Solution_UC_multistage
     return klass(power_system, stage_times, stage_solutions)
 
 

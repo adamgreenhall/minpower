@@ -15,7 +15,7 @@ python_version = sys.version_info
 install_requires=[
     'Coopr>=3.3.7114',
     'numpy>=1.6.1',
-    'pandas>=0.10',
+    'pandas>=0.11.0',
     ]
     
 if python_version[0] == 2 and python_version[1] < 7:

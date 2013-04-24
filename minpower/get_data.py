@@ -230,6 +230,8 @@ def _parse_raw_data(generators_data, loads_data,
     elif len(hydro_data) > 0:
         logging.warning('no hydro_initial.csv file found')
         hydro_init_data = pd.DataFrame(0, columns=hydro_initial_cols, index=hydro_data.index)
+    else:
+        hydro_init_data = None
 
     hydro_generators = setup_hydro(hydro_data, hydro_init_data, timeseries, times)
     generators.extend(hydro_generators)

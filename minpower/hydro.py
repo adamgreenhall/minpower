@@ -126,11 +126,12 @@ class HydroGenerator(Generator):
         prod = dict(
                 inputA=self.head,
                 inputB=self.outflow,
-                pointsA=self.head_to_production_coefficient.indvar.values,
+                pointsA=bidding.drop_dup_slopes(
+                    self.head_to_production_coefficient).indvar.values,
                 pointsB=np.linspace(
                     self.flow_to_tailwater_elevation.indvar.min(),
                     self.flow_to_tailwater_elevation.indvar.max(),
-                    user_config.breakpoints),
+                    2), # user_config.breakpoints),
                 output_name='power_production',
                 output_var=self.power,
                 )        
@@ -305,6 +306,3 @@ class HydroGenerator(Generator):
     def status(self, *a, **k): return True
     def cost_startup(self, *a, **k): return 0
     def cost_shutdown(self, *a, **k): return 0
-    def getstatus(self, *a, **k): return {}
-    
-

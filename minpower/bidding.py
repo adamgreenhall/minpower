@@ -4,7 +4,8 @@ from commonscripts import update_attributes, pairwise, set_trace
 from optimization import value, OptimizationObject
 from config import user_config
 import re
-from coopr.pyomo import Piecewise
+from coopr import pyomo
+from coopr.pyomo.base import piecewise
 
 
 class Bid(OptimizationObject):
@@ -23,7 +24,10 @@ class Bid(OptimizationObject):
                  max_input=1000,
                  num_breakpoints=user_config.breakpoints,
                  status_variable=True,
-                 fixed_input=False):
+                 fixed_input=False,
+                 pw_repn=None,
+                 pw_constr_type='LB',
+                 ):
         update_attributes(self, locals(), exclude=['owner'])
         self._parent_problem = owner._parent_problem
         self.owner_id = str(owner)
@@ -56,13 +60,13 @@ class Bid(OptimizationObject):
             in_pts = dict(
                 (t, self.discrete_input_points) for t in self.times.set)
 
-            pw_representation = Piecewise(
+            pw_representation = pyomo.Piecewise(
                 self.times.set,
                 self.get_variable(self.output_name, time=None, indexed=True),
                 self.input_variable(),
                 f_rule=pw_rule,
                 pw_pts=in_pts,
-                pw_constr_type='LB',
+                pw_constr_type=self.pw_constr_type,
                 warn_domain_coverage=False,
                 # unless warn_domain_coverage is set, pyomo will complain
                 # gen lower power bounds are set to zero (status trick)
@@ -87,12 +91,13 @@ class Bid(OptimizationObject):
                 # see coopr/examples/pyomo/piecewise/example3.py
                 return mapping[input_var]
 
-            pw_representation = Piecewise(self.times.set,
+            pw_representation = pyomo.Piecewise(self.times.set,
                 self.get_variable(self.output_name, time=None, indexed=True),
                 self.input_variable(),
                 pw_pts=in_pts,
-                pw_constr_type='LB',
-                pw_repn='DCC',  # the disagregated convex combination method
+                pw_constr_type=self.pw_constr_type,
+                pw_repn='DCC' if self.pw_repn is None else self.pw_repn,
+                # use a default of the disagregated convex combination method
                 f_rule=pw_rule_points,
                 warn_domain_coverage=False)
 
@@ -300,3 +305,137 @@ def drop_dup_slopes(df):
         if slopes[i] == slopes[i-1]:
             out = out.append(row)
     return out
+    
+class TwoVarPW(OptimizationObject):
+    def __init__(self, times, owner,
+        inputA, inputB,
+        pointsA, pointsB, 
+        pointsOut,
+        output_name='cost',
+        output_var=None,
+        status_variable=True
+        ):
+        '''
+        implements a general piecewise linear formulation with two variables
+        called the "rectangle method" and based on the paper:
+        D'Ambrosio, Lodi, Martello 2009
+        
+        pointsOut is a Series with a MultiIndex, by both pointsA and pointsB
+        '''
+        self.name = '{}_{}'.format(output_name, str(owner))
+        self.output_var = output_var
+        self.output_name = output_name
+        self._parent_problem = owner._parent_problem
+        self.owner_id = str(owner)
+        self.is_pwl = True
+        self.is_linear = False
+
+
+        for time in times:
+            self.build_constraints(time, inputA(time), inputB(time), 
+                pointsA, pointsB, pointsOut, self.output_var(time))
+
+    def output(self, time):
+        return self.output_var(time)
+
+    def add_component(self, comp, time):
+        comp.name += '_' + self.iden(time)
+        self._parent_problem().add_component_to_problem(comp)
+
+    def build_constraints(self, time, inputA, inputB,
+        pointsA, pointsB, pointsOut, outputVar):
+        '''construct the PW variables and constraints for a single time'''
+
+        n = len(pointsA)
+        m = len(pointsB)
+        a_index = range(n)
+        b_index = range(m)
+        a_index_short = range(n-1)
+        b_index_short = range(m-1)
+
+        binaryA = self.add_variable('binaryA_{}'.format(time),
+            index=a_index_short, kind='Boolean')
+        fractionA = self.add_variable('fractionA_{}'.format(time),
+            index=a_index, kind='NonNegativeReals')
+
+        # eqn4
+        self.add_constraint('bin_sumA', time, 
+            sum(binaryA[i] for i in a_index_short) == 1)
+        
+        # eqn5 
+        self.add_constraint_set('Afrac_max_{}'.format(time), a_index, 
+            lambda model, i: fractionA[i] <= \
+                (binaryA[i-1] if 0 < i else 0) + \
+                (binaryA[i] if i < n-1 else 0))
+
+        # eqn6
+        self.add_constraint('Afrac_sum', time, 
+            sum(fractionA[i] for i in a_index) == 1)
+
+        # eqn7
+        self.add_constraint('sumX', time, 
+            inputA == sum(fractionA[i] * pointsA[i] for i in a_index))
+
+        binaryB = self.add_variable('binaryB_{}'.format(time),
+            index=b_index_short, kind='Boolean')
+        proportionB = self.add_variable('proportionB_{}'.format(time),
+            index=b_index_short, kind='NonNegativeReals')
+        
+        # eqn11
+        self.add_constraint('bin_sumB', time, 
+            sum(binaryB[j] for j in b_index_short) == 1)
+            
+        # eqn23
+        self.add_constraint('sumY', time, 
+            inputB == sum(binaryB[j] * pointsB[j] + \
+                proportionB[j] * (pointsB[j+1] - pointsB[j]) \
+                for j in b_index_short)
+        )
+
+        # eqn24
+        self.add_constraint_set('Bprop_max_{}'.format(time), b_index_short, 
+            lambda model, j: proportionB[j] <= binaryB[j])
+        
+        # setup K_{ij}
+        def delta(i, j): 
+            return pointsOut.ix[(pointsA[i], pointsB[j+1])] - \
+                   pointsOut.ix[(pointsA[i], pointsB[j])]
+        def K(i, j): return min(delta(i, j), delta(i+1, j))
+
+        bigM = 1e9
+        def summationTerm(j): return sum(fractionA[k] * \
+            pointsOut.ix[(pointsA[k], pointsB[j])] for k in a_index)
+        
+        # eqn25
+        def output_upper_rule(model, i, j):
+            return outputVar <= summationTerm(j) + \
+                proportionB[j] * K(i, j) + \
+                bigM * (2 - binaryA[i] - binaryB[j])
+        self.add_component(pyomo.Constraint(a_index_short, b_index_short, 
+            rule=output_upper_rule,
+            name='output_upper'), time)
+
+        # eqn26
+        def output_lower_rule(model, i, j):
+            return outputVar >= summationTerm(j) + \
+                proportionB[j] * K(i, j) + \
+                -1 * bigM * (2 - binaryA[i] - binaryB[j])
+        self.add_component(pyomo.Constraint(a_index_short, b_index_short,
+            rule=output_lower_rule,
+            name='output_lower'), time)
+
+        # label the special ordered sets
+        self.add_component(piecewise.SOSConstraint(
+            name='A_sos1', var=binaryA, sos=1), time)
+        self.add_component(piecewise.SOSConstraint(
+            name='A_sos2', var=fractionA, sos=2), time)
+        self.add_component(piecewise.SOSConstraint(
+            name='B_sos1', var=binaryB, sos=1), time)
+        return
+        
+
+    def __str__(self):
+        return 'curve_{}_{}'.format(self.output_name, self.owner_id)
+
+    def iden(self, time):
+        return 'curve_{}_{}_{}'.format(self.output_name, self.owner_id, str(time))

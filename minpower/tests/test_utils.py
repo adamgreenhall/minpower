@@ -8,7 +8,6 @@ import nose
 from nose.tools import istest, with_setup, raises, set_trace
 from nose.tools import eq_ as assert_equal
 
-
 import logging
 logging.basicConfig(
     level=logging.CRITICAL,

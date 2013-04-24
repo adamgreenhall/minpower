@@ -1,9 +1,14 @@
 '''Test the constraint behavior of the bids'''
 import nose
+import pandas as pd
+import numpy as np
+from pandas.util.testing import assert_almost_equal
+
 from minpower.config import user_config
 from minpower.generators import Generator
-from minpower.optimization import value
-from minpower.bidding import parse_polynomial
+from minpower.optimization import (value, 
+    OptimizationProblem, OptimizationObject)
+from minpower.bidding import parse_polynomial, TwoVarPW
 from test_utils import (istest, with_setup, make_loads_times, solve_problem,
     reset_config, set_trace, make_cheap_gen, make_expensive_gen, make_mid_gen)
 
@@ -126,6 +131,70 @@ def fixed_costs_when_off():
     
     assert(generators[2].cost(times[0], evaluate=True) == 0)
     
+    
+@istest
+def two_var_pw():
+    '''
+    create a simple PW linear function of two variables. 
+    ensure that the modeled values are close to the true values.
+    '''
+    def f(x, y): 
+        return x**2 * y**2
+
+    # user_config.debugger = True
+    
+    Nbreakpoints = 10
+    xmin = 2
+    xmax = 2.5
+    ymin = 2.8
+    ymax = 4.5
+
+    model = OptimizationProblem()
+    gen = OptimizationObject()
+    gen.index = 0
+    gen.__str__ = lambda obj: 'gen'
+     
+    model.add_children([gen], 'gens')
+    times = ['t00']
+    model.add_set('times', times)
+    x = gen.add_variable('x', index=times, low=xmin, high=xmax)
+    y = gen.add_variable('y', index=times, low=ymin, high=ymax)
+    cost = gen.add_variable('cost', index=times, low=0)
+    model.add_objective(sum(cost[t] for t in times))
+    
+    fcurve = dict(
+            inputA=lambda t: x[t],
+            inputB=lambda t: y[t],
+            output_var=lambda t: cost[t],
+            pointsA=np.linspace(xmin - 0.5, xmax + 0.5, Nbreakpoints),
+            pointsB=np.linspace(ymin - 0.5, ymax + 0.5, Nbreakpoints),
+            output_name='cost',
+            owner=gen,
+            times=times,
+            )
+    index = pd.MultiIndex.from_arrays([
+        np.repeat(fcurve['pointsA'], len(fcurve['pointsB'])),
+        np.tile(fcurve['pointsB'], len(fcurve['pointsA']))],
+        names=['pointsA', 'pointsB'])            
+    fcurve['pointsOut'] = pd.Series([f(a, b) for a, b in index], index=index)
+
+    gen.fcurve = TwoVarPW(**fcurve)
+    
+    instance = model.solve()
+    
+    xVal = x[times[0]].value
+    yVal = y[times[0]].value
+        
+    # make sure the correct minimum values were found
+    assert_almost_equal(xVal, xmin)
+    assert_almost_equal(yVal, ymin)
+    
+    # make sure the linearized objective value is
+    # within 5% of the true solution
+    trueVal = f(xVal, yVal)
+    estmVal = float(instance.objective)
+    assert(np.abs(estmVal - trueVal) / trueVal < 0.05)
+     
 if __name__ == '__main__':
     nose.runmodule(argv=[__file__,'-vvs','-x','--pdb', '--pdb-failure'],
                    exit=False)

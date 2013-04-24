@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from config import user_config
 from commonscripts import update_attributes, hours, set_trace
 from optimization import value
@@ -75,20 +76,21 @@ class HydroGenerator(Generator):
                 self.initial['outflow'] + \
                 self.initial['spill']
                 )
-        self.power_production_coef = self.PWmodels[
-            'head_to_production_coefficient'].output_true(
-            self.initial['head'])
+        #self.power_production_coef = self.PWmodels[
+        #    'head_to_production_coefficient'].output_true(
+        #    self.initial['head'])
 
     def build_pw_models(self):
         '''
         take sets of PWL points and make models for the
         three different hydro PWL functions.
         '''
-        def pw_or_poly(obj, input_variable, output_name='cost'):
+        def pw_or_poly(obj, input_variable, output_name='cost', **kwds):
             params = dict(
                 input_variable=input_variable,
                 output_name=output_name,
                 )
+            params.update(kwds)
             if type(obj) == pd.DataFrame:
                 # PWL model
                 params.update(dict(
@@ -102,6 +104,7 @@ class HydroGenerator(Generator):
                     num_breakpoints= user_config.breakpoints))
             return params
 
+
         self.PWparams = dict(
             volume_to_forebay_elevation= pw_or_poly(
                 self.volume_to_forebay_elevation,
@@ -111,16 +114,41 @@ class HydroGenerator(Generator):
                 self.flow_to_tailwater_elevation,
                 self.net_outflow,
                 output_name= 'el_tw'),
-            head_to_production_coefficient=pw_or_poly(
-                self.head_to_production_coefficient,
-                self.head,
-                output_name= 'prod_coeff')
+            #head_to_production_coefficient=pw_or_poly(
+            #    self.head_to_production_coefficient,
+            #    self.head,
+            #    output_name= 'prod_coeff',
+            #    pw_repn='SOS2',
+            #    pw_constr_type='UB'
+            #    ),
         )
+        
+        prod = dict(
+                inputA=self.head,
+                inputB=self.outflow,
+                pointsA=self.head_to_production_coefficient.indvar.values,
+                pointsB=np.linspace(
+                    self.flow_to_tailwater_elevation.indvar.min(),
+                    self.flow_to_tailwater_elevation.indvar.max(),
+                    user_config.breakpoints),
+                output_name='power_production',
+                output_var=self.power,
+                )        
+        index = pd.MultiIndex.from_arrays([
+            np.repeat(prod['pointsA'], len(prod['pointsB'])),
+            np.tile(prod['pointsB'], len(prod['pointsA']))],
+            names=['pointsA', 'pointsB'])            
+        prod['pointsOut'] = pd.Series([
+            outflow * self.head_to_production_coefficient.set_index('indvar').ix[head, 'depvar']
+            for head, outflow in index], index=index, name='output')
+        self.PWparams['head_outflow_to_production'] = prod
+        
         for k in self.PWparams.keys():
             self.PWparams[k].update(dict(
                 owner= self,
                 status_variable= self.status,
                 ))
+        
     def power(self, time=None, scenario=None):
         if time is not None and is_init(time):
             return self.initial['power']
@@ -195,8 +223,11 @@ class HydroGenerator(Generator):
             high=max_head)
         self.add_variable('spill', index=times.set,
             low=self.spill_min, high=self.spill_max)
+        def bid_maker(key): 
+            return bidding.TwoVarPW if \
+                key == 'head_outflow_to_production' else bidding.Bid
         self.PWmodels = {
-            key: bidding.Bid(times=times, **self.PWparams[key])
+            key: bid_maker(key)(times=times, **self.PWparams[key])
             for key in self.PWparams.keys()}
         self._set_derived_init()
 
@@ -225,10 +256,11 @@ class HydroGenerator(Generator):
 
         self.add_constraint_set('modeled elevation', times.set, lambda model, t:
             self.elevation(t) == self.PWmodels['volume_to_forebay_elevation'].output(t))
-
         self.add_constraint_set('power production', times.set, lambda model, t:
-            self.power(t) == \
-            self.power_production_coef * self.outflow(t) # based on initial head
+            self.power(t) <= \
+            # self.power_production_coef * self.outflow(t) # based on initial head
+            #self.PWmodels['head_to_production_coefficient'].output(t) * self.outflow(t)
+            self.PWmodels['head_outflow_to_production'].output(t)
             )
 
         self.add_constraint_set('modeled head', times.set, lambda model, t:

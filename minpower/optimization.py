@@ -25,7 +25,9 @@ pyomo.base.numvalue.KnownConstants[
 variable_kinds = dict(
     Continuous=pyomo.Reals,
     Binary=pyomo.Boolean,
-    Boolean=pyomo.Boolean)
+    Boolean=pyomo.Boolean,
+    NonNegativeReals=pyomo.NonNegativeReals,
+    )
 
 from config import user_config
 
@@ -165,6 +167,7 @@ class OptimizationObject(object):
             if high_limit_series is not None:
                 self.add_constraint_set('{}_max'.format(name), index,
                     lambda model, t: var[t] <= high_limit_series[t])
+        return var
 
     def add_parameter(self, name, index=None, values=None, mutable=True, default=None, **kwargs):
         name = self._id(name)
@@ -333,6 +336,7 @@ class OptimizationProblem(OptimizationObject):
             return dict(bounds=(low, high), domain=variable_kinds[kind])
         var = pyomo.Var(name=name, **map_args(**kwargs))
         self._model.add_component(name, var)
+        return var
 
     def add_constraint(self, name, expression, time=None):
         cname = self._t_id(name, time) if time is not None else name

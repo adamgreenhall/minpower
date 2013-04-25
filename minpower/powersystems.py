@@ -9,7 +9,7 @@ optimization framework from :class:`~optimization.OptimizationObject`.
 
 import logging
 
-from commonscripts import (update_attributes, getattrL, flatten, set_trace)
+from commonscripts import (update_attributes, getattrL, flatten)
 from config import user_config
 
 from optimization import (value, OptimizationObject,
@@ -177,7 +177,7 @@ class Bus(OptimizationObject):
                 for otherBus in allBuses])  # P_{ij}=sum_{i} B_{ij}*theta_j ???
         if self.exports is not None:
             lineFlowsFromBus += self.Pexport(t) - self.Pimport(t)
-        
+
         return self.Pgen(t) - self.Pload(t) - lineFlowsFromBus
 
     def create_variables(self, times):
@@ -213,7 +213,7 @@ class Bus(OptimizationObject):
     def cost_second_stage(self, times):
         cost = sum(gen.cost_second_stage(times) for gen in self.generators) + \
             sum(load.cost_second_stage(times) for load in self.loads)
-        if self.exports is not None: 
+        if self.exports is not None:
             cost += sum(self.Pimport(t) * self.exports.priceimport[t] for t in times)
             cost -= sum(self.Pexport(t) * self.exports.priceexport[t] for t in times)
         return cost
@@ -260,12 +260,12 @@ class PowerSystem(OptimizationProblem):
         self.reserve_required = (self.reserve_fixed > 0) or \
             (self.reserve_load_fraction > 0.0)
         self.has_exports = exports is not None and len(exports) > 0
-        
+
         if lines is None:  # pragma: no cover
             lines = []
-        
+
         buses = self.make_buses_list(loads, generators, exports)
-        
+
         self.create_admittance_matrix(buses, lines)
         self.init_optimization()
 
@@ -278,8 +278,8 @@ class PowerSystem(OptimizationProblem):
             sum(map(lambda gen:
                 getattr(gen, 'is_hydro', False), generators)) > 0
         self.shedding_mode = False
-        
-        
+
+
 
     def make_buses_list(self, loads, generators, exports=None):
         """
@@ -427,35 +427,21 @@ class PowerSystem(OptimizationProblem):
     def get_generator_with_observed(self):
         return filter(lambda gen: getattr(gen, 'observed_values', None) is not None, self.generators())[0]
 
-    def get_finalconditions(self, sln):
+    def set_initial_conditions(self):
+        if getattr(self, 'final_condition', None) is not None:
+            for gen in self.generators():
+                gen.set_initial_condition(
+                    **self.final_condition.ix[str(gen)].dropna().to_dict())
+
+    def get_final_conditions(self, sln):
         times = sln.times
-
-        tEnd = times.last_non_overlap()  # like 2011-01-01 23:00:00
-        tEndstr = times.non_overlap().last()  # like t99
-
-        status = sln.generators_status
-
+        final_condition = {}
         for gen in self.generators():
-            g = str(gen)
-            stat = status[g]
-            if sln.is_stochastic:
-                gen.finalstatus = dict(
-                    power=sln.generators_power[g][tEnd],
-                    status=sln.generators_status[g][tEnd],
-                    hoursinstatus=gen.gethrsinstatus(times.non_overlap(), stat)
-                )
-            else:
-                gen.finalstatus = gen.getstatus(tEndstr,
-                                                times.non_overlap(), stat)
+            final_condition[str(gen)] = \
+                gen.get_final_condition(times.non_overlap())
+        self.final_condition = pd.DataFrame(final_condition).T.astype(float)
         return
 
-    def set_initialconditions(self, initTime):
-        for gen in self.generators():
-            finalstatus = getattr(gen, 'finalstatus', {})
-            if finalstatus:
-                gen.set_initial_condition(**finalstatus)
-                del gen.finalstatus
-        return
 
     def solve_problem(self, times):
         try:

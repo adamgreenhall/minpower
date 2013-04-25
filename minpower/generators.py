@@ -154,12 +154,6 @@ class Generator(OptimizationObject):
     def cost_second_stage(self, times):
         return sum(self.operatingcost(time) for time in times)
 
-    def getstatus(self, tend, times, status):
-        return dict(
-            status=value(self.status(tend)),
-            power=value(self.power(tend)),
-            hoursinstatus=self.gethrsinstatus(times, status))
-
     def gethrsinstatus(self, times, stat):
         if not self.is_controllable:
             return 0
@@ -182,7 +176,7 @@ class Generator(OptimizationObject):
 
         return hrs
 
-    def set_initial_condition(self, power=None, 
+    def set_initial_condition(self, power=None,
         status=True, hoursinstatus=100):
         if power is None:
             # set default power as mean output
@@ -192,6 +186,15 @@ class Generator(OptimizationObject):
         self.initial_status = bool_to_int(status)
         self.initial_power = float(power * self.initial_status)  # note: this eliminates ambiguity of off status with power non-zero output
         self.initial_status_hours = hoursinstatus
+
+    def get_final_condition(self, times):
+        tFinal = times.last()
+        status = pd.Series(
+            [value(self.status(t)) for t in times], index=times.times)
+        return dict(
+               power=value(self.power(tFinal)),
+               status=value(self.status(tFinal)),
+               hoursinstatus=self.gethrsinstatus(times, status))
 
     def build_cost_model(self):
         '''
@@ -227,7 +230,7 @@ class Generator(OptimizationObject):
             # object
             min_power_bid = self.bid_points.power.min()
             max_power_bid = self.bid_points.power.max()
-            
+
             if min_power_bid > self.pmin:  # pragma: no cover
                 self.pmin = min_power_bid
                 logging.warning('{g} should have a min. power bid ({mpb}) <= to its min. power limit ({mpl})'.format(g=str(self), mpb=min_power_bid, mpl=self.pmin))
@@ -477,15 +480,16 @@ class Generator_nonControllable(Generator):
             Pavail = value(Pavail)
         return Pavail - Pused
 
-    def set_initial_condition(self, power=None, status=None, hoursinstatus=None):  #pragma: no cover
-        self.initial_power = 0
-        self.initial_status = 1
-        self.initial_status_hours = 0
+    def set_initial_condition(self, power=0, status=1, hoursinstatus=0):  #pragma: no cover
+        self.initial_power = power
+        self.initial_status = status
+        self.initial_status_hours = hoursinstatus
 
-    def getstatus(self, tend, times=None, status=None):
+    def get_final_condition(self, times):
+        tend = times.last()
         return dict(
             status=1,
-            power=self.power(tend),
+            power=value(self.power(tend)),
             hoursinstatus=0)
 
     def create_variables(self, times):
@@ -589,15 +593,17 @@ class Generator_Stochastic(Generator_nonControllable):
     def _get_scenario_values(self, times, s=0):
         # scenario values are structured as a pd.Panel
         # with axes: day, scenario, {prob, [hours]}
-        # the panel has items which are dates 
-        return self.scenario_values[times.Start.date()][
-            range(len(times))].ix[s].dropna().values.tolist()
-    
+        # the panel has items which are dates
+        return self.scenario_values[times.Start.date()]\
+                .ix[s].drop('probability')\
+                [range(len(times))]\
+                .values.tolist()
+
     def _get_scenario_probabilities(self, times):
         # if any of the scenario values are defined, we want them
         return self.scenario_values[
-            times.Start.date()].dropna(how='all').probability
-    
+            times.Start.date()].probability.dropna()
+
     def create_variables(self, times):
         if self.shedding_mode:
             self.create_variables_shedding(times)

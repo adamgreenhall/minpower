@@ -6,10 +6,9 @@ and reloading them to run the next day as a memory independent subprocess.
 
 import os
 import logging
-import sys
 import pandas as pd
 from pandas import Series, DataFrame
-from commonscripts import gen_time_dataframe, correct_status, debug_frame_unequal, set_trace
+from commonscripts import gen_time_dataframe, correct_status, set_trace
 from config import user_config
 
 from schedule import TimeIndex
@@ -19,8 +18,9 @@ import pkg_resources
 
 try:
     import tables as tb
+    assert tb # make sure tables exsists
 except ImportError:
-    logging.debug('could not load pytables - cannot use standalone mode.')
+    logging.warning('could not load pytables - cannot use standalone mode.')
 
 
 def wipe_storage():
@@ -46,36 +46,22 @@ def init_store(power_system, times, data):
     '''create the store before the first stage'''
     wipe_storage()
     storage = get_storage()
-    generators = power_system.generators()
 
     # store the problem info read from the spreadsheets
     for key, df in data.iteritems():
-        if key != 'scenario_values': 
-            for k, v in (df.dtypes == object).iterkv():
-                if v: df[k] = df[k].fillna('')
-        
+        # if type(df) == pd.DataFrame:
+            # for k in df.dtypes.where(df.dtypes == 'object').dropna().index:
+                # use blanks instead of nans for strings
+                # df[k] = df[k].fillna('')
+
         key = 'data_' + key
         storage[key] = df
 
     stages = len(times)  # stage_times
-    est_Nt = len(data['timeseries'])
-    t = [times[0].initialTime]
-
-    # store first stage initial state
-    storage.append('power', 
-        gen_time_dataframe(generators, t,
-            values=[[gen.initial_power for gen in generators]]),
-        expectedrows=est_Nt)
-        
-    storage.append('status',
-        gen_time_dataframe(generators, t,
-            values=[[gen.initial_status for gen in generators]]),
-        expectedrows=est_Nt)
-        
-    storage['hrsinstatus'] = gen_time_dataframe(generators, t,
-        values=[[gen.initial_status_hours for gen in generators]])
 
     # setup empty containers for variables
+    storage['power'] = DataFrame()
+    storage['status'] = DataFrame()
     storage['load_shed'] = Series()
     storage['gen_shed'] = Series()
     storage['expected_cost'] = DataFrame()
@@ -84,6 +70,9 @@ def init_store(power_system, times, data):
     storage['expected_power'] = DataFrame()
     storage['expected_fuelcost'] = DataFrame()
     storage['observed_fuelcost'] = DataFrame()
+
+    # store initial condition data
+    storage['final_condition'] = data['init']
 
     # setup one-per-stage results
     storage['solve_time'] = Series(index=range(stages))
@@ -113,19 +102,13 @@ def _get_problem_version():
 
 def store_state(power_system, times, sln=None):
     storage = get_storage()
-    generators = power_system.generators()
-
     stg = sln.stage_number
     table_append(storage, 'power', sln.generators_power)
     table_append(storage, 'status', sln.generators_status)
     table_append(storage, 'load_shed', sln.load_shed_timeseries)
     table_append(storage, 'gen_shed', sln.gen_shed_timeseries)
 
-    tEnd = times.last_non_overlap()
-    storage['hrsinstatus'] = gen_time_dataframe(generators, [tEnd],
-                                                values=[
-                                                [gen.finalstatus['hoursinstatus'] for gen in generators]
-                                                ])
+    storage['final_condition'] = power_system.final_condition
 
     _add_tbl_val(storage, 'solve_time', stg, sln.solve_time)
     _add_tbl_val(storage, 'mipgap', stg, sln.mipgap)
@@ -140,30 +123,6 @@ def store_state(power_system, times, sln=None):
     else:
         table_append(storage, 'expected_cost', sln.totalcost_generation)
         table_append(storage, 'expected_fuelcost', sln.fuelcost)
-
-#    # DEBUGGING
-#    from pandas.util.testing import assert_frame_equal
-#    try: 
-#        gens = storage['data_generators'].copy()
-#        gens.index = ['g{}'.format(g) for g in gens.index]
-#        status = storage['status'].ix[1:]
-#        power = storage['power'][status.columns].ix[status.index]
-#        cost = storage['observed_cost'][status.columns].ix[status.index]
-#        fuelcost = storage['observed_fuelcost'][status.columns].ix[status.index]
-#        stcost = cost - fuelcost
-
-#        
-#        pcheck = (power * status)
-#        ccheck = (cost * status)
-#        stcheck = (stcost * status)
-#        assert_frame_equal(pcheck, power)
-#        assert_frame_equal(ccheck, cost)
-#        assert_frame_equal(stcheck, stcost)
-#        assert(((stcost < gens.startupcost - 1e-5) & (stcost > 1e-5) ).sum().sum() == 0)
-#        
-#    except AssertionError:
-#        raise
-        
     return storage
 
 
@@ -184,17 +143,10 @@ def load_state():
 
     # create power_system
     power_system, times, scenario_tree = parse_standalone(storage, times)
-    generators = power_system.generators()
 
     # set up initial state
-    t = times.initialTime
-    status = correct_status(storage['status']).ix[t]
-    for gen in generators:
-        g = str(gen)
-        gen.set_initial_condition(
-            power=storage['power'][g][t],
-            status=status[g],
-            hoursinstatus=storage['hrsinstatus'][g][t])
+    power_system.final_condition = storage['final_condition']
+    power_system.set_initial_conditions()
 
     return power_system, times, scenario_tree
 

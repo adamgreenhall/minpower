@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from config import user_config
-from commonscripts import update_attributes, hours, set_trace
+from commonscripts import update_attributes, hours
 from optimization import value
 from generators import Generator
 from schedule import is_init, get_tPrev
@@ -51,15 +51,20 @@ class HydroGenerator(Generator):
         self.init_optimization()
 
     def set_initial_condition(self,
-        power=0, elevation=0, outflow=0, spill=0):
+        power=0, elevation=0, outflow=0, spill=0, status=1):
         self.initial = dict(
             power=power,
             elevation=elevation,
             outflow=outflow,
             spill=spill)
-        self.initial_status = True
 
-    def getstatus(self, tend, *a, **kw):
+        # compatability with generator
+        self.initial_status = True
+        self.initial_power = self.initial['power']
+        self.initial_status_hours = 0
+
+    def get_final_condition(self, times, *a, **kw):
+        tend = times.last()
         return dict(
             status=self.status(tend),
             power= value(self.power(tend)),

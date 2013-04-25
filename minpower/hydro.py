@@ -8,9 +8,9 @@ from schedule import is_init, get_tPrev
 import bidding
 
 default_max=dict(
-    flow= 1e9,
-    elevation= 1e6,
-    volume= 1e9)
+    flow= 1e3,
+    elevation= 1e4,
+    volume= 1e7)
 
 class HydroGenerator(Generator):
     """
@@ -122,34 +122,35 @@ class HydroGenerator(Generator):
             #    pw_constr_type='UB'
             #    ),
         )
-        
+        if type(self.flow_to_tailwater_elevation) == pd.DataFrame:
+            pointsB = [
+                self.flow_to_tailwater_elevation.indvar.min(),
+                self.flow_to_tailwater_elevation.indvar.max()]
+        else: pointsB = [0, default_max['flow']]
         prod = dict(
                 inputA=self.head,
                 inputB=self.outflow,
                 pointsA=bidding.drop_dup_slopes(
                     self.head_to_production_coefficient).indvar.values,
-                pointsB=np.linspace(
-                    self.flow_to_tailwater_elevation.indvar.min(),
-                    self.flow_to_tailwater_elevation.indvar.max(),
-                    2), # user_config.breakpoints),
+                pointsB=pointsB,
                 output_name='power_production',
                 output_var=self.power,
-                )        
+                )
         index = pd.MultiIndex.from_arrays([
             np.repeat(prod['pointsA'], len(prod['pointsB'])),
             np.tile(prod['pointsB'], len(prod['pointsA']))],
-            names=['pointsA', 'pointsB'])            
+            names=['pointsA', 'pointsB'])
         prod['pointsOut'] = pd.Series([
             outflow * self.head_to_production_coefficient.set_index('indvar').ix[head, 'depvar']
             for head, outflow in index], index=index, name='output')
         self.PWparams['head_outflow_to_production'] = prod
-        
+
         for k in self.PWparams.keys():
             self.PWparams[k].update(dict(
                 owner= self,
                 status_variable= self.status,
                 ))
-        
+
     def power(self, time=None, scenario=None):
         if time is not None and is_init(time):
             return self.initial['power']
@@ -224,7 +225,7 @@ class HydroGenerator(Generator):
             high=max_head)
         self.add_variable('spill', index=times.set,
             low=self.spill_min, high=self.spill_max)
-        def bid_maker(key): 
+        def bid_maker(key):
             return bidding.TwoVarPW if \
                 key == 'head_outflow_to_production' else bidding.Bid
         self.PWmodels = {
@@ -275,9 +276,9 @@ class HydroGenerator(Generator):
         # ramping constraints
         self.add_ramp_constraints(self.power,
             self.rampratemin, self.rampratemax, times)
-        self.add_ramp_constraints(self.elevation, 
+        self.add_ramp_constraints(self.elevation,
             self.elevation_ramp_min, self.elevation_ramp_max, times)
-        self.add_ramp_constraints(self.outflow, 
+        self.add_ramp_constraints(self.outflow,
             self.outflow_ramp_min, self.outflow_ramp_max, times)
 
     def add_ramp_constraints(self, var, minlim, maxlim, times):
@@ -286,14 +287,14 @@ class HydroGenerator(Generator):
             self.add_constraint_set('{} ramp limit low'.format(name), times.set,
             lambda model, t:
             var(t) - var(get_tPrev(t, model, times)) >= float(minlim[t]))
-        #def max_lim_setter(model, t): 
+        #def max_lim_setter(model, t):
         #    return var(t) - var(get_tPrev(t, model, times)) <= float(maxlim[t])
         if maxlim is not None:
             self.add_constraint_set('{} ramp limit high'.format(name), times.set,
             lambda model, t:
             var(t) - var(get_tPrev(t, model, times)) <= float(maxlim[t]))
         return
-        
+
     def __str__(self):
         return 'h{ind}'.format(ind=self.index)
 

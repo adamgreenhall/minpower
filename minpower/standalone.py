@@ -71,6 +71,9 @@ def init_store(power_system, times, data):
     storage['expected_fuelcost'] = DataFrame()
     storage['observed_fuelcost'] = DataFrame()
 
+    if power_system.has_hydro:
+        storage['hydro_outflows'] = pd.DataFrame()
+
     # store initial condition data
     storage['final_condition'] = data['init']
 
@@ -107,6 +110,8 @@ def store_state(power_system, times, sln=None):
     table_append(storage, 'status', sln.generators_status)
     table_append(storage, 'load_shed', sln.load_shed_timeseries)
     table_append(storage, 'gen_shed', sln.gen_shed_timeseries)
+    if power_system.has_hydro:
+        table_append(storage, 'hydro_outflows', sln.generators_outflows)
 
     storage['final_condition'] = power_system.final_condition
 
@@ -142,13 +147,7 @@ def load_state():
         times._int_overlap = 0
 
     # create power_system
-    power_system, times, scenario_tree = parse_standalone(storage, times)
-
-    # set up initial state
-    power_system.final_condition = storage['final_condition']
-    power_system.set_initial_conditions()
-
-    return power_system, times, scenario_tree
+    return parse_standalone(storage, times)
 
 
 def repack_storage():

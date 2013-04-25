@@ -273,10 +273,10 @@ class PowerSystem(OptimizationProblem):
         self.add_children(lines, 'lines')
 
         self.is_stochastic = \
-            sum(map(lambda gen: gen.is_stochastic, generators)) > 0
+            any(map(lambda gen: gen.is_stochastic, generators))
         self.has_hydro = \
-            sum(map(lambda gen:
-                getattr(gen, 'is_hydro', False), generators)) > 0
+            any(map(lambda gen:
+                getattr(gen, 'is_hydro', False), generators))
         self.shedding_mode = False
 
 

@@ -133,7 +133,10 @@ def parse_standalone(storage, times):
         times, timeseries)
     generators.extend(hydro)
 
-    power_system = PowerSystem(generators, loads, lines)
+    # add exports
+    exports = storage['data_exports']
+
+    power_system = PowerSystem(generators, loads, lines, exports)
 
     gen = power_system.get_generator_with_scenarios()
     if gen:
@@ -142,6 +145,10 @@ def parse_standalone(storage, times):
         gen.scenario_values = scenario_values
     else:
         scenario_values = pd.Panel()
+
+    # set up initial state
+    power_system.final_condition = storage['final_condition']
+    power_system.set_initial_conditions()
 
     return power_system, times, scenario_values
 
@@ -257,7 +264,7 @@ def _parse_raw_data(generators_data, loads_data,
         timeseries=timeseries,
         scenario_values=scenario_values,
         hydro=hydro_data,
-        exports=exports_data,
+        exports=exports,
         pwl=pwl_data,
         )
 

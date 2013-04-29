@@ -724,8 +724,8 @@ class Solution_Stochastic(Solution):
             self.generators_power = self.gen_time_df('power', None)
             self.generators_status = self.gen_time_df('status', None)
             if self.hydro_gens:
-                self.hdyro_vars = pd.Panel({
-                    key: self.get_time_df(key, None, generators=self.hydro_gens)
+                self.hydro_vars = pd.Panel({
+                    key: self.gen_time_df(key, None, generators=self.hydro_gens)
                     for key in _hydro_var_names})
 
 

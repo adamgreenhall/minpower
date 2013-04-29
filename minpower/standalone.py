@@ -71,8 +71,7 @@ def init_store(power_system, times, data):
     storage['expected_fuelcost'] = DataFrame()
     storage['observed_fuelcost'] = DataFrame()
 
-    if power_system.has_hydro:
-        storage['hydro_vars'] = pd.DataFrame()
+    storage['hydro_vars'] = pd.DataFrame()
 
     # store initial condition data
     storage['final_condition'] = data['init']

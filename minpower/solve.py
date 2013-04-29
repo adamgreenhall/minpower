@@ -176,10 +176,10 @@ def solve_multistage(power_system, times, scenario_tree=None, data=None):
     for stg, t_stage in enumerate(stage_times):
         logging.info('Stage starting at {}'.format(t_stage.Start.date()))
         # solve
-        solution = create_solve_problem(
+        sln = create_solve_problem(
             power_system, t_stage, scenario_tree, stg)
         # add to stage solutions
-        stage_solutions.append(solution)
+        stage_solutions.append(sln)
         # reset model
         power_system.reset_model()
         # set inital state for next stage

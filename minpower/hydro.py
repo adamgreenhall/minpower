@@ -183,9 +183,6 @@ class HydroGenerator(Generator):
     def net_outflow(self, time=None, scenario=None):
         return self.get_var('net_outflow', time, scenario)
 
-    def net_flow(self, time=None, scenario=None):
-        return self.get_var('net_flow', time, scenario)
-
     def net_inflow(self, t, times, other_hydro):
         return self.inflow_schedule[times[t]] + sum(
             self.upstream_unit_outflow(
@@ -218,9 +215,7 @@ class HydroGenerator(Generator):
             low=self.outflow_min, high=self.outflow_max)
 
         self.add_variable('net_outflow', index=times.set, low= 0, high= default_max['flow'])
-        self.add_variable('net_flow', index=times.set,
-            low= -1*default_max['flow'],
-            high= default_max['flow'])
+
         try:
             max_head = self.head_to_production_coefficient.indvar.max()
         except AttributeError:
@@ -253,13 +248,8 @@ class HydroGenerator(Generator):
             if t < len(times) - 1:
                 self.add_constraint('water balance', time,
                     self.volume(times[t+1]) - self.volume(time) == \
-                    self.net_flow(time))
-
-            self.add_constraint('modeled net flow', time,
-                self.net_flow(times[t]) == \
-                self.net_inflow(t, times, hydro_gens) - \
-                self.net_outflow(time))
-
+                    self.net_inflow(t, times, hydro_gens) - \
+                    self.net_outflow(time))
 
         self.add_constraint_set('modeled elevation', times.set, lambda model, t:
             self.elevation(t) == self.PWmodels['volume_to_forebay_elevation'].output(t))

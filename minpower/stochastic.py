@@ -11,7 +11,7 @@ import logging
 def construct_simple_scenario_tree(power_system, times, time_stage=None):
     '''Construct a simple scenario tree instance'''
 
-    gen = power_system.get_generator_with_scenarios()    
+    gen = power_system.get_generator_with_scenarios()
     probabilities = gen._get_scenario_probabilities(times).values.tolist()
 
     tree = new_scenario_tree_model()
@@ -50,7 +50,9 @@ def construct_simple_scenario_tree(power_system, times, time_stage=None):
     # as do the values of the per scenario variables
     return
 
-
+hydro_second_stage_varnms = [
+    'power', 'outflow', 'elevation', 'volume', 'spill', 'head',
+    ]
 def define_stage_variables(power_system, times):
     # scenario_tree.Stages.pprint()
     # scenario_tree.StageVariables.pprint()
@@ -62,25 +64,35 @@ def define_stage_variables(power_system, times):
     for gen in power_system.get_generators_without_scenarios():
         # for each non stochastic generator
         if gen.is_controllable:
-            variables_first_stage.add(
-                str(gen.get_variable('status', indexed=True, time=None)) + '[*]')
-            variables_second_stage.add(
-                str(gen.get_variable('power', indexed=True, time=None)) + '[*]')
+            if getattr(gen, 'is_hydro', False):
+                variables_first_stage.add(
+                    str(gen.get_var('net_outflow')) + '[*]')
+
+                for varnm in hydro_second_stage_varnms:
+                    variables_second_stage.add(
+                        str(gen.get_var(varnm)) + '[*]')
+            else:
+                variables_first_stage.add(
+                    str(gen.get_var('status')) + '[*]')
+                variables_second_stage.add(
+                    str(gen.get_var('power')) + '[*]')
+
+
         # note - appending '[*]' to the indicies is required to get
         # pysp to assign all the variables in the array to a shape
 
     if power_system.shedding_mode:
-        for gen in filter(lambda gen: gen.shedding_mode, 
+        for gen in filter(lambda gen: gen.shedding_mode,
             power_system.get_generators_noncontrollable()):
             variables_second_stage.add(
-                str(gen.get_variable('power_used', time=None, indexed=True)) + '[*]')
+                str(gen.get_var('power_used')) + '[*]')
         for load in power_system.loads():
             variables_second_stage.add(
-                str(load.get_variable('power', time=None, indexed=True)) + '[*]')
-    
+                str(load.get_var('power')) + '[*]')
+
     # variables_first_stage.pprint()
     scenario_tree = power_system._scenario_tree_instance
-    
+
     scenario_tree.StageVariables['first stage'] = variables_first_stage
     scenario_tree.StageVariables['second stage'] = variables_second_stage
 
@@ -124,7 +136,7 @@ def create_problem_with_scenarios(power_system, times):
 
     gc.enable()
     scenario_tree.defineVariableIndexSets(power_system._model)
-        
+
     cvar_params = {}
     if user_config.cvar_weight > 0:
         cvar_params = dict(
@@ -132,7 +144,7 @@ def create_problem_with_scenarios(power_system, times):
             cvar_weight = user_config.cvar_weight,
             risk_alpha = user_config.cvar_confidence_level,
             )
-    
+
     full_problem_instance = create_ef_instance(
         scenario_tree, scenario_instances, **cvar_params)
 
@@ -146,10 +158,10 @@ def create_problem_with_scenarios(power_system, times):
     for time in times.post_horizon():
         for scenario in scenario_instances.keys():
             for gen in power_system.generators():
-                if not gen.is_controllable:
+                if not gen.is_controllable or getattr(gen, 'is_hydro', False):
                     continue
                 u = gen.status().name
-                delattr(full_problem_instance, 
+                delattr(full_problem_instance,
                     '{s}_{u}_{t}'.format(s=scenario, u=u, t=str(time)))
 
     power_system.stochastic_formulation = True

@@ -591,7 +591,7 @@ class PowerSystem(OptimizationProblem):
         self.create_constraints(times)
 
         # fix statuses for all units
-        self.fix_binary_variables()
+        self.fix_binary_variables(name_filter='status')
 
         # store original problem solve time
         self.full_sln_time = self.solution_time

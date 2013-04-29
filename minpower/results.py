@@ -111,6 +111,10 @@ class Solution(object):
         self.loads = self.power_system.loads()
         self.times_non_overlap = self.times.non_overlap()
 
+        self.hydro_gens = filter(
+            lambda gen: getattr(gen,'is_hydro', False), 
+            self.generators)
+
     def get_values(self, items, method='power', time=None, evaluate=False):
         '''Get the attributes of all objects of a certain kind at a given time.'''
         if time:
@@ -140,15 +144,11 @@ class Solution(object):
             self.mipgap = None
 
     def _get_outputs(self):
-        hydro_gens = filter(
-            lambda gen: getattr(gen,'is_hydro', False), 
-            self.generators)
-
-        if hydro_gens:
+        if self.hydro_gens:
             self.generators_volumes = \
-                self.gen_time_df('volume', generators=hydro_gens)
+                self.gen_time_df('volume', generators=self.hydro_gens)
             self.generators_outflows = \
-                self.gen_time_df('outflow', generators=hydro_gens)
+                self.gen_time_df('outflow', generators=self.hydro_gens)
 
         if self.power_system.has_exports:
             self.power_exports = self.gen_time_df(
@@ -725,6 +725,12 @@ class Solution_Stochastic(Solution):
             # -- no more scenario labeling is needed
             self.generators_power = self.gen_time_df('power', None)
             self.generators_status = self.gen_time_df('status', None)
+            if self.hydro_gens:
+                self.generators_volumes = \
+                    self.gen_time_df('volume', None, generators=self.hydro_gens)
+                self.generators_outflows = \
+                    self.gen_time_df('outflow', None, generators=self.hydro_gens)
+
 
         else:
             self.generators_power_scenarios = self.stg_panel('power')

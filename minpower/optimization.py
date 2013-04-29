@@ -591,11 +591,12 @@ class OptimizationProblem(OptimizationObject):
             debug_infeasible(self._opt_solver)
         return results, elapsed
 
-    def fix_binary_variables(self, fix_offs=True):
+    def fix_binary_variables(self, fix_offs=True, name_filter=None):
         _fix_binary_variables(
             self._model,
             self.stochastic_formulation,
-            fix_offs)
+            fix_offs=fix_offs,
+            name_filter=name_filter)
 
     def _unfix_variables(self):
         _unfix_variables(self._model)
@@ -607,12 +608,16 @@ class OptimizationProblem(OptimizationObject):
             delattr(self._model, key)
 
 
-def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
+def _fix_binary_variables(instance, is_stochastic=False,
+    fix_offs=True,
+    name_filter=None,
+    ):
     '''fix binary variables to their solved values to create an LP problem'''
     active_vars = instance.active_components(pyomo.Var)
     for var in active_vars.values():
         if isinstance(var.domain, pyomo.base.IntegerSet) or \
                 isinstance(var.domain, pyomo.base.BooleanSet):
+            if name_filter and (not name_filter in var.name): continue
             if var.is_indexed():
                 for key, ind_var in var.iteritems():
                     if fix_offs or ind_var.value >= 1 - 1e-5:
@@ -628,7 +633,8 @@ def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
             lambda blk: type(blk) != pyomo.Piecewise,
             instance.active_components(pyomo.Block).values()
         ):
-            _fix_binary_variables(scenario_block)
+            _fix_binary_variables(scenario_block,
+                fix_offs=fix_offs, name_filter=name_filter)
     # need to preprocess after fixing
     instance.preprocess()
 

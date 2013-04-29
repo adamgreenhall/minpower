@@ -185,6 +185,14 @@ def solve_multistage(power_system, times, scenario_tree=None, data=None):
         # set inital state for next stage
         if stg < len(stage_times)-1:
             power_system.set_initial_conditions()
+            
+            if sln.hydro_gens:
+                hydro_vars = sln.hydro_vars\
+                    .to_frame().reset_index().set_index('time')\
+                    .rename(columns={'minor':'name'})
+
+            for gen in sln.hydro_gens:
+                gen.flow_history = hydro_vars[hydro_vars.name == str(gen)]
 
     return stage_solutions, stage_times
 

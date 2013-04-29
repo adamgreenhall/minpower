@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from config import user_config
-from commonscripts import update_attributes, hours
+from commonscripts import update_attributes, hours, set_trace
 from optimization import value
 from generators import Generator
 from schedule import is_init, get_tPrev
@@ -49,9 +49,11 @@ class HydroGenerator(Generator):
             except AttributeError:
                 self.outflow_max = default_max['flow']
         self.init_optimization()
+        self.flow_history = pd.DataFrame()
 
     def set_initial_condition(self,
-        power=0, elevation=0, outflow=0, spill=0, status=1):
+        power=0, elevation=0, outflow=0, spill=0,
+        status=1):
         self.initial = dict(
             power=power,
             elevation=elevation,
@@ -197,8 +199,12 @@ class HydroGenerator(Generator):
                 pd.DateOffset(minute=0)
 
         if outflow_time < times.Start:
-            out = upstream_gen.initial['outflow'] + \
-                  upstream_gen.initial['spill']
+            if len(upstream_gen.flow_history): 
+                net_outflow = upstream_gen.flow_history[['outflow', 'spill']].sum(axis=1)
+                out = net_outflow.ix[outflow_time]
+            else:
+                out = upstream_gen.initial['outflow'] + \
+                      upstream_gen.initial['spill']
         else:
             tm_up = times[times.times.indexer_at_time(outflow_time)[0]]
             out = upstream_gen.net_outflow(tm_up)

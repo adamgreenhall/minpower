@@ -72,7 +72,7 @@ def init_store(power_system, times, data):
     storage['observed_fuelcost'] = DataFrame()
 
     if power_system.has_hydro:
-        storage['hydro_outflows'] = pd.DataFrame()
+        storage['hydro_vars'] = pd.DataFrame()
 
     # store initial condition data
     storage['final_condition'] = data['init']
@@ -111,7 +111,10 @@ def store_state(power_system, times, sln=None):
     table_append(storage, 'load_shed', sln.load_shed_timeseries)
     table_append(storage, 'gen_shed', sln.gen_shed_timeseries)
     if power_system.has_hydro:
-        table_append(storage, 'hydro_outflows', sln.generators_outflows)
+        table_append(storage, 'hydro_vars', 
+            sln.hydro_vars\
+            .to_frame().reset_index().set_index('time')\
+            .rename(columns={'minor':'name'}))
 
     storage['final_condition'] = power_system.final_condition
 

@@ -14,6 +14,8 @@ from schedule import TimeIndex
 from optimization import value
 from config import user_config
 
+_hydro_var_names = ['volume', 'outflow', 'spill', 'elevation']
+
 def prettify_plots(for_publication=True):
     plot.rc("xtick", direction="out")
     plot.rc("ytick", direction="out")
@@ -145,10 +147,9 @@ class Solution(object):
 
     def _get_outputs(self):
         if self.hydro_gens:
-            self.generators_volumes = \
-                self.gen_time_df('volume', generators=self.hydro_gens)
-            self.generators_outflows = \
-                self.gen_time_df('outflow', generators=self.hydro_gens)
+            self.hydro_vars = pd.Panel({
+                key: self.gen_time_df(key, generators=self.hydro_gens)
+                for key in _hydro_var_names})
 
         if self.power_system.has_exports:
             self.power_exports = self.gen_time_df(
@@ -226,9 +227,6 @@ class Solution(object):
             out.append('IC')
             out.append(self.incremental_cost)
             out.append('')
-#            if self.power_system.has_hdyro:
-#                out.append('volume={}'.format(self.generators_volumes[t]))
-#                out.append('outflow={}'.format(self.generators_outflow[t]))
             
             for t in self.times:
                 if len(self.times) > 1:
@@ -726,10 +724,9 @@ class Solution_Stochastic(Solution):
             self.generators_power = self.gen_time_df('power', None)
             self.generators_status = self.gen_time_df('status', None)
             if self.hydro_gens:
-                self.generators_volumes = \
-                    self.gen_time_df('volume', None, generators=self.hydro_gens)
-                self.generators_outflows = \
-                    self.gen_time_df('outflow', None, generators=self.hydro_gens)
+                self.hdyro_vars = pd.Panel({
+                    key: self.get_time_df(key, None, generators=self.hydro_gens)
+                    for key in _hydro_var_names})
 
 
         else:

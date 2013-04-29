@@ -149,6 +149,10 @@ def parse_standalone(storage, times):
     # set up initial state
     power_system.final_condition = storage['final_condition']
     power_system.set_initial_conditions()
+    if len(storage.hydro_vars):
+        for gen in hydro:
+            gen.flow_history = storage.hydro_vars[
+                storage.hydro_vars.name == str(gen)]
 
     return power_system, times, scenario_values
 

@@ -183,15 +183,19 @@ class Solution(object):
             logging.debug('generation shed: {}MW'.format(self.gen_shed))
         if self.load_shed > 0.01:
             logging.debug('load shed: {}MW'.format(self.load_shed))
+        self._get_cost_error()
+        self._get_export_income()
+
+    def _get_export_income(self):
         if self.power_system.has_exports:
-            export_prices = pd.DataFrame({str(bus): bus.exports.priceexport.ix[self.times]
+            times = self.times.non_overlap()
+            export_prices = pd.DataFrame({str(bus): bus.exports.priceexport.ix[times]
                 for bus in self.power_system.buses})
-            import_prices = pd.DataFrame({str(bus): bus.exports.priceimport.ix[self.times] 
+            import_prices = pd.DataFrame({str(bus): bus.exports.priceimport.ix[times] 
                 for bus in self.power_system.buses})
-            import_prices.index = export_prices.index = self.times.times
+            import_prices.index = export_prices.index = times.times
             self.net_export_income = self.power_exports * export_prices - \
                 self.power_imports * import_prices
-        self._get_cost_error()
 
     def _get_cost_error(self):
         try:
@@ -679,7 +683,6 @@ class Solution_Stochastic(Solution):
         self._get_problem_info()
         self._get_outputs()
         self._get_costs()
-        self._get_prices()
 
     def stg_panel(self, method, 
         generators=None,
@@ -727,6 +730,12 @@ class Solution_Stochastic(Solution):
                 self.hydro_vars = pd.Panel({
                     key: self.gen_time_df(key, None, generators=self.hydro_gens)
                     for key in _hydro_var_names})
+            if self.power_system.has_exports:
+                self.power_exports = self.gen_time_df(
+                    'Pexport', None, generators=self.power_system.buses)
+                self.power_imports = self.gen_time_df(
+                    'Pimport', None, generators=self.power_system.buses)
+                self.net_exports = self.power_exports - self.power_imports                
 
 
         else:
@@ -785,6 +794,9 @@ class Solution_Stochastic(Solution):
             if self.load_shed > 0.01:
                 logging.debug('load shed: {}MW'.format(self.load_shed))
 
+            self._get_export_income()
+            self._get_prices()
+
         else:
             # get expected cost of non_overlap times
             self.expected_totalcost = self._calc_expected_cost('cost')
@@ -812,8 +824,6 @@ class Solution_Stochastic(Solution):
     def _get_cost_error(self):
         pass
 
-    def _get_prices(self):
-        pass
 
     def info_cost(self):
         return ['expected cost= {}'.format(self.expected_totalcost.sum().sum())]

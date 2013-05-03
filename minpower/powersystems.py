@@ -609,7 +609,7 @@ class PowerSystem(OptimizationProblem):
 
         logging.info('resolving with observed values')
         try:
-            self.solve()
+            self.solve() #get_duals=True
         except OptimizationError:
             faststarts = map(lambda gen: str(gen), filter(lambda gen: gen.faststart, self.generators()))
             # at least one faststarting unit must be available (off)
@@ -620,7 +620,7 @@ class PowerSystem(OptimizationProblem):
                 # just shed the un-meetable load and calculate cost later
                 self.allow_shedding(sln.times, resolve=True)
                 try:
-                    self.solve()
+                    self.solve() #get_duals=True
                 except OptimizationError:
                     scheduled, committed = self.debug_infeasible(
                         sln.times, resolve_sln=sln)

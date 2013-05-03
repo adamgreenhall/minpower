@@ -723,4 +723,6 @@ def setup_exports(data, times):
         if col not in data.columns: data[col] = 0
     for col in ['exportmax', 'importmax']:
         if col not in data.columns: data[col] = 1e9
+    if 'priceimport' not in data.columns:
+        data['priceimport'] = 1e12
     return data[fields['ExportSchedule']]

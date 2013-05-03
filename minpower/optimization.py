@@ -465,13 +465,14 @@ class OptimizationProblem(OptimizationObject):
                 else:
                     raise
 
-    def solve(self):
+    def solve(self, get_duals=None):
         '''
         Send the optimization problem off to the solver.
         '''
 
         solver = user_config.solver
-        get_duals = user_config.duals
+        if get_duals is None:
+            get_duals = user_config.duals
 
         logging.info('Solving with {s}'.format(s=solver))
 
@@ -509,7 +510,7 @@ class OptimizationProblem(OptimizationObject):
                 instance, get_duals=get_duals)
             self.solution_time += elapsed
 
-            instance.load(results)
+            instance.load(results, allow_consistent_values_for_fixed_vars=True)
             logging.debug('... LP problem solved')
 
         if self.stochastic_formulation:

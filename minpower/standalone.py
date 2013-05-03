@@ -72,7 +72,8 @@ def init_store(power_system, times, data):
     storage['observed_fuelcost'] = DataFrame()
 
     storage['hydro_vars'] = pd.DataFrame()
-
+    storage['export_income'] = pd.DataFrame()
+    
     # store initial condition data
     storage['final_condition'] = data['init']
 
@@ -114,6 +115,9 @@ def store_state(power_system, times, sln=None):
             sln.hydro_vars\
             .to_frame().reset_index().set_index('time')\
             .rename(columns={'minor':'name'}))
+    if power_system.has_exports:
+        table_append(storage, 'export_income', sln.net_export_income)
+        
 
     storage['final_condition'] = power_system.final_condition
 

@@ -410,6 +410,9 @@ class PowerSystem(OptimizationProblem):
     def get_generators_noncontrollable(self):
         return filter(lambda gen: not gen.is_controllable, self.generators())
 
+    def get_generators_hydro(self):
+        return filter(lambda gen: getattr(gen, 'is_hydro', False), self.generators())
+
     def get_generators_without_scenarios(self):
         return filter(lambda gen: getattr(gen, 'is_stochastic', False) == False, self.generators())
 
@@ -482,7 +485,9 @@ class PowerSystem(OptimizationProblem):
         sln.expected_fuelcost = sln.fuelcost.copy()
         sln.expected_totalcost = sln.totalcost_generation.copy()
         sln.expected_load_shed = float(sln.load_shed)
-
+        if self.has_hydro:
+            sln.expected_hydro_vars = sln.hydro_vars.copy()
+        
         # resolve the problem
         self._resolve_problem(sln)
 
@@ -592,6 +597,11 @@ class PowerSystem(OptimizationProblem):
 
         # fix statuses for all units
         self.fix_binary_variables(name_filter='status')
+
+        # if this is a hydro problem - fix the net outflow
+        if self.has_hydro:
+            net_outflows = [hy.net_outflow().name for hy in self.get_generators_hydro()]
+            self._fix_variables(net_outflows)
 
         # store original problem solve time
         self.full_sln_time = self.solution_time

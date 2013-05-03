@@ -28,11 +28,12 @@ import logging
 hydro_schedule_cols = [
     'elevation_min', 'elevation_max',
     'outflow_min', 'outflow_max',
+    'net_outflow_min', 'net_outflow_max',
     'spill_min', 'spill_max',
     'pmin', 'pmax',
     'elevation_ramp_min', 'elevation_ramp_max',
     'outflow_ramp_min', 'outflow_ramp_max',
-
+    'net_outflow_ramp_min', 'net_outflow_ramp_max',
     'inflow_schedule',
 ]
 

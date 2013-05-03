@@ -24,11 +24,13 @@ class HydroGenerator(Generator):
             delay_downstream=0,
             elevation_min=0, elevation_max=None,
             outflow_min=0, outflow_max=None,
+            net_outflow_min=0, net_outflow_max=None,            
             spill_min=0, spill_max=None,
             pmin=0, pmax=None,
             rampratemin=None, rampratemax=None,
             elevation_ramp_min=None, elevation_ramp_max=None,
             outflow_ramp_min=None, outflow_ramp_max=None,
+            net_outflow_ramp_min=None, net_outflow_ramp_max=None,            
             elevation_final=None,
             inflow_schedule=None,
             volume_to_forebay_elevation=None,
@@ -59,7 +61,8 @@ class HydroGenerator(Generator):
             elevation=elevation,
             outflow=outflow,
             spill=spill)
-
+        self.initial['net_outflow'] = \
+            self.initial['outflow'] + self.initial['spill']
         # compatability with generator
         self.initial_status = True
         self.initial_power = self.initial['power']
@@ -183,6 +186,8 @@ class HydroGenerator(Generator):
         return self.get_var('head', time, scenario)
 
     def net_outflow(self, time=None, scenario=None):
+        if time is not None and is_init(time):
+            return self.initial['net_outflow']
         return self.get_var('net_outflow', time, scenario)
 
     def net_inflow(self, t, times, other_hydro):
@@ -220,7 +225,9 @@ class HydroGenerator(Generator):
         self.add_variable('outflow', index=times.set,
             low=self.outflow_min, high=self.outflow_max)
 
-        self.add_variable('net_outflow', index=times.set, low= 0, high= default_max['flow'])
+        self.add_variable('net_outflow', index=times.set,
+            low=self.net_outflow_min,
+            high= default_max['flow'] or self.net_outflow_max)
 
         try:
             max_head = self.head_to_production_coefficient.indvar.max()
@@ -279,6 +286,8 @@ class HydroGenerator(Generator):
             self.rampratemin, self.rampratemax, times)
         self.add_ramp_constraints(self.elevation,
             self.elevation_ramp_min, self.elevation_ramp_max, times)
+        self.add_ramp_constraints(self.net_outflow,
+            self.net_outflow_ramp_min, self.net_outflow_ramp_max, times)
         self.add_ramp_constraints(self.outflow,
             self.outflow_ramp_min, self.outflow_ramp_max, times)
 

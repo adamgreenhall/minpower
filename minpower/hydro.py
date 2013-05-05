@@ -163,8 +163,12 @@ class HydroGenerator(Generator):
                 ))
 
     def _var_get(self, varnm, time=None, scenario=None):
-        return self.initial[varnm] if (time is not None and is_init(time)) \
-            else self.get_var(varnm, time, scenario)
+        if time is None:
+            return self.get_var(varnm)
+        elif is_init(time):
+            return self.initial[varnm]
+        else:
+            return self.get_var(varnm, time, scenario)
 
 
     def power(self, *a, **k):
@@ -210,17 +214,21 @@ class HydroGenerator(Generator):
 
     def create_variables(self, times):
         self.add_variable('power', index=times.set,
-            low=self.pmin, high=self.pmax)
+            low=self.pmin, high=self.pmax, kind='NonNegativeReals')
         self.add_variable('elevation', index=times.set,
-            low=self.elevation_min, high=self.elevation_max)
+            low=self.elevation_min, high=self.elevation_max,
+            kind='NonNegativeReals')
         self.add_variable('volume', index=times.set,
-            low=0, high=default_max['volume'])
+            low=0, high=default_max['volume'],
+            kind='NonNegativeReals')
         self.add_variable('outflow', index=times.set,
-            low=self.outflow_min, high=self.outflow_max)
+            low=self.outflow_min, high=self.outflow_max,
+            kind='NonNegativeReals')
 
         self.add_variable('net_outflow', index=times.set,
             low=self.net_outflow_min,
-            high= default_max['flow'] or self.net_outflow_max)
+            high= default_max['flow'] or self.net_outflow_max,
+            kind='NonNegativeReals')
 
         try:
             max_head = self.head_to_production_coefficient.indvar.max()
@@ -249,19 +257,72 @@ class HydroGenerator(Generator):
             self.add_constraint('elevation final', times.last(),
                 self.elevation(times.last()) >= self.elevation_final)
 
+#        crude_power_production_coef = bidding.get_pwl_output(
+#            self.head_to_production_coefficient, self.initial['head'])
+
+        # TODO - this should be averaged over 24hrs
+        if len(self.flow_history) == 0: 
+            # assume elevation was equal to initial at all past times
+            elevation_history = pd.Series(self.initial['elevation'],
+                index=pd.date_range(
+                    times.times[0] - pd.DateOffset(hours=24),
+                    times.times[0] - pd.DateOffset(hours=1),
+                    freq='H'))
+        else:
+            elevation_history = self.flow_history.elevation
+
+        def prev_elv(time, offset_hrs=24):
+            # TODO - assumes hourly intervals
+            tprev = time + pd.DateOffset(hours=offset_hrs)
+            if tprev in elevation_history.index:
+                return elevation_history[tprev]
+            else:
+                tidx = (times.times == tprev).tolist().index(True)
+                return self.elevation(times[tidx])
+
         for t, time in enumerate(times):
+            tmstmp = times.times[t]
             # network balance
+#            if t < len(times) - 1:
+#                self.add_constraint('water balance', time,
+#                    self.volume(times[t+1]) - self.volume(time) == \
+#                    self.net_inflow(t, times, hydro_gens) - \
+#                    self.net_outflow(time))
+            
             self.add_constraint('water balance', time,
                 self.volume(time) - self.volume(times[t-1]) == \
                 self.net_inflow(t, times, hydro_gens) - \
                 self.net_outflow(time))
 
+            self.add_constraint('power production', time,
+                self.power(time) == \
+                self.PWmodels['head_outflow_to_production'].output(time))
+
+            if self.elevation_ramp_max is not None:
+                self.add_constraint('elevation ramp max', time,
+                    self.elevation(time) - prev_elv(tmstmp, -24) \
+                    <= 24 * self.elevation_ramp_max[time])
+            if self.elevation_ramp_min is not None:
+                self.add_constraint('elevation ramp min', time,
+                    self.elevation(time) - prev_elv(tmstmp, -24) \
+                    >= 24 * self.elevation_ramp_min[time])
+                
+#            if t < times._int_division:  # TODO - assumes hourly intervals
+#                self.add_constraint('power production', time,
+#                    self.power(time) == \
+#                    self.PWmodels['head_outflow_to_production'].output(time))
+#            else:
+#                # a crude approximation based on initial head to 
+#                # avoid activating the large number of binary variables 
+#                # in the two variable PWL curve
+#                self.add_constraint('power production', time,
+#                    self.power(time) <= \
+#                    crude_power_production_coef * self.outflow(time)
+#                )
+
+
         self.add_constraint_set('modeled elevation', times.set, lambda model, t:
             self.elevation(t) == self.PWmodels['volume_to_forebay_elevation'].output(t))
-        self.add_constraint_set('power production', times.set, lambda model, t:
-            self.power(t) <= \ # TODO - should this be equals?
-            self.PWmodels['head_outflow_to_production'].output(t)
-            )
 
         self.add_constraint_set('modeled head', times.set, lambda model, t:
             self.head(t) == self.elevation(t) - \
@@ -274,12 +335,12 @@ class HydroGenerator(Generator):
         # ramping constraints
         self.add_ramp_constraints(self.power,
             self.rampratemin, self.rampratemax, times)
-        self.add_ramp_constraints(self.elevation,
-            self.elevation_ramp_min, self.elevation_ramp_max, times)
         self.add_ramp_constraints(self.net_outflow,
             self.net_outflow_ramp_min, self.net_outflow_ramp_max, times)
         self.add_ramp_constraints(self.outflow,
             self.outflow_ramp_min, self.outflow_ramp_max, times)
+#        self.add_ramp_constraints(self.elevation,
+#            self.elevation_ramp_min, self.elevation_ramp_max, times)
 
     def add_ramp_constraints(self, var, minlim, maxlim, times):
         name = var(None).name

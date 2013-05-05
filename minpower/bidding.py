@@ -305,7 +305,14 @@ def drop_dup_slopes(df):
         if slopes[i] == slopes[i-1]:
             out = out.append(row)
     return out
-    
+
+def get_pwl_output(pwl_points, input_val):
+    for A, B in pairwise(pwl_points.values.tolist()):
+        if A[0] <= input_val <= B[0]:
+            return get_line_value(A, B, input_val)
+    else:
+        raise ValueError('input value not found in domain of PWL points')
+
 class TwoVarPW(OptimizationObject):
     def __init__(self, times, owner,
         inputA, inputB,

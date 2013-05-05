@@ -8,7 +8,7 @@ from schedule import is_init, get_tPrev
 import bidding
 
 default_max=dict(
-    flow= 1e3,
+    flow= 1e6,
     elevation= 1e4,
     volume= 1e7)
 
@@ -54,12 +54,14 @@ class HydroGenerator(Generator):
         self.flow_history = pd.DataFrame()
 
     def set_initial_condition(self,
-        power=0, elevation=0, outflow=0, spill=0,
+        power=0, elevation=0, outflow=0, spill=0, volume=0, head=0,
         status=1):
         self.initial = dict(
             power=power,
             elevation=elevation,
             outflow=outflow,
+            volume=volume,
+            head=head,
             spill=spill)
         self.initial['net_outflow'] = \
             self.initial['outflow'] + self.initial['spill']
@@ -70,13 +72,12 @@ class HydroGenerator(Generator):
 
     def get_final_condition(self, times, *a, **kw):
         tend = times.last()
-        return dict(
-            status=self.status(tend),
-            power= value(self.power(tend)),
-            elevation= value(self.elevation(tend)),
-            outflow= value(self.outflow(tend)),
-            spill= value(self.spill(tend)),
-            )
+        varnms = [
+            'status', 'power',
+            'elevation', 'volume', 'head',
+            'outflow', 'spill',
+            ]
+        return {nm: value(getattr(self, nm)(tend)) for nm in varnms}
 
     def _set_derived_init(self):
         '''after models have been built, set derived initial vars'''
@@ -161,34 +162,26 @@ class HydroGenerator(Generator):
                 status_variable= self.status,
                 ))
 
-    def power(self, time=None, scenario=None):
-        if time is not None and is_init(time):
-            return self.initial['power']
-        return self.get_var('power', time, scenario)
+    def _var_get(self, varnm, time=None, scenario=None):
+        return self.initial[varnm] if (time is not None and is_init(time)) \
+            else self.get_var(varnm, time, scenario)
 
-    def outflow(self, time=None, scenario=None):
-        if time is not None and is_init(time):
-            return self.initial['outflow']
-        return self.get_var('outflow', time, scenario)
 
-    def elevation(self, time=None, scenario=None):
-        if time is not None and is_init(time):
-            return self.initial['elevation']
-        return self.get_var('elevation', time, scenario)
+    def power(self, *a, **k):
+        return self._var_get('power', *a, **k)
+    def outflow(self, *a, **k):
+        return self._var_get('outflow', *a, **k)
+    def elevation(self, *a, **k):
+        return self._var_get('elevation', *a, **k)
+    def volume(self, *a, **k):
+        return self._var_get('volume', *a, **k)
+    def spill(self, *a, **k):
+        return self._var_get('spill', *a, **k)
+    def head(self, *a, **k):
+        return self._var_get('head', *a, **k)
+    def net_outflow(self, *a, **k):
+        return self._var_get('net_outflow', *a, **k)
 
-    def volume(self, time=None, scenario=None):
-        return self.get_var('volume', time, scenario)
-
-    def spill(self, time=None, scenario=None):
-        return self.get_var('spill', time, scenario)
-
-    def head(self, time=None, scenario=None):
-        return self.get_var('head', time, scenario)
-
-    def net_outflow(self, time=None, scenario=None):
-        if time is not None and is_init(time):
-            return self.initial['net_outflow']
-        return self.get_var('net_outflow', time, scenario)
 
     def net_inflow(self, t, times, other_hydro):
         return self.inflow_schedule[times[t]] + sum(
@@ -258,18 +251,15 @@ class HydroGenerator(Generator):
 
         for t, time in enumerate(times):
             # network balance
-            if t < len(times) - 1:
-                self.add_constraint('water balance', time,
-                    self.volume(times[t+1]) - self.volume(time) == \
-                    self.net_inflow(t, times, hydro_gens) - \
-                    self.net_outflow(time))
+            self.add_constraint('water balance', time,
+                self.volume(time) - self.volume(times[t-1]) == \
+                self.net_inflow(t, times, hydro_gens) - \
+                self.net_outflow(time))
 
         self.add_constraint_set('modeled elevation', times.set, lambda model, t:
             self.elevation(t) == self.PWmodels['volume_to_forebay_elevation'].output(t))
         self.add_constraint_set('power production', times.set, lambda model, t:
-            self.power(t) <= \
-            # self.power_production_coef * self.outflow(t) # based on initial head
-            #self.PWmodels['head_to_production_coefficient'].output(t) * self.outflow(t)
+            self.power(t) <= \ # TODO - should this be equals?
             self.PWmodels['head_outflow_to_production'].output(t)
             )
 

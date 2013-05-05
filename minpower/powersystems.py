@@ -9,7 +9,7 @@ optimization framework from :class:`~optimization.OptimizationObject`.
 
 import logging
 
-from commonscripts import (update_attributes, getattrL, flatten)
+from commonscripts import (update_attributes, getattrL, flatten, set_trace)
 from config import user_config
 
 from optimization import (value, OptimizationObject,
@@ -495,6 +495,7 @@ class PowerSystem(OptimizationProblem):
         sln._resolved = True
         sln._get_outputs()
         sln._get_costs()
+
 
         sln.observed_fuelcost = sln.fuelcost
         sln.observed_totalcost = sln.totalcost_generation

@@ -44,6 +44,7 @@ hydro_pw_cols = [
 ]
 hydro_initial_cols = [
     'elevation',
+    'volume',
     'outflow',
     'power',
     'spill',

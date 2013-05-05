@@ -197,6 +197,17 @@ class Solution(object):
             self.net_export_income = self.power_exports * export_prices - \
                 self.power_imports * import_prices
 
+            if len(self.power_system.buses) == 1:
+                busnm = str(self.power_system.buses[0])
+                self.exports_data = pd.DataFrame({
+                    'power_exports': self.power_exports[busnm],
+                    'power_imports': self.power_imports[busnm],
+                    'net_export_income': self.net_export_income[busnm]
+                    })
+            else:
+                # TODO - multiple buses - make the export data into a panel?
+                self.exports_data = self.net_export_income
+
     def _get_cost_error(self):
         try:
             self.costerror = abs(self.fuelcost.sum(
@@ -736,8 +747,6 @@ class Solution_Stochastic(Solution):
                 self.power_imports = self.gen_time_df(
                     'Pimport', None, generators=self.power_system.buses)
                 self.net_exports = self.power_exports - self.power_imports                
-
-
         else:
             self.generators_power_scenarios = self.stg_panel('power')
             self.generators_status_scenarios = \
@@ -747,6 +756,13 @@ class Solution_Stochastic(Solution):
             self.generators_status = self.expected_status.copy()
             self.expected_power = self.generators_power = self._calc_expected(
                 self.generators_power_scenarios)
+            if self.hydro_gens:
+                self.expected_hydro_vars = pd.Panel({
+                    key: self._calc_expected(self.stg_panel(key, generators=self.hydro_gens))
+                    for key in _hydro_var_names})
+
+
+
         return
 
     def _calc_expected(self, panel):

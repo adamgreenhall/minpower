@@ -87,9 +87,6 @@ class HydroGenerator(Generator):
                 self.initial['outflow'] + \
                 self.initial['spill']
                 )
-        #self.power_production_coef = self.PWmodels[
-        #    'head_to_production_coefficient'].output_true(
-        #    self.initial['head'])
 
     def build_pw_models(self):
         '''
@@ -125,13 +122,6 @@ class HydroGenerator(Generator):
                 self.flow_to_tailwater_elevation,
                 self.net_outflow,
                 output_name= 'el_tw'),
-            #head_to_production_coefficient=pw_or_poly(
-            #    self.head_to_production_coefficient,
-            #    self.head,
-            #    output_name= 'prod_coeff',
-            #    pw_repn='SOS2',
-            #    pw_constr_type='UB'
-            #    ),
         )
         if type(self.flow_to_tailwater_elevation) == pd.DataFrame:
             pointsB = [
@@ -257,12 +247,9 @@ class HydroGenerator(Generator):
             self.add_constraint('elevation final', times.last(),
                 self.elevation(times.last()) >= self.elevation_final)
 
-#        crude_power_production_coef = bidding.get_pwl_output(
-#            self.head_to_production_coefficient, self.initial['head'])
-
-        # TODO - this should be averaged over 24hrs
         if len(self.flow_history) == 0: 
             # assume elevation was equal to initial at all past times
+            # TODO - assumes hourly intervals
             elevation_history = pd.Series(self.initial['elevation'],
                 index=pd.date_range(
                     times.times[0] - pd.DateOffset(hours=24),
@@ -280,14 +267,21 @@ class HydroGenerator(Generator):
                 tidx = (times.times == tprev).tolist().index(True)
                 return self.elevation(times[tidx])
 
+
+        self.add_constraint_set('modeled elevation', times.set, lambda model, t:
+            self.elevation(t) == self.PWmodels['volume_to_forebay_elevation'].output(t))
+
+        self.add_constraint_set('modeled head', times.set, lambda model, t:
+            self.head(t) == self.elevation(t) - \
+            self.PWmodels['flow_to_tailwater_elevation'].output(t))
+
+        self.add_constraint_set('modeled net outflow', times.set,
+            lambda model, t:
+            self.net_outflow(t) == self.outflow(t) + self.spill(t))
+
+
         for t, time in enumerate(times):
             tmstmp = times.times[t]
-            # network balance
-#            if t < len(times) - 1:
-#                self.add_constraint('water balance', time,
-#                    self.volume(times[t+1]) - self.volume(time) == \
-#                    self.net_inflow(t, times, hydro_gens) - \
-#                    self.net_outflow(time))
             
             self.add_constraint('water balance', time,
                 self.volume(time) - self.volume(times[t-1]) == \
@@ -307,30 +301,6 @@ class HydroGenerator(Generator):
                     self.elevation(time) - prev_elv(tmstmp, -24) \
                     >= 24 * self.elevation_ramp_min[time])
                 
-#            if t < times._int_division:  # TODO - assumes hourly intervals
-#                self.add_constraint('power production', time,
-#                    self.power(time) == \
-#                    self.PWmodels['head_outflow_to_production'].output(time))
-#            else:
-#                # a crude approximation based on initial head to 
-#                # avoid activating the large number of binary variables 
-#                # in the two variable PWL curve
-#                self.add_constraint('power production', time,
-#                    self.power(time) <= \
-#                    crude_power_production_coef * self.outflow(time)
-#                )
-
-
-        self.add_constraint_set('modeled elevation', times.set, lambda model, t:
-            self.elevation(t) == self.PWmodels['volume_to_forebay_elevation'].output(t))
-
-        self.add_constraint_set('modeled head', times.set, lambda model, t:
-            self.head(t) == self.elevation(t) - \
-            self.PWmodels['flow_to_tailwater_elevation'].output(t))
-
-        self.add_constraint_set('modeled net outflow', times.set,
-            lambda model, t:
-            self.net_outflow(t) == self.outflow(t) + self.spill(t))
 
         # ramping constraints
         self.add_ramp_constraints(self.power,
@@ -339,8 +309,6 @@ class HydroGenerator(Generator):
             self.net_outflow_ramp_min, self.net_outflow_ramp_max, times)
         self.add_ramp_constraints(self.outflow,
             self.outflow_ramp_min, self.outflow_ramp_max, times)
-#        self.add_ramp_constraints(self.elevation,
-#            self.elevation_ramp_min, self.elevation_ramp_max, times)
 
     def add_ramp_constraints(self, var, minlim, maxlim, times):
         name = var(None).name
@@ -348,8 +316,6 @@ class HydroGenerator(Generator):
             self.add_constraint_set('{} ramp limit low'.format(name), times.set,
             lambda model, t:
             var(t) - var(get_tPrev(t, model, times)) >= float(minlim[t]))
-        #def max_lim_setter(model, t):
-        #    return var(t) - var(get_tPrev(t, model, times)) <= float(maxlim[t])
         if maxlim is not None:
             self.add_constraint_set('{} ramp limit high'.format(name), times.set,
             lambda model, t:

@@ -530,7 +530,6 @@ def setup_times(generators_data, loads_data):
     if len(timeseries) == 0:
         # this is a ED or OPF problem - only one time
         return DataFrame(), just_one_time(), generators_data, loads_data
-
     timeseries = DataFrame(timeseries)
 
     hs_file = joindir(user_config.directory, 'hydro_schedule.csv')

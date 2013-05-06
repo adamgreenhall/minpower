@@ -12,6 +12,11 @@ default_max=dict(
     elevation= 1e4,
     volume= 1e7)
 
+units=dict(
+    # flow [kcfs] * 3600 [s/hr] = change in volume [kcfs * hr]
+    flow_to_volume_change= 3600.0,
+)
+
 class HydroGenerator(Generator):
     """
     A hydro plant model, including the upstream reservoir.
@@ -285,8 +290,8 @@ class HydroGenerator(Generator):
             
             self.add_constraint('water balance', time,
                 self.volume(time) - self.volume(times[t-1]) == \
-                self.net_inflow(t, times, hydro_gens) - \
-                self.net_outflow(time))
+                units['flow_to_volume_change'] * (self.net_inflow(t, times, hydro_gens) - \
+                self.net_outflow(time)))
 
             self.add_constraint('power production', time,
                 self.power(time) == \

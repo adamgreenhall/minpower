@@ -297,23 +297,26 @@ class HydroGenerator(Generator):
                 self.power(time) == \
                 self.PWmodels['head_outflow_to_production'].output(time))
 
-            if self.elevation_ramp_max is not None:
+            if self.elevation_ramp_max is not None and \
+                not user_config.ignore_ramping_constraints:
                 self.add_constraint('elevation ramp max', time,
                     self.elevation(time) - prev_elv(tmstmp, -24) \
                     <= 24 * self.elevation_ramp_max[time])
-            if self.elevation_ramp_min is not None:
+            if self.elevation_ramp_min is not None and \
+                not user_config.ignore_ramping_constraints:
                 self.add_constraint('elevation ramp min', time,
                     self.elevation(time) - prev_elv(tmstmp, -24) \
                     >= 24 * self.elevation_ramp_min[time])
                 
 
         # ramping constraints
-        self.add_ramp_constraints(self.power,
-            self.rampratemin, self.rampratemax, times)
-        self.add_ramp_constraints(self.net_outflow,
-            self.net_outflow_ramp_min, self.net_outflow_ramp_max, times)
-        self.add_ramp_constraints(self.outflow,
-            self.outflow_ramp_min, self.outflow_ramp_max, times)
+        if not user_config.ignore_ramping_constraints:
+            self.add_ramp_constraints(self.power,
+                self.rampratemin, self.rampratemax, times)
+            self.add_ramp_constraints(self.net_outflow,
+                self.net_outflow_ramp_min, self.net_outflow_ramp_max, times)
+            self.add_ramp_constraints(self.outflow,
+                self.outflow_ramp_min, self.outflow_ramp_max, times)
 
     def add_ramp_constraints(self, var, minlim, maxlim, times):
         name = var(None).name

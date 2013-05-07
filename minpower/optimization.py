@@ -15,6 +15,7 @@ with quiet():
     # it isn't stdout or stderr
     import coopr.pyomo as pyomo
 
+import coopr
 from coopr.opt.base import solvers as cooprsolver
 import pandas as pd
 
@@ -548,17 +549,22 @@ class OptimizationProblem(OptimizationObject):
 #                    import cplex
 #                    kwds['solver_io'] = 'python'
 #            except ImportError: pass
+            if solver == 'ipopt':
+                self._opt_solver = coopr.plugins.solvers.ASL(options={
+                    'solver':'ipopt',
+                    'halt_on_ampl_error':'yes'})
+            else:
+                self._opt_solver = cooprsolver.SolverFactory(solver, **kwds)
+                self._opt_solver.options.mipgap = user_config.mipgap
 
-            self._opt_solver = cooprsolver.SolverFactory(solver, **kwds)
-            self._opt_solver.options.mipgap = user_config.mipgap
-
+                if user_config.solver_time_limit:
+                    self._opt_solver.options.timelimit = user_config.solver_time_limit
 
             if self._opt_solver is None:
                 msg = 'solver "{}" not found by coopr'.format(solver)
                 raise OptimizationError(msg)
 
-        if user_config.solver_time_limit:
-            self._opt_solver.options.timelimit = user_config.solver_time_limit
+
 
 
         # if we are debugging, show the solver output

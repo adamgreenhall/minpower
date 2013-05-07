@@ -305,18 +305,18 @@ class Generator(OptimizationObject):
             if min_down_intervals_remaining_init > 0:
                 self.add_constraint('mindowntime', tInitial, 0 == sum([self.status(times[t]) for t in range(min_down_intervals_remaining_init)]))
 
-            # initial ramp rate
-            if self.rampratemax is not None:
-                if self.initial_power + self.rampratemax < self.pmax:
-                    E = self.power(
-                        times[0]) - self.initial_power <= self.rampratemax
-                    self.add_constraint('ramp lim high', tInitial, E)
+#            # initial ramp rate
+#            if self.rampratemax is not None:
+#                if self.initial_power + self.rampratemax < self.pmax:
+#                    E = self.power(
+#                        times[0]) - self.initial_power <= self.rampratemax
+#                    self.add_constraint('ramp lim high', tInitial, E)
 
-            if self.rampratemin is not None:
-                if self.initial_power + self.rampratemin > self.pmin:
-                    E = self.rampratemin <= self.power(
-                        times[0]) - self.initial_power
-                    self.add_constraint('ramp lim low', tInitial, E)
+#            if self.rampratemin is not None:
+#                if self.initial_power + self.rampratemin > self.pmin:
+#                    E = self.rampratemin <= self.power(
+#                        times[0]) - self.initial_power
+#                    self.add_constraint('ramp lim low', tInitial, E)
 
             # calculate up down intervals
             min_up_intervals = roundoff(self.minuptime / times.intervalhrs)

@@ -6,6 +6,11 @@ import pandas as pd
 from pandas import date_range, Series
 from commonscripts import hours, ts_from_csv
 
+def unique_val(series): 
+    u = series.unique()
+    if len(u) == 1: return u[0]
+    else: return None
+Series.unique_val = unique_val
 
 def get_schedule(filename):
     return ts_from_csv(filename)
@@ -32,7 +37,8 @@ class TimeIndex(object):
         self.times = index.copy()
         self.strings = Series(strings, index=self.times)
         self._set = self.strings.values.tolist()
-
+        self._time_names = pd.Series(self.times, index=self.strings.values)
+        
         self.get_interval()
         self.Start = self.times[0]
         self.startdate = self.Start.date()
@@ -66,8 +72,8 @@ class TimeIndex(object):
         else:
             self.interval = self.times[1] - self.times[0]
             self.intervalhrs = self.interval.total_seconds() / 3600.0
+        self.is_hourly = self.intervalhrs == 1
         return
-
     def __contains__(self, item):
         return item in self.times
 
@@ -128,3 +134,6 @@ class TimeIndex(object):
 
 def is_init(time):
     return getattr(time, 'index', None) == 'Init'
+
+def get_tPrev(t, model, times):
+    return model.times.prev(t) if t != model.times.first() else times.initialTime

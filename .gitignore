@@ -21,6 +21,9 @@ addons/*.py
 *stage*.csv
 *solution*.csv
 *.hd5
+# infeasibility debugging
+gurobi_script.py
+*.ilp
 
 # Compiled source #
 ###################

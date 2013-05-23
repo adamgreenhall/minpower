@@ -2,10 +2,11 @@
 An optimization command library for Minpower.
 Basically a wrapper around Coopr's `pyomo.ConcreteModel` class.
 """
+import os
 import logging
 import time
 import weakref
-from commonscripts import (quiet, not_quiet, 
+from commonscripts import (quiet, not_quiet,
     update_attributes, joindir, set_trace)
 
 with quiet():
@@ -14,6 +15,7 @@ with quiet():
     # it isn't stdout or stderr
     import coopr.pyomo as pyomo
 
+import coopr
 from coopr.opt.base import solvers as cooprsolver
 import pandas as pd
 
@@ -24,7 +26,9 @@ pyomo.base.numvalue.KnownConstants[
 variable_kinds = dict(
     Continuous=pyomo.Reals,
     Binary=pyomo.Boolean,
-    Boolean=pyomo.Boolean)
+    Boolean=pyomo.Boolean,
+    NonNegativeReals=pyomo.NonNegativeReals,
+    )
 
 from config import user_config
 
@@ -137,12 +141,13 @@ class OptimizationObject(object):
             def get_varying_lim(limname='low'):
                 if limname in kwargs and hasattr(kwargs[limname], 'index'):
                     unq = kwargs[limname].unique()
-                    if len(unq) == 1: 
+                    if len(unq) == 1:
                         kwargs[limname] = unq[0]
                         return None
-                    return kwargs.pop(limname)
+                    else:
+                        return kwargs.pop(limname)
                 else: return None
-                    
+
             low_limit_series = get_varying_lim('low')
             high_limit_series = get_varying_lim('high')
 
@@ -158,12 +163,13 @@ class OptimizationObject(object):
                     var[i] = fixed_value
 
             if low_limit_series is not None:
-                self.add_constraint_set('{}_min'.format(name), index, 
+                self.add_constraint_set('{}_min'.format(name), index,
                     lambda model, t: var[t] >= low_limit_series[t])
             if high_limit_series is not None:
-                self.add_constraint_set('{}_max'.format(name), index, 
+                self.add_constraint_set('{}_max'.format(name), index,
                     lambda model, t: var[t] <= high_limit_series[t])
-                
+        return var
+
     def add_parameter(self, name, index=None, values=None, mutable=True, default=None, **kwargs):
         name = self._id(name)
         self._parent_problem().add_component_to_problem(
@@ -194,6 +200,9 @@ class OptimizationObject(object):
                 self.get_constraint(cname, time))
         else:
             return None
+
+    def get_var(self, name, time=None, scenario=None):
+        return self.get_variable(name, time, indexed=True, scenario=scenario)
 
     def get_variable(self, name, time=None, indexed=False, scenario=None):
         if indexed:
@@ -275,7 +284,7 @@ class OptimizationObject(object):
         return 'opt_obj{ind}'.format(ind=self.index)
 
     def _remove_component(self, name, time=None):
-        key = self._t_id(name, time)
+        key = self._id(name) if time is None else self._t_id(name, time)
         delattr(self._parent_problem()._model, key)
 
     def values(self, name, reindex=None):
@@ -328,6 +337,7 @@ class OptimizationProblem(OptimizationObject):
             return dict(bounds=(low, high), domain=variable_kinds[kind])
         var = pyomo.Var(name=name, **map_args(**kwargs))
         self._model.add_component(name, var)
+        return var
 
     def add_constraint(self, name, expression, time=None):
         cname = self._t_id(name, time) if time is not None else name
@@ -344,7 +354,7 @@ class OptimizationProblem(OptimizationObject):
         if scenario is None:
             try:
                 return getattr(self._model, name)
-            except (AttributeError, KeyError) as NotInModelError:
+            except (AttributeError, KeyError):
                 # self.show_model()
                 raise AttributeError('error getting {}'.format(name))
         else:
@@ -456,13 +466,14 @@ class OptimizationProblem(OptimizationObject):
                 else:
                     raise
 
-    def solve(self):
+    def solve(self, get_duals=None):
         '''
         Send the optimization problem off to the solver.
         '''
 
         solver = user_config.solver
-        get_duals = user_config.duals
+        if get_duals is None:
+            get_duals = user_config.duals
 
         logging.info('Solving with {s}'.format(s=solver))
 
@@ -500,18 +511,16 @@ class OptimizationProblem(OptimizationObject):
                 instance, get_duals=get_duals)
             self.solution_time += elapsed
 
-            instance.load(results)
+            instance.load(results, allow_consistent_values_for_fixed_vars=True)
             logging.debug('... LP problem solved')
 
         if self.stochastic_formulation:
             self._scenario_tree.snapshotSolutionFromInstances(
                 self._scenario_instances)
 
-        self.objective = get_objective(results,
+        self.objective = get_objective(instance, results,
                                        name='MASTER' if self.stochastic_formulation else 'objective')
 
-        # self.constraints = instance.active_components(pyomo.Constraint)
-        # self.variables =   instance.active_components(pyomo.Var)
         return instance
 
     def __str__(self):
@@ -521,49 +530,61 @@ class OptimizationProblem(OptimizationObject):
         solver=user_config.solver,
         get_duals=False,
         keepfiles=False,
+        solve_kwds=None
         ):
 
-        if user_config.keep_lp_files:
+        if user_config.keep_lp_files or user_config.debugger:
             keepfiles = True
 
         suffixes = ['dual'] if get_duals else []
 
-        if not hasattr(self, '_opt_solver'):
+        if getattr(self, '_opt_solver', None) is None:
             kwds = {}
-#            try:
-#                if solver == 'gurobi':
-#                    import gurobipy
-#                    kwds['solver_io'] = 'python'
-#                elif solver == 'cplex':
-#                    import cplex
-#                    kwds['solver_io'] = 'python'
-#            except ImportError: pass
+            if solver == 'ipopt':
+                self._opt_solver = coopr.plugins.solvers.ASL(options={
+                    'solver':'ipopt',
+                    'halt_on_ampl_error':'yes'})
+            else:
+                self._opt_solver = cooprsolver.SolverFactory(solver, **kwds)
+                
+                if solver == 'gurobi':
+                    self._opt_solver.options.ImproveStartGap = user_config.mipgap * 1.1
+                    self._opt_solver.options.mipgap = user_config.mipgap 
 
-            self._opt_solver = cooprsolver.SolverFactory(solver, **kwds)
-            self._opt_solver.options.mipgap = user_config.mipgap
-
+                    self._opt_solver.options.FlowCoverCuts = 2
+                    self._opt_solver.options.MIRCuts = 2
+                    self._opt_solver.options.Cuts = 2
+                    # self._opt_solver.options.MIPFocus = 1
+                    
+                    # see http://www.gurobi.com/documentation/5.5/reference-manual/node801
+                else:
+                    self._opt_solver.options.mipgap = user_config.mipgap
+                
+                if user_config.solver_time_limit:
+                    self._opt_solver.options.timelimit = user_config.solver_time_limit
 
             if self._opt_solver is None:
                 msg = 'solver "{}" not found by coopr'.format(solver)
                 raise OptimizationError(msg)
+            self.solver_name = solver
 
-        if user_config.solver_time_limit:
-            self._opt_solver.options.timelimit = user_config.solver_time_limit
 
 
         # if we are debugging, show the solver output
-        show_solver_output = user_config.logging_level <= 10
+        show_solver_output = user_config.logging_level <= 10 or user_config.debugger
 
         start = time.time()
 
         quiet_fn = not_quiet if keepfiles or show_solver_output else quiet
-
+        kwds = dict(
+            suffixes=suffixes,
+            keepfiles=keepfiles,
+            tee=show_solver_output,
+            symbolic_solver_labels=keepfiles,
+            )
+        if solve_kwds is not None: kwds.update(solve_kwds)
         with quiet_fn():
-            results = self._opt_solver.solve(instance,
-                suffixes=suffixes,
-                keepfiles=keepfiles,
-                tee=show_solver_output,
-                )
+            results = self._opt_solver.solve(instance, **kwds)
         try:
             self._opt_solver._symbol_map = None  # this should mimic the memory leak bugfix at: software.sandia.gov/trac/coopr/changeset/5449
         except AttributeError:
@@ -573,18 +594,20 @@ class OptimizationProblem(OptimizationObject):
 
         if self.solved and not get_duals:
             try:
-                self.mipgap = results.Solution[0]['Gap']
+                self.mipgap = float(results.Solution[0]['Gap'])
                 logging.debug('solution gap={}'.format(self.mipgap))
-            except AttributeError:
+            except (AttributeError, TypeError) as e:
                 self.mipgap = None
-
+        if not self.solved and keepfiles and user_config.debugger:
+            debug_infeasible(self._opt_solver)
         return results, elapsed
 
-    def fix_binary_variables(self, fix_offs=True):
+    def fix_binary_variables(self, fix_offs=True, name_filter=None):
         _fix_binary_variables(
             self._model,
             self.stochastic_formulation,
-            fix_offs)
+            fix_offs=fix_offs,
+            name_filter=name_filter)
 
     def _unfix_variables(self):
         _unfix_variables(self._model)
@@ -596,12 +619,16 @@ class OptimizationProblem(OptimizationObject):
             delattr(self._model, key)
 
 
-def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
+def _fix_binary_variables(instance, is_stochastic=False,
+    fix_offs=True,
+    name_filter=None,
+    ):
     '''fix binary variables to their solved values to create an LP problem'''
     active_vars = instance.active_components(pyomo.Var)
     for var in active_vars.values():
         if isinstance(var.domain, pyomo.base.IntegerSet) or \
                 isinstance(var.domain, pyomo.base.BooleanSet):
+            if name_filter and (not name_filter in var.name): continue
             if var.is_indexed():
                 for key, ind_var in var.iteritems():
                     if fix_offs or ind_var.value >= 1 - 1e-5:
@@ -617,7 +644,8 @@ def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
             lambda blk: type(blk) != pyomo.Piecewise,
             instance.active_components(pyomo.Block).values()
         ):
-            _fix_binary_variables(scenario_block)
+            _fix_binary_variables(scenario_block,
+                fix_offs=fix_offs, name_filter=name_filter)
     # need to preprocess after fixing
     instance.preprocess()
 
@@ -676,10 +704,10 @@ def detect_status(results, solver):
     return success
 
 
-def get_objective(results, name='objective'):
+def get_objective(instance, results, name='objective'):
     value = 0
     try:
-        value = results.Solution.objective[name].value
+        value = float(getattr(instance, name))
     except AttributeError:
         objs = results.Solution.objective.values()
         value = [obj['Value'] for obj in objs if 'Value' in obj][0]
@@ -719,3 +747,29 @@ class NotInModelError(Exception):
 
     def __str__(self):
         return self.value
+
+def debug_infeasible(opt_solver):
+    logging.info('opening solver files for inspection')
+    prob_filename = opt_solver._problem_files[0]
+    if user_config.solver == 'gurobi':
+        infeas_fnm = joindir(user_config.directory, 'infeasibility.ilp')
+        script_fnm = joindir(user_config.directory, 'gurobi_script.py')
+        with open(script_fnm, 'w+') as f:
+            f.write('\n'.join([
+                'from gurobipy import read',
+                'model = read("{}")'.format(prob_filename),
+                'model.computeIIS()',
+                'model.write("{}")'.format(infeas_fnm)]))
+        errcode = os.system('gurobi.sh < {}'.format(script_fnm))
+        if errcode == 0:
+            os.system('sleep 2; vim -p {}'.format(infeas_fnm))
+    # elif cplex
+        # read /tmp/tmpqKUijC.pyomo.lp
+        # optimize
+        # conflict
+        # display conflict all 
+        # write???
+        # quit
+    else:
+        os.system('sleep 2; vim -p {} {}'.format(opt_solver.log_file, prob_filename))
+    set_trace()

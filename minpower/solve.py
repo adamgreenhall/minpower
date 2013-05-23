@@ -12,7 +12,7 @@ import argparse
 import pdb
 
 from config import user_config, parse_command_line_config
-from commonscripts import joindir, StreamToLogger, set_trace
+from commonscripts import joindir, StreamToLogger
 import powersystems, get_data, stochastic, results
 from standalone import store_times, init_store, get_storage, repack_storage
 
@@ -41,7 +41,7 @@ def solve_multistage_standalone(power_system, times, scenario_tree, data):
         storage = init_store(power_system, stage_times, data)
         stage_times_remaining = stage_times
         stg_start = 0
-    
+
     for stg, t_stage in enumerate(stage_times_remaining):
         logging.info('Stage starting at {}'.format(t_stage.Start.date()))
         # store current stage times
@@ -71,15 +71,15 @@ def standaloneUC():
     parser.add_argument('--pid', default='',
         help='the process id of the parent')
     parser.add_argument('--debugger', action='store_true', default=False,
-        help='do some debugging')        
+        help='do some debugging')
 
     args = parser.parse_args()
     stg = args.stg
     user_config.directory = args.directory
     user_config.pid = args.pid
 
-    try:          
-        _set_store_filename(args.pid)    
+    try:
+        _set_store_filename(args.pid)
         # load stage data
         power_system, times, scenario_tree = load_state()
 
@@ -88,7 +88,7 @@ def standaloneUC():
         user_config.debugger = args.debugger
 
         _setup_logging(args.pid)
-      
+
         sln = create_solve_problem(power_system, times, scenario_tree, stage_number=stg)
 
         store = store_state(power_system, times, sln)
@@ -97,7 +97,7 @@ def standaloneUC():
         if user_config.debugger or args.debugger:
             __, __, tb = sys.exc_info()
             traceback.print_exc()
-            pdb.post_mortem(tb)            
+            pdb.post_mortem(tb)
         else:
             raise
 
@@ -115,9 +115,9 @@ def solve_problem(datadir='.',
     All options are set within `user_config`.
     """
     user_config.directory = datadir
-    
+
     pid = user_config.pid if user_config.pid else os.getpid()
-        
+
     _set_store_filename(pid)
     _setup_logging(pid)
 
@@ -130,7 +130,7 @@ def solve_problem(datadir='.',
         store.close()
 
     logging.debug(dict(user_config))
-    
+
     start_time = timer.time()
     logging.debug('Minpower reading {}'.format(datadir))
     generators, loads, lines, times, scenario_tree, exports, data = get_data.parsedir()
@@ -176,15 +176,23 @@ def solve_multistage(power_system, times, scenario_tree=None, data=None):
     for stg, t_stage in enumerate(stage_times):
         logging.info('Stage starting at {}'.format(t_stage.Start.date()))
         # solve
-        solution = create_solve_problem(
+        sln = create_solve_problem(
             power_system, t_stage, scenario_tree, stg)
         # add to stage solutions
-        stage_solutions.append(solution)
+        stage_solutions.append(sln)
         # reset model
         power_system.reset_model()
         # set inital state for next stage
         if stg < len(stage_times)-1:
-            power_system.set_initialconditions(stage_times[stg+1].initialTime)
+            power_system.set_initial_conditions()
+            
+            if sln.hydro_gens:
+                hydro_vars = sln.hydro_vars\
+                    .to_frame().reset_index().set_index('time')\
+                    .rename(columns={'minor':'name'})
+
+            for gen in sln.hydro_gens:
+                gen.flow_history = hydro_vars[hydro_vars.name == str(gen)]
 
     return stage_solutions, stage_times
 
@@ -192,16 +200,16 @@ def solve_multistage(power_system, times, scenario_tree=None, data=None):
 def create_solve_problem(power_system, times, scenario_tree=None,
     stage_number=None, rerun=False):
     '''create and solve an optimization problem.'''
-    
+
     create_problem(power_system, times, scenario_tree,
         stage_number, rerun)
-    
+
     instance = power_system.solve_problem(times)
 
     logging.debug('solved... get results')
 
     sln = results.make_solution(power_system, times)
-    
+
     power_system.disallow_shedding()
 
     # resolve with observed power and fixed status
@@ -209,13 +217,13 @@ def create_solve_problem(power_system, times, scenario_tree=None,
         power_system.resolve_stochastic_with_observed(instance, sln)
     elif user_config.deterministic_solve or user_config.perfect_solve:
         power_system.resolve_determinisitc_with_observed(sln)
-   
+
     if len(times)>1:
-        power_system.get_finalconditions(sln)
+        power_system.get_final_conditions(sln)
 
         power_system.disallow_shedding()
         sln.stage_number = stage_number
-    
+
     return sln
 
 def create_problem(power_system, times, scenario_tree=None,
@@ -259,16 +267,16 @@ def main():
     The command line interface for minpower. For more info use:
     ``minpower --help``
     '''
-            
+
     args = parse_command_line_config(
         argparse.ArgumentParser(description='Minpower command line interface'))
-    
+
     directory = user_config.directory
 
     if not os.path.isdir(directory):
         msg = 'There is no folder named "{}".'.format(directory)
         raise OSError(msg)
-    
+
     if args['profile']:
         print 'run profile'
         import cProfile
@@ -276,7 +284,7 @@ def main():
         prof.runcall(solve_problem, directory)
         prof.dump_stats('minpower.profile')
         return
-    
+
     # open IPython on exception
     if args['debugger']:
         from IPython.core import ultratb

@@ -4,7 +4,8 @@ from config import user_config
 from commonscripts import update_attributes, bool_to_int, set_trace
 
 from optimization import value, OptimizationObject
-from schedule import is_init
+from schedule import is_init, get_tPrev
+
 import bidding
 
 
@@ -77,6 +78,9 @@ class Generator(OptimizationObject):
         self.commitment_problem = True
         self.build_cost_model()
         self.init_optimization()
+        
+        self.always_on = self.noloadcost == 0 and \
+            self.startupcost == 0 and self.shutdowncost == 0
 
     def power(self, time=None, scenario=None):
         '''real power output at time'''
@@ -96,7 +100,9 @@ class Generator(OptimizationObject):
 
     def status(self, time=None, scenario=None):
         '''on/off status at time'''
-        if self.commitment_problem or user_config.dispatch_decommit_allowed:
+        if self.always_on:
+            return 1
+        elif self.commitment_problem or user_config.dispatch_decommit_allowed:
             if time is not None and is_init(time):
                 return self.initial_status
             else:
@@ -153,12 +159,6 @@ class Generator(OptimizationObject):
     def cost_second_stage(self, times):
         return sum(self.operatingcost(time) for time in times)
 
-    def getstatus(self, tend, times, status):
-        return dict(
-            status=value(self.status(tend)),
-            power=value(self.power(tend)),
-            hoursinstatus=self.gethrsinstatus(times, status))
-
     def gethrsinstatus(self, times, stat):
         if not self.is_controllable:
             return 0
@@ -181,7 +181,7 @@ class Generator(OptimizationObject):
 
         return hrs
 
-    def set_initial_condition(self, power=None, 
+    def set_initial_condition(self, power=None,
         status=True, hoursinstatus=100):
         if power is None:
             # set default power as mean output
@@ -191,6 +191,18 @@ class Generator(OptimizationObject):
         self.initial_status = bool_to_int(status)
         self.initial_power = float(power * self.initial_status)  # note: this eliminates ambiguity of off status with power non-zero output
         self.initial_status_hours = hoursinstatus
+        
+        if not self.initial_status:
+            self.always_on = False
+
+    def get_final_condition(self, times):
+        tFinal = times.last()
+        status = pd.Series(
+            [value(self.status(t)) for t in times], index=times.times)
+        return dict(
+               power=value(self.power(tFinal)),
+               status=value(self.status(tFinal)),
+               hoursinstatus=self.gethrsinstatus(times, status))
 
     def build_cost_model(self):
         '''
@@ -226,7 +238,7 @@ class Generator(OptimizationObject):
             # object
             min_power_bid = self.bid_points.power.min()
             max_power_bid = self.bid_points.power.max()
-            
+
             if min_power_bid > self.pmin:  # pragma: no cover
                 self.pmin = min_power_bid
                 logging.warning('{g} should have a min. power bid ({mpb}) <= to its min. power limit ({mpl})'.format(g=str(self), mpb=min_power_bid, mpl=self.pmin))
@@ -249,7 +261,8 @@ class Generator(OptimizationObject):
         self.commitment_problem = len(times) > 1
         self.add_variable('power', index=times.set, low=0, high=self.pmax)
 
-        if self.commitment_problem or user_config.dispatch_decommit_allowed:
+        if self.commitment_problem or user_config.dispatch_decommit_allowed \
+            and not self.always_on:
             self.add_variable('status', index=times.set, kind='Binary',
                               fixed_value=1 if self.mustrun else None)
 
@@ -301,18 +314,18 @@ class Generator(OptimizationObject):
             if min_down_intervals_remaining_init > 0:
                 self.add_constraint('mindowntime', tInitial, 0 == sum([self.status(times[t]) for t in range(min_down_intervals_remaining_init)]))
 
-            # initial ramp rate
-            if self.rampratemax is not None:
-                if self.initial_power + self.rampratemax < self.pmax:
-                    E = self.power(
-                        times[0]) - self.initial_power <= self.rampratemax
-                    self.add_constraint('ramp lim high', tInitial, E)
+#            # initial ramp rate
+#            if self.rampratemax is not None:
+#                if self.initial_power + self.rampratemax < self.pmax:
+#                    E = self.power(
+#                        times[0]) - self.initial_power <= self.rampratemax
+#                    self.add_constraint('ramp lim high', tInitial, E)
 
-            if self.rampratemin is not None:
-                if self.initial_power + self.rampratemin > self.pmin:
-                    E = self.rampratemin <= self.power(
-                        times[0]) - self.initial_power
-                    self.add_constraint('ramp lim low', tInitial, E)
+#            if self.rampratemin is not None:
+#                if self.initial_power + self.rampratemin > self.pmin:
+#                    E = self.rampratemin <= self.power(
+#                        times[0]) - self.initial_power
+#                    self.add_constraint('ramp lim low', tInitial, E)
 
             # calculate up down intervals
             min_up_intervals = roundoff(self.minuptime / times.intervalhrs)
@@ -426,10 +439,6 @@ class Generator(OptimizationObject):
         return 'g{ind}'.format(ind=self.index)
 
 
-def get_tPrev(t, model, times):
-    return model.times.prev(t) if t != model.times.first() else times.initialTime
-
-
 class Generator_nonControllable(Generator):
     """
     A generator with a fixed schedule.
@@ -480,15 +489,16 @@ class Generator_nonControllable(Generator):
             Pavail = value(Pavail)
         return Pavail - Pused
 
-    def set_initial_condition(self, power=None, status=None, hoursinstatus=None):  #pragma: no cover
-        self.initial_power = 0
-        self.initial_status = 1
-        self.initial_status_hours = 0
+    def set_initial_condition(self, power=0, status=1, hoursinstatus=0):  #pragma: no cover
+        self.initial_power = power
+        self.initial_status = status
+        self.initial_status_hours = hoursinstatus
 
-    def getstatus(self, tend, times=None, status=None):
+    def get_final_condition(self, times):
+        tend = times.last()
         return dict(
             status=1,
-            power=self.power(tend),
+            power=value(self.power(tend)),
             hoursinstatus=0)
 
     def create_variables(self, times):
@@ -592,15 +602,17 @@ class Generator_Stochastic(Generator_nonControllable):
     def _get_scenario_values(self, times, s=0):
         # scenario values are structured as a pd.Panel
         # with axes: day, scenario, {prob, [hours]}
-        # the panel has items which are dates 
-        return self.scenario_values[times.Start.date()][
-            range(len(times))].ix[s].dropna().values.tolist()
-    
+        # the panel has items which are dates
+        return self.scenario_values[times.Start.date()]\
+                .ix[s].drop('probability')\
+                [range(len(times))]\
+                .values.tolist()
+
     def _get_scenario_probabilities(self, times):
         # if any of the scenario values are defined, we want them
         return self.scenario_values[
-            times.Start.date()].dropna(how='all').probability
-    
+            times.Start.date()].probability.dropna()
+
     def create_variables(self, times):
         if self.shedding_mode:
             self.create_variables_shedding(times)

@@ -21,6 +21,8 @@ from coopr import pyomo
 import numpy as np
 import pandas as pd
 
+max_hydro_profits_form = False
+
 
 class Load(OptimizationObject):
     """
@@ -161,10 +163,12 @@ class Bus(OptimizationObject):
             return sum(ld.power(t) for ld in self.loads)
 
     def Pexport(self, t, evaluate=False):
+        if not self.has_exports: return 0
         P = self.get_variable('power_export', t, indexed=True)
         return value(P) if evaluate else P
 
     def Pimport(self, t, evaluate=False):
+        if not self.has_imports: return 0
         P = self.get_variable('power_import', t, indexed=True)
         return value(P) if evaluate else P
 
@@ -175,9 +179,8 @@ class Bus(OptimizationObject):
             lineFlowsFromBus = sum([
                 Bmatrix[self.index][otherBus.index] * otherBus.angle(t)
                 for otherBus in allBuses])  # P_{ij}=sum_{i} B_{ij}*theta_j ???
-        if self.exports is not None:
-            lineFlowsFromBus += self.Pexport(t) - self.Pimport(t)
-        
+        lineFlowsFromBus += self.Pexport(t) - self.Pimport(t)
+
         return self.Pgen(t) - self.Pload(t) - lineFlowsFromBus
 
     def create_variables(self, times):
@@ -193,13 +196,19 @@ class Bus(OptimizationObject):
             load.create_variables(times)
         logging.debug('created load variables')
         self.add_variable('angle', index=times.set)
+        
+        self.has_imports = False
+        self.has_exports = False
         if self.exports is not None:
-            self.add_variable('power_import', index=times.set,
-                low=self.exports['importmin'],
-                high=self.exports['importmax'])
             self.add_variable('power_export', index=times.set,
                 low=self.exports['exportmin'],
                 high=self.exports['exportmax'])
+            self.has_exports = True
+            if 'priceimport' in self.exports.columns:
+                self.add_variable('power_import', index=times.set,
+                    low=self.exports['importmin'],
+                    high=self.exports['importmax'])
+                self.has_imports = True
         logging.debug('created bus variables ... returning')
         return
 
@@ -207,15 +216,23 @@ class Bus(OptimizationObject):
         return self.cost_first_stage(times) + self.cost_second_stage(times)
 
     def cost_first_stage(self, times):
-        return sum(gen.cost_first_stage(times) for gen in self.generators) + \
+        cost = sum(gen.cost_first_stage(times) for gen in self.generators) + \
             sum(load.cost_first_stage(times) for load in self.loads)
+        if max_hydro_profits_form:
+            cost *= -1
+            # assuming hydro generators have no 1st stage income
+        return cost
 
     def cost_second_stage(self, times):
         cost = sum(gen.cost_second_stage(times) for gen in self.generators) + \
             sum(load.cost_second_stage(times) for load in self.loads)
-        if self.exports is not None: 
+        if self.has_imports:
             cost += sum(self.Pimport(t) * self.exports.priceimport[t] for t in times)
+        if self.has_exports:
             cost -= sum(self.Pexport(t) * self.exports.priceexport[t] for t in times)
+        if max_hydro_profits_form:
+            # assuming hydro generators have no costs
+            cost *= -1
         return cost
 
     def create_constraints(self, times, Bmatrix, buses, include_children=True):
@@ -259,13 +276,15 @@ class PowerSystem(OptimizationProblem):
         self.reserve_load_fraction = user_config.reserve_load_fraction
         self.reserve_required = (self.reserve_fixed > 0) or \
             (self.reserve_load_fraction > 0.0)
-        self.has_exports = exports is not None and len(exports) > 0
         
+        self.has_exports = exports is not None and len(exports) > 0
+        self.has_imports = self.has_exports and 'priceimports' in exports.columns
+
         if lines is None:  # pragma: no cover
             lines = []
-        
+
         buses = self.make_buses_list(loads, generators, exports)
-        
+
         self.create_admittance_matrix(buses, lines)
         self.init_optimization()
 
@@ -273,13 +292,13 @@ class PowerSystem(OptimizationProblem):
         self.add_children(lines, 'lines')
 
         self.is_stochastic = \
-            sum(map(lambda gen: gen.is_stochastic, generators)) > 0
+            any(map(lambda gen: gen.is_stochastic, generators))
         self.has_hydro = \
-            sum(map(lambda gen:
-                getattr(gen, 'is_hydro', False), generators)) > 0
+            any(map(lambda gen:
+                getattr(gen, 'is_hydro', False), generators))
         self.shedding_mode = False
-        
-        
+
+
 
     def make_buses_list(self, loads, generators, exports=None):
         """
@@ -362,7 +381,9 @@ class PowerSystem(OptimizationProblem):
         return self.get_component('cost_second_stage', scenario=scenario)
 
     def create_objective(self, times):
-        self.add_objective(self.cost_first_stage() + self.cost_second_stage())
+        sense = pyomo.maximize if max_hydro_profits_form else pyomo.minimize
+        self.add_objective(self.cost_first_stage() + self.cost_second_stage(),
+            sense=sense)
 
     def create_constraints(self, times, include_children=True):
         if include_children:
@@ -410,6 +431,9 @@ class PowerSystem(OptimizationProblem):
     def get_generators_noncontrollable(self):
         return filter(lambda gen: not gen.is_controllable, self.generators())
 
+    def get_generators_hydro(self):
+        return filter(lambda gen: getattr(gen, 'is_hydro', False), self.generators())
+
     def get_generators_without_scenarios(self):
         return filter(lambda gen: getattr(gen, 'is_stochastic', False) == False, self.generators())
 
@@ -427,35 +451,21 @@ class PowerSystem(OptimizationProblem):
     def get_generator_with_observed(self):
         return filter(lambda gen: getattr(gen, 'observed_values', None) is not None, self.generators())[0]
 
-    def get_finalconditions(self, sln):
+    def set_initial_conditions(self):
+        if getattr(self, 'final_condition', None) is not None:
+            for gen in self.generators():
+                gen.set_initial_condition(
+                    **self.final_condition.ix[str(gen)].dropna().to_dict())
+
+    def get_final_conditions(self, sln):
         times = sln.times
-
-        tEnd = times.last_non_overlap()  # like 2011-01-01 23:00:00
-        tEndstr = times.non_overlap().last()  # like t99
-
-        status = sln.generators_status
-
+        final_condition = {}
         for gen in self.generators():
-            g = str(gen)
-            stat = status[g]
-            if sln.is_stochastic:
-                gen.finalstatus = dict(
-                    power=sln.generators_power[g][tEnd],
-                    status=sln.generators_status[g][tEnd],
-                    hoursinstatus=gen.gethrsinstatus(times.non_overlap(), stat)
-                )
-            else:
-                gen.finalstatus = gen.getstatus(tEndstr,
-                                                times.non_overlap(), stat)
+            final_condition[str(gen)] = \
+                gen.get_final_condition(times.non_overlap())
+        self.final_condition = pd.DataFrame(final_condition).T.astype(float)
         return
 
-    def set_initialconditions(self, initTime):
-        for gen in self.generators():
-            finalstatus = getattr(gen, 'finalstatus', {})
-            if finalstatus:
-                gen.set_initial_condition(**finalstatus)
-                del gen.finalstatus
-        return
 
     def solve_problem(self, times):
         try:
@@ -496,7 +506,9 @@ class PowerSystem(OptimizationProblem):
         sln.expected_fuelcost = sln.fuelcost.copy()
         sln.expected_totalcost = sln.totalcost_generation.copy()
         sln.expected_load_shed = float(sln.load_shed)
-
+        if self.has_hydro:
+            sln.expected_hydro_vars = sln.hydro_vars.copy()
+        
         # resolve the problem
         self._resolve_problem(sln)
 
@@ -504,6 +516,7 @@ class PowerSystem(OptimizationProblem):
         sln._resolved = True
         sln._get_outputs()
         sln._get_costs()
+
 
         sln.observed_fuelcost = sln.fuelcost
         sln.observed_totalcost = sln.totalcost_generation
@@ -605,7 +618,28 @@ class PowerSystem(OptimizationProblem):
         self.create_constraints(times)
 
         # fix statuses for all units
-        self.fix_binary_variables()
+        self.fix_binary_variables(name_filter='status')
+
+        # if this is a hydro problem - fix the net outflow
+        if self.has_hydro:
+        
+            fixed_hydro_vars = []
+            for nm in ['net_outflow', 'volume', 'head', 'elevation']:
+                fixed_hydro_vars.extend([
+                    getattr(hy, nm)().name \
+                    for hy in self.get_generators_hydro()])
+            self._fix_variables(fixed_hydro_vars)
+            
+            # HACK - feasification
+            for gen in self.get_generators_hydro():
+                for nm in ['volume_to_forebay_elevation', 'flow_to_tailwater_elevation']:
+                    if gen.PWmodels[nm].bid_points is not None:
+                        gen.PWmodels[nm]._pw_block().deactivate()
+                
+                #try: el_modeled = gen.get_var('el_fb_curve_el_fb')
+                #except AttributeError: el_modeled = {}
+                #for tm, val in el_modeled.iteritems(): 
+                #    val.value = max(min(val.value, val.ub), val.lb)
 
         # store original problem solve time
         self.full_sln_time = self.solution_time
@@ -613,7 +647,7 @@ class PowerSystem(OptimizationProblem):
 
         logging.info('resolving with observed values')
         try:
-            self.solve()
+            self.solve() #get_duals=True
         except OptimizationError:
             faststarts = map(lambda gen: str(gen), filter(lambda gen: gen.faststart, self.generators()))
             # at least one faststarting unit must be available (off)
@@ -624,7 +658,7 @@ class PowerSystem(OptimizationProblem):
                 # just shed the un-meetable load and calculate cost later
                 self.allow_shedding(sln.times, resolve=True)
                 try:
-                    self.solve()
+                    self.solve() #get_duals=True
                 except OptimizationError:
                     scheduled, committed = self.debug_infeasible(
                         sln.times, resolve_sln=sln)

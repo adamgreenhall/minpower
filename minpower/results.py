@@ -14,6 +14,8 @@ from schedule import TimeIndex
 from optimization import value
 from config import user_config
 
+_hydro_var_names = ['volume', 'outflow', 'spill', 'elevation']
+
 def prettify_plots(for_publication=True):
     plot.rc("xtick", direction="out")
     plot.rc("ytick", direction="out")
@@ -82,8 +84,8 @@ def make_multistage_solution(power_system, stage_times, stage_solutions):
         prettify_plots()
     if power_system.lines:
         logging.warning('no visualization for multistage SCUC yet')
-    klass = MultistageStandalone if getattr(
-        stage_solutions, 'path', False) else Solution_UC_multistage
+    klass = MultistageStandalone if (
+        type(stage_solutions) == pd.HDFStore) else Solution_UC_multistage
     return klass(power_system, stage_times, stage_solutions)
 
 
@@ -110,6 +112,10 @@ class Solution(object):
         self.generators = self.power_system.generators()
         self.loads = self.power_system.loads()
         self.times_non_overlap = self.times.non_overlap()
+
+        self.hydro_gens = filter(
+            lambda gen: getattr(gen,'is_hydro', False), 
+            self.generators)
 
     def get_values(self, items, method='power', time=None, evaluate=False):
         '''Get the attributes of all objects of a certain kind at a given time.'''
@@ -140,22 +146,23 @@ class Solution(object):
             self.mipgap = None
 
     def _get_outputs(self):
-        hydro_gens = filter(
-            lambda gen: getattr(gen,'is_hydro', False), 
-            self.generators)
+        if self.hydro_gens:
+            self.hydro_vars = pd.Panel({
+                key: self.gen_time_df(key, generators=self.hydro_gens)
+                for key in _hydro_var_names})
 
-        if hydro_gens:
-            self.generators_volumes = \
-                self.gen_time_df('volume', generators=hydro_gens)
-            self.generators_outflows = \
-                self.gen_time_df('outflow', generators=hydro_gens)
+            # add incremental inflows to the recorded data
+            self.hydro_vars['incremental_inflows'] = pd.DataFrame(
+                {str(gen): gen.inflow_schedule for gen in self.hydro_gens}
+                ).rename(index=self.times._time_names)
 
-        if self.power_system.has_exports:
-            self.power_exports = self.gen_time_df(
-                'Pexport', generators=self.power_system.buses)
-            self.power_imports = self.gen_time_df(
-                'Pimport', generators=self.power_system.buses)
-            self.net_exports = self.power_exports - self.power_imports                
+            
+
+        self.power_exports = self.gen_time_df(
+            'Pexport', generators=self.power_system.buses)
+        self.power_imports = self.gen_time_df(
+            'Pimport', generators=self.power_system.buses)
+        self.net_exports = self.power_exports - self.power_imports                
 
         self.generators_power = self.gen_time_df('power')
         self.generators_status = correct_status(self.gen_time_df('status'))
@@ -182,15 +189,42 @@ class Solution(object):
             logging.debug('generation shed: {}MW'.format(self.gen_shed))
         if self.load_shed > 0.01:
             logging.debug('load shed: {}MW'.format(self.load_shed))
-        if self.power_system.has_exports:
-            export_prices = pd.DataFrame({str(bus): bus.exports.priceexport
-                for bus in self.power_system.buses})
-            import_prices = pd.DataFrame({str(bus): bus.exports.priceimport 
-                for bus in self.power_system.buses})
-            import_prices.index = export_prices.index = self.times.times
-            self.net_export_income = self.power_exports * export_prices - \
-                self.power_imports * import_prices
         self._get_cost_error()
+        self._get_export_income()
+
+    def _get_export_income(self):
+        times = self.times.non_overlap()
+        has_exports = self.power_system.has_exports
+        has_imports = self.power_system.has_imports
+        export_prices = pd.DataFrame({str(bus): 
+            bus.exports.priceexport.ix[times] if has_exports \
+            else pd.Series(0.0, times.times) 
+            for bus in self.power_system.buses})
+        export_prices.index = times.times
+            
+        import_prices = pd.DataFrame({str(bus): 
+            bus.exports.priceimport.ix[times] if has_imports \
+            else pd.Series(0.0, times.times)
+            for bus in self.power_system.buses})
+        import_prices.index = times.times
+        
+        self.net_export_income = pd.DataFrame(0.0, 
+            columns=export_prices.columns, index=export_prices.index)
+        if has_exports:
+            self.net_export_income += self.power_exports * export_prices
+        if has_imports:
+            self.net_export_income += self.power_imports * import_prices
+
+        if len(self.power_system.buses) == 1:
+            busnm = str(self.power_system.buses[0])
+            self.exports_data = pd.DataFrame({
+                'power_exports': self.power_exports[busnm],
+                'power_imports': self.power_imports[busnm],
+                'net_export_income': self.net_export_income[busnm]
+                })
+        else:
+            # TODO - multiple buses - make the export data into a panel?
+            self.exports_data = self.net_export_income
 
     def _get_cost_error(self):
         try:
@@ -226,9 +260,6 @@ class Solution(object):
             out.append('IC')
             out.append(self.incremental_cost)
             out.append('')
-#            if self.power_system.has_hdyro:
-#                out.append('volume={}'.format(self.generators_volumes[t]))
-#                out.append('outflow={}'.format(self.generators_outflow[t]))
             
             for t in self.times:
                 if len(self.times) > 1:
@@ -681,7 +712,6 @@ class Solution_Stochastic(Solution):
         self._get_problem_info()
         self._get_outputs()
         self._get_costs()
-        self._get_prices()
 
     def stg_panel(self, method, 
         generators=None,
@@ -725,7 +755,18 @@ class Solution_Stochastic(Solution):
             # -- no more scenario labeling is needed
             self.generators_power = self.gen_time_df('power', None)
             self.generators_status = self.gen_time_df('status', None)
-
+            if self.hydro_gens:
+                self.hydro_vars = pd.Panel({
+                    key: self.gen_time_df(key, None, generators=self.hydro_gens)
+                    for key in _hydro_var_names})
+                self.hydro_vars['incremental_inflows'] = pd.DataFrame(
+                    {str(gen): gen.inflow_schedule for gen in self.hydro_gens}
+                    ).rename(index=self.times._time_names)
+            self.power_exports = self.gen_time_df(
+                'Pexport', None, generators=self.power_system.buses)
+            self.power_imports = self.gen_time_df(
+                'Pimport', None, generators=self.power_system.buses)
+            self.net_exports = self.power_exports - self.power_imports                
         else:
             self.generators_power_scenarios = self.stg_panel('power')
             self.generators_status_scenarios = \
@@ -735,6 +776,13 @@ class Solution_Stochastic(Solution):
             self.generators_status = self.expected_status.copy()
             self.expected_power = self.generators_power = self._calc_expected(
                 self.generators_power_scenarios)
+            if self.hydro_gens:
+                self.expected_hydro_vars = pd.Panel({
+                    key: self._calc_expected(self.stg_panel(key, generators=self.hydro_gens))
+                    for key in _hydro_var_names})
+
+
+
         return
 
     def _calc_expected(self, panel):
@@ -782,6 +830,9 @@ class Solution_Stochastic(Solution):
             if self.load_shed > 0.01:
                 logging.debug('load shed: {}MW'.format(self.load_shed))
 
+            self._get_export_income()
+            self._get_prices()
+
         else:
             # get expected cost of non_overlap times
             self.expected_totalcost = self._calc_expected_cost('cost')
@@ -809,8 +860,6 @@ class Solution_Stochastic(Solution):
     def _get_cost_error(self):
         pass
 
-    def _get_prices(self):
-        pass
 
     def info_cost(self):
         return ['expected cost= {}'.format(self.expected_totalcost.sum().sum())]

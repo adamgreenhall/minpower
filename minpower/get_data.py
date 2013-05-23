@@ -25,6 +25,35 @@ from config import user_config
 import os
 import logging
 
+hydro_schedule_cols = [
+    'elevation_min', 'elevation_max',
+    'volume_min', 'volume_max',
+    'head_min', 'head_max',
+    'outflow_min', 'outflow_max',
+    'net_outflow_min', 'net_outflow_max',
+    'spill_min', 'spill_max',
+    'pmin', 'pmax',
+    'elevation_ramp_min', 'elevation_ramp_max',
+    'outflow_ramp_min', 'outflow_ramp_max',
+    'net_outflow_ramp_min', 'net_outflow_ramp_max',
+    'inflow_schedule',
+    'elevation_target_min_schedule', 'elevation_target_max_schedule'
+]
+
+hydro_pw_cols = [
+    'volume_to_forebay_elevation',
+    'flow_to_tailwater_elevation',
+    'head_to_production_coefficient',
+]
+hydro_initial_cols = [
+    'elevation',
+    'volume',
+    'outflow',
+    'power',
+    'spill',
+]
+
+
 fields = dict(
     Line=[
         'name',
@@ -56,48 +85,19 @@ fields = dict(
 
     Load = ['name', 'bus', 'power'],
 
-    HydroGenerator = ['name', 'bus'],
-    
+    HydroGenerator = [
+        'name', 'bus',
+        'downstream_reservoir',
+        'delay_downstream',
+        ] + hydro_schedule_cols + hydro_pw_cols,
+
     ExportSchedule = [
-        'priceimport','priceexport', 
+        'priceimport','priceexport',
         'exportmin', 'exportmax',
         'importmin', 'importmax'
         ]
 )
 
-field_rename = dict(
-    HydroGenerator = {
-    'downstreamreservoir': 'downstream_reservoir',
-    'delaydownstream':'delay_downstream',
-    'volumemin':'volume_min',
-    'volumemax':'volume_max',
-    'volumeinitial':'volume_initial',
-    'volumefinal':'volume_final',
-    'outflowmin':'outflow_min',
-    'outflowmax':'outflow_max',
-    'outflowinitial':'outflow_initial',
-    'powermin':'pmin',
-    'powermax':'pmax',
-    'powerinitial':'power_initial',
-    'spillinitial':'spill_initial',
-    'productioncurve':'production_curve_equation',
-    'productioncurvecorrection':'production_curve_correction_equation',
-    'headcorrectionconstant':'head_correction_constant',
-    'inflowschedule':'inflow_schedule',
-    }
-)
-
-hydro_schedule_cols = [
-    'volume_min',
-    'volume_max',
-    'outflow_min',
-    'outflow_max',
-    'spill_min',
-    'spill_max',
-    'pmin',
-    'pmax',
-    'inflow_schedule',
-]
 
 # extra fields for generator scheduling and bid specification
 # these fields require parsing of additional files
@@ -133,8 +133,15 @@ def parse_standalone(storage, times):
     # add lines
     lines = build_class_list(storage['data_lines'], powersystems.Line,
                              times, timeseries)
+    # add hydro
+    hydro = setup_hydro(storage['data_hydro'], storage['data_pwl'],
+        times, timeseries)
+    generators.extend(hydro)
 
-    power_system = PowerSystem(generators, loads, lines)
+    # add exports
+    exports = storage['data_exports']
+
+    power_system = PowerSystem(generators, loads, lines, exports)
 
     gen = power_system.get_generator_with_scenarios()
     if gen:
@@ -143,6 +150,14 @@ def parse_standalone(storage, times):
         gen.scenario_values = scenario_values
     else:
         scenario_values = pd.Panel()
+
+    # set up initial state
+    power_system.final_condition = storage['final_condition']
+    power_system.set_initial_conditions()
+    if len(storage.hydro_vars):
+        for gen in hydro:
+            gen.flow_history = storage.hydro_vars[
+                storage.hydro_vars.name == str(gen)]
 
     return power_system, times, scenario_values
 
@@ -164,7 +179,7 @@ def _load_raw_data():
 
     if not os.path.isdir(datadir):
         raise OSError('data directory "{d}" does not exist'.format(d=datadir))
-    data = {} 
+    data = {}
     data_filenames = {key: joindir(datadir, user_config[nm]) for key, nm in data_files.iteritems()}
     for nm, filenm in data_filenames.iteritems():
         if not os.path.exists(filenm) and nm in required_data_names:
@@ -222,19 +237,43 @@ def _parse_raw_data(generators_data, loads_data,
     # add lines
     lines = build_class_list(lines_data, powersystems.Line)
     # add initial conditions
-    setup_initialcond(init_data, generators, times)
+    init_data = setup_initialcond(init_data, generators, times)
 
     # get scenario values (if applicable)
     scenario_values = setup_scenarios(generators_data, generators, times)
 
     #setup hydro if applicable
-    hydro_generators = setup_hydro(hydro_data, timeseries)
-    generators.extend(hydro_generators)
+    pwl_data = setup_pwl_curves(generators_data, hydro_data)
+    hydro_generators = setup_hydro(hydro_data, pwl_data, times, timeseries)
 
-    
+    hinit_file = joindir(user_config.directory, 'hydro_initial.csv')
+    if os.path.exists(hinit_file):
+        hydro_init_data = pd.read_csv(hinit_file)[hydro_initial_cols]
+        # assume same index order as hydro_data
+        for i, hg in enumerate(hydro_generators):
+            hg.set_initial_condition(
+                **hydro_init_data.ix[i].to_dict())
+
+        init_data = init_data.append(hydro_init_data)
+    elif len(hydro_data) > 0:
+        logging.warning('no hydro_initial.csv file found')
+        
+    hhist_file = joindir(user_config.directory, 'hydro_history.csv')
+    if os.path.exists(hhist_file):
+        hydro_history_data = pd.Panel({k: df for k, df in \
+            pd.read_csv(hhist_file, index_col=0, parse_dates=True)\
+            .groupby('minor')})
+            
+        for hg in hydro_generators:
+            hg.flow_history = hydro_history_data.minor_xs(hg.name)
+        
+    generators.extend(hydro_generators)
+    init_data = init_data.reset_index(drop=True).rename(
+        {g: str(gen) for g, gen in enumerate(generators)})
+
     exports = setup_exports(exports_data, times)
-    
-    # also return the raw DataFrame objects
+
+    # also return the raw DataFrame (or Panel) objects for storage
     data = dict(
         generators=generators_data,
         loads=loads_data,
@@ -243,7 +282,8 @@ def _parse_raw_data(generators_data, loads_data,
         timeseries=timeseries,
         scenario_values=scenario_values,
         hydro=hydro_data,
-        exports=exports_data,
+        exports=exports,
+        pwl=pwl_data,
         )
 
     return generators, loads, lines, times, scenario_values, exports, data
@@ -263,14 +303,16 @@ def setup_initialcond(data, generators, times):
     add information to each :class:`~Generator` object.
     '''
     if len(times) <= 1:
-        return  # for UC,ED no need to set initial status
+        return pd.DataFrame() # for UC,ED no need to set initial status
 
     if len(data) == 0:
         logging.warning('''No generation initial conditions file found.
             Setting to defaults.''')
         for gen in generators:
             gen.set_initial_condition()
-        return
+        return pd.DataFrame(
+            columns=['power', 'status', 'hoursinstatus'],
+            index=range(len(generators)))
 
     # begin by setting initial condition for all generators to off
     for g in generators:
@@ -278,20 +320,20 @@ def setup_initialcond(data, generators, times):
 
     names = [g.name for g in generators]
 
-    if not 'name' in data.columns:
-        # assume they are in order
-        data['name'] = names
+    if 'name' in data.columns:
+        # reorder so names match
+        data = data.set_index('name').ix[names].reset_index(drop=True)
+    # otherwise assume they are in order
 
     if 'power' not in data.columns:
         raise KeyError('initial conditions file should contain "power".')
 
     # add initial conditions for generators
     # which are specified in the initial file
-    for i, row in data.iterrows():
-        g = names.index(row['name'])
+    for g, row in data.iterrows():
         kwds = row[fields_initial].dropna().to_dict()
         generators[g].set_initial_condition(**kwds)
-    return
+    return data
 
 
 def build_class_list(data, model, times=None, timeseries=None):
@@ -393,10 +435,23 @@ def build_class_list(data, model, times=None, timeseries=None):
     return all_models
 
 
-def read_bid_points(filename):
-    bid_points = read_csv(filename)
-    # return a dataframe of bidpoints
-    return bid_points[['power', 'cost']].astype(float)
+def read_bid_points(filename, depvar='power', indvar='cost'):
+    '''read a DataFrame of PWL points'''
+    try: bid_points = read_csv(filename)
+    except Exception, msg:
+        raise OSError(str(msg))
+    bid_points = bid_points[[depvar, indvar]].rename(columns={
+        depvar: 'depvar',
+        indvar: 'indvar'
+        }).astype(float)
+
+    # combine segments with same slope
+    # bid_points = bid_points.ix[[0]].append(
+    #    bid_points.groupby(
+    #        bid_points.depvar.diff() / bid_points.indvar.diff()
+    #        ).last()).reset_index(drop=True)
+    return bid_points[['indvar', 'depvar']]\
+        .sort('indvar').reset_index(drop=True)
 
 
 def setup_times(generators_data, loads_data):
@@ -487,14 +542,18 @@ def setup_times(generators_data, loads_data):
     if len(timeseries) == 0:
         # this is a ED or OPF problem - only one time
         return DataFrame(), just_one_time(), generators_data, loads_data
-
     timeseries = DataFrame(timeseries)
 
     hs_file = joindir(user_config.directory, 'hydro_schedule.csv')
 
     if os.path.exists(hs_file):
         hydro_ts = read_csv(hs_file, index_col=0, parse_dates=True)
-        timeseries = timeseries.join(hydro_ts)
+        # if hydro data is at a lower freq
+        # pad the hydro data to get a ts without nans
+        timeseries = timeseries.join(hydro_ts)\
+            .fillna(method='bfill').fillna(method='ffill')
+
+
 
     times = TimeIndex(timeseries.index)
     timeseries.index = times.strings.values
@@ -519,6 +578,8 @@ def setup_times(generators_data, loads_data):
         if fcst_name:
             timeseries[fcst_name] *= wind_mult
     return timeseries, times, generators_data, loads_data
+
+
 
 
 def _parse_scenario_day(filename):
@@ -569,7 +630,7 @@ def setup_scenarios(gen_data, generators, times):
         alldata[date] = data
 
     # TODO - assumes one hour intervals!!
-    hrs = user_config.hours_commitment + user_config.hours_overlap
+    hrs = min(len(times), user_config.hours_commitment + user_config.hours_overlap)
 
     # make scenarios into a pd.Panel with axes: day, scenario, {prob, [hours]}
     scenario_values = pd.Panel(
@@ -577,12 +638,7 @@ def setup_scenarios(gen_data, generators, times):
         major_axis=range(max([len(dat) for dat in alldata.values()])),
         minor_axis=['probability'] + range(hrs)
     )
-
     for day, scenarios in alldata.iteritems():
-        if 'probability' == scenarios.columns[-1]:
-            # reoder so that probability is the first column
-            scenarios = scenarios[
-                scenarios.columns[:-1].insert(0, 'probability')]
         # rename the times into just hour offsets
         scenarios = scenarios.rename(columns=dict(zip(scenarios.columns,
             ['probability'] + range(len(scenarios.columns) - 1))))
@@ -597,7 +653,6 @@ def setup_scenarios(gen_data, generators, times):
         svt = scenario_values.transpose(2, 1, 0)
         svt['probability'] *= 1 / user_config.wind_multiplier
         scenario_values = svt.transpose(2, 1, 0)
-
     gen.scenario_values = scenario_values
     # defer scenario tree construction until actual time stage starts
     return scenario_values
@@ -612,19 +667,29 @@ def get_sched(val, ts):
         return ts[val]
     else:
         return pd.Series(val, ts.index).astype(float)
-    
-def setup_hydro(data, ts):
+
+_hydro_rename = {f.replace('_', ''): f
+    for f in fields['HydroGenerator']}
+_hydro_pw_nms = {
+    'volume_to_forebay_elevation':
+        dict(indvar='volume', depvar='elevation_fb'),
+    'flow_to_tailwater_elevation':
+        dict(indvar='flow', depvar='elevation_tw'),
+    'head_to_production_coefficient':
+        dict(indvar='head', depvar='outflow_coef'),
+}
+def setup_hydro(data, pwl_data, times, ts):
     hydro_generators = []
     if len(data) == 0: return hydro_generators
 
-    # inflow_name = data.pop('inflowschedulename')
-    data = data.rename(columns=field_rename['HydroGenerator'])
-
+    data = data.rename(columns=_hydro_rename)
     for i, row in data.iterrows():
         row = row.dropna().to_dict()
         for key in row.keys():
             if key in hydro_schedule_cols:
                 row[key] = get_sched(row[key], ts)
+            if key in hydro_pw_cols and row[key] in pwl_data:
+                row[key] = pwl_data[row[key]].dropna()
         hg = HydroGenerator(index=i, **row)
         hydro_generators.append(hg)
 
@@ -638,6 +703,20 @@ def setup_hydro(data, ts):
             gen.downstream_reservoir=down_gen.index
     return hydro_generators
 
+def setup_pwl_curves(gen_data, hydro_data):
+    PWdata = {}
+    # TODO - generator curve data
+    # get hydro pwl data
+    for i, row in hydro_data.rename(columns=_hydro_rename).iterrows():
+        row = row.dropna().to_dict()
+        for key in row.keys():
+            if key in hydro_pw_cols:
+                try:
+                    PWdata[row[key]] = read_bid_points(
+                        joindir(user_config.directory, row[key]),
+                        **_hydro_pw_nms[key])
+                except OSError: pass
+    return pd.Panel(PWdata)
 
 def setup_exports(data, times):
     """
@@ -647,13 +726,19 @@ def setup_exports(data, times):
     if 'bus' not in data.columns:
         data['bus'] = 'system'
 
-    data['time'] = data.time.apply(pd.Timestamp)    
+    data['time'] = data.time.apply(pd.Timestamp)
     data = data.sort(['bus', 'time'])
     data['time'] = np.repeat(times, data.bus.nunique())
     data = data.set_index(['bus', 'time'])
     
-    for col in ['exportmin', 'importmin']:
-        if col not in data.columns: data[col] = 0
-    for col in ['exportmax', 'importmax']:
-        if col not in data.columns: data[col] = 1e9
-    return data[fields['ExportSchedule']]
+    
+    
+    if 'exportmin' not in data.columns: data['exportmin'] = 0
+    if 'exportmax' not in data.columns: data['exportmax'] = 1e9
+    
+    if 'importprice' in data.columns:
+        if 'importmin' not in data.columns: data['importmin'] = 0
+        if 'importmax' not in data.columns: data['importmax'] = 0
+
+    ifields = pd.Index(fields['ExportSchedule'])
+    return data[ifields[ifields.isin(data.columns)]]

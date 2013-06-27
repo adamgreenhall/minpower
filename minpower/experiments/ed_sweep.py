@@ -51,7 +51,7 @@ def main(args):
     
     results.to_csv(joindir(user_config.directory, 'ed_sweep.csv'))
     
-    if args['hide_units_committed']:
+    if not args['show_units_committed']:
         ax = results.prices.plot(drawstyle='steps')
     else:
         ax = results[['prices', 'committed']].plot(drawstyle='steps', secondary_y=['committed'])
@@ -78,7 +78,7 @@ def get_args():
     parser.add_argument('--interval', type=float,
         default=100,
         help='the interval to increment the load by')
-    parser.add_argument('--hide_units_committed', '-c', 
+    parser.add_argument('--show_units_committed', '-c', 
         action='store_true', default=False)
     
     args = parser.parse_args()

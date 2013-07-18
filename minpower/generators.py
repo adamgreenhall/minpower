@@ -125,6 +125,10 @@ class Generator(OptimizationObject):
             self.cost_startup(time, scenario, evaluate) + \
             self.cost_shutdown(time, scenario, evaluate)
 
+    def penalty(self, time, scenario=None, evaluate=False):
+        '''total penalty at time'''
+        return 0
+
     def cost_startup(self, time, scenario=None, evaluate=False):
         if self.startupcost == 0 or not self.commitment_problem:
             return 0
@@ -158,6 +162,11 @@ class Generator(OptimizationObject):
 
     def cost_second_stage(self, times):
         return sum(self.operatingcost(time) for time in times)
+
+#  Added penalties to influence solution (not added to costs but are part of objective function)
+    def penalties(self, times):
+        '''total penalties at time (ramping(power) + Dump + etc)'''
+        return sum(self.penalty(time) for time in times)
 
     def gethrsinstatus(self, times, stat):
         if not self.is_controllable:
@@ -283,7 +292,7 @@ class Generator(OptimizationObject):
         return
 
     def create_objective(self, times):
-        return sum(self.cost(time) for time in times)
+        return sum(self.cost(time) + self.penalty(time) for time in times)
 
     def create_constraints(self, times):
         '''create the optimization constraints for a generator over all times'''
@@ -436,7 +445,11 @@ class Generator(OptimizationObject):
         return
 
     def __str__(self):
-        return 'g{ind}'.format(ind=self.index)
+#  Prefer more descriptive names, implemented change assumes names are always set.  The former 
+#      might be safer
+#        return 'g{ind}'.format(ind=self.index)
+#        return 'g{ind}-{name}'.format(name=self.name,ind=self.index)
+        return self.name
 
 
 class Generator_nonControllable(Generator):
@@ -530,6 +543,9 @@ class Generator_nonControllable(Generator):
     def cost(self, time, scenario=None, evaluate=False):
         return self.operatingcost(time, scenario=scenario, evaluate=evaluate)
 
+    def penalty(self, time, scenario=None, evaluate=False):
+        return 0
+
     def operatingcost(self, time=None, scenario=None, evaluate=False):
         return self.bids.output(time, scenario=scenario) + \
             user_config.cost_wind_shedding * self.shed(time, scenario=scenario, evaluate=evaluate)
@@ -551,6 +567,10 @@ class Generator_nonControllable(Generator):
 
     def cost_second_stage(self, times):
         return sum(self.cost(time) for time in times)
+
+#  Added Penalties to influence solution
+    def penalties(self, times):
+        return sum(self.penalty(time) for time in times)
 
     def get_scheduled_ouput(self, time):
         return float(self.schedule.ix[time])

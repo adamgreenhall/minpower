@@ -172,6 +172,8 @@ class Solution(object):
         self.fuelcost = self.gen_time_df('operatingcost', evaluate=True)
         self.fuelcost_true = self.gen_time_df('truecost').sum().sum()
         self.incremental_cost = self.gen_time_df('incrementalcost')
+#  Added penalties to influence solution
+        self.penalties = self.gen_time_df('penalty', evaluate=True)
 
         times = self.times_non_overlap
         self.load_shed_timeseries = pd.Series(
@@ -544,6 +546,8 @@ class Solution_UC(Solution):
         # for stochastic: output is the generators' power under observed wind
         self.generators_power.to_csv(full_filename('commitment-power.csv'))
         self.generators_status.to_csv(full_filename('commitment-status.csv'))
+ #  exporting hydro variables, transpose is optional
+        self.hydro_vars.transpose(2,0,1).to_frame().to_csv(full_filename('Hydro-vars.csv'))
 
     def visualization(self, withPrices=True):
         '''generator output visualization for unit commitment'''
@@ -594,10 +598,16 @@ class Solution_UC_multistage(Solution_UC):
     def _concat(self, attrib, slns):
         return pd.concat([getattr(sln, attrib) for sln in slns])
 
+    def panel_concat(self, attrib, slns):
+        return pd.concat([getattr(sln, attrib) for sln in slns],axis=1)
+
     def _get_outputs(self, slns):
         '''the outputs under observed wind'''
         self.generators_power = self._concat('generators_power', slns)
         self.generators_status = self._concat('generators_status', slns)
+#  Concat not merging variables, get a new set of  'Items'/columns for each day
+#       self.hydro_vars = self._concat('hydro_vars', slns)
+        self.hydro_vars = self.panel_concat('hydro_vars', slns)
         if self._resolved:
             self.expected_power = self._concat('expected_power', slns)
             self.expected_status = self._concat('expected_status', slns)
@@ -606,6 +616,7 @@ class Solution_UC_multistage(Solution_UC):
         self.expected_cost = self.totalcost_generation = \
             self._concat('expected_totalcost'
                          if self._resolved else 'totalcost_generation', slns)
+        self.penalties = self._concat('penalties', slns)
         self.load_shed_timeseries = self._concat('load_shed_timeseries', slns)
         self.gen_shed_timeseries = self._concat('gen_shed_timeseries', slns)
 

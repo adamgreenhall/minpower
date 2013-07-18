@@ -58,12 +58,21 @@ class Load(OptimizationObject):
         return self.get_scheduled_output(time) - self.power(time, scenario, evaluate)
 
     def cost(self, time, scenario=None):
+#  Moved load shedding cost to penalty
+#        return self.cost_shedding * self.shed(time, scenario)
+        return 0
+
+    def penalty(self, time, scenario=None):
         return self.cost_shedding * self.shed(time, scenario)
 
     def cost_first_stage(self, times):
         return 0
 
     def cost_second_stage(self, times):
+        return sum(self.cost(time) for time in times)
+
+#  Added penalties to influence solution
+    def penalties(self, times):
         return sum(self.cost(time) for time in times)
 
     def create_variables(self, times):
@@ -77,7 +86,9 @@ class Load(OptimizationObject):
                                     self.power(time) <= self.get_scheduled_output(time))
 
     def create_objective(self, times):
-        return sum([self.cost(time) for time in times])
+#  Added Penality to influence solution
+#        return sum([self.cost(time) for time in times])
+        return sum([self.cost(time)+self.penalty(time) for time in times])
 
     def __str__(self):
         return 'd{ind}'.format(ind=self.index)
@@ -125,7 +136,10 @@ class Line(OptimizationObject):
         return
 
     def __str__(self):
-        return 'k{ind}'.format(ind=self.index)
+#  Prefer descriptive names
+#        return 'k{ind}'.format(ind=self.index)
+#        return 'k{ind}-{name}'.format(name=self.name,ind=self.index)
+        return 'Line_' + self.name
 
     def __int__(self):
         return self.index
@@ -213,7 +227,7 @@ class Bus(OptimizationObject):
         return
 
     def create_objective(self, times):
-        return self.cost_first_stage(times) + self.cost_second_stage(times)
+        return self.cost_first_stage(times) + self.cost_second_stage(times) + self.penalty(time)
 
     def cost_first_stage(self, times):
         cost = sum(gen.cost_first_stage(times) for gen in self.generators) + \
@@ -233,6 +247,12 @@ class Bus(OptimizationObject):
         if max_hydro_profits_form:
             # assuming hydro generators have no costs
             cost *= -1
+        return cost
+
+#  Added Penalties to influence solution
+    def penalties(self, times):
+        cost = sum(gen.penalties(times) for gen in self.generators) + \
+            sum(load.penalties(times) for load in self.loads)
         return cost
 
     def create_constraints(self, times, Bmatrix, buses, include_children=True):
@@ -255,7 +275,10 @@ class Bus(OptimizationObject):
     #     for load in self.loads: load.clear_constraints()
 
     def __str__(self):
-        return 'i{ind}'.format(ind=self.index)
+#  Prefer descriptive names
+#        return 'i{ind}'.format(ind=self.index)
+#        return 'i{ind}-{name}'.format(name=self.name,ind=self.index)
+        return 'Bus_' + self.name
 
 
 class PowerSystem(OptimizationProblem):
@@ -366,6 +389,7 @@ class PowerSystem(OptimizationProblem):
     def create_variables(self, times):
         self.add_variable('cost_first_stage')
         self.add_variable('cost_second_stage')
+        self.add_variable('penalties')
         self.add_set('times', times._set, ordered=True)
         times.set = self._model.times
         for bus in self.buses:
@@ -380,9 +404,13 @@ class PowerSystem(OptimizationProblem):
     def cost_second_stage(self, scenario=None):
         return self.get_component('cost_second_stage', scenario=scenario)
 
+#  Added Penalties to influence solution
+    def penalties(self, scenario=None):
+        return self.get_component('penalties', scenario=scenario)
+
     def create_objective(self, times):
         sense = pyomo.maximize if max_hydro_profits_form else pyomo.minimize
-        self.add_objective(self.cost_first_stage() + self.cost_second_stage(),
+        self.add_objective(self.cost_first_stage() + self.cost_second_stage() + self.penalties(),
             sense=sense)
 
     def create_constraints(self, times, include_children=True):
@@ -410,8 +438,9 @@ class PowerSystem(OptimizationProblem):
         self.add_constraint('system_cost_second_stage',
             self.cost_second_stage() == \
             sum(bus.cost_second_stage(times) for bus in self.buses))
-
-
+        self.add_constraint('system_penalties',
+            self.penalties() == \
+            sum(bus.penalties(times) for bus in self.buses))
 
     def iden(self, time=None):
         name = 'system'
@@ -573,6 +602,7 @@ class PowerSystem(OptimizationProblem):
         # re-create system cost constraints
         self._remove_component('system_cost_first_stage')
         self._remove_component('system_cost_second_stage')
+        self._remove_component('system_penalties')
         if self._has_reserve:
             self._remove_component('reserve')
         self.create_constraints(const_times, include_children=False)

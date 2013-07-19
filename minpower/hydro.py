@@ -10,7 +10,7 @@ import bidding
 
 default_max=dict(
     flow= 1e6,
-    elevation= 1e4,
+    elevation= 500,
     volume= 1e7)
 
 penalty=dict(
@@ -361,7 +361,8 @@ class HydroGenerator(Generator):
             kind='NonNegativeReals')
 
         try:
-            max_head = self.head_to_production_coefficient.indvar.max()
+#  Not working as expected, getting the default_max
+            max_head = self.volume_to_forebay_elevation.indvar.max()
         except AttributeError:
             max_head = default_max['elevation']
         self.add_variable('head', index=times.set,

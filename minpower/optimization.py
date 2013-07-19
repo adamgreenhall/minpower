@@ -488,7 +488,7 @@ class OptimizationProblem(OptimizationObject):
 
         if self.solved:
             self.solution_time = elapsed  # results.Solver[0]['Wallclock time']
-            logging.info('Problem solved in {}s.'.format(self.solution_time))
+            logging.info('Problem solved in {0:.1f}s.'.format(self.solution_time))
 
         if user_config.problem_file:
             self.write_model(full_filename('problem.lp'))

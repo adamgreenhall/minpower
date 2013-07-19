@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from config import user_config
-from commonscripts import update_attributes, hours, set_trace
+from commonscripts import update_attributes, hours, bool_to_int, set_trace
 from optimization import value
 from coopr import pyomo
 from generators import Generator
@@ -10,12 +10,18 @@ import bidding
 
 default_max=dict(
     flow= 1e6,
-    elevation= 1e4,
+    elevation= 500,
     volume= 1e7)
 
+penalty=dict(
+    spill=10.0)
+
 units=dict(
-    # flow [kcfs * 1hr] = change in volume [kcfs * hr]
-    flow_to_volume_change= 1.0,
+# flow [kcfs] * 3600 [s/hr] = change in volume [kcf * hr]
+#   flow_to_volume_change= 3600.0,
+#
+# flow [kcfs] * 3600 [s/hr] / 43.560 [kcf/af] = change in volume [af / hr]
+    flow_to_volume_change=82.6446281,
 )
 
 
@@ -35,7 +41,7 @@ class HydroGenerator(Generator):
             net_outflow_min=0, net_outflow_max=None,            
             spill_min=0, spill_max=default_max['flow'],
             pmin=0, pmax=None,
-            volume_min=0, volume_max=default_max['volume'],
+            volume_min=0, volume_max=None,
             rampratemin=None, rampratemax=None,
             elevation_ramp_min=None, elevation_ramp_max=None,
             outflow_ramp_min=None, outflow_ramp_max=None,
@@ -71,22 +77,22 @@ class HydroGenerator(Generator):
         self.flow_history = pd.DataFrame()
         
 
-    def set_initial_condition(self,
-        power=0, elevation=0, outflow=0, spill=0, volume=0, head=0,
-        status=1):
+    def set_initial_condition(self, power=None, status=True, hoursinstatus=100, 
+		elevation=0, outflow=0, spill=0, net_outflow=0, volume=0, head=0):
         self.initial = dict(
             power=power,
             elevation=elevation,
             outflow=outflow,
             volume=volume,
             head=head,
-            spill=spill)
-        self.initial['net_outflow'] = \
-            self.initial['outflow'] + self.initial['spill']
+            spill=spill,
+            net_outflow=net_outflow)
+        self.initial['net_outflow'] = outflow + spill
         # compatability with generator
-        self.initial_status = True
-        self.initial_power = self.initial['power']
-        self.initial_status_hours = 0
+        self.initial_status = bool_to_int(status)
+#   Power initialized based on initial elevation curves in _set_derived_init below
+#      self.initial_power = self.initial['power']
+        self.initial_status_hours = hoursinstatus
 
     def get_final_condition(self, times, *a, **kw):
         tend = times.last()
@@ -97,9 +103,9 @@ class HydroGenerator(Generator):
             ]
         final = pd.Series({nm: value(getattr(self, nm)(tend)) for nm in varnms}, name=self.name)
 
-        if self.PWmodels['volume_to_forebay_elevation'].is_pwl:
+#        if self.PWmodels['volume_to_forebay_elevation'].is_pwl:
             # get the actual value for elevation
-            final['elevation'] = \
+        final['elevation'] = \
                 self.PWmodels['volume_to_forebay_elevation'].output_true(final['volume'])
 #            hydro_gens = self._parent_problem().get_generators_hydro()
 #            net_flows = np.array([
@@ -107,8 +113,8 @@ class HydroGenerator(Generator):
 #                for t, tm in enumerate(times)])
             
         # linear HACK - correct to the true values for head 
-        if self.model_production == 'simplified':
-            final['head'] = final['elevation'] - \
+#        if self.model_production == 'simplified':
+        final['head'] = final['elevation'] - \
                 self.PWmodels['flow_to_tailwater_elevation'].output_true(
                     final['spill'] + final['outflow'])
 
@@ -120,12 +126,16 @@ class HydroGenerator(Generator):
 
     def _set_derived_init(self):
         '''after models have been built, set derived initial vars'''
+        self.initial['elevation'] = self.PWmodels['volume_to_forebay_elevation'].output_true(self.initial['volume'])
         self.initial['head'] = \
             self.initial['elevation'] - \
             self.PWmodels['flow_to_tailwater_elevation'].output_true(
                 self.initial['outflow'] + \
                 self.initial['spill']
                 )
+        self.initial_power = self.initial['outflow'] * \
+		    self.PWmodels['head_to_production_coefficient'].output_true(self.initial['head'])
+        self.initial['power'] = self.initial_power
 
     def build_pw_models(self):
         '''
@@ -152,20 +162,26 @@ class HydroGenerator(Generator):
                     num_breakpoints= user_config.breakpoints))
 
             # set the min/max input domain
-            max_or_none = lambda series: series.max() if series is not None else None
-            min_or_none = lambda series: series.min() if series is not None else None
+#            max_or_none = lambda series: series.max() if series is not None else None
+#            min_or_none = lambda series: series.min() if series is not None else None
             minval, maxval, minout, maxout = None, None, None, None
             
             if output_name == 'el_fb':
                 # input is over volume
-                minval = min_or_none(self.volume_min)
-                maxval = max_or_none(self.volume_max)
-                minout = min_or_none(self.elevation_min)
-                maxout = max_or_none(self.elevation_max)                
+#                minval = min_or_none(self.volume_min)
+#                maxval = max_or_none(self.volume_max)
+#                minout = min_or_none(self.elevation_min)
+#                maxout = max_or_none(self.elevation_max)                
+                minval = self.volume_min
+                maxval = self.volume_max
+                minout = self.elevation_min
+                maxout = self.elevation_max                
             elif output_name == 'el_tw':
                 # input is net outflow
-                minval = min_or_none(self.net_outflow_min)
-                maxval = max_or_none(self.net_outflow_max)
+#                minval = min_or_none(self.net_outflow_min)
+#                maxval = max_or_none(self.net_outflow_max)
+                minval = self.net_outflow_min
+                maxval = self.net_outflow_max
                 if type(obj) == pd.DataFrame:
                     minout, maxout = obj.depvar.min(), obj.depvar.max()
             
@@ -213,8 +229,8 @@ class HydroGenerator(Generator):
             output_name= 'production_coef',
             force_no_build= self.model_production != 'production_coefficient')
 
-        if self.model_production == 'two_var':
-            self._build_two_var_pw()
+#        if self.model_production == 'two_var':
+#            self._build_two_var_pw()
                                     
         for k in self.PWparams.keys():
             self.PWparams[k].update(dict(
@@ -224,6 +240,7 @@ class HydroGenerator(Generator):
 
     def _build_two_var_pw(self):
         # two variable PWL formulation
+ #  Error 'str' object has no attribute 'dropna' for poly formations for elevation and tailwater curves
         pointsA = bidding._drop_dup_slopes(
             self.head_to_production_coefficient).indvar.values
 
@@ -265,7 +282,7 @@ class HydroGenerator(Generator):
         if time is None:
             return self.get_var(varnm)
         elif is_init(time):
-            return self.initial[varnm]
+            return float(self.initial[varnm])
         else:
             return self.get_var(varnm, time, scenario)
 
@@ -330,7 +347,8 @@ class HydroGenerator(Generator):
             low=self.elevation_min, high=self.elevation_max,
             kind='NonNegativeReals')
         self.add_variable('volume', index=times.set,
-            low=0, high=default_max['volume'],
+#            low=0, high=default_max['volume'],
+            low=self.volume_min, high=self.volume_max,
             kind='NonNegativeReals')
         self.add_variable('outflow', index=times.set,
             low=self.outflow_min, high=self.outflow_max,
@@ -338,11 +356,13 @@ class HydroGenerator(Generator):
 
         self.add_variable('net_outflow', index=times.set,
             low=self.net_outflow_min,
-            high= default_max['flow'] or self.net_outflow_max,
+#            high= default_max['flow'] or self.net_outflow_max,
+            high=self.outflow_max+50,
             kind='NonNegativeReals')
 
         try:
-            max_head = self.head_to_production_coefficient.indvar.max()
+#  Not working as expected, getting the default_max
+            max_head = self.volume_to_forebay_elevation.indvar.max()
         except AttributeError:
             max_head = default_max['elevation']
         self.add_variable('head', index=times.set,
@@ -358,9 +378,7 @@ class HydroGenerator(Generator):
             key: bid_maker(key)(times=times, **self.PWparams[key])
             for key in self.PWparams.keys()}  
         self._set_derived_init()
-        # HACK
-        self._times = times
-        
+
     def create_constraints(self, times):
         hydro_gens = filter(
             lambda gen: getattr(gen,'is_hydro', False),
@@ -404,53 +422,64 @@ class HydroGenerator(Generator):
                 return self.elevation(times[tidx])
 
 
-        self.add_constraint_set('modeled elevation', times.set, lambda model, t:
-            self.elevation(t) == self.PWmodels['volume_to_forebay_elevation'].output(t))
-
-
-
         self.add_constraint_set('modeled net outflow', times.set,
             lambda model, t:
             self.net_outflow(t) == self.outflow(t) + self.spill(t))
 
         
-        if self.model_production == 'simplified':
+        if self.net_outflow_min is not None:
+            self.add_constraint_set('modeled net outflow min', times.set,
+                lambda model, t:
+                self.net_outflow(t) >= self.net_outflow_min)
+
+        if self.net_outflow_max is not None:
+            self.add_constraint_set('modeled net outflow Max', times.set,
+                lambda model, t:
+                self.net_outflow(t) <= self.outflow_max)
+
+#  Water_Balance constraint not fomulated right, Volume variable for each period was not getting defined.
+#      switched constraint to this hour's volume is based on last hour's volume plus the net change 
+#      in water for this hour
+        for t, time in enumerate(times):
+            tPrev = times[t-1]
+            self.add_constraint('modeled volume', time,
+                self.volume(time) == self.volume(tPrev) + units['flow_to_volume_change'] * \
+                (self.net_inflow(t, times, hydro_gens) - self.net_outflow(time)))
+
+        self.add_constraint_set('modeled elevation', times.set, lambda model, t:
+            self.elevation(t) == self.PWmodels['volume_to_forebay_elevation'].output(t))
+
+#  The two var model still needs some work, the simplified method works for large reservoirs 
+#  where the elevation change is not great for the daily study period 
+#        if self.model_production == 'simplified':
             # this is a simplification of the HPC
             # where the production coefficient is based on the INITIAL head only
             # note that this means that head is not constrained in the problem
             
-            hpc_val = self.PWmodels['head_to_production_coefficient'].output_true(
-                self.initial['head'])
-            self.add_constraint_set('power production', times.set,
-                lambda model, t:
-                self.power(t) == hpc_val * self.outflow(t))
-        else:
+        hpc_val = self.PWmodels['head_to_production_coefficient'].output_true(
+            self.initial['head'])
+        self.add_constraint_set('power production', times.set,
+            lambda model, t:
+            self.power(t) == hpc_val * self.outflow(t))
+#        else:
             # otherwise head is modeled as a variable
-            self.add_constraint_set('modeled head', times.set, lambda model, t:
-                self.head(t) == self.elevation(t) - \
-                self.PWmodels['flow_to_tailwater_elevation'].output(t))         
-
-        if self.model_production == 'two_var': 
-            pass 
-            # the full two variable PWL modeling sets up constraints that bound
-            #  power production relative to the curves created
-        elif self.model_production == 'production_coefficient':
-            # this formulation is quadratic and does not work with MIP solvers
-            self.add_constraint_set('power production', times.set,
-                lambda model, t:
-                self.power(t) <= \
-                    self.PWmodels['head_to_production_coefficient'].output(t) *\
-                    self.outflow(t))
+#            self.add_constraint_set('modeled head', times.set, lambda model, t:
+#                self.head(t) == self.elevation(t) - \
+#                self.PWmodels['flow_to_tailwater_elevation'].output(t))
+#
+#        if self.model_production == 'two_var': 
+#            pass 
+#            # the full two variable PWL modeling sets up constraints that bound
+#            #  power production relative to the curves created
+#        elif self.model_production == 'production_coefficient':
+#            # this formulation is quadratic and does not work with MIP solvers
+#            self.add_constraint_set('power production', times.set,
+#                lambda model, t:
+#                self.power(t) <= \
+#                    self.PWmodels['head_to_production_coefficient'].output(t) *\
+#                    self.outflow(t))
             
                 
-        for t, time in enumerate(times):
-            tmstmp = times.times[t]
-            tPrev = times[t-1]
-            self.add_constraint('water balance', time,
-                self.volume(time) - self.volume(tPrev) == \
-                units['flow_to_volume_change'] * (self.net_inflow(t - 1, times, hydro_gens) - \
-                self.net_outflow(tPrev)))
-
 #            # elevation ramping constraints over 24hrs
 #            if self.elevation_ramp_max is not None and \
 #                not user_config.ignore_ramping_constraints:
@@ -466,39 +495,62 @@ class HydroGenerator(Generator):
 
         # ramping constraints
         if not user_config.ignore_ramping_constraints:
-            self.add_ramp_constraints(self.power,
-                self.rampratemin, self.rampratemax, times)
-            self.add_ramp_constraints(self.net_outflow,
-                self.net_outflow_ramp_min, self.net_outflow_ramp_max, times)
-            self.add_ramp_constraints(self.outflow,
-                self.outflow_ramp_min, self.outflow_ramp_max, times)
-            self.add_ramp_constraints(self.elevation,
-                self.elevation_ramp_min, self.elevation_ramp_max, times, include_t0=False)
-                
-    def add_ramp_constraints(self, var, minlim, maxlim, times, include_t0=True):
-        name = var(None).name
-        if minlim is not None:
-            self.add_constraint_set('{} ramp limit low'.format(name), times.set,
-            lambda model, t:
-            var(t) - var(get_tPrev(t, model, times)) >= float(minlim[t]) 
-            if (include_t0 or t != times[0]) else pyomo.Constraint.Feasible)
-        if maxlim is not None:
-            self.add_constraint_set('{} ramp limit high'.format(name), times.set,
-            lambda model, t:
-            var(t) - var(get_tPrev(t, model, times)) <= float(maxlim[t])
-            if (include_t0 or t != times[0]) else pyomo.Constraint.Feasible)
-            
-        return
+#            self.add_ramp_constraints(self.power,
+#                self.rampratemin, self.rampratemax, times)
+#            self.add_ramp_constraints(self.net_outflow,
+#               self.net_outflow_ramp_min, self.net_outflow_ramp_max, times)
+#            self.add_ramp_constraints(self.outflow,
+#                self.outflow_ramp_min, self.outflow_ramp_max, times)
+#            self.add_ramp_constraints(self.elevation,
+#                self.elevation_ramp_min, self.elevation_ramp_max, times, include_t0=False)
+
+#   Having problems formulating previous day value for the net_outflow, 
+#         added float() to "get_var" when time is init
+            for t, time in enumerate(times):
+                tPrev = times[t-1]
+                if self.net_outflow_ramp_min is not None:
+                    self.add_constraint('net outflow ramp low', time,
+                        self.net_outflow_ramp_min <= self.net_outflow(time) - self.net_outflow(tPrev))
+                if self.net_outflow_ramp_max is not None:
+                    self.add_constraint('net outflow ramp high', time,
+                        self.net_outflow_ramp_max >= self.net_outflow(time) - self.net_outflow(tPrev))
+
+#    def add_ramp_constraints(self, var, minlim, maxlim, times, include_t0=True):
+#        name = var(None).name
+#        if minlim is not None:
+#            print self, name, times
+#            self.add_constraint_set('{} ramp limit low'.format(name), times.set,
+#            lambda model, t:
+#            var(t) - var(get_tPrev(t, model, times)) >= float(minlim[t]) 
+#            if (include_t0 or t != times[0]) else pyomo.Constraint.Feasible)
+#        if maxlim is not None:
+#            self.add_constraint_set('{} ramp limit high'.format(name), times.set,
+#            lambda model, t:
+#            var(t) - var(get_tPrev(t, model, times)) <= float(maxlim[t])
+#            if (include_t0 or t != times[0]) else pyomo.Constraint.Feasible)
+#        return
 
     def __str__(self):
-        return 'h{ind}'.format(ind=self.index)
+#  Prefer more descriptive names, returning only self.name assumes name is manditory 
+#        return 'h{ind}'.format(ind=self.index)
+#        return 'h{ind}-{name}'.format(name=self.name,ind=self.index)
+        return self.name
 
     def cost(self, *a, **k): return 0
+#  Added penalities to influence solution
+    def penalty(self, time, scenario=None, evaluate=False):
+#          total penalties at time (ramping(flows,spill) + spill + Dump + etc)
+#  More to Do: add Penalty for dump energy, much smaller penalty for changes in flows and spill
+        c = self.get_var('spill', time, scenario=scenario) * penalty['spill']
+        return c if not evaluate else value(c)
+
     def operatingcost(self, *a, **k): return 0
     def incrementalcost(self, *a, **k): return 0
     def truecost(self, *a, **k): return 0
     def cost_first_stage(self, *a, **k): return 0
     def cost_second_stage(self, *a, **k): return 0
+    def penalties(self, times):
+        return sum(self.penalty(time) for time in times)
     def status(self, *a, **k): return True
     def cost_startup(self, *a, **k): return 0
     def cost_shutdown(self, *a, **k): return 0

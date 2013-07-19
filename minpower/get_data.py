@@ -26,18 +26,8 @@ import os
 import logging
 
 hydro_schedule_cols = [
-    'elevation_min', 'elevation_max',
-    'volume_min', 'volume_max',
-    'head_min', 'head_max',
-    'outflow_min', 'outflow_max',
-    'net_outflow_min', 'net_outflow_max',
-    'spill_min', 'spill_max',
-    'pmin', 'pmax',
-    'elevation_ramp_min', 'elevation_ramp_max',
-    'outflow_ramp_min', 'outflow_ramp_max',
-    'net_outflow_ramp_min', 'net_outflow_ramp_max',
-    'inflow_schedule',
-    'elevation_target_min_schedule', 'elevation_target_max_schedule'
+    'inflow_schedule', 
+    'elevation_target_min_schedule', 'elevation_target_max_schedule',
 ]
 
 hydro_pw_cols = [
@@ -46,10 +36,8 @@ hydro_pw_cols = [
     'head_to_production_coefficient',
 ]
 hydro_initial_cols = [
-    'elevation',
     'volume',
     'outflow',
-    'power',
     'spill',
 ]
 
@@ -89,7 +77,16 @@ fields = dict(
         'name', 'bus',
         'downstream_reservoir',
         'delay_downstream',
-        ] + hydro_schedule_cols + hydro_pw_cols,
+		'pmin', 'pmax',
+		'elevation_min', 'elevation_max',
+		'volume_min', 'volume_max',
+		'outflow_min', 'outflow_max',
+		'net_outflow_min', 'net_outflow_max',
+		'spill_min', 'spill_max',
+		'elevation_ramp_min', 'elevation_ramp_max',
+		'outflow_ramp_min', 'outflow_ramp_max',
+		'net_outflow_ramp_min', 'net_outflow_ramp_max',
+	] + hydro_schedule_cols + hydro_pw_cols,
 
     ExportSchedule = [
         'priceimport','priceexport',
@@ -282,7 +279,7 @@ def _parse_raw_data(generators_data, loads_data,
         timeseries=timeseries,
         scenario_values=scenario_values,
         hydro=hydro_data,
-        exports=exports,
+        exports=exports_data,
         pwl=pwl_data,
         )
 
@@ -730,13 +727,12 @@ def setup_exports(data, times):
     data = data.sort(['bus', 'time'])
     data['time'] = np.repeat(times, data.bus.nunique())
     data = data.set_index(['bus', 'time'])
+
+    if 'priceexport' in data.columns:
+        if 'exportmin' not in data.columns: data['exportmin'] = 0
+        if 'exportmax' not in data.columns: data['exportmax'] = 1e9
     
-    
-    
-    if 'exportmin' not in data.columns: data['exportmin'] = 0
-    if 'exportmax' not in data.columns: data['exportmax'] = 1e9
-    
-    if 'importprice' in data.columns:
+    if 'priceimport' in data.columns:
         if 'importmin' not in data.columns: data['importmin'] = 0
         if 'importmax' not in data.columns: data['importmax'] = 0
 

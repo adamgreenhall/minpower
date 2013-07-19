@@ -548,6 +548,8 @@ class Solution_UC(Solution):
         self.generators_status.to_csv(full_filename('commitment-status.csv'))
  #  exporting hydro variables, transpose is optional
         self.hydro_vars.transpose(2,0,1).to_frame().to_csv(full_filename('Hydro-vars.csv'))
+        self.power_exports.to_csv(full_filename('commitment-exports.csv'))
+        self.power_imports.to_csv(full_filename('commitment-imports.csv'))
 
     def visualization(self, withPrices=True):
         '''generator output visualization for unit commitment'''
@@ -608,6 +610,8 @@ class Solution_UC_multistage(Solution_UC):
 #  Concat not merging variables, get a new set of  'Items'/columns for each day
 #       self.hydro_vars = self._concat('hydro_vars', slns)
         self.hydro_vars = self.panel_concat('hydro_vars', slns)
+        self.power_exports = self._concat('power_exports',slns)
+        self.power_imports = self._concat('power_imports',slns)
         if self._resolved:
             self.expected_power = self._concat('expected_power', slns)
             self.expected_status = self._concat('expected_status', slns)

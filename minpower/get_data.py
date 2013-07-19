@@ -279,7 +279,7 @@ def _parse_raw_data(generators_data, loads_data,
         timeseries=timeseries,
         scenario_values=scenario_values,
         hydro=hydro_data,
-        exports=exports,
+        exports=exports_data,
         pwl=pwl_data,
         )
 
@@ -727,13 +727,12 @@ def setup_exports(data, times):
     data = data.sort(['bus', 'time'])
     data['time'] = np.repeat(times, data.bus.nunique())
     data = data.set_index(['bus', 'time'])
+
+    if 'priceexport' in data.columns:
+        if 'exportmin' not in data.columns: data['exportmin'] = 0
+        if 'exportmax' not in data.columns: data['exportmax'] = 1e9
     
-    
-    
-    if 'exportmin' not in data.columns: data['exportmin'] = 0
-    if 'exportmax' not in data.columns: data['exportmax'] = 1e9
-    
-    if 'importprice' in data.columns:
+    if 'priceimport' in data.columns:
         if 'importmin' not in data.columns: data['importmin'] = 0
         if 'importmax' not in data.columns: data['importmax'] = 0
 

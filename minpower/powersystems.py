@@ -214,14 +214,23 @@ class Bus(OptimizationObject):
         self.has_imports = False
         self.has_exports = False
         if self.exports is not None:
-            self.add_variable('power_export', index=times.set,
-                low=self.exports['exportmin'],
-                high=self.exports['exportmax'])
+            if 'priceexport' in self.exports.columns:
+                self.add_variable('power_export', index=times.set,
+#  Having issues with time series data "float64" and "int64" not recognized as numeric
+#  in add_variable method of optimization
+#                    low=self.exports['exportmin'],
+#                    high=self.exports['exportmax'])
+                    low=0,
+                    high=500)
             self.has_exports = True
             if 'priceimport' in self.exports.columns:
                 self.add_variable('power_import', index=times.set,
-                    low=self.exports['importmin'],
-                    high=self.exports['importmax'])
+#  Having issues with time series data "float64" and "int64" not recognized as numeric
+#  in add_variable method of optimization
+#                    low=self.exports['exportmin'],
+#                    high=self.exports['exportmax'])
+                    low=0,
+                    high=300)
                 self.has_imports = True
         logging.debug('created bus variables ... returning')
         return
@@ -241,9 +250,9 @@ class Bus(OptimizationObject):
         cost = sum(gen.cost_second_stage(times) for gen in self.generators) + \
             sum(load.cost_second_stage(times) for load in self.loads)
         if self.has_imports:
-            cost += sum(self.Pimport(t) * self.exports.priceimport[t] for t in times)
+            cost += sum(self.Pimport(t) * float(self.exports.priceimport[t]) for t in times)
         if self.has_exports:
-            cost -= sum(self.Pexport(t) * self.exports.priceexport[t] for t in times)
+            cost -= sum(self.Pexport(t) * float(self.exports.priceexport[t]) for t in times)
         if max_hydro_profits_form:
             # assuming hydro generators have no costs
             cost *= -1

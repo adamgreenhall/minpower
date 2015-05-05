@@ -1,4 +1,5 @@
-sudo apt-get install python-numpy glpk
+sudo apt-get install glpk
+pip install numpy==1.6.1
 pip install --use-mirrors .
 
 if [ x"$FULL_DEPS" == x"true" ]; then

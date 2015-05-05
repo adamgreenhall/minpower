@@ -13,7 +13,7 @@ version_number = open('minpower/__init__.py').read().split('"')[1].rstrip('"')
 python_version = sys.version_info
 
 install_requires=[
-    'Coopr==3.3.7114',
+    'Coopr==3.5.8787',
     'numpy==1.6.1',
     'pandas==0.10',
     ]

@@ -13,9 +13,9 @@ version_number = open('minpower/__init__.py').read().split('"')[1].rstrip('"')
 python_version = sys.version_info
 
 install_requires=[
-    'Coopr>=3.3.7114',
-    'numpy>=1.6.1',
-    'pandas>=0.10',
+    'Coopr==3.3.7114',
+    'numpy==1.6.1',
+    'pandas==0.10',
     ]
     
 if python_version[0] == 2 and python_version[1] < 7:

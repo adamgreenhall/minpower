@@ -13,8 +13,8 @@ before_install:
     - sudo apt-get update
 install:
     - bash .travis_install.sh
-script:
     - pip install --use-mirrors nose coverage objgraph
+script:
     - nosetests --with-coverage --cover-package=minpower
 
 branches:

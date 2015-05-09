@@ -5,16 +5,10 @@ Basically a wrapper around Coopr's `pyomo.ConcreteModel` class.
 import logging
 import time
 import weakref
-from commonscripts import (quiet, not_quiet,
-                           update_attributes, joindir, set_trace)
-
-with quiet():
-    # FIXME - cplex ilog manager is making noise
-    # can't seem to figure out which stream it is outputing to
-    # it isn't stdout or stderr
-    import coopr.pyomo as pyomo
-
-from coopr.opt.base import solvers as cooprsolver
+from commonscripts import quiet, not_quiet, update_attributes, joindir
+from pyomo import environ as pyomo
+from pyomo.opt.base import solvers as cooprsolver
+from config import user_config
 import pandas as pd
 
 # make pyomo recognize that True == 1
@@ -25,8 +19,6 @@ variable_kinds = dict(
     Continuous=pyomo.Reals,
     Binary=pyomo.Boolean,
     Boolean=pyomo.Boolean)
-
-from config import user_config
 
 
 def full_filename(filename):
@@ -324,7 +316,7 @@ class OptimizationProblem(OptimizationObject):
         if scenario is None:
             try:
                 return getattr(self._model, name)
-            except (AttributeError, KeyError) as NotInModelError:
+            except (AttributeError, KeyError):
                 # self.show_model()
                 raise AttributeError('error getting {}'.format(name))
         else:
@@ -414,7 +406,7 @@ class OptimizationProblem(OptimizationObject):
         items = [pyomo.Set, pyomo.Param, pyomo.Var,
                  pyomo.Objective, pyomo.Constraint]
         for item in items:
-            if not item in components:
+            if item not in components:
                 continue
             keys = components[item].keys()
             keys.sort()

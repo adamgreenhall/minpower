@@ -2,7 +2,8 @@
 
 from minpower import optimization, config
 from test_utils import *
-from coopr import pyomo
+from pyomo import environ as pyomo
+
 
 mem_tracking = False
 if mem_tracking:

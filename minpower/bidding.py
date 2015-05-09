@@ -3,7 +3,7 @@ from commonscripts import update_attributes, pairwise
 from optimization import value, OptimizationObject
 from config import user_config
 import re
-from coopr.pyomo import Piecewise
+from pyomo.environ import Piecewise
 
 
 class Bid(OptimizationObject):
@@ -208,17 +208,17 @@ def parse_polynomial(s):
     Can handle simple polynomials (addition and subtraction):
 
     >>> parse_polynomial('7x^2 + 6x - 5')
-    [-5, 6, 7]
+    [-5.0, 6.0, 7.0]
 
     or with the explicit * multiplier:
 
     >>> parse_polynomial('7*P^2 + 6*P - 5')
-    [-5, 6, 7]
+    [-5.0, 6.0, 7.0]
 
     or even with the terms in some random order:
 
     >>> parse_polynomial('6*P - 5 + 7*P^2')
-    [-5, 6, 7]
+    [-5.0, 6.0, 7.0]
     """
 
     def parse_n(s):
@@ -262,8 +262,8 @@ def parse_polynomial(s):
     highest_order = max(
         max(order_multipliers.keys()), 1)  # order must be at least linear
     multipliers = [0] * (highest_order + 1)
-    for key, value in order_multipliers.items():
-        multipliers[key] = value
+    for key, val in order_multipliers.items():
+        multipliers[key] = val
 
     return multipliers
 

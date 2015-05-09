@@ -9,15 +9,12 @@ optimization framework from :class:`~optimization.OptimizationObject`.
 
 import logging
 
-from commonscripts import (update_attributes, getattrL, flatten, set_trace)
+from commonscripts import update_attributes, getattrL, flatten
 from config import user_config
-
-from optimization import (value, OptimizationObject,
-                          OptimizationProblem, OptimizationError)
+from optimization import value, OptimizationObject, OptimizationProblem, OptimizationError
 import stochastic
 
-
-from coopr import pyomo
+from pyomo.environ import Block
 import numpy as np
 import pandas as pd
 
@@ -454,7 +451,7 @@ class PowerSystem(OptimizationProblem):
 
     def resolve_stochastic_with_observed(self, instance, sln):
         s = sln.scenarios[0]
-        self._model = instance.active_components(pyomo.Block)[s]
+        self._model = instance.active_components(Block)[s]
         self.is_stochastic = False
         self.stochastic_formulation = False
 

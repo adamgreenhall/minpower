@@ -28,7 +28,7 @@ Authors and Collaborators
 
 .. comment
     ..  image:: ./_static/sandia.gif
-        :target: https://software.sandia.gov/trac/coopr
+        :target: http://www.pyomo.org/
         :width: 80 px
         :align: left
     ..  container:: halfwidth
@@ -49,7 +49,7 @@ Development
 
 ..  container:: halfwidth
     
-    **Minpower** is actively and openly developed on `github <http://github.com/adamgreenhall/minpower>`_, a social code 
+    **Minpower** is openly developed on `github <http://github.com/adamgreenhall/minpower>`_, a code 
     hosting site that allows for collaboration by many people, change tracking, and issue hosting. 
 
 Development is simple:

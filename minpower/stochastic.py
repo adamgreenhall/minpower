@@ -1,9 +1,9 @@
 """
 Stochastic scenario models for schedules.
 """
-from coopr.pyomo import AbstractModel, Set, Param, Boolean, Var
-from coopr.pysp.scenariotree import ScenarioTree
-from coopr.pysp.ef import create_ef_instance
+from pyomo.environ import AbstractModel, Set, Param, Boolean, Var
+from pyomo.pysp.scenariotree import ScenarioTree
+from pyomo.pysp.ef import create_ef_instance
 from config import user_config
 import gc
 import logging

@@ -1,8 +1,8 @@
 # minpower's setup script
 
-# make a new release by using 
+# make a new release by using
 # seed release --dry-run
-# and then 
+# and then
 # seed release
 
 import sys
@@ -12,26 +12,26 @@ version_number = open('minpower/__init__.py').read().split('"')[1].rstrip('"')
 
 python_version = sys.version_info
 
-install_requires=[
-    'Coopr==3.5.8787',
-    'numpy==1.6.1',
-    'pandas==0.10',
+install_requires = [
+    'pyomo==4.0.9682',
+    'numpy==1.9.1',
+    'pandas==0.16',
     ]
-    
+
 if python_version[0] == 2 and python_version[1] < 7:
     install_requires.append('ordereddict>=1.1')
-    
+
     # syntax changes currently result in failures on python 2.6
     # https://github.com/adamgreenhall/minpower/issues/8
     # https://travis-ci.org/adamgreenhall/minpower/jobs/4433662
     sys.exit('minpower currently requires Python 2.7')
-    
+
 
 setup(
-    name = "minpower",
-    version = version_number,
-    download_url = "https://github.com/adamgreenhall/minpower" + \
-        "/zipball/v{v}".format(v=version_number),
+    name="minpower",
+    version=version_number,
+    download_url="https://github.com/adamgreenhall/minpower" +
+    "/zipball/v{v}".format(v=version_number),
     entry_points="""
     [console_scripts]
     minpower = minpower.solve:main
@@ -43,30 +43,30 @@ setup(
     package_data={
         'minpower.configuration': ['minpower.cfg'],
         'minpower.tests': [
-            '*.csv', 
+            '*.csv',
             '*/*.csv',
             '*/*/*.csv']},
 
     install_requires=install_requires,
-    
+
     tests_require=[
         'nose',
         'coverage',
         'objgraph'
         ],
-    
+
     # it helps to have seed if you are going to make releases
     # but it is not required for setup
 
-    description = "power systems optimization made beautiful",
-    author = "Adam Greenhall",
-    author_email = "minpower@adamgreenhall.com",
-    url = "http://minpowertoolkit.com/",
+    description="power systems optimization made beautiful",
+    author="Adam Greenhall",
+    author_email="minpower@adamgreenhall.com",
+    url="http://minpowertoolkit.com/",
 
-    packages = find_packages(),
-    keywords = ["power systems","optimization"],
+    packages=find_packages(),
+    keywords=["power systems", "optimization"],
 
-    classifiers = [
+    classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Other Environment",
         "Intended Audience :: Science/Research",
@@ -78,7 +78,7 @@ setup(
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Mathematics",
         ],
-    long_description = """
+    long_description="""
 power systems tools made beautiful
 -----------------------------------------
 
@@ -89,7 +89,7 @@ power systems tools made beautiful
 
 
 * `Full documentation and tutorials <http://minpowertoolkit.com>`_
-* `Actively developed <http://github.com/adamgreenhall/minpower>`_
+* `Code base <http://github.com/adamgreenhall/minpower>`_
 
 """
 )

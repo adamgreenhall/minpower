@@ -98,7 +98,6 @@ def solve_problem(generators, loads=None, times=None,
             else:
                 gen.set_initial_condition(**gen_init[g])
 
-
     power_system = powersystems.PowerSystem(generators, loads, lines)
     solve.create_problem(power_system, times)
 

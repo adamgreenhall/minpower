@@ -7,9 +7,11 @@ from coopr.pyomo import Piecewise
 
 
 class Bid(OptimizationObject):
+
     """
     A bid modeled by a polynomial or a set of piecewise points.
     """
+
     def __init__(self,
                  polynomial='10P',
                  bid_points=None,
@@ -84,7 +86,7 @@ class Bid(OptimizationObject):
 
             pw_representation = Piecewise(self.times.set,
                                           self.get_variable(
-                                          'cost', time=None, indexed=True),
+                                              'cost', time=None, indexed=True),
                                           self.input_variable(),
                                           pw_pts=in_pts,
                                           pw_constr_type='LB',
@@ -169,7 +171,8 @@ def is_linear(coefs):
     else:
         if len(coefs) < 2:
             result = True
-        elif all(m == 0 for m in coefs[2:]): result = True
+        elif all(m == 0 for m in coefs[2:]):
+            result = True
         else:
             result = False
     return result

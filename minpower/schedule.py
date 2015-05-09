@@ -26,7 +26,9 @@ def make_constant_schedule(times, power=0):
 
 
 class TimeIndex(object):
+
     '''a list of times (underlying model is pandas.Index)'''
+
     def __init__(self, index, str_start=0):
         strings = ['t%02d' % (i + str_start) for i in range(len(index))]
         self.times = index.copy()

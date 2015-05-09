@@ -50,10 +50,11 @@ def init_store(power_system, times, data):
 
     # store the problem info read from the spreadsheets
     for key, df in data.iteritems():
-        if key != 'scenario_values': 
+        if key != 'scenario_values':
             for k, v in (df.dtypes == object).iterkv():
-                if v: df[k] = df[k].fillna('')
-        
+                if v:
+                    df[k] = df[k].fillna('')
+
         key = 'data_' + key
         storage[key] = df
 
@@ -62,18 +63,18 @@ def init_store(power_system, times, data):
     t = [times[0].initialTime]
 
     # store first stage initial state
-    storage.append('power', 
-        gen_time_dataframe(generators, t,
-            values=[[gen.initial_power for gen in generators]]),
-        expectedrows=est_Nt)
-        
+    storage.append('power',
+                   gen_time_dataframe(generators, t,
+                                      values=[[gen.initial_power for gen in generators]]),
+                   expectedrows=est_Nt)
+
     storage.append('status',
-        gen_time_dataframe(generators, t,
-            values=[[gen.initial_status for gen in generators]]),
-        expectedrows=est_Nt)
-        
+                   gen_time_dataframe(generators, t,
+                                      values=[[gen.initial_status for gen in generators]]),
+                   expectedrows=est_Nt)
+
     storage['hrsinstatus'] = gen_time_dataframe(generators, t,
-        values=[[gen.initial_status_hours for gen in generators]])
+                                                values=[[gen.initial_status_hours for gen in generators]])
 
     # setup empty containers for variables
     storage['load_shed'] = Series()
@@ -143,7 +144,7 @@ def store_state(power_system, times, sln=None):
 
 #    # DEBUGGING
 #    from pandas.util.testing import assert_frame_equal
-#    try: 
+#    try:
 #        gens = storage['data_generators'].copy()
 #        gens.index = ['g{}'.format(g) for g in gens.index]
 #        status = storage['status'].ix[1:]
@@ -152,7 +153,7 @@ def store_state(power_system, times, sln=None):
 #        fuelcost = storage['observed_fuelcost'][status.columns].ix[status.index]
 #        stcost = cost - fuelcost
 
-#        
+#
 #        pcheck = (power * status)
 #        ccheck = (cost * status)
 #        stcheck = (stcost * status)
@@ -160,10 +161,10 @@ def store_state(power_system, times, sln=None):
 #        assert_frame_equal(ccheck, cost)
 #        assert_frame_equal(stcheck, stcost)
 #        assert(((stcost < gens.startupcost - 1e-5) & (stcost > 1e-5) ).sum().sum() == 0)
-#        
+#
 #    except AssertionError:
 #        raise
-        
+
     return storage
 
 

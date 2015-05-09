@@ -28,13 +28,15 @@ def basic_checks(sln):
 
     # make sure that generation meets load (plus any shed)
     shed = sln.load_shed_timeseries
-    try: scheduled = sln.power_system.total_scheduled_load()
-    except AttributeError: 
+    try:
+        scheduled = sln.power_system.total_scheduled_load()
+    except AttributeError:
         # look up the scheduled load from the timeseries data
-        loads = [col for col in \
-            sln.store['data_timeseries'].columns if col.startswith('d')]
+        loads = [col for col in
+                 sln.store['data_timeseries'].columns if col.startswith('d')]
         scheduled = sln.store['data_timeseries'][loads].sum(axis=1)
-    try: scheduled.index = shed.index
+    try:
+        scheduled.index = shed.index
     except AssertionError:
         # not the same length due to overlap
         scheduled = scheduled.ix[scheduled.index[:len(shed)]]
@@ -49,9 +51,9 @@ def basic_checks(sln):
 #            other_sched=sum(gen.schedule \
 #                for gen in sln.power_system.generators() \
 #                if not gen.is_controllable and gen != wind_gen)
-#            )).ix[:len(shed.index)]  
+#            )).ix[:len(shed.index)]
 #        gen_scheduled.index = shed.index
-#        
+#
 #        print('controllable_requirement')
 #        print(scheduled - gen_scheduled.sum(axis=1))
 #        raise
@@ -59,6 +61,7 @@ def basic_checks(sln):
 
 this_directory = os.path.dirname(__file__)
 default_config = user_config.copy()
+
 
 def run_case(name, basedir=this_directory, **kwds):
     '''
@@ -69,7 +72,7 @@ def run_case(name, basedir=this_directory, **kwds):
     # reset user_config to defaults first
     user_config.update(default_config)
     assert(user_config == default_config)
-    user_config.breakpoints = 3 # for speedier testing
+    user_config.breakpoints = 3  # for speedier testing
     user_config.update(kwds)
     sln = solve_dir(os.path.join(basedir, name))
     basic_checks(sln)
@@ -80,18 +83,21 @@ def run_case(name, basedir=this_directory, **kwds):
 def run_uc():
     run_case('uc')
 
+
 @istest
 def run_uc_rolling():
     run_case('uc-rolling')
+
 
 @istest
 def run_ed():
     run_case('ed')
 
+
 @istest
 def run_opf():
     run_case('opf')
-    
+
 
 # just test that the visulizations all work
 # if matplotlib is installed

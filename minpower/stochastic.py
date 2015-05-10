@@ -81,7 +81,7 @@ def define_stage_variables(power_system, times):
 
     # variables_first_stage.pprint()
     scenario_tree = power_system._scenario_tree_instance
-
+    scenario_tree.StageDerivedVariables = []
     scenario_tree.StageVariables['first stage'] = variables_first_stage
     scenario_tree.StageVariables['second stage'] = variables_second_stage
 

@@ -9,7 +9,7 @@ import pandas as pd
 from pandas import DataFrame, Timestamp, read_csv
 from glob import glob
 from collections import OrderedDict
-    
+
 import powersystems
 from schedule import (just_one_time, get_schedule,
                       TimeIndex, make_constant_schedule)
@@ -70,8 +70,7 @@ fields_initial = [
 
 def nice_names(df):
     '''drop the case and spaces from all column names'''
-    return df.rename(columns=
-                     dict([(col, drop_case_spaces(col)) for col in df.columns]))
+    return df.rename(columns=dict([(col, drop_case_spaces(col)) for col in df.columns]))
 
 
 def parse_standalone(storage, times):
@@ -112,8 +111,8 @@ def _load_raw_data():
     [file_gens, file_loads, file_lines, file_init] = \
         [joindir(datadir, filename) for filename in (
             user_config.file_gens,
-            user_config.file_loads, 
-            user_config.file_lines, 
+            user_config.file_loads,
+            user_config.file_lines,
             user_config.file_init)]
 
     generators_data = nice_names(read_csv(file_gens))
@@ -287,7 +286,7 @@ def build_class_list(data, model, times=None, timeseries=None):
         valid_fields = pd.Index(fields[model.__name__] + ['schedulename'])
         if is_generator:
             valid_fields = valid_fields.union(pd.Index(gen_extra_fields))
-        invalid_fields = row.index.diff(valid_fields)
+        invalid_fields = row.index.difference(valid_fields)
         if len(invalid_fields) > 0:
             raise ValueError('invalid fields in model:: {}'.format(
                 invalid_fields.tolist()))
@@ -389,7 +388,7 @@ def setup_times(generators_data, loads_data):
     ffcstcol = 'forecastfilename'
     fcstcol = 'forecastname'
 
-    obs_name = None    
+    obs_name = None
     if fobscol in generators_data:
         generators_data[obscol] = None
         for i, gen in filter_notnull(generators_data, fobscol).iterrows():
@@ -398,9 +397,9 @@ def setup_times(generators_data, loads_data):
             timeseries[obs_name] = get_schedule(joindir(datadir, gen[fobscol]))
             if user_config.wind_multiplier != 1.0:
                 timeseries[obs_name] *= user_config.wind_multiplier
-                
+
         generators_data = generators_data.drop(fobscol, axis=1)
-    
+
     fcst_name = None
     if ffcstcol in generators_data:
         generators_data[fcstcol] = None
@@ -421,7 +420,7 @@ def setup_times(generators_data, loads_data):
                 print timeseries[fcst_name].describe()
                 logging.warning('Wind forecast must always be at least zero.')
                 timeseries[fcst_name][timeseries[fcst_name] < 0] = 0
-                
+
         generators_data = generators_data.drop(ffcstcol, axis=1)
 
     generators_data = generators_data.drop(fcol, axis=1)
@@ -439,22 +438,22 @@ def setup_times(generators_data, loads_data):
         if len(filter_notnull(generators_data, obscol)) != 1:
             raise NotImplementedError(
                 'wind capacity factor only works with one wind generator')
-            
+
         all_loads = timeseries[filter(lambda col: col.startswith('d'),
-            timeseries.columns)]
+                                      timeseries.columns)]
 
         capf_current = timeseries[obs_name].sum() / all_loads.sum(axis=1).sum()
-        
+
         wind_mult = user_config.wind_capacity_factor / capf_current
         user_config.wind_multiplier = wind_mult
 
         logging.info('scaling wind from a c.f. of {} to a c.f. of {}'.format(
             capf_current, user_config.wind_capacity_factor
-            ))
+        ))
         timeseries[obs_name] *= wind_mult
         if fcst_name:
-            timeseries[fcst_name] *= wind_mult        
-        
+            timeseries[fcst_name] *= wind_mult
+
     return timeseries, times, generators_data, loads_data
 
 
@@ -522,11 +521,11 @@ def setup_scenarios(gen_data, generators, times):
                 scenarios.columns[:-1].insert(0, 'probability')]
         # rename the times into just hour offsets
         scenarios = scenarios.rename(columns=dict(zip(scenarios.columns,
-            ['probability'] + range(len(scenarios.columns) - 1))))
+                                                      ['probability'] + range(len(scenarios.columns) - 1))))
 
         # and take the number of hours needed
         scenarios = scenarios[scenarios.columns[:1 + hrs]]
-        
+
         scenario_values[day] = scenarios
 
     if user_config.wind_multiplier != 1.0:

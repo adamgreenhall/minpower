@@ -1,7 +1,7 @@
 import pandas as pd
 import logging
 from config import user_config
-from commonscripts import update_attributes, bool_to_int, set_trace
+from commonscripts import update_attributes, bool_to_int
 
 from optimization import value, OptimizationObject
 from schedule import is_init
@@ -9,6 +9,7 @@ import bidding
 
 
 class Generator(OptimizationObject):
+
     """
     A generator model.
 
@@ -112,7 +113,6 @@ class Generator(OptimizationObject):
             previous_status = self.initial_status
         return self.status(times[t]) - previous_status
 
-
     def cost(self, time, scenario=None, evaluate=False):
         '''total cost at time (operating + startup + shutdown)'''
         return self.operatingcost(time, scenario, evaluate) + \
@@ -181,8 +181,8 @@ class Generator(OptimizationObject):
 
         return hrs
 
-    def set_initial_condition(self, power=None, 
-        status=True, hoursinstatus=100):
+    def set_initial_condition(self, power=None,
+                              status=True, hoursinstatus=100):
         if power is None:
             # set default power as mean output
             power = (self.pmax - self.pmin) / 2
@@ -226,7 +226,7 @@ class Generator(OptimizationObject):
             # object
             min_power_bid = self.bid_points.power.min()
             max_power_bid = self.bid_points.power.max()
-            
+
             if min_power_bid > self.pmin:  # pragma: no cover
                 self.pmin = min_power_bid
                 logging.warning('{g} should have a min. power bid ({mpb}) <= to its min. power limit ({mpl})'.format(g=str(self), mpb=min_power_bid, mpl=self.pmin))
@@ -346,7 +346,6 @@ class Generator(OptimizationObject):
 #                        self.shutdownramplimit * -1 * self.status_change(t, times)
 #                        )
 
-
             if self.rampratemin is not None:
                 def ramp_min(model, t):
                     tPrev = get_tPrev(t, model, times)
@@ -407,8 +406,6 @@ class Generator(OptimizationObject):
                     E = sum([1 - self.status(times[s]) for s in no_start_up]) >= min_down_intervals_remaining * -1 * self.status_change(t, times)
                     self.add_constraint('min down time', time, E)
 
-
-
         # min/max power limits
         # these always apply (even if not a UC problem)
         if self.pmin > 0:
@@ -431,9 +428,11 @@ def get_tPrev(t, model, times):
 
 
 class Generator_nonControllable(Generator):
+
     """
     A generator with a fixed schedule.
     """
+
     def __init__(self,
                  schedule=None,
                  fuelcost=1,
@@ -480,7 +479,7 @@ class Generator_nonControllable(Generator):
             Pavail = value(Pavail)
         return Pavail - Pused
 
-    def set_initial_condition(self, power=None, status=None, hoursinstatus=None):  #pragma: no cover
+    def set_initial_condition(self, power=None, status=None, hoursinstatus=None):  # pragma: no cover
         self.initial_power = 0
         self.initial_status = 1
         self.initial_status_hours = 0
@@ -552,9 +551,11 @@ class Generator_nonControllable(Generator):
 
 
 class Generator_Stochastic(Generator_nonControllable):
+
     """
     A generator with a stochastic power output.
     """
+
     def __init__(self,
                  scenario_values=None,
                  costcurveequation='0',
@@ -592,15 +593,15 @@ class Generator_Stochastic(Generator_nonControllable):
     def _get_scenario_values(self, times, s=0):
         # scenario values are structured as a pd.Panel
         # with axes: day, scenario, {prob, [hours]}
-        # the panel has items which are dates 
+        # the panel has items which are dates
         return self.scenario_values[times.Start.date()][
             range(len(times))].ix[s].dropna().values.tolist()
-    
+
     def _get_scenario_probabilities(self, times):
         # if any of the scenario values are defined, we want them
         return self.scenario_values[
             times.Start.date()].dropna(how='all').probability
-    
+
     def create_variables(self, times):
         if self.shedding_mode:
             self.create_variables_shedding(times)
@@ -608,12 +609,11 @@ class Generator_Stochastic(Generator_nonControllable):
         if self.is_stochastic:
             # initialize parameter set to first scenario value
             scenario_one = self._get_scenario_values(times, s=0)
-            self.add_parameter('power', index=times.set, nochecking=True,
-                values=dict(zip(times, scenario_one)))
+            self.add_parameter('power', index=times.set, values=dict(zip(times, scenario_one)))
         else:
             # set to forecast values
             self.add_parameter('power', index=times.set,
-               values=dict([(t, self.get_scheduled_ouput(t)) for t in times]))
+                               values=dict([(t, self.get_scheduled_ouput(t)) for t in times]))
 
         self.create_bids(times)
         return

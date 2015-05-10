@@ -34,9 +34,11 @@ except:
 
 
 class StreamToLogger(object):
+
     """
     Fake file-like stream object that redirects writes to a logger instance.
     """
+
     def __init__(self, logger=logging, log_level=logging.INFO):
         self.logger = logger
         self.log_level = log_level
@@ -46,10 +48,12 @@ class StreamToLogger(object):
         for line in buf.rstrip().splitlines():
             self.logger.log(self.log_level, line.rstrip())
 
+
 @contextmanager
 def not_quiet():
     yield
-    
+
+
 @contextmanager
 def quiet():
     sys.stderr.flush()
@@ -60,7 +64,7 @@ def quiet():
         # so skip it
         yield
         return
-        
+
     devnull = open(os.devnull, "w")
     sys.stdout = devnull
     sys.stderr = devnull
@@ -112,7 +116,9 @@ def bool_to_int(x):
 
 
 class DotDict(dict):
+
     '''a dict with dot notation access'''
+
     def __getattr__(self, attr):
         return self.get(attr)
 
@@ -123,6 +129,7 @@ class DotDict(dict):
     __delattr__ = dict.__delitem__
 
 ###### matrix stuff #######
+
 
 def correct_status(status):
     # correct for strange solver values returned on resolve
@@ -166,6 +173,7 @@ def pairwise(iterable):
     return itertools.izip(a, b)
 
 ##### csv stuff #####
+
 
 def writeCSV(fields, data, filename):
     with open(filename, 'w+') as f:
@@ -255,10 +263,10 @@ def update_attributes(instance, variables, exclude=['self'], include=None):
 
 def debug_frame_unequal(left, right, tol=1e-5):
     diff = left - right
-    different = diff[ (diff < -tol) | (diff > tol) ]
+    different = diff[(diff < -tol) | (diff > tol)]
     cols = different.columns[different.any()]
     idx = different.ix[different.any(axis=1)].index
-    
+
     print(left[cols].ix[idx])
     print(right[cols].ix[idx])
-    return cols, idx            
+    return cols, idx

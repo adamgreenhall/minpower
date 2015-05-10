@@ -1,17 +1,18 @@
 """
 Stochastic scenario models for schedules.
 """
-from coopr.pyomo import AbstractModel, Set, Param, Boolean, Var
-from coopr.pysp.scenariotree import ScenarioTree
-from coopr.pysp.ef import create_ef_instance
+from pyomo.environ import AbstractModel, Set, Param, Boolean, Var
+from pyomo.pysp.scenariotree import ScenarioTree
+from pyomo.pysp.ef import create_ef_instance
 from config import user_config
 import gc
 import logging
 
+
 def construct_simple_scenario_tree(power_system, times, time_stage=None):
     '''Construct a simple scenario tree instance'''
 
-    gen = power_system.get_generator_with_scenarios()    
+    gen = power_system.get_generator_with_scenarios()
     probabilities = gen._get_scenario_probabilities(times).values.tolist()
 
     tree = new_scenario_tree_model()
@@ -70,17 +71,17 @@ def define_stage_variables(power_system, times):
         # pysp to assign all the variables in the array to a shape
 
     if power_system.shedding_mode:
-        for gen in filter(lambda gen: gen.shedding_mode, 
-            power_system.get_generators_noncontrollable()):
+        for gen in filter(lambda gen: gen.shedding_mode,
+                          power_system.get_generators_noncontrollable()):
             variables_second_stage.add(
                 str(gen.get_variable('power_used', time=None, indexed=True)) + '[*]')
         for load in power_system.loads():
             variables_second_stage.add(
                 str(load.get_variable('power', time=None, indexed=True)) + '[*]')
-    
+
     # variables_first_stage.pprint()
     scenario_tree = power_system._scenario_tree_instance
-    
+    scenario_tree.StageDerivedVariables = []
     scenario_tree.StageVariables['first stage'] = variables_first_stage
     scenario_tree.StageVariables['second stage'] = variables_second_stage
 
@@ -88,6 +89,7 @@ def define_stage_variables(power_system, times):
         power_system.cost_first_stage())
     scenario_tree.StageCostVariable['second stage'] = str(
         power_system.cost_second_stage())
+
 
 def create_problem_with_scenarios(power_system, times):
     logging.debug('constructing scenario tree')
@@ -124,18 +126,17 @@ def create_problem_with_scenarios(power_system, times):
 
     gc.enable()
     scenario_tree.defineVariableIndexSets(power_system._model)
-        
+
     cvar_params = {}
     if user_config.cvar_weight > 0:
         cvar_params = dict(
-            generate_weighted_cvar = True,
-            cvar_weight = user_config.cvar_weight,
-            risk_alpha = user_config.cvar_confidence_level,
-            )
-    
+            generate_weighted_cvar=True,
+            cvar_weight=user_config.cvar_weight,
+            risk_alpha=user_config.cvar_confidence_level,
+        )
+
     full_problem_instance = create_ef_instance(
         scenario_tree, scenario_instances, **cvar_params)
-
 
     # full_problem_instance.pprint()
 
@@ -149,8 +150,8 @@ def create_problem_with_scenarios(power_system, times):
                 if not gen.is_controllable:
                     continue
                 u = gen.status().name
-                delattr(full_problem_instance, 
-                    '{s}_{u}_{t}'.format(s=scenario, u=u, t=str(time)))
+                delattr(full_problem_instance,
+                        '{s}_{u}_{t}'.format(s=scenario, u=u, t=str(time)))
 
     power_system.stochastic_formulation = True
     power_system._stochastic_instance = full_problem_instance
@@ -179,10 +180,10 @@ def update_variables(power_system, times):
     for s, scenario in power_system._scenario_instances.items():
         for var_name, var in scenario.active_components(Var).items():
             if var.is_indexed():
-                    values[var_name][s] = dict(
-                        [(idx, var_val.value) for idx, var_val in var.iteritems()])
+                values[var_name][s] = dict(
+                    [(idx, var_val.value) for idx, var_val in var.iteritems()])
             else:
-                    values[var_name][s] = var.value
+                values[var_name][s] = var.value
     power_system._per_scenario_values = values
 
 

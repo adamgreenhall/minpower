@@ -1,7 +1,8 @@
-from minpower import solve,config
+from minpower import solve, config
 import sys
 
-def test(resultsfile='out.txt',logfile='out.log'):
+
+def test(resultsfile='out.txt', logfile='out.log'):
     sys.stdout = open(resultsfile, 'w+')
     solve.solve_problem(
         datadir='/home/adam/ercot-data/ercot-2010-test-system/',
@@ -16,9 +17,9 @@ def test(resultsfile='out.txt',logfile='out.log'):
         get_duals=False,
         logging_file=logfile,
         solution_file=False
-        )
+    )
 
-if __name__ == "__main__": 
-    config.updown_formulation=sys.argv[1]
-    filename=config.updown_formulation.replace(' ','-')
-    test(resultsfile=filename+'.txt',logfile=filename+'.log')
+if __name__ == "__main__":
+    config.updown_formulation = sys.argv[1]
+    filename = config.updown_formulation.replace(' ', '-')
+    test(resultsfile=filename + '.txt', logfile=filename + '.log')

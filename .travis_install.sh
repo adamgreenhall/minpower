@@ -1,9 +1,10 @@
-sudo apt-get install python-numpy glpk
-pip install --use-mirrors .
+sudo apt-get install glpk
+conda install --yes python=$TRAVIS_PYTHON_VERSION --file requirements.conda.txt
+pip install .
 
 if [ x"$FULL_DEPS" == x"true" ]; then
     echo "Installing FULL_DEPS"
-    sudo apt-get install libhdf5-serial-dev
-    pip install numexpr cython
-    pip install tables matplotlib
+    conda install --yes python=$TRAVIS_PYTHON_VERSION --file requirements.conda.full_deps.txt
+    mkdir -p ~/.config/matplotlib/
+    echo "backend : Agg" > ~/.config/matplotlib/matplotlibrc
 fi

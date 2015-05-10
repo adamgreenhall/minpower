@@ -3,13 +3,15 @@ from commonscripts import update_attributes, pairwise
 from optimization import value, OptimizationObject
 from config import user_config
 import re
-from coopr.pyomo import Piecewise
+from pyomo.environ import Piecewise
 
 
 class Bid(OptimizationObject):
+
     """
     A bid modeled by a polynomial or a set of piecewise points.
     """
+
     def __init__(self,
                  polynomial='10P',
                  bid_points=None,
@@ -84,7 +86,7 @@ class Bid(OptimizationObject):
 
             pw_representation = Piecewise(self.times.set,
                                           self.get_variable(
-                                          'cost', time=None, indexed=True),
+                                              'cost', time=None, indexed=True),
                                           self.input_variable(),
                                           pw_pts=in_pts,
                                           pw_constr_type='LB',
@@ -169,7 +171,8 @@ def is_linear(coefs):
     else:
         if len(coefs) < 2:
             result = True
-        elif all(m == 0 for m in coefs[2:]): result = True
+        elif all(m == 0 for m in coefs[2:]):
+            result = True
         else:
             result = False
     return result
@@ -205,17 +208,17 @@ def parse_polynomial(s):
     Can handle simple polynomials (addition and subtraction):
 
     >>> parse_polynomial('7x^2 + 6x - 5')
-    [-5, 6, 7]
+    [-5.0, 6.0, 7.0]
 
     or with the explicit * multiplier:
 
     >>> parse_polynomial('7*P^2 + 6*P - 5')
-    [-5, 6, 7]
+    [-5.0, 6.0, 7.0]
 
     or even with the terms in some random order:
 
     >>> parse_polynomial('6*P - 5 + 7*P^2')
-    [-5, 6, 7]
+    [-5.0, 6.0, 7.0]
     """
 
     def parse_n(s):
@@ -259,8 +262,8 @@ def parse_polynomial(s):
     highest_order = max(
         max(order_multipliers.keys()), 1)  # order must be at least linear
     multipliers = [0] * (highest_order + 1)
-    for key, value in order_multipliers.items():
-        multipliers[key] = value
+    for key, val in order_multipliers.items():
+        multipliers[key] = val
 
     return multipliers
 

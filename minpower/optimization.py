@@ -5,16 +5,10 @@ Basically a wrapper around Coopr's `pyomo.ConcreteModel` class.
 import logging
 import time
 import weakref
-from commonscripts import (quiet, not_quiet, 
-    update_attributes, joindir, set_trace)
-
-with quiet():
-    # FIXME - cplex ilog manager is making noise
-    # can't seem to figure out which stream it is outputing to
-    # it isn't stdout or stderr
-    import coopr.pyomo as pyomo
-
-from coopr.opt.base import solvers as cooprsolver
+from commonscripts import quiet, not_quiet, update_attributes, joindir
+from pyomo import environ as pyomo
+from pyomo.opt.base import solvers as cooprsolver
+from config import user_config
 import pandas as pd
 
 # make pyomo recognize that True == 1
@@ -26,19 +20,19 @@ variable_kinds = dict(
     Binary=pyomo.Boolean,
     Boolean=pyomo.Boolean)
 
-from config import user_config
-
 
 def full_filename(filename):
     return joindir(user_config.directory, filename)
 
 
 class OptimizationObject(object):
+
     '''
     A base class for an optimization object.
     This also serves as a template for
     how :class:`~OptimizationObject`s are structured.
     '''
+
     def __init__(self, *args, **kwargs):
         '''
         Individual class defined.
@@ -98,7 +92,6 @@ class OptimizationObject(object):
         '''
         return  # self.all_constraints(times)
 
-
     def add_variable(self, name, time=None,
                      fixed_value=None,
                      index=None,
@@ -144,8 +137,7 @@ class OptimizationObject(object):
     def add_parameter(self, name, index=None, values=None, mutable=True, default=None, **kwargs):
         name = self._id(name)
         self._parent_problem().add_component_to_problem(
-            pyomo.Param(index, name=name,
-                        default=default, mutable=mutable, **kwargs))
+            pyomo.Param(index, name=name, mutable=mutable, default=default, **kwargs))
         if values is not None:
             if pd.Series(values).count() != len(values):
                 raise ValueError('a parameter value cannot be NaN')
@@ -156,22 +148,20 @@ class OptimizationObject(object):
     def add_constraint(self, name, time, expression):
         '''Create a new constraint and add it to the object's constraints and the model's constraints.'''
         cname = self._t_id(name, time)
-        self._parent_problem().add_component_to_problem(
-            pyomo.Constraint(name=cname, rule=expression))
+        self._parent_problem().add_component_to_problem(pyomo.Constraint(name=cname, expr=expression))
 
     def add_constraint_set(self, name, index, expression):
         cname = self._id(name)
-        self._parent_problem().add_component_to_problem(
-            pyomo.Constraint(index, name=cname, rule=expression))
-    
+        self._parent_problem().add_component_to_problem(pyomo.Constraint(index, name=cname, rule=expression))
+
     def get_dual(self, cname, time=None):
-        '''get the dual of a constraint of an LP problem''' 
+        '''get the dual of a constraint of an LP problem'''
         if user_config.duals:
             return self._parent_problem()._model.dual.getValue(
                 self.get_constraint(cname, time))
         else:
             return None
-    
+
     def get_variable(self, name, time=None, indexed=False, scenario=None):
         if indexed:
             var_name = self._id(name)
@@ -263,8 +253,11 @@ class OptimizationObject(object):
             out.index = reindex
         return out
 
+
 class OptimizationProblem(OptimizationObject):
+
     '''an optimization problem/model based on pyomo'''
+
     def __init__(self):
         self.init_optimization()
 
@@ -291,13 +284,11 @@ class OptimizationProblem(OptimizationObject):
 
     def add_objective(self, expression, sense=pyomo.minimize):
         '''add an objective to the problem'''
-        self._model.objective = pyomo.Objective(
-            name='objective', rule=expression, sense=sense)
+        self._model.objective = pyomo.Objective(name='objective', expr=expression, sense=sense)
 
     def add_set(self, name, items, ordered=False):
         '''add a :class:`pyomo.Set` to the problem'''
-        self._model.add_component(name,
-                                   pyomo.Set(initialize=items, name=name, ordered=ordered))
+        self._model.add_component(name, pyomo.Set(initialize=items, name=name, ordered=ordered))
 
     def add_variable(self, name, **kwargs):
         '''create a new variable and add it to the root problem'''
@@ -308,20 +299,17 @@ class OptimizationProblem(OptimizationObject):
 
     def add_constraint(self, name, expression, time=None):
         cname = self._t_id(name, time) if time is not None else name
-        self._model.add_component(cname,
-                                   pyomo.Constraint(name=name, rule=expression))
+        self._model.add_component(cname, pyomo.Constraint(name=name, expr=expression))
 
     def add_suffix(self, name):
-        self._model.add_component(name, 
-            pyomo.Suffix(direction=pyomo.Suffix.IMPORT))
-
+        self._model.add_component(name, pyomo.Suffix(direction=pyomo.Suffix.IMPORT))
 
     def get_component(self, name, scenario=None):
         '''Get an optimization component'''
         if scenario is None:
             try:
                 return getattr(self._model, name)
-            except (AttributeError, KeyError) as NotInModelError:
+            except (AttributeError, KeyError):
                 # self.show_model()
                 raise AttributeError('error getting {}'.format(name))
         else:
@@ -342,19 +330,18 @@ class OptimizationProblem(OptimizationObject):
         key = self._t_id(name, time) if time is not None else name
         delattr(self._model, key)
 
-    
     def reset_objective(self):
         delattr(self._model, 'objective')
-    
+
     def reset_model(self):
         instances = [self._model]
         if self.stochastic_formulation:
             instances.append(self._stochastic_instance)
 
         for instance in instances:
-#        piecewise models leak memory
-# keep until Coopr release integrates:
-# https://software.sandia.gov/trac/coopr/changeset/5781
+            #        piecewise models leak memory
+            # keep until Coopr release integrates:
+            # https://software.sandia.gov/trac/coopr/changeset/5781
             for pw in instance.active_components(pyomo.Piecewise).values():
                 pw._constraints_dict = None
                 pw._vars_dict = None
@@ -412,7 +399,7 @@ class OptimizationProblem(OptimizationObject):
         items = [pyomo.Set, pyomo.Param, pyomo.Var,
                  pyomo.Objective, pyomo.Constraint]
         for item in items:
-            if not item in components:
+            if item not in components:
                 continue
             keys = components[item].keys()
             keys.sort()
@@ -495,14 +482,14 @@ class OptimizationProblem(OptimizationObject):
         return 'system'
 
     def _solve_instance(self, instance,
-        solver=user_config.solver, 
-        get_duals=False,
-        keepfiles=False,
-        ):
-        
-        if user_config.keep_lp_files: 
+                        solver=user_config.solver,
+                        get_duals=False,
+                        keepfiles=False,
+                        ):
+
+        if user_config.keep_lp_files:
             keepfiles = True
-        
+
         suffixes = ['dual'] if get_duals else []
 
         if not hasattr(self, '_opt_solver'):
@@ -518,29 +505,27 @@ class OptimizationProblem(OptimizationObject):
 
             self._opt_solver = cooprsolver.SolverFactory(solver, **kwds)
             self._opt_solver.options.mipgap = user_config.mipgap
-            
 
             if self._opt_solver is None:
                 msg = 'solver "{}" not found by coopr'.format(solver)
                 raise OptimizationError(msg)
 
-        if user_config.solver_time_limit: 
+        if user_config.solver_time_limit:
             self._opt_solver.options.timelimit = user_config.solver_time_limit
-
 
         # if we are debugging, show the solver output
         show_solver_output = user_config.logging_level <= 10
 
         start = time.time()
-         
+
         quiet_fn = not_quiet if keepfiles or show_solver_output else quiet
-        
+
         with quiet_fn():
-            results = self._opt_solver.solve(instance, 
-                suffixes=suffixes, 
-                keepfiles=keepfiles, 
-                tee=show_solver_output,
-                )
+            results = self._opt_solver.solve(instance,
+                                             suffixes=suffixes,
+                                             keepfiles=keepfiles,
+                                             tee=show_solver_output,
+                                             )
         try:
             self._opt_solver._symbol_map = None  # this should mimic the memory leak bugfix at: software.sandia.gov/trac/coopr/changeset/5449
         except AttributeError:
@@ -565,6 +550,7 @@ class OptimizationProblem(OptimizationObject):
 
     def _unfix_variables(self):
         _unfix_variables(self._model)
+
     def _fix_variables(self, names):
         _fix_variables(names, self._model)
 
@@ -664,7 +650,9 @@ def get_objective(results, name='objective'):
 
 
 class OptimizationError(Exception):
+
     '''Error that occurs within solving an optimization problem.'''
+
     def __init__(self, ivalue):
         if ivalue:
             self.value = ivalue
@@ -677,15 +665,18 @@ class OptimizationError(Exception):
 
 
 class OptimizationResolveError(OptimizationError):
+
     '''Error that occurs when re-solving an optimization problem.'''
     pass
 
 
 class NotInModelError(Exception):
+
     '''
     Error that occurs when trying to find
     a component in the optimization model.
     '''
+
     def __init__(self, ivalue):
         if ivalue:
             self.value = ivalue

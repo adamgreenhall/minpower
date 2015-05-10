@@ -4,21 +4,23 @@
     visualization.
 """
 import logging
-import os
 import pandas as pd
 import numpy as np
 
-try: 
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
-
 from commonscripts import (update_attributes, gen_time_dataframe, joindir,
-    replace_all, getattrL, writeCSV, transpose, within, correct_status,
-    set_trace)
+                           replace_all, getattrL, writeCSV, transpose, within, correct_status,
+                           set_trace)
 from schedule import TimeIndex
 from optimization import value
 from config import user_config
+try:
+    import matplotlib
+    import matplotlib.pyplot as plot
+    do_plotting = True
+except ImportError:
+    logging.warning("Can't import matplotlib -- skipping plotting.")
+    do_plotting = False
+
 
 def prettify_plots(for_publication=True):
     plot.rc("xtick", direction="out")
@@ -29,15 +31,6 @@ def prettify_plots(for_publication=True):
     plot.rc("font", family="serif")
     if for_publication:
         plot.rc("font", size=16)
-        
-
-try:
-    import matplotlib
-    import matplotlib.pyplot as plot
-    do_plotting = True
-except ImportError:
-    logging.warning("Can't import matplotlib -- skipping plotting.")
-    do_plotting = False
 
 
 def full_filename(filename):
@@ -94,11 +87,13 @@ def make_multistage_solution(power_system, stage_times, stage_solutions):
 
 
 class Solution(object):
+
     '''
     Solution information template for a power system over times.
     Each problem type has its own class for visualization and
     spreadsheet output, e.g. :class:`~solution.Solution_ED`.
     '''
+
     def __init__(self, power_system, times, datadir='.', is_stochastic=False):
         update_attributes(self, locals())
         self._resolved = False
@@ -135,7 +130,7 @@ class Solution(object):
         if generators is None:
             generators = self.generators
         return gen_time_dataframe(generators, times,
-            [self.get_values(generators, method, t, evaluate) for t in times])
+                                  [self.get_values(generators, method, t, evaluate) for t in times])
 
     def _get_problem_info(self):
         self.solve_time = self.power_system.solution_time
@@ -161,8 +156,8 @@ class Solution(object):
                 self.loads, 'shed', t, evaluate=True)) for t in times],
             index=times.strings.index)
         self.gen_shed_timeseries = self.gen_time_df('shed', evaluate=True,
-            generators=self.power_system.get_generators_noncontrollable()
-            ).sum(axis=1)
+                                                    generators=self.power_system.get_generators_noncontrollable()
+                                                    ).sum(axis=1)
 
         self.load_shed = self.load_shed_timeseries.sum()
         self.gen_shed = self.gen_shed_timeseries.sum()
@@ -267,6 +262,7 @@ class Solution(object):
 
 
 class Solution_ED(Solution):
+
     def info_lines(self, t):
         return []
 
@@ -325,8 +321,8 @@ class Solution_ED(Solution):
         if plotted_loads:
             plot.legend(plotted_loads, names_loads,
                         fancybox=True, title='Loads:', loc='best')
-            # add first legend to the axes manually bcs multiple legends get overwritten                        
-            plot.gca().add_artist(legendGens)  
+            # add first legend to the axes manually bcs multiple legends get overwritten
+            plot.gca().add_artist(legendGens)
 
         self.savevisualization(filename=full_filename('dispatch.png'))
 
@@ -339,10 +335,10 @@ class Solution_ED(Solution):
             for g, gen in enumerate(generators):
                 if gen.status(t):
                     plotted_gens.append(gen.cost_model.plot(
-                        P=value(gen.power(t)), 
-                        linestyle='-', 
+                        P=value(gen.power(t)),
+                        linestyle='-',
                         color=gensPlotted_price[g].get_color()
-                        ))
+                    ))
                     names_gens.append(gen.name)
             for load in loads:
                 if load.kind == 'bidding':
@@ -391,6 +387,7 @@ class Solution_ED(Solution):
 
 
 class Solution_OPF(Solution):
+
     def visualization(self, filename=None):
         '''power flow visualization'''
         if not do_plotting:
@@ -420,8 +417,11 @@ class Solution_OPF(Solution):
                 if 'Pinj' in ndata]
         nx.draw(G, node_color=Pinj, pos=pos, node_size=1500,
                 alpha=.7, cmap=plot.cm.get_cmap('RdYlBu'), fontsize=30)
-        cb = plot.colorbar(shrink=.8)
-        cb.set_label('injected power [MW]', fontsize=15)
+
+        # TODO: get colorbar label working again
+        # ax = plot.gca()
+        # cb = plot.colorbar(ax=ax, shrink=.8)
+        # cb.set_label('injected power [MW]', fontsize=15)
 
         Plines = [edata['P'] for _, t, edata in G.edges(data=True)
                   if 'P' in edata]
@@ -472,6 +472,7 @@ class Solution_OPF(Solution):
 
 
 class Solution_UC(Solution):
+
     def info_lines(self, t):
         return []
 
@@ -498,16 +499,19 @@ class Solution_UC(Solution):
 
 
 class Solution_SCUC(Solution_UC):
+
     def visualization(self):
         logging.warning('no visualization for SCUC. Spreadsheet output is valid, except for the price column is the price on first bus only.')
 
 
 class Solution_UC_multistage(Solution_UC):
+
     '''
     Muti-stage unit commitment. Each stage represents one optimization problem.
     Each element of the list :param:stage_solutions is a :class:`~results.Solution_UC` object.
 
     '''
+
     def __init__(self, power_system, stage_times, stage_solutions):
         update_attributes(self, locals(),
                           exclude=['stage_solutions', 'stage_times'])
@@ -606,6 +610,7 @@ class Solution_UC_multistage(Solution_UC):
 
 
 class MultistageStandalone(Solution_UC_multistage):
+
     def __init__(self, power_system, stage_times, store):
         self.power_system = power_system
         self.is_stochastic = power_system.is_stochastic
@@ -634,6 +639,7 @@ class MultistageStandalone(Solution_UC_multistage):
 
 
 class Solution_Stochastic(Solution):
+
     def __init__(self, power_system, times, datadir='.', is_stochastic=True):
         update_attributes(self, locals())
         self._setup_powersystem()
@@ -655,13 +661,13 @@ class Solution_Stochastic(Solution):
         self._get_costs()
         self._get_prices()
 
-    def stg_panel(self, method, 
-        generators=None,
-        no_overlap=True,
-        evaluate=False):
+    def stg_panel(self, method,
+                  generators=None,
+                  no_overlap=True,
+                  evaluate=False):
         if generators is None:
             generators = self.generators
-            
+
         times = self.times_non_overlap if no_overlap else self.times
         if evaluate:
             getval = lambda s, gen, t: value(
@@ -760,13 +766,13 @@ class Solution_Stochastic(Solution):
             self.expected_fuelcost = self._calc_expected_cost('operatingcost')
 
             # calculate expected load, gen shed
-            self.expected_gen_shed_timeseries = self._calc_expected(self.stg_panel('shed', evaluate=True, 
-                generators=self.power_system.get_generators_noncontrollable()))            
+            self.expected_gen_shed_timeseries = self._calc_expected(self.stg_panel('shed', evaluate=True,
+                                                                                   generators=self.power_system.get_generators_noncontrollable()))
             self.expected_gen_shed = self.expected_gen_shed_timeseries.sum().sum()
-                
+
             self.expected_load_shed_timeseries = self._calc_expected(
-                self.stg_panel('shed', evaluate=True, 
-                    generators=self.power_system.loads()))
+                self.stg_panel('shed', evaluate=True,
+                               generators=self.power_system.loads()))
             self.expected_load_shed = self.expected_load_shed_timeseries.sum()
 
             if self.expected_gen_shed > 0.01:
@@ -775,8 +781,6 @@ class Solution_Stochastic(Solution):
             if self.expected_load_shed > 0.01:
                 logging.debug('expected load shed: {}MW'.format(
                     self.expected_load_shed))
-            
-                
 
     def _get_cost_error(self):
         pass
@@ -797,6 +801,7 @@ class Solution_Stochastic(Solution):
 
 
 class Solution_Stochastic_UC(Solution_Stochastic):
+
     def saveCSV(self):
         '''generator power and status values for stochastic unit commitment'''
         try:
@@ -833,7 +838,7 @@ def stack_plot_UC(solution, generators, times, prices,
     bar_width = times.intervalhrs / 24.0  # maplotlib dates have base of 1day
 
     convert_to_GW = solution.generators_power.max().sum() > 20e3
-    
+
     power = solution.generators_power.copy()
     if convert_to_GW:
         power = power / 1e3
@@ -841,7 +846,7 @@ def stack_plot_UC(solution, generators, times, prices,
     colors = _colormap(len(generators), colormapName='Blues')
 
     power.plot(ax=ax, kind='bar', legend=True, stacked=True, color=colors, edgecolor='none')
-    
+
     # show prices
     if withPrices:
         prices = pd.Series(prices, index=times.times)
@@ -851,10 +856,10 @@ def stack_plot_UC(solution, generators, times, prices,
             axes_price = plot.axes([figLeft, .75, figWidth, .2], sharex=ax)
 
             # HACK - pandas uses this index for the bar plots
-            # and since they share an x axis, use the same x values here            
+            # and since they share an x axis, use the same x values here
             pd.Series(prices.values, index=np.arange(len(prices)) + 0.25).plot(
                 ax=axes_price, drawstyle='steps')
-            
+
             # axes_price.step(times.times.tolist() + [times.End], prices.values.tolist() + [prices[prices.index[-1]]],
             #                 where='post')  # start from 1 past initial time
             axes_price.set_ylabel('price\n[$/MWh]', ha='center', **font_big)
@@ -900,6 +905,7 @@ def stack_plot_UC(solution, generators, times, prices,
         ax.set_ylabel('energy [GWh]', ha='center', **font_big)
     ax.autoscale_view()
 
+
 def prettify_axes(ax):
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -910,4 +916,4 @@ def prettify_axes(ax):
 def shrink_axis(ax, percent_horizontal=0.20, percent_vertical=0):
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width * (1 -
-                    percent_horizontal), box.height * (1 - percent_vertical)])
+                                                  percent_horizontal), box.height * (1 - percent_vertical)])

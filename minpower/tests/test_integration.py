@@ -3,7 +3,6 @@ A selection of integration tests. These are designed to find failures that
 the unit tests don't pick up.
 """
 import os
-import pandas as pd
 import nose
 from nose.tools import istest
 from pandas.util.testing import assert_frame_equal, assert_series_equal

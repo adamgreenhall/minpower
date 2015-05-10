@@ -54,10 +54,16 @@ setup(
         'coverage',
         'objgraph'
         ],
-
+    extras_require=dict(
+        extras=[
+            'matplotlib==1.4.3',
+            'tables==3.1.1',
+            'numexpr==2.3.1',
+            'cython==0.20.1',
+            ],
+        ),
     # it helps to have seed if you are going to make releases
     # but it is not required for setup
-
     description="power systems optimization made beautiful",
     author="Adam Greenhall",
     author_email="minpower@adamgreenhall.com",

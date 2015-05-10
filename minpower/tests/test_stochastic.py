@@ -1,13 +1,10 @@
 import logging
-logging.basicConfig(level=logging.ERROR)
-
 import nose
 import numpy as np
 import pandas as pd
-from minpower.commonscripts import set_trace, debug_frame_unequal
 from minpower.tests.test_utils import istest
-from minpower.tests.test_integration import (run_case,
-                                             assert_series_equal, assert_frame_equal)
+from minpower.tests.test_integration import run_case, assert_series_equal, assert_frame_equal
+logging.basicConfig(level=logging.ERROR)
 
 
 mipgap = 0.0001
@@ -70,7 +67,7 @@ def expected_cost_case():
 @istest
 def designed_diff_case():
     '''
-    ensure that a simple case designed to produce a more expensive 
+    ensure that a simple case designed to produce a more expensive
     deterministic forecast solution has a cheaper perfect forecast
     '''
     # this is a short and simple case with 4hrs, but make it into two UC days
@@ -136,7 +133,7 @@ def stochastic_gen_shedding():
 def cvar_objective():
     '''
     Set up an either-or two gen case: g1 cheap, g2 expensive,
-    with two wind senarios: 
+    with two wind senarios:
         s0 - high prob., use cheap gen
         s1 - very low prob. (below conf. limit), expensive gen needed
 

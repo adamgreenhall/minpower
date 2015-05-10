@@ -15,7 +15,7 @@ import argparse
 import pdb
 
 from config import user_config, parse_command_line_config
-from commonscripts import joindir, StreamToLogger, set_trace
+from commonscripts import joindir, StreamToLogger
 import powersystems
 import get_data
 import stochastic
@@ -263,7 +263,7 @@ def _setup_logging(pid=None):
             and not user_config.debugger:
         kwds['filename'] = joindir(user_config.directory,
                                    '{}.log'.format(pid))
-    if (user_config.logging_level > 10) and (not 'filename' in kwds):
+    if (user_config.logging_level > 10) and ('filename' not in kwds):
         # don't log the time if debugging isn't turned on
         kwds['format'] = '%(levelname)s: %(message)s'
     logging.basicConfig(**kwds)

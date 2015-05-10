@@ -1,9 +1,6 @@
 '''Test for memory leaks'''
 from minpower import powersystems, solve
 from test_utils import solve_problem, make_loads_times
-from coopr import pyomo
-
-
 import objgraph
 import inspect
 

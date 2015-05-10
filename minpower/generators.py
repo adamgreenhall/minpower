@@ -1,7 +1,7 @@
 import pandas as pd
 import logging
 from config import user_config
-from commonscripts import update_attributes, bool_to_int, set_trace
+from commonscripts import update_attributes, bool_to_int
 
 from optimization import value, OptimizationObject
 from schedule import is_init

@@ -149,13 +149,11 @@ class OptimizationObject(object):
     def add_constraint(self, name, time, expression):
         '''Create a new constraint and add it to the object's constraints and the model's constraints.'''
         cname = self._t_id(name, time)
-        self._parent_problem().add_component_to_problem(
-            pyomo.Constraint(name=cname, rule=expression))
+        self._parent_problem().add_component_to_problem(pyomo.Constraint(name=cname, expr=expression))
 
     def add_constraint_set(self, name, index, expression):
         cname = self._id(name)
-        self._parent_problem().add_component_to_problem(
-            pyomo.Constraint(index, name=cname, rule=expression))
+        self._parent_problem().add_component_to_problem(pyomo.Constraint(index, name=cname, rule=expression))
 
     def get_dual(self, cname, time=None):
         '''get the dual of a constraint of an LP problem'''
@@ -287,13 +285,11 @@ class OptimizationProblem(OptimizationObject):
 
     def add_objective(self, expression, sense=pyomo.minimize):
         '''add an objective to the problem'''
-        self._model.objective = pyomo.Objective(
-            name='objective', rule=expression, sense=sense)
+        self._model.objective = pyomo.Objective(name='objective', expr=expression, sense=sense)
 
     def add_set(self, name, items, ordered=False):
         '''add a :class:`pyomo.Set` to the problem'''
-        self._model.add_component(name,
-                                  pyomo.Set(initialize=items, name=name, ordered=ordered))
+        self._model.add_component(name, pyomo.Set(initialize=items, name=name, ordered=ordered))
 
     def add_variable(self, name, **kwargs):
         '''create a new variable and add it to the root problem'''
@@ -304,12 +300,10 @@ class OptimizationProblem(OptimizationObject):
 
     def add_constraint(self, name, expression, time=None):
         cname = self._t_id(name, time) if time is not None else name
-        self._model.add_component(cname,
-                                  pyomo.Constraint(name=name, rule=expression))
+        self._model.add_component(cname, pyomo.Constraint(name=name, expr=expression))
 
     def add_suffix(self, name):
-        self._model.add_component(name,
-                                  pyomo.Suffix(direction=pyomo.Suffix.IMPORT))
+        self._model.add_component(name, pyomo.Suffix(direction=pyomo.Suffix.IMPORT))
 
     def get_component(self, name, scenario=None):
         '''Get an optimization component'''

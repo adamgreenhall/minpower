@@ -42,7 +42,7 @@ def main(args):
 
         results.ix[load_val, 'committed'] = statuses.sum()
         results.ix[load_val, 'last_committed'] = \
-            statuses[statuses == 1].index.diff(committed_gen_names)
+            statuses[statuses == 1].index.difference(committed_gen_names)
         committed_gen_names = statuses[statuses == 1].index
 
     if (load_values[-1] == 0.99 * gen_data.pmax.sum()) and \

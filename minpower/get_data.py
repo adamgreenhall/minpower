@@ -286,7 +286,7 @@ def build_class_list(data, model, times=None, timeseries=None):
         valid_fields = pd.Index(fields[model.__name__] + ['schedulename'])
         if is_generator:
             valid_fields = valid_fields.union(pd.Index(gen_extra_fields))
-        invalid_fields = row.index.diff(valid_fields)
+        invalid_fields = row.index.difference(valid_fields)
         if len(invalid_fields) > 0:
             raise ValueError('invalid fields in model:: {}'.format(
                 invalid_fields.tolist()))

@@ -16,7 +16,7 @@ from test_utils import *
 @istest
 def power_maximum():
     '''
-    Create two generators, one cheap and one expensive. 
+    Create two generators, one cheap and one expensive.
     Give the cheap one a maximum power limit lower than the load.
     Ensure that the cheaper unit is at its limit.
     '''
@@ -50,7 +50,7 @@ def power_minimum():
 @istest
 def ramp_up():
     '''
-    Create 2 gen, cheaper one with ramp up limit. 
+    Create 2 gen, cheaper one with ramp up limit.
     Create load that ramps up faster than limit, at t1.
     Ensure that cheaper unit is at its limit.
     '''
@@ -68,7 +68,7 @@ def ramp_up():
 @istest
 def ramp_down():
     '''
-    Create 2 gen, expensive one with ramp down limit. 
+    Create 2 gen, expensive one with ramp down limit.
     Create load that ramps down faster than limit at t1.
     Ensure that exp. unit is at its limit.
     '''
@@ -86,7 +86,7 @@ def ramp_down():
 @istest
 def ramp_up_initial():
     '''
-    Create 2 gen, cheaper one with ramp up limit. 
+    Create 2 gen, cheaper one with ramp up limit.
     Create load that ramps up faster than limit, at t0.
     Ensure that cheaper unit is at its limit.
     '''
@@ -105,7 +105,7 @@ def ramp_up_initial():
 @istest
 def ramp_down_initial():
     '''
-    Create 2 gen, expensive one with ramp down limit. 
+    Create 2 gen, expensive one with ramp down limit.
     Create load that ramps down faster than limit, at t0.
     Ensure that exp. unit is at its limit.
     '''
@@ -123,7 +123,7 @@ def ramp_down_initial():
 @istest
 def cold_ramp_up():
     '''
-    Create three generators, one that must ramp up from cold. 
+    Create three generators, one that must ramp up from cold.
     Ensure that the generator ramps at within its limit.
     '''
     ramp_limit_SU = 20
@@ -138,7 +138,7 @@ def cold_ramp_up():
     power_system, times = solve_problem(generators, gen_init=initial,
                                         **make_loads_times(Pdt=[200, 230, 280]))
 
-    ramp_rate_SU = value(generators[1].power(times[1])) - value(generators[1].power(times[0]))
+    ramp_rate_SU = value(generators[1].power(times[0])) - generators[1].initial_power
     assert ramp_rate_SU <= ramp_limit_SU
     ramp_rate = value(generators[1].power(times[2])) - value(generators[1].power(times[1]))
     assert ramp_rate <= ramp_limit
@@ -147,7 +147,7 @@ def cold_ramp_up():
 @istest
 def hot_shut_down():
     '''
-    Create three generators, one that must shut down from hot. 
+    Create three generators, one that must shut down from hot.
     Ensure that the generator ramps within its limit.
     '''
     ramp_limit_SD = -30
@@ -177,7 +177,7 @@ def min_up_time():
     '''
     Create two generators: cheap with max power limit, exp. with min up time and min power limits.
     Create load that increases over the cheap limit at t1 and then reduces back to constant.
-    Ensure that the expensive generator is on at t1 and t2, then turns off. 
+    Ensure that the expensive generator is on at t1 and t2, then turns off.
     '''
     generators = [
         make_cheap_gen(pmax=100),
@@ -193,7 +193,7 @@ def min_up_time():
 @istest
 def min_down_time():
     '''
-    Create three generators: 
+    Create three generators:
     * cheap with max power limit
     * with min down time
     * expensive
@@ -263,7 +263,7 @@ def min_up_time_longer():
     '''
     Create two generators: cheap with max power limit, exp. with min up time and min power limits.
     Create load that increases over the cheap limit at t1 and then reduces back to constant.
-    Ensure that the expensive generator is on at t1 and t2, then turns off. 
+    Ensure that the expensive generator is on at t1 and t2, then turns off.
     '''
     generators = [
         make_cheap_gen(pmax=100),

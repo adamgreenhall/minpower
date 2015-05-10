@@ -609,8 +609,7 @@ class Generator_Stochastic(Generator_nonControllable):
         if self.is_stochastic:
             # initialize parameter set to first scenario value
             scenario_one = self._get_scenario_values(times, s=0)
-            self.add_parameter('power', index=times.set, nochecking=True,
-                               values=dict(zip(times, scenario_one)))
+            self.add_parameter('power', index=times.set, values=dict(zip(times, scenario_one)))
         else:
             # set to forecast values
             self.add_parameter('power', index=times.set,

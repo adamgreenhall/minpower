@@ -134,11 +134,10 @@ class OptimizationObject(object):
                 for i in index:
                     var[i] = fixed_value
 
-    def add_parameter(self, name, index=None, values=None, mutable=True, default=None, **kwargs):
+    def add_parameter(self, name, index=None, values=None, default=None, **kwargs):
         name = self._id(name)
         self._parent_problem().add_component_to_problem(
-            pyomo.Param(index, name=name,
-                        default=default, mutable=mutable, **kwargs))
+            pyomo.Param(index, name=name, default=default, **kwargs))
         if values is not None:
             if pd.Series(values).count() != len(values):
                 raise ValueError('a parameter value cannot be NaN')

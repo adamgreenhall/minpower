@@ -4,14 +4,8 @@
     visualization.
 """
 import logging
-import os
 import pandas as pd
 import numpy as np
-
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
 
 from commonscripts import (update_attributes, gen_time_dataframe, joindir,
                            replace_all, getattrL, writeCSV, transpose, within, correct_status,
@@ -19,6 +13,13 @@ from commonscripts import (update_attributes, gen_time_dataframe, joindir,
 from schedule import TimeIndex
 from optimization import value
 from config import user_config
+try:
+    import matplotlib
+    import matplotlib.pyplot as plot
+    do_plotting = True
+except ImportError:
+    logging.warning("Can't import matplotlib -- skipping plotting.")
+    do_plotting = False
 
 
 def prettify_plots(for_publication=True):
@@ -30,15 +31,6 @@ def prettify_plots(for_publication=True):
     plot.rc("font", family="serif")
     if for_publication:
         plot.rc("font", size=16)
-
-
-try:
-    import matplotlib
-    import matplotlib.pyplot as plot
-    do_plotting = True
-except ImportError:
-    logging.warning("Can't import matplotlib -- skipping plotting.")
-    do_plotting = False
 
 
 def full_filename(filename):
@@ -425,8 +417,11 @@ class Solution_OPF(Solution):
                 if 'Pinj' in ndata]
         nx.draw(G, node_color=Pinj, pos=pos, node_size=1500,
                 alpha=.7, cmap=plot.cm.get_cmap('RdYlBu'), fontsize=30)
-        cb = plot.colorbar(shrink=.8)
-        cb.set_label('injected power [MW]', fontsize=15)
+
+        # TODO: get colorbar label working again
+        # ax = plot.gca()
+        # cb = plot.colorbar(ax=ax, shrink=.8)
+        # cb.set_label('injected power [MW]', fontsize=15)
 
         Plines = [edata['P'] for _, t, edata in G.edges(data=True)
                   if 'P' in edata]

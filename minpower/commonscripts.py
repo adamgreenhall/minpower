@@ -103,12 +103,7 @@ def gen_time_dataframe(generators, times, values=()):
 def ts_from_csv(filename, index_col=0, squeeze=True, timezone=None, is_df=True, **kwargs):
     kwargs['header'] = 0 if is_df else None
 
-    df = pd.read_csv(filename, index_col=index_col, squeeze=squeeze, **kwargs)
-    df.index = pd.DatetimeIndex(df.index)
-    if timezone is not None:
-        # pandas seems to convert any stamps to UTC in the DatetimeIndex call
-        df.index = df.index.tz_localize('UTC').tz_convert(timezone)
-    return df
+    return pd.read_csv(filename, index_col=index_col, squeeze=squeeze, parse_dates=[0], **kwargs)
 
 
 def bool_to_int(x):

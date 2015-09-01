@@ -8,6 +8,6 @@ h2. power systems optimization made beautiful
     - Unit Commitment
 * Problems can be made in simple spreadsheets.
 * Many solvers supported.
-* "Full documentation and tutorials":http://minpowertoolkit.com
+* "Full documentation and tutorials":http://adamgreenhall.github.io/minpower/
 
 Build Status !https://secure.travis-ci.org/adamgreenhall/minpower.png!:http://travis-ci.org/adamgreenhall/minpower

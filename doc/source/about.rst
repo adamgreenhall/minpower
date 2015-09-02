@@ -5,7 +5,7 @@ About minpower
 
 
 **Minpower** is currently :ref:`under development <development>`.
- 
+
 
 .. _authors:
 
@@ -33,7 +33,7 @@ Authors and Collaborators
         :align: left
     ..  container:: halfwidth
 
-        `Sandia National Labs <https://software.sandia.gov/trac/coopr>`_ makes the ``coopr`` package which is the engine for the optimization that goes on in minpower. 
+        `Sandia National Labs <https://software.sandia.gov/trac/coopr>`_ makes the ``coopr`` package which is the engine for the optimization that goes on in minpower.
 
 
 .. _development:
@@ -48,16 +48,16 @@ Development
     :align: left
 
 ..  container:: halfwidth
-    
-    **Minpower** is openly developed on `github <http://github.com/adamgreenhall/minpower>`_, a code 
-    hosting site that allows for collaboration by many people, change tracking, and issue hosting. 
+
+    **Minpower** is openly developed on `github <http://github.com/adamgreenhall/minpower>`_, a code
+    hosting site that allows for collaboration by many people, change tracking, and issue hosting.
 
 Development is simple:
-    
+
     #. Get on github and `fork minpower <http://github.com/adamgreenhall/minpower>`_
     #. Clone Minpower from GitHub: ``git clone http://github.com/<yourname>/minpower``
     #. :abbr:`install it locally (pip's -e flag links you handy-to-find directory to the much more obscure site-packages directory where Python looks for its packages)`: ``pip install -e minpower``
-        
+
     #. Make it better
     #. Test it out. Minpower uses `Nose <http://nose.readthedocs.org/>`_ and `Travis <travis-ci.org/adamgreenhall/minpower>`_ for testing. To run all of the tests use ``nosetests`` in your local minpower directory.
     #. Make a `pull request <https://github.com/adamgreenhall/minpower/pulls>`_ to get your version in
@@ -69,24 +69,24 @@ License
 
 **Minpower** is distributed under the `MIT license <http://www.opensource.org/licenses/mit-license>`_. This basically means:
 
-Copyright 2011 by Adam Greenhall and contributors, minpowertoolkit.com
+Copyright 2011 by Adam Greenhall and contributors
 
 Redistribution and use with or without modification, are ok provided that: redistributions of code must retain the copyright above, this list of conditions, and the disclaimer below.
 
-If you use **Minpower** in published research, please cite minpowertoolkit.com. If you use this code and modify it for the better, please share your improvements. But you are not required to. 
+If you use **Minpower** in published research, please cite it. If you use this code and modify it for the better, please share your improvements. But you are not required to.
 
 
 
-The full fine print: 
+The full fine print:
 
 ..  container:: license
-    
+
     Copyright 2011 by Adam Greenhall and contributors, minpowertoolkit.com
-    
+
     Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-    
+
     The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-    
+
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 

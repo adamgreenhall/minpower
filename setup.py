@@ -67,7 +67,7 @@ setup(
     description="power systems optimization made beautiful",
     author="Adam Greenhall",
     author_email="minpower@adamgreenhall.com",
-    url="http://minpowertoolkit.com/",
+    url="http://adamgreenhall.github.io/minpower",
 
     packages=find_packages(),
     keywords=["power systems", "optimization"],
@@ -94,7 +94,7 @@ power systems tools made beautiful
 * Many solvers are supported.
 
 
-* `Full documentation and tutorials <http://minpowertoolkit.com>`_
+* `Full documentation and tutorials <http://adamgreenhall.github.io/minpower>`_
 * `Code base <http://github.com/adamgreenhall/minpower>`_
 
 """

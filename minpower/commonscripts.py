@@ -134,11 +134,11 @@ def correct_status(status):
 
 
 def elementwiseAdd(La, Lb):
-    return map(operator.add, La, Lb)
+    return list(map(operator.add, La, Lb))
 
 
 def transpose(listoflists):
-    return map(None, *listoflists)
+    return list(*listoflists)
 
 
 def flatten(listoflists):
@@ -152,7 +152,7 @@ def within(x, val=0, eps=1e-3):
 
 def replace_all(seq, obj, replacement):
     def with_index(seq):
-        for i in xrange(len(seq)):
+        for i in range(len(seq)):
             yield i, seq[i]
 
     for i, elem in with_index(seq):
@@ -165,7 +165,7 @@ def pairwise(iterable):
     "s -> (s0,s1), (s1,s2), (s2, s3), ..."
     a, b = itertools.tee(iterable)
     next(b, None)
-    return itertools.izip(a, b)
+    return list(zip(a, b))
 
 ##### csv stuff #####
 
@@ -191,7 +191,7 @@ def convert_str2num(s):
 
 
 def indexCaseSpaceInsensitive(L, s):
-    return map(drop_case_spaces, L).index(drop_case_spaces(s))
+    return list(map(drop_case_spaces, L)).index(drop_case_spaces(s))
 
 
 def drop_case_spaces(s):
@@ -202,7 +202,7 @@ def drop_case_spaces(s):
         if s is None:
             return None
         elif isinstance(s, list):
-            return map(drop_case_spaces, s)
+            return list(map(drop_case_spaces, s))
 
 
 def to_percent(val, digits=0):
@@ -248,12 +248,12 @@ def update_attributes(instance, variables, exclude=['self'], include=None):
     include: Variables to explicitly include. If set, include overides exclude.
     """
     if include is not None:
-        [setattr(instance, k, v) for k, v in variables.items() if k in include]
+        [setattr(instance, k, v) for k, v in list(variables.items()) if k in include]
     else:
         if 'self' not in exclude:
             exclude.append('self')
         [setattr(
-            instance, k, v) for k, v in variables.items() if k not in exclude]
+            instance, k, v) for k, v in list(variables.items()) if k not in exclude]
 
 
 def debug_frame_unequal(left, right, tol=1e-5):
@@ -262,6 +262,6 @@ def debug_frame_unequal(left, right, tol=1e-5):
     cols = different.columns[different.any()]
     idx = different.ix[different.any(axis=1)].index
 
-    print(left[cols].ix[idx])
-    print(right[cols].ix[idx])
+    print((left[cols].ix[idx]))
+    print((right[cols].ix[idx]))
     return cols, idx

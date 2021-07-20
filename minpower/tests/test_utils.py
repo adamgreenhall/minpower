@@ -30,9 +30,9 @@ def reset_config():
     try:
         assert(user_config == default_config)
     except:
-        print DataFrame(dict(
+        print((DataFrame(dict(
             config=Series(user_config),
-            default=Series(default_config)))
+            default=Series(default_config)))))
         raise
 
 singletime = schedule.just_one_time()

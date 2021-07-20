@@ -9,10 +9,10 @@ optimization framework from :class:`~optimization.OptimizationObject`.
 
 import logging
 
-from commonscripts import update_attributes, getattrL, flatten
-from config import user_config
-from optimization import value, OptimizationObject, OptimizationProblem, OptimizationError
-import stochastic
+from .commonscripts import update_attributes, getattrL, flatten
+from .config import user_config
+from .optimization import value, OptimizationObject, OptimizationProblem, OptimizationError
+from . import stochastic
 
 from pyomo.environ import Block
 import numpy as np
@@ -259,7 +259,7 @@ class PowerSystem(OptimizationProblem):
         self.add_children(lines, 'lines')
 
         self.is_stochastic = len(
-            filter(lambda gen: gen.is_stochastic, generators)) > 0
+            [gen for gen in generators if gen.is_stochastic]) > 0
         self.shedding_mode = False
 
     def make_buses_list(self, loads, generators):
@@ -382,17 +382,17 @@ class PowerSystem(OptimizationProblem):
         return sum(gen.schedule for gen in self.generators() if not gen.is_controllable)
 
     def get_generators_controllable(self):
-        return filter(lambda gen: gen.is_controllable, self.generators())
+        return [gen for gen in self.generators() if gen.is_controllable]
 
     def get_generators_noncontrollable(self):
-        return filter(lambda gen: not gen.is_controllable, self.generators())
+        return [gen for gen in self.generators() if not gen.is_controllable]
 
     def get_generators_without_scenarios(self):
-        return filter(lambda gen: getattr(gen, 'is_stochastic', False) == False, self.generators())
+        return [gen for gen in self.generators() if getattr(gen, 'is_stochastic', False) == False]
 
     def get_generator_with_scenarios(self):
-        gens = filter(lambda gen: getattr(gen, 'is_stochastic',
-                                          False), self.generators())
+        gens = [gen for gen in self.generators() if getattr(gen, 'is_stochastic',
+                                          False)]
         if len(gens) > 1:  # pragma: no cover
             raise NotImplementedError(
                 'Dont handle the case of multiple stochastic generators')
@@ -402,7 +402,7 @@ class PowerSystem(OptimizationProblem):
             return gens[0]
 
     def get_generator_with_observed(self):
-        return filter(lambda gen: getattr(gen, 'observed_values', None) is not None, self.generators())[0]
+        return [gen for gen in self.generators() if getattr(gen, 'observed_values', None) is not None][0]
 
     def get_finalconditions(self, sln):
         times = sln.times
@@ -489,13 +489,11 @@ class PowerSystem(OptimizationProblem):
 
     def _set_load_shedding(self, to_mode):
         '''set system mode for load shedding'''
-        for load in filter(lambda ld:
-                           ld.sheddingallowed, self.loads()):
+        for load in [ld for ld in self.loads() if ld.sheddingallowed]:
             load.shedding_mode = to_mode
 
     def _set_gen_shedding(self, to_mode):
-        for gen in filter(lambda g:
-                          not g.is_controllable and g.sheddingallowed, self.generators()):
+        for gen in [g for g in self.generators() if not g.is_controllable and g.sheddingallowed]:
             gen.shedding_mode = to_mode
 
     def allow_shedding(self, times, resolve=False):
@@ -518,8 +516,7 @@ class PowerSystem(OptimizationProblem):
                 pass
 
         if not user_config.economic_wind_shed:
-            for gen in filter(lambda gen: gen.shedding_mode,
-                              self.get_generators_noncontrollable()):
+            for gen in [gen for gen in self.get_generators_noncontrollable() if gen.shedding_mode]:
                 # create only the power_used var, don't reset the power param
                 gen.create_variables_shedding(times)
                 gen.create_constraints(const_times)
@@ -591,7 +588,7 @@ class PowerSystem(OptimizationProblem):
         try:
             self.solve()
         except OptimizationError:
-            faststarts = map(lambda gen: str(gen), filter(lambda gen: gen.faststart, self.generators()))
+            faststarts = [str(gen) for gen in [gen for gen in self.generators() if gen.faststart]]
             # at least one faststarting unit must be available (off)
             if user_config.faststart_resolve and \
                     (sln.expected_status[faststarts] == 0).any().any():
@@ -650,8 +647,7 @@ class PowerSystem(OptimizationProblem):
         only for system security, not economics
         '''
         names = []
-        for gen in filter(lambda gen:
-                          (not gen.faststart) and gen.is_controllable, self.generators()):
+        for gen in [gen for gen in self.generators() if (not gen.faststart) and gen.is_controllable]:
             names.append(gen.status().name)
             if fix_power:
                 names.append(gen.power().name)
@@ -679,15 +675,13 @@ class PowerSystem(OptimizationProblem):
                 scenarios.index = scheduled.index
 
                 scheduled['net_load'] = scheduled['load'] - sum(
-                    map(lambda gen: gen.schedule,
-                        filter(lambda gen: not gen.is_stochastic,
-                               self.get_generators_noncontrollable())))
+                    [gen.schedule for gen in [gen for gen in self.get_generators_noncontrollable() if not gen.is_stochastic]])
 
                 gen_required = (-1 * scenarios).add(scheduled.net_load, axis=0)
 
                 print('generation required')
                 print(gen_required)
-                print(gen_required.describe())
+                print((gen_required.describe()))
 
             else:
                 if any([hasattr(gen, 'schedule') for gen in self.generators()]):
@@ -698,7 +692,7 @@ class PowerSystem(OptimizationProblem):
                 scheduled['net_required'] = scheduled['load'] - \
                     scheduled.generation
 
-        print 'total scheduled\n', scheduled
+        print(('total scheduled\n', scheduled))
 
         if resolve_sln:
             committed = pd.DataFrame(dict(
@@ -709,34 +703,32 @@ class PowerSystem(OptimizationProblem):
                 rampratemax=[getattr(gen, 'rampratemax',
                                      None) for gen in generators],
             )).T
-            print 'generator limits\n', committed
+            print(('generator limits\n', committed))
         else:
-            gens = filter(lambda gen:
-                          gen.is_controllable and gen.initial_status == 1,
-                          self.generators())
+            gens = [gen for gen in self.generators() if gen.is_controllable and gen.initial_status == 1]
             committed = pd.Series(dict(
                 Pmin=sum(gen.pmin for gen in gens),
                 Pmax=sum(gen.pmax for gen in gens),
                 rampratemin=pd.Series(gen.rampratemin for gen in gens).sum(),
                 rampratemax=pd.Series(gen.rampratemax for gen in gens).sum(),
             ))
-            print 'total committed\n', committed
+            print(('total committed\n', committed))
 
         if resolve_sln:
-            print 'expected status'
+            print('expected status')
             if len(resolve_sln.generators_status.columns) < 5:
-                print(resolve_sln.generators_status)
+                print((resolve_sln.generators_status))
             else:
-                print(resolve_sln.generators_status.sum(axis=1))
+                print((resolve_sln.generators_status.sum(axis=1)))
             ep = resolve_sln.generators_power
             ep['net_required'] = scheduled.net_required.values
             print('expected power')
             if len(ep.columns) < 5:
                 print(ep)
             else:
-                print(ep.sum(axis=1))
+                print((ep.sum(axis=1)))
         else:
-            print 'initial_status\n'
-            print pd.Series([gen.initial_status for gen in self.generators()])
+            print('initial_status\n')
+            print((pd.Series([gen.initial_status for gen in self.generators()])))
 
         return scheduled, committed

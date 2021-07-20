@@ -1,7 +1,7 @@
 import numpy as np
-from commonscripts import update_attributes, pairwise
-from optimization import value, OptimizationObject
-from config import user_config
+from .commonscripts import update_attributes, pairwise
+from .optimization import value, OptimizationObject
+from .config import user_config
 import re
 from pyomo.environ import Piecewise
 
@@ -125,10 +125,10 @@ class Bid(OptimizationObject):
         if (self.is_pwl or force_linear) and not self.is_linear:
             if not self.is_pwl and self.bid_points is None:
                 # construct the bid points
-                bid_pt_outputs = map(lambda pt: polynomial_value(
-                    self.polynomial, pt), self.discrete_input_points)
-                self.bid_points = zip(
-                    self.discrete_input_points, bid_pt_outputs)
+                bid_pt_outputs = [polynomial_value(
+                    self.polynomial, pt) for pt in self.discrete_input_points]
+                self.bid_points = list(zip(
+                    self.discrete_input_points, bid_pt_outputs))
 
             for A, B in pairwise(self.bid_points.values.tolist()):
                 if A[0] <= input_val <= B[0]:
@@ -262,7 +262,7 @@ def parse_polynomial(s):
     highest_order = max(
         max(order_multipliers.keys()), 1)  # order must be at least linear
     multipliers = [0] * (highest_order + 1)
-    for key, val in order_multipliers.items():
+    for key, val in list(order_multipliers.items()):
         multipliers[key] = val
 
     return multipliers

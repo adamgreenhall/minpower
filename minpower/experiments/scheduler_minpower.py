@@ -86,7 +86,7 @@ def main():
         return s
     # make a big chain of args
     minpower_call.extend(sorted(
-        [arg2str(k, v) for k, v in minpower_args.iteritems() if
+        [arg2str(k, v) for k, v in list(minpower_args.items()) if
             (k == 'directory') or (
                 (k in default_minpower_config) and
                 (v != default_minpower_config[k])
@@ -100,8 +100,8 @@ def main():
     elif mode == 'nohup':
         scheduler_call = ['nohup']
         if args.dry_run:
-            print("would have opened files to write" +
-                  "\n\tstdout: {p}.out\n\tstderr: {p}.err".format(p=os.getpid()))
+            print(("would have opened files to write" +
+                  "\n\tstdout: {p}.out\n\tstderr: {p}.err".format(p=os.getpid())))
         else:
             stdout = open('{}.out'.format(os.getpid()), 'w')
             stderr = open('{}.err'.format(os.getpid()), 'w')
@@ -124,7 +124,7 @@ def main():
             # write to the same script, but comment out the original call
             script_name = './{}.sh'.format(minpower_args['pid'])
             if args.dry_run:
-                print('would have commented out the original call in {}'.format(script_name))
+                print(('would have commented out the original call in {}'.format(script_name)))
             else:
                 with open(script_name, 'r') as f:
                     old_script = '\n'.join(
@@ -138,9 +138,9 @@ def main():
             script_name = './{}.sh'.format(os.getpid())
             script_mode = 'w+'
         if args.dry_run:
-            print('would have written script {f}: \n{c}'.format(
+            print(('would have written script {f}: \n{c}'.format(
                 f=script_name,
-                c=' '.join(minpower_call)))
+                c=' '.join(minpower_call))))
         else:
             with open(script_name, script_mode) as f:
                 f.write(' '.join(minpower_call))
@@ -148,10 +148,10 @@ def main():
 
     # actually make the call
     if args.dry_run:
-        print('would have executed as a {p}:\n{c}'.format(
+        print(('would have executed as a {p}:\n{c}'.format(
             p='child process' if mode == 'pass' else 'subprocess',
             c=' '.join((scheduler_call + minpower_call))
-        ))
+        )))
     else:
         if mode == 'pass':
             subprocess.call(scheduler_call + minpower_call)
@@ -164,8 +164,8 @@ def main():
                                    ).pid
 
     if args.verbose:
-        print 'parent process {}'.format(os.getpid())
-        print 'starting run {}'.format(pid)
+        print(('parent process {}'.format(os.getpid())))
+        print(('starting run {}'.format(pid)))
 
 
 if __name__ == '__main__':

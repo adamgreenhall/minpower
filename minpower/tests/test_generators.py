@@ -10,7 +10,7 @@ from pandas.util.testing import assert_series_equal
 from minpower.generators import Generator_nonControllable, Generator_Stochastic
 from minpower.optimization import value
 from minpower.schedule import TimeIndex
-from test_utils import *
+from .test_utils import *
 
 
 @istest
@@ -61,7 +61,7 @@ def ramp_up():
     ]
     initial = [{'power': 250}, {'power': 250}]
     _, times = solve_problem(generators, gen_init=initial, **make_loads_times(Pdt=[250, 350]))
-    print generators[1]._parent_problem()
+    print((generators[1]._parent_problem()))
     assert generators[0].power(times[1]) - generators[0].power(times[0]) == ramp_limit
 
 

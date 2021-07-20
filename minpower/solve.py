@@ -14,13 +14,13 @@ import time as timer
 import argparse
 import pdb
 
-from config import user_config, parse_command_line_config
-from commonscripts import joindir, StreamToLogger
-import powersystems
-import get_data
-import stochastic
-import results
-from standalone import store_times, init_store, get_storage, repack_storage
+from .config import user_config, parse_command_line_config
+from .commonscripts import joindir, StreamToLogger
+from . import powersystems
+from . import get_data
+from . import stochastic
+from . import results
+from .standalone import store_times, init_store, get_storage, repack_storage
 
 
 def _set_store_filename(pid=None):
@@ -73,7 +73,7 @@ def solve_multistage_standalone(power_system, times, scenario_tree, data):
 
 def standaloneUC():
     '''the hook for the ``standalone_minpower`` script'''
-    from standalone import store_state, load_state
+    from .standalone import store_state, load_state
 
     parser = argparse.ArgumentParser()
     parser.add_argument('directory', type=str, help='the problem direcory')
@@ -285,7 +285,7 @@ def main():
         raise OSError(msg)
 
     if args['profile']:
-        print 'run profile'
+        print('run profile')
         import cProfile
         prof = cProfile.Profile()
         prof.runcall(solve_problem, directory)

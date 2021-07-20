@@ -3,7 +3,7 @@ Time and schedule related models.
 """
 
 from datetime import timedelta, datetime
-from commonscripts import *
+from .commonscripts import *
 from operator import attrgetter
 
 

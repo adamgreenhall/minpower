@@ -14,4 +14,4 @@ def check_pmin():
     generators, loads, _, times, _, data = parsedir()
 
     assert(data['generators'].pmin.tolist() ==
-           map(lambda gen: gen.pmin, generators))
+           [gen.pmin for gen in generators])

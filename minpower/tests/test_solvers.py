@@ -1,7 +1,7 @@
 '''Test the all of the solver links'''
 
 from minpower import optimization, config
-from test_utils import *
+from .test_utils import *
 from pyomo import environ as pyomo
 
 
@@ -47,7 +47,7 @@ def run_one_solver(solver_name):
         tracker.stats.print_summary()
         # HtmlStats(tracker=tracker).create_html('profile-simple-problem.html')
         models_left = objgraph.by_type('ConcreteModel')
-        print models_left
+        print(models_left)
         objgraph.show_backrefs(models_left, filename='backrefs-simple-problem.png')
 
     config.user_config.duals = True

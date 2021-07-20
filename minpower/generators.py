@@ -1,11 +1,11 @@
 import pandas as pd
 import logging
-from config import user_config
-from commonscripts import update_attributes, bool_to_int
+from .config import user_config
+from .commonscripts import update_attributes, bool_to_int
 
-from optimization import value, OptimizationObject
-from schedule import is_init
-import bidding
+from .optimization import value, OptimizationObject
+from .schedule import is_init
+from . import bidding
 
 
 class Generator(OptimizationObject):
@@ -394,13 +394,13 @@ class Generator(OptimizationObject):
 
                 # min up time
                 if t >= min_up_intervals_remaining_init and self.minuptime > 0:
-                    no_shut_down = range(t, min(tEnd, t + min_up_intervals))
+                    no_shut_down = list(range(t, min(tEnd, t + min_up_intervals)))
                     min_up_intervals_remaining = min(tEnd - t, min_up_intervals)
                     E = sum([self.status(times[s]) for s in no_shut_down]) >= min_up_intervals_remaining * self.status_change(t, times)
                     self.add_constraint('min up time', time, E)
                 # min down time
                 if t >= min_down_intervals_remaining_init and self.mindowntime > 0:
-                    no_start_up = range(t, min(tEnd, t + min_down_intervals))
+                    no_start_up = list(range(t, min(tEnd, t + min_down_intervals)))
                     min_down_intervals_remaining = min(
                         tEnd - t, min_down_intervals)
                     E = sum([1 - self.status(times[s]) for s in no_start_up]) >= min_down_intervals_remaining * -1 * self.status_change(t, times)
@@ -595,7 +595,7 @@ class Generator_Stochastic(Generator_nonControllable):
         # with axes: day, scenario, {prob, [hours]}
         # the panel has items which are dates
         return self.scenario_values[times.Start.date()][
-            range(len(times))].ix[s].dropna().values.tolist()
+            list(range(len(times)))].ix[s].dropna().values.tolist()
 
     def _get_scenario_probabilities(self, times):
         # if any of the scenario values are defined, we want them
@@ -609,7 +609,7 @@ class Generator_Stochastic(Generator_nonControllable):
         if self.is_stochastic:
             # initialize parameter set to first scenario value
             scenario_one = self._get_scenario_values(times, s=0)
-            self.add_parameter('power', index=times.set, values=dict(zip(times, scenario_one)))
+            self.add_parameter('power', index=times.set, values=dict(list(zip(times, scenario_one))))
         else:
             # set to forecast values
             self.add_parameter('power', index=times.set,

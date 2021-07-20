@@ -4,7 +4,7 @@ Stochastic scenario models for schedules.
 from pyomo.environ import AbstractModel, Set, Param, Boolean, Var
 from pyomo.pysp.scenariotree import ScenarioTree
 from pyomo.pysp.ef import create_ef_instance
-from config import user_config
+from .config import user_config
 import gc
 import logging
 
@@ -17,7 +17,7 @@ def construct_simple_scenario_tree(power_system, times, time_stage=None):
 
     tree = new_scenario_tree_model()
 
-    prob_set = range(len(probabilities))
+    prob_set = list(range(len(probabilities)))
     if time_stage is None:
         scenario_names = ['s{n}'.format(n=n) for n in prob_set]
         node_names = ['n{n}'.format(n=n) for n in prob_set]
@@ -71,8 +71,7 @@ def define_stage_variables(power_system, times):
         # pysp to assign all the variables in the array to a shape
 
     if power_system.shedding_mode:
-        for gen in filter(lambda gen: gen.shedding_mode,
-                          power_system.get_generators_noncontrollable()):
+        for gen in [gen for gen in power_system.get_generators_noncontrollable() if gen.shedding_mode]:
             variables_second_stage.add(
                 str(gen.get_variable('power_used', time=None, indexed=True)) + '[*]')
         for load in power_system.loads():
@@ -100,7 +99,7 @@ def create_problem_with_scenarios(power_system, times):
 
     if not scenario_tree.validate():
         for s, scenario in enumerate(scenario_tree._scenarios):
-            print s, scenario
+            print((s, scenario))
         raise ValueError('not a valid scenario tree')
 
     gen = power_system.get_generator_with_scenarios()
@@ -145,7 +144,7 @@ def create_problem_with_scenarios(power_system, times):
     if len(times.post_horizon()) > 0:
         logging.debug('removing non-anticipatory constraints for post-commitment horizon')
     for time in times.post_horizon():
-        for scenario in scenario_instances.keys():
+        for scenario in list(scenario_instances.keys()):
             for gen in power_system.generators():
                 if not gen.is_controllable:
                     continue
@@ -163,7 +162,7 @@ def create_problem_with_scenarios(power_system, times):
 def get_scenario_based_costs(scenario_tree, scenario_instances):
     # scenario_tree.pprintCosts(scenario_instances)
     costs = dict()
-    for node in scenario_tree._tree_node_map.values():
+    for node in list(scenario_tree._tree_node_map.values()):
         scenarios = node._scenarios
         if len(scenarios) == 1:
             costs[node._scenarios[0]._name] = \
@@ -175,13 +174,13 @@ def get_scenario_based_costs(scenario_tree, scenario_instances):
 
 def update_variables(power_system, times):
     '''Convert all variables into dictionaries of their solved values, keyed by scenario'''
-    variable_names = power_system._model.active_components(Var).keys()
+    variable_names = list(power_system._model.active_components(Var).keys())
     values = dict([(nm, {}) for nm in variable_names])
-    for s, scenario in power_system._scenario_instances.items():
-        for var_name, var in scenario.active_components(Var).items():
+    for s, scenario in list(power_system._scenario_instances.items()):
+        for var_name, var in list(scenario.active_components(Var).items()):
             if var.is_indexed():
                 values[var_name][s] = dict(
-                    [(idx, var_val.value) for idx, var_val in var.iteritems()])
+                    [(idx, var_val.value) for idx, var_val in list(var.items())])
             else:
                 values[var_name][s] = var.value
     power_system._per_scenario_values = values

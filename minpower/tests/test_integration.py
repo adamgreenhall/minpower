@@ -9,7 +9,7 @@ from pandas.util.testing import assert_frame_equal, assert_series_equal
 
 from minpower.solve import solve_problem as solve_dir
 from minpower.config import user_config
-from test_utils import reset_config, with_setup
+from .test_utils import reset_config, with_setup
 
 
 def basic_checks(sln):

@@ -7,12 +7,12 @@ import logging
 import pandas as pd
 import numpy as np
 
-from commonscripts import (update_attributes, gen_time_dataframe, joindir,
+from .commonscripts import (update_attributes, gen_time_dataframe, joindir,
                            replace_all, getattrL, writeCSV, transpose, within, correct_status,
                            set_trace)
-from schedule import TimeIndex
-from optimization import value
-from config import user_config
+from .schedule import TimeIndex
+from .optimization import value
+from .config import user_config
 try:
     import matplotlib
     import matplotlib.pyplot as plot
@@ -212,7 +212,7 @@ class Solution(object):
                 out.append('')
 
         out.extend(self.info_cost())
-        print '\n'.join([str(o) for o in out])
+        print(('\n'.join([str(o) for o in out])))
 
     def info_status(self):
         return ['solved in {time:0.4f} sec'.format(time=self.solve_time)]
@@ -244,7 +244,7 @@ class Solution(object):
         lines = self.lines
         return ['line info:',
                 'connecting={}'.format(
-                    zip(getattrL(lines, 'frombus'), getattrL(lines, 'tobus'))),
+                    list(zip(getattrL(lines, 'frombus'), getattrL(lines, 'tobus')))),
                 'Pk={}'.format(self.get_values(lines, 'power', t)),
                 'price={}'.format(self.line_prices[str(t)])]
 
@@ -588,7 +588,7 @@ class Solution_UC_multistage(Solution_UC):
         out.extend(self.info_status())
         out.extend(self.info_cost())
         out.extend(self.info_shedding())
-        print '\n'.join(out)
+        print(('\n'.join(out)))
 
     def info_generators(self):
         return []
@@ -717,7 +717,7 @@ class Solution_Stochastic(Solution):
 
     def _calc_expected(self, panel):
         out = panel.copy()
-        for s, pr in self.probability.iteritems():
+        for s, pr in list(self.probability.items()):
             out[s] *= pr
         return out.sum(axis=0)
 
@@ -797,7 +797,7 @@ class Solution_Stochastic(Solution):
         out = ['']
         out.extend(['Solution information', '-' * 20])
         out.extend(self.info_cost())
-        print '\n'.join(out)
+        print(('\n'.join(out)))
 
 
 class Solution_Stochastic_UC(Solution_Stochastic):

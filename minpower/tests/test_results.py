@@ -1,4 +1,4 @@
-from test_utils import *
+from .test_utils import *
 from minpower.results import make_solution
 
 

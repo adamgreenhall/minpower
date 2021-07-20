@@ -13,7 +13,7 @@ benchmarks = []
 
 for modname in modules:
     ref = __import__(modname)
-    by_module[modname] = [v for v in ref.__dict__.values()
+    by_module[modname] = [v for v in list(ref.__dict__.values())
                           if isinstance(v, Benchmark)]
     benchmarks.extend(by_module[modname])
 
@@ -57,7 +57,7 @@ def make_plots(benchmarks):
     fig_base_path = os.path.join(vb_path, 'figures')
 
     if not os.path.exists(fig_base_path):
-        print 'creating %s' % fig_base_path
+        print('creating %s' % fig_base_path)
         os.makedirs(fig_base_path)
 
     for bmk in benchmarks:
@@ -76,6 +76,6 @@ def make_plots(benchmarks):
         
 if __name__ == '__main__':
     for bm in benchmarks:
-        print bm.name
-        print bm.get_results(DB_PATH)
+        print(bm.name)
+        print(bm.get_results(DB_PATH))
     make_plots(benchmarks)

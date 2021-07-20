@@ -10,15 +10,15 @@ from pandas import DataFrame, Timestamp, read_csv
 from glob import glob
 from collections import OrderedDict
 
-import powersystems
-from schedule import (just_one_time, get_schedule,
+from . import powersystems
+from .schedule import (just_one_time, get_schedule,
                       TimeIndex, make_constant_schedule)
-from commonscripts import (joindir, drop_case_spaces, set_trace)
+from .commonscripts import (joindir, drop_case_spaces, set_trace)
 
-from powersystems import PowerSystem
-from generators import (Generator,
+from .powersystems import PowerSystem
+from .generators import (Generator,
                         Generator_Stochastic, Generator_nonControllable)
-from config import user_config
+from .config import user_config
 
 import os
 import logging
@@ -329,7 +329,7 @@ def build_class_list(data, model, times=None, timeseries=None):
         try:
             obj = row_model(index=i, **kwds)
         except TypeError:
-            print '{} model got unexpected parameter'.format(model)
+            print(('{} model got unexpected parameter'.format(model)))
             raise
 
         all_models.append(obj)
@@ -417,7 +417,7 @@ def setup_times(generators_data, loads_data):
                     error * user_config.wind_error_multiplier
 
             if (timeseries[fcst_name] < 0).any():
-                print timeseries[fcst_name].describe()
+                print((timeseries[fcst_name].describe()))
                 logging.warning('Wind forecast must always be at least zero.')
                 timeseries[fcst_name][timeseries[fcst_name] < 0] = 0
 
@@ -439,8 +439,7 @@ def setup_times(generators_data, loads_data):
             raise NotImplementedError(
                 'wind capacity factor only works with one wind generator')
 
-        all_loads = timeseries[filter(lambda col: col.startswith('d'),
-                                      timeseries.columns)]
+        all_loads = timeseries[[col for col in timeseries.columns if col.startswith('d')]]
 
         capf_current = timeseries[obs_name].sum() / all_loads.sum(axis=1).sum()
 
@@ -509,19 +508,19 @@ def setup_scenarios(gen_data, generators, times):
 
     # make scenarios into a pd.Panel with axes: day, scenario, {prob, [hours]}
     scenario_values = pd.Panel(
-        items=alldata.keys(),
-        major_axis=range(max([len(dat) for dat in alldata.values()])),
-        minor_axis=['probability'] + range(hrs)
+        items=list(alldata.keys()),
+        major_axis=list(range(max([len(dat) for dat in list(alldata.values())]))),
+        minor_axis=['probability'] + list(range(hrs))
     )
 
-    for day, scenarios in alldata.iteritems():
+    for day, scenarios in list(alldata.items()):
         if 'probability' == scenarios.columns[-1]:
             # reoder so that probability is the first column
             scenarios = scenarios[
                 scenarios.columns[:-1].insert(0, 'probability')]
         # rename the times into just hour offsets
-        scenarios = scenarios.rename(columns=dict(zip(scenarios.columns,
-                                                      ['probability'] + range(len(scenarios.columns) - 1))))
+        scenarios = scenarios.rename(columns=dict(list(zip(scenarios.columns,
+                                                      ['probability'] + list(range(len(scenarios.columns) - 1))))))
 
         # and take the number of hours needed
         scenarios = scenarios[scenarios.columns[:1 + hrs]]

@@ -61,16 +61,16 @@ def get_results_df(db,rev):
     """Takes a git commit hash and returns a Dataframe of benchmark results
     """
     bench = DataFrame(db.get_benchmarks())
-    results = DataFrame(db.get_rev_results(rev).values())
+    results = DataFrame(list(db.get_rev_results(rev).values()))
 
     # Sinch vbench.db._reg_rev_results returns an unlabeled dict,
     # we have to break encapsulation a bit.
-    results.columns = db._results.c.keys()
+    results.columns = list(db._results.c.keys())
     results = results.join(bench['name'], on='checksum').set_index("checksum")
     return results
 
 def prprint(s):
-    print("*** %s"%s)
+    print(("*** %s"%s))
 
 def main():
     from pandas import DataFrame

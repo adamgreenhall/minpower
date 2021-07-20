@@ -2,7 +2,7 @@
 from minpower.generators import Generator
 from minpower.optimization import value
 from minpower.bidding import parse_polynomial
-from test_utils import *
+from .test_utils import *
 
 
 @istest

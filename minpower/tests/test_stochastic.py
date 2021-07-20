@@ -120,7 +120,7 @@ def stochastic_gen_shedding():
         scenario_values.items[0]].T.ix[:len(epower.major_axis) - 1] \
         .set_index(epower.major_axis) \
         .rename(
-            columns=dict(zip(range(len(sln.scenarios)), sln.scenarios)))
+            columns=dict(list(zip(list(range(len(sln.scenarios))), sln.scenarios))))
     # calculate wind shed per scenario
     wind_shed = scenario_values - epower.minor_xs('g0')
 

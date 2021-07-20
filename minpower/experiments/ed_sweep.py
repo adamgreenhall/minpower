@@ -16,7 +16,7 @@ import argparse
 
 def main(args):
     generators, loads, _, times, _, data = parsedir()
-    generators = filter(lambda gen: gen.is_controllable, generators)
+    generators = [gen for gen in generators if gen.is_controllable]
 
     gen_data = data['generators']
     if args['min'] == 0:
@@ -31,7 +31,7 @@ def main(args):
     committed_gen_names = Index([])
 
     for load_val in load_values:
-        print load_val
+        print(load_val)
         loads_times = make_loads_times(Pd=load_val)
         power_system, times = solve_problem(generators,
                                             do_reset_config=False, **loads_times)
@@ -48,7 +48,7 @@ def main(args):
     if (load_values[-1] == 0.99 * gen_data.pmax.sum()) and \
             (statuses.sum() != len(generators)):
         print('warning: uncommitted generation:')
-        print(gen_data.set_index('name').ix[statuses[statuses == 0].index])
+        print((gen_data.set_index('name').ix[statuses[statuses == 0].index]))
 
     results.to_csv(joindir(user_config.directory, 'ed_sweep.csv'))
 

@@ -9,11 +9,11 @@ import logging
 import sys
 import pandas as pd
 from pandas import Series, DataFrame
-from commonscripts import gen_time_dataframe, correct_status, debug_frame_unequal, set_trace
-from config import user_config
+from .commonscripts import gen_time_dataframe, correct_status, debug_frame_unequal, set_trace
+from .config import user_config
 
-from schedule import TimeIndex
-from get_data import parse_standalone
+from .schedule import TimeIndex
+from .get_data import parse_standalone
 import pkg_resources
 
 
@@ -49,7 +49,7 @@ def init_store(power_system, times, data):
     generators = power_system.generators()
 
     # store the problem info read from the spreadsheets
-    for key, df in data.iteritems():
+    for key, df in list(data.items()):
         if key != 'scenario_values':
             for k, v in (df.dtypes == object).iterkv():
                 if v:
@@ -87,8 +87,8 @@ def init_store(power_system, times, data):
     storage['observed_fuelcost'] = DataFrame()
 
     # setup one-per-stage results
-    storage['solve_time'] = Series(index=range(stages))
-    storage['mipgap'] = Series(index=range(stages))
+    storage['solve_time'] = Series(index=list(range(stages)))
+    storage['mipgap'] = Series(index=list(range(stages)))
 
     # store configuration
     storage['configuration'] = Series(user_config)

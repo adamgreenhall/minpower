@@ -44,7 +44,7 @@ def main(solver=config.user_config.solver):
         testDir = joindir(dirNm, fileNm)
         if not os.path.isdir(testDir):
             continue
-        print 'testing: ', fileNm
+        print(('testing: ', fileNm))
         wipeTestSlate(testDir)
         fResults = open(joindir(testDir, 'results.txt'), 'w+')
         fError = open(joindir(testDir, 'error.txt'), 'w+')
@@ -64,7 +64,7 @@ def main(solver=config.user_config.solver):
                 traceback.print_tb(exc_traceback, file=fError)
                 traceback.print_exception(exc_type, exc_value, exc_traceback, file=fError)
                 sys.stdout = sys.__stdout__  # switch back to standard outputting
-                print '\t had error'  # note that this dir produced error
+                print('\t had error')  # note that this dir produced error
     else:
         sys.stdout = sys.__stdout__  # switch back to standard outputting
 

@@ -4,8 +4,8 @@ Provide the defaults and configuration for other modules.
 """
 import os
 import sys
-from ConfigParser import SafeConfigParser
-from commonscripts import DotDict, joindir
+from configparser import SafeConfigParser
+from .commonscripts import DotDict, joindir
 
 parser = SafeConfigParser()
 parser.read([
@@ -95,7 +95,7 @@ def parser_value(parser, section, key, opt_type):
 def parse_config(parser):
     minpower_config = DotDict(
         dict([(k, parser_value(parser, 'minpower', k, v))
-              for k, v in option_types.iteritems()]))
+              for k, v in list(option_types.items())]))
 
     s = 'scheduler'
     scheduler_config = DotDict(dict(
@@ -117,7 +117,7 @@ for solver in parser.options('available_solvers'):
 
 
 def filter_non_defaults(x, defaults):
-    return dict((k, v) for k, v in x.iteritems() if
+    return dict((k, v) for k, v in list(x.items()) if
                 (k not in defaults) or (v != defaults[k])
                 )
 

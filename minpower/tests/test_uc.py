@@ -3,7 +3,7 @@ import random
 from minpower.generators import Generator
 import pandas as pd
 from pandas.util.testing import assert_frame_equal, assert_series_equal
-from test_utils import *
+from .test_utils import *
 
 
 @istest

@@ -5,10 +5,10 @@ Basically a wrapper around Coopr's `pyomo.ConcreteModel` class.
 import logging
 import time
 import weakref
-from commonscripts import quiet, not_quiet, update_attributes, joindir
+from .commonscripts import quiet, not_quiet, update_attributes, joindir
 from pyomo import environ as pyomo
 from pyomo.opt.base import solvers as cooprsolver
-from config import user_config
+from .config import user_config
 import pandas as pd
 
 # make pyomo recognize that True == 1
@@ -192,7 +192,7 @@ class OptimizationObject(object):
         self.children[name] = objects
         try:
             # if objects is actually a dictionary
-            for child in self.children[name].values():
+            for child in list(self.children[name].values()):
                 child._parent_problem = self._parent_problem
         except AttributeError:
             for child in self.children[name]:
@@ -214,7 +214,7 @@ class OptimizationObject(object):
             else:
                 return self.children[name][time]
         except KeyError:
-            print self.children.keys()
+            print((list(self.children.keys())))
             raise
     # def get_cost(self,times): return
     # self.objective+sum([child.get_cost(times) for child in self.children])
@@ -248,7 +248,7 @@ class OptimizationObject(object):
     def values(self, name, reindex=None):
         '''return the values of an indexed pyomo component as a Series'''
         var = self._parent_problem().get_component(self._id(name))
-        out = pd.Series(dict([(k, value(v)) for k, v in var.iteritems()]))
+        out = pd.Series(dict([(k, value(v)) for k, v in list(var.items())]))
         if reindex is not None:
             out.index = reindex
         return out
@@ -316,7 +316,7 @@ class OptimizationProblem(OptimizationObject):
             try:
                 return getattr(self._scenario_instances[scenario], name)
             except AttributeError:
-                print 'error getting ', name
+                print(('error getting ', name))
                 self._scenario_instances[scenario].pprint()
                 raise
 
@@ -342,15 +342,15 @@ class OptimizationProblem(OptimizationObject):
             #        piecewise models leak memory
             # keep until Coopr release integrates:
             # https://software.sandia.gov/trac/coopr/changeset/5781
-            for pw in instance.active_components(pyomo.Piecewise).values():
+            for pw in list(instance.active_components(pyomo.Piecewise).values()):
                 pw._constraints_dict = None
                 pw._vars_dict = None
                 pw._sets_dict = None
 
             # another memory leak
-            for key, var in instance.active_components(pyomo.Param).iteritems():
+            for key, var in list(instance.active_components(pyomo.Param).items()):
                 var._index = None
-            for key, var in instance.active_components(pyomo.Var).iteritems():
+            for key, var in list(instance.active_components(pyomo.Var).items()):
                 var.reset()
                 var._index = None
                 var._data = None
@@ -401,16 +401,16 @@ class OptimizationProblem(OptimizationObject):
         for item in items:
             if item not in components:
                 continue
-            keys = components[item].keys()
+            keys = list(components[item].keys())
             keys.sort()
-            print len(keys), item.__name__ + " Declarations"
+            print((len(keys), item.__name__ + " Declarations"))
             for key in keys:
                 components[item][key].pprint()
-            print ""
+            print("")
 
     def update_variables(self):
         '''Replace the variables with their numeric value.'''
-        for name, var in self._model.active_components(pyomo.Var).items():
+        for name, var in list(self._model.active_components(pyomo.Var).items()):
             try:
                 setattr(self._model, name, value(var))
             except ValueError:
@@ -555,18 +555,18 @@ class OptimizationProblem(OptimizationObject):
         _fix_variables(names, self._model)
 
     def _remove_all_constraints(self):
-        for key in self._model.active_components(pyomo.Constraint).keys():
+        for key in list(self._model.active_components(pyomo.Constraint).keys()):
             delattr(self._model, key)
 
 
 def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
     '''fix binary variables to their solved values to create an LP problem'''
     active_vars = instance.active_components(pyomo.Var)
-    for var in active_vars.values():
+    for var in list(active_vars.values()):
         if isinstance(var.domain, pyomo.base.IntegerSet) or \
                 isinstance(var.domain, pyomo.base.BooleanSet):
             if var.is_indexed():
-                for key, ind_var in var.iteritems():
+                for key, ind_var in list(var.items()):
                     if fix_offs or ind_var.value >= 1 - 1e-5:
                         # not quite integer values can create strange
                         # and often infeasible resolve problems
@@ -576,10 +576,7 @@ def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
                 if fix_offs or var.value == 1:
                     var.fixed = True
     if is_stochastic:
-        for scenario_block in filter(
-            lambda blk: type(blk) != pyomo.Piecewise,
-            instance.active_components(pyomo.Block).values()
-        ):
+        for scenario_block in [blk for blk in list(instance.active_components(pyomo.Block).values()) if type(blk) != pyomo.Piecewise]:
             _fix_binary_variables(scenario_block)
     # need to preprocess after fixing
     instance.preprocess()
@@ -587,10 +584,10 @@ def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
 
 def _fix_variables(names, instance):
     active_vars = instance.active_components(pyomo.Var)
-    for var in active_vars.values():
+    for var in list(active_vars.values()):
         if var.name in names:
             if var.is_indexed():
-                for key, ind_var in var.iteritems():
+                for key, ind_var in list(var.items()):
                     ind_var.fixed = True
             else:
                 var.fixed = True
@@ -599,9 +596,9 @@ def _fix_variables(names, instance):
 
 def _unfix_variables(instance):
     active_vars = instance.active_components(pyomo.Var)
-    for var in active_vars.values():
+    for var in list(active_vars.values()):
         if var.is_indexed():
-            for key, ind_var in var.iteritems():
+            for key, ind_var in list(var.items()):
                 ind_var.fixed = False
         else:
             var.fixed = False
@@ -629,7 +626,7 @@ def detect_status(results, solver):
     elif status_text in ['unknown', 'maxTimeLimit']:
         # max time limit - the solver may have reached a viable solution
         # unknown - an edge case encountered in resolves
-        success = len(results.Solution.Variable.keys()) > 0
+        success = len(list(results.Solution.Variable.keys())) > 0
     else:
         success = False
 
@@ -644,7 +641,7 @@ def get_objective(results, name='objective'):
     try:
         value = results.Solution.objective[name].value
     except AttributeError:
-        objs = results.Solution.objective.values()
+        objs = list(results.Solution.objective.values())
         value = [obj['Value'] for obj in objs if 'Value' in obj][0]
     return value
 

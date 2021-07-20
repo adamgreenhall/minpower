@@ -5,33 +5,15 @@
 # and then
 # seed release
 
-import sys
 from setuptools import setup, find_packages
 
-version_number = open('minpower/__init__.py').read().split('"')[1].rstrip('"')
-
-python_version = sys.version_info
-
-install_requires = [
-    'pyomo==4.0.9682',
-    'numpy==1.9.1',
-    'pandas==0.16',
-    ]
-
-if python_version[0] == 2 and python_version[1] < 7:
-    install_requires.append('ordereddict>=1.1')
-
-    # syntax changes currently result in failures on python 2.6
-    # https://github.com/adamgreenhall/minpower/issues/8
-    # https://travis-ci.org/adamgreenhall/minpower/jobs/4433662
-    sys.exit('minpower currently requires Python 2.7')
-
+version_number = open("minpower/__init__.py").read().split('"')[1].rstrip('"')
 
 setup(
     name="minpower",
     version=version_number,
-    download_url="https://github.com/adamgreenhall/minpower" +
-    "/zipball/v{v}".format(v=version_number),
+    download_url="https://github.com/adamgreenhall/minpower"
+    + "/zipball/v{v}".format(v=version_number),
     entry_points="""
     [console_scripts]
     minpower = minpower.solve:main
@@ -39,39 +21,32 @@ setup(
     scheduler_minpower = minpower.experiments.scheduler_minpower:main
     initial_dispatch = minpower.experiments.get_initial_dispatch:main
     """,
-
     package_data={
-        'minpower.configuration': ['minpower.cfg'],
-        'minpower.tests': [
-            '*.csv',
-            '*/*.csv',
-            '*/*/*.csv']},
-
-    install_requires=install_requires,
-
-    tests_require=[
-        'nose',
-        'coverage',
-        'objgraph'
-        ],
+        "minpower.configuration": ["minpower.cfg"],
+        "minpower.tests": ["*.csv", "*/*.csv", "*/*/*.csv"],
+    },
+    install_requires=[
+        "pyomo",
+        "numpy",
+        "pandas",
+    ],
+    tests_require=["nose", "coverage", "objgraph"],
     extras_require=dict(
         extras=[
-            'matplotlib==1.4.3',
-            'tables==3.1.1',
-            'numexpr==2.3.1',
-            'cython==0.20.1',
-            ],
-        ),
+            "matplotlib==1.4.3",
+            "tables==3.1.1",
+            "numexpr==2.3.1",
+            "cython==0.20.1",
+        ],
+    ),
     # it helps to have seed if you are going to make releases
     # but it is not required for setup
     description="power systems optimization made beautiful",
     author="Adam Greenhall",
     author_email="minpower@adamgreenhall.com",
     url="http://adamgreenhall.github.io/minpower",
-
     packages=find_packages(),
     keywords=["power systems", "optimization"],
-
     classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Other Environment",
@@ -83,7 +58,7 @@ setup(
         "Programming Language :: Python",
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Mathematics",
-        ],
+    ],
     long_description="""
 power systems tools made beautiful
 -----------------------------------------
@@ -97,5 +72,5 @@ power systems tools made beautiful
 * `Full documentation and tutorials <http://adamgreenhall.github.io/minpower>`_
 * `Code base <http://github.com/adamgreenhall/minpower>`_
 
-"""
+""",
 )

@@ -25,7 +25,7 @@ def api():
     os.system('sphinx-apidoc {proj}/minpower -o {proj}/doc/source/api'.format(proj=project_dir))
 
 def html():
-    print 'building to',build_dir
+    print('building to',build_dir)
     css()
     check_build()
     api()
@@ -34,7 +34,7 @@ def html():
         raise SystemExit("Building HTML failed.")
 
 def publish():
-    print 'publishing docs from ',build_dir
+    print('publishing docs from ',build_dir)
     current_dir = os.getcwd()
     os.chdir(build_dir)
     os.system('git commit -a')

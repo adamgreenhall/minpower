@@ -1,6 +1,6 @@
 '''Test for memory leaks'''
 from minpower import powersystems, solve
-from test_utils import solve_problem, make_loads_times
+from .test_utils import solve_problem, make_loads_times
 import objgraph
 import inspect
 
@@ -15,7 +15,7 @@ def show_memory_refs(name):
     try:
         obj = objgraph.by_type(name)[0]
     except IndexError:
-        print 'no object of type', name
+        print(('no object of type', name))
         return
     objgraph.show_chain(
         objgraph.find_backref_chain(obj, inspect.ismodule),

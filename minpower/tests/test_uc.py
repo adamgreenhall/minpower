@@ -1,4 +1,4 @@
-'''Test the higher level behavior of the unit commitment'''
+"""Test the higher level behavior of the unit commitment"""
 import random
 from minpower.generators import Generator
 import pandas as pd
@@ -9,30 +9,27 @@ from .test_utils import *
 @istest
 @with_setup(setup=get_duals, teardown=reset_config)
 def prices():
-    '''
-    Run a basic unit commitment. 
+    """
+    Run a basic unit commitment.
     Ensure that the correct LMPs are returned for all times.
-    '''
-    generators = [
-        make_cheap_gen(pmax=100),
-        make_mid_gen(pmax=20),
-        make_expensive_gen()
-    ]
+    """
+    generators = [make_cheap_gen(pmax=100), make_mid_gen(pmax=20), make_expensive_gen()]
 
-    power_system, times = solve_problem(generators, do_reset_config=False,
-                                        **make_loads_times(Pdt=[80, 110, 130]))
+    power_system, times = solve_problem(
+        generators, do_reset_config=False, **make_loads_times(Pdt=[80, 110, 130])
+    )
     lmps = [power_system.buses[0].price(t) for t in times]
 
-    assert lmps == [gen_costs['cheap'], gen_costs['mid'], gen_costs['expensive']]
+    assert lmps == [gen_costs["cheap"], gen_costs["mid"], gen_costs["expensive"]]
 
 
 @istest
 def rolling():
-    '''
+    """
     Run a basic unit commitment over 72hrs
     Ensure that the generation meets the load for each time.
-    '''
-    generators = [Generator(costcurveequation='10P+.01P^2')]
+    """
+    generators = [Generator(costcurveequation="10P+.01P^2")]
     Pdt = [random.randrange(0, 200) for i in range(0, 72)]
     power_system, times = solve_problem(generators, **make_loads_times(Pdt=Pdt))
     load = power_system.loads()[0]
@@ -43,22 +40,23 @@ def rolling():
 @istest
 @with_setup(teardown=reset_config)
 def load_shedding():
-    '''
+    """
     Create a single generator with a high limit.
     Create a load that exceeds that limit at t1.
     Ensure that:
     * Pdt1=Pgmax
     * Pshedt1 = Pdt1 - pmax
     * pricet1 = cost of load shedding
-    '''
+    """
 
     user_config.duals = True
     pmax = 100
     Pdt1 = 211
     generators = [make_cheap_gen(pmax=pmax)]
     Pdt = [110, Pdt1, 110]
-    power_system, times = solve_problem(generators, do_reset_config=False,
-                                        **make_loads_times(Pdt=Pdt))
+    power_system, times = solve_problem(
+        generators, do_reset_config=False, **make_loads_times(Pdt=Pdt)
+    )
     load = power_system.loads()[0]
     load_t1 = load.power(times[1], evaluate=True)
     load_t1_shed = load.shed(times[1], evaluate=True)
@@ -71,32 +69,35 @@ def load_shedding():
 @istest
 @with_setup(teardown=reset_config)
 def reserve_fixed_amount():
-    '''
+    """
     Create two generators, the cheaper one with a limit near the load.
     Require 50MW of reserve (which exceeds pmax of cheap)
     Ensure that: g2 is turned on to meet reserve req.
 
     Pg1+Pg2 = load
     Pavail1 + Pavail2 = load + reserve
-    '''
+    """
     reserve_req = 30.0
     user_config.reserve_fixed = reserve_req
 
     generators = [
         make_cheap_gen(pmax=100),
-        make_expensive_gen(pmin=0, pmax=300, costcurveequation='5000+30P')]
+        make_expensive_gen(pmin=0, pmax=300, costcurveequation="5000+30P"),
+    ]
     Pdt = [80, 90]
 
-    power_system, times = solve_problem(generators,
-                                        **make_loads_times(Pdt=Pdt))
-    total_power = [sum([value(gen.power(time)) for gen in generators]) for time in times]
-    total_available_power = [sum(value(gen.power_available(time))
-                                 for gen in generators) for time in times]
+    power_system, times = solve_problem(generators, **make_loads_times(Pdt=Pdt))
+    total_power = [
+        sum([value(gen.power(time)) for gen in generators]) for time in times
+    ]
+    total_available_power = [
+        sum(value(gen.power_available(time)) for gen in generators) for time in times
+    ]
 
-#    print load_t1 + reserve_req
-#    print [[value(gen.power(time)) for gen in generators] for time in times]
-#    print total_available_power
-#    print [reserve_req + Pd for Pd in Pdt]
+    #    print load_t1 + reserve_req
+    #    print [[value(gen.power(time)) for gen in generators] for time in times]
+    #    print total_available_power
+    #    print [reserve_req + Pd for Pd in Pdt]
 
     assert Pdt == total_power
     assert total_available_power >= [reserve_req + Pd for Pd in Pdt]
@@ -105,28 +106,32 @@ def reserve_fixed_amount():
 @istest
 @with_setup(teardown=reset_config)
 def startup_ramprate_default():
-    '''
+    """
     Create two generators with a high limit,
     one limited by Pmax, the other by rampratemax.
     Ensure that the second gen. is started up to its limit to minimize shed.
-    '''
+    """
 
     pmax = 100
     Pdt1 = 210
     generators = [
         make_cheap_gen(pmax=pmax),
-        make_expensive_gen(rampratemax=100,
-                           rampratemin=-200, pmin=95, pmax=200)
+        make_expensive_gen(rampratemax=100, rampratemin=-200, pmin=95, pmax=200),
     ]
-    initial = [{'power': 90}, {'status': 0}]
+    initial = [{"power": 90}, {"status": 0}]
     Pdt = [90, Pdt1, 90]
     power_system, times = solve_problem(
-        generators, gen_init=initial, **make_loads_times(Pdt=Pdt))
+        generators, gen_init=initial, **make_loads_times(Pdt=Pdt)
+    )
 
     # the expensive unit turns on
-    assert_series_equal(pd.Series([0.0, 1.0, 0.0], index=times.times),
-                        generators[1].values('status', times.times))
+    assert_series_equal(
+        pd.Series([0.0, 1.0, 0.0], index=times.times),
+        generators[1].values("status", times.times),
+    )
 
     # the minimum load was shed
-    assert_series_equal(pd.Series([0.0, 100.0, 0.0], index=times.times),
-                        generators[1].values('power', times.times))
+    assert_series_equal(
+        pd.Series([0.0, 100.0, 0.0], index=times.times),
+        generators[1].values("power", times.times),
+    )

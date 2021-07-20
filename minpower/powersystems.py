@@ -80,7 +80,7 @@ class Load(OptimizationObject):
         return 'd{ind}'.format(ind=self.index)
 
     def get_scheduled_output(self, time):
-        return float(self.schedule.ix[time])
+        return float(self.schedule.loc[time])
 
 
 class Line(OptimizationObject):
@@ -660,14 +660,14 @@ class PowerSystem(OptimizationProblem):
 
             scheduled = pd.DataFrame({
                 'expected_power': resolve_sln.generators_power.sum(axis=1).values,
-                'expected_wind': windgen.schedule.ix[times.non_overlap()],
-                'observed_wind': windgen.observed_values.ix[times.non_overlap()],
+                'expected_wind': windgen.schedule.loc[times.non_overlap()],
+                'observed_wind': windgen.observed_values.loc[times.non_overlap()],
             })
             scheduled['net_required'] = \
                 scheduled.expected_wind - scheduled.observed_wind
         else:
             scheduled = pd.DataFrame({
-                'load': self.total_scheduled_load().ix[times.strings.values]})
+                'load': self.total_scheduled_load().loc[times.strings.values]})
 
             if self.is_stochastic:
                 gen = self.get_generator_with_scenarios()
@@ -685,7 +685,7 @@ class PowerSystem(OptimizationProblem):
 
             else:
                 if any([hasattr(gen, 'schedule') for gen in self.generators()]):
-                    scheduled['generation'] = self.total_scheduled_generation().ix[times.strings.values]
+                    scheduled['generation'] = self.total_scheduled_generation().loc[times.strings.values]
                 else:
                     scheduled['generation'] = 0
 

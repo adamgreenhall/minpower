@@ -14,8 +14,8 @@ from .test_utils import reset_config, with_setup
 
 def basic_checks(sln):
     cost = sln.totalcost_generation
-    power = sln.generators_power.ix[cost.index]
-    status = sln.generators_status.ix[cost.index]
+    power = sln.generators_power.loc[cost.index]
+    status = sln.generators_status.loc[cost.index]
 
     # make sure that if status = 0 then power also = 0
     Pcheck = power * status
@@ -31,17 +31,19 @@ def basic_checks(sln):
         scheduled = sln.power_system.total_scheduled_load()
     except AttributeError:
         # look up the scheduled load from the timeseries data
-        loads = [col for col in
-                 sln.store['data_timeseries'].columns if col.startswith('d')]
-        scheduled = sln.store['data_timeseries'][loads].sum(axis=1)
+        loads = [
+            col for col in sln.store["data_timeseries"].columns if col.startswith("d")
+        ]
+        scheduled = sln.store["data_timeseries"][loads].sum(axis=1)
     try:
         scheduled.index = shed.index
     except AssertionError:
         # not the same length due to overlap
-        scheduled = scheduled.ix[scheduled.index[:len(shed)]]
+        scheduled = scheduled.loc[scheduled.index[: len(shed)]]
         scheduled.index = shed.index
 
     assert_series_equal(scheduled - shed, power.sum(axis=1))
+
 
 #    except:
 #        wind_gen = sln.power_system.get_generator_with_observed()
@@ -50,7 +52,7 @@ def basic_checks(sln):
 #            other_sched=sum(gen.schedule \
 #                for gen in sln.power_system.generators() \
 #                if not gen.is_controllable and gen != wind_gen)
-#            )).ix[:len(shed.index)]
+#            )).loc[:len(shed.index)]
 #        gen_scheduled.index = shed.index
 #
 #        print('controllable_requirement')
@@ -63,14 +65,14 @@ default_config = user_config.copy()
 
 
 def run_case(name, basedir=this_directory, **kwds):
-    '''
+    """
     a programatic way to do (nearly) the same thing
     as calling the minpower script
     (nearly: because prepends basedir to the directory name you are solving)
-    '''
+    """
     # reset user_config to defaults first
     user_config.update(default_config)
-    assert(user_config == default_config)
+    assert user_config == default_config
     user_config.breakpoints = 3  # for speedier testing
     user_config.update(kwds)
     sln = solve_dir(os.path.join(basedir, name))
@@ -80,22 +82,22 @@ def run_case(name, basedir=this_directory, **kwds):
 
 @istest
 def run_uc():
-    run_case('uc')
+    run_case("uc")
 
 
 @istest
 def run_uc_rolling():
-    run_case('uc-rolling')
+    run_case("uc-rolling")
 
 
 @istest
 def run_ed():
-    run_case('ed')
+    run_case("ed")
 
 
 @istest
 def run_opf():
-    run_case('opf')
+    run_case("opf")
 
 
 # just test that the visulizations all work
@@ -106,9 +108,9 @@ def ed_visualization():
     try:
         import matplotlib
     except ImportError:
-        raise nose.SkipTest('visualizations require matplotlib')
+        raise nose.SkipTest("visualizations require matplotlib")
 
-    run_case('ed', visualization=True)
+    run_case("ed", visualization=True)
 
 
 @istest
@@ -117,9 +119,9 @@ def opf_visualization():
     try:
         import matplotlib
     except ImportError:
-        raise nose.SkipTest('visualizations require matplotlib')
+        raise nose.SkipTest("visualizations require matplotlib")
 
-    run_case('opf', visualization=True)
+    run_case("opf", visualization=True)
 
 
 @istest
@@ -128,8 +130,8 @@ def uc_visualization():
     try:
         import matplotlib
     except ImportError:
-        raise nose.SkipTest('visualizations require matplotlib')
+        raise nose.SkipTest("visualizations require matplotlib")
 
-    duals = user_config.solver != 'glpk'
+    duals = user_config.solver != "glpk"
 
-    run_case('uc-rolling', visualization=True, duals=duals)
+    run_case("uc-rolling", visualization=True, duals=duals)

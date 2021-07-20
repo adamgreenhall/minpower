@@ -12,12 +12,12 @@ def get_schedule(filename):
 
 
 def make_times_basic(N):
-    '''make a :class:`schedule.TimeIndex` of N times with hourly interval'''
-    return TimeIndex(date_range('00:00:00', periods=N, freq='H'))
+    """make a :class:`schedule.TimeIndex` of N times with hourly interval"""
+    return TimeIndex(date_range("00:00:00", periods=N, freq="H"))
 
 
 def just_one_time():
-    '''make a TimeIndex with just one time in it'''
+    """make a TimeIndex with just one time in it"""
     return make_times_basic(1)
 
 
@@ -27,10 +27,10 @@ def make_constant_schedule(times, power=0):
 
 class TimeIndex(object):
 
-    '''a list of times (underlying model is pandas.Index)'''
+    """a list of times (underlying model is pandas.Index)"""
 
     def __init__(self, index, str_start=0):
-        strings = ['t%02d' % (i + str_start) for i in range(len(index))]
+        strings = ["t%02d" % (i + str_start) for i in range(len(index))]
         self.times = index.copy()
         self.strings = Series(strings, index=self.times)
         self._set = self.strings.values.tolist()
@@ -54,14 +54,14 @@ class TimeIndex(object):
             self.initialTime = initialTime
         else:
             self.initialTime = pd.Timestamp(self.Start - self.interval)
-            self.initialTime.index = 'Init'
-        self.initialTimestr = 'tInit'
+            self.initialTime.index = "Init"
+        self.initialTimestr = "tInit"
 
     def get_interval(self):
         freq = self.strings.index.freq
         if freq is not None:
             self.interval = freq
-            if self.interval.freqstr == 'H':
+            if self.interval.freqstr == "H":
                 self.intervalhrs = self.interval.n
             else:
                 self.intervalhrs = self.interval.nanos / 1.0e9 / 3600.0
@@ -93,15 +93,17 @@ class TimeIndex(object):
 
     def non_overlap(self):
         if self._int_overlap > 0:
-            return TimeIndex(self.strings.index[:-1 - self._int_overlap + 1], self._str_start)
+            return TimeIndex(
+                self.strings.index[: -1 - self._int_overlap + 1], self._str_start
+            )
         else:
             return self
         return
 
     def post_horizon(self):
         if len(self) > self._int_division + 1:
-            str_start = int(self.strings.ix[self._int_division + 1].strip('t'))
-            return TimeIndex(self.strings.index[self._int_division + 1:], str_start)
+            str_start = int(self.strings.loc[self._int_division + 1].strip("t"))
+            return TimeIndex(self.strings.index[self._int_division + 1 :], str_start)
         else:
             return Series()
         return
@@ -129,4 +131,4 @@ class TimeIndex(object):
 
 
 def is_init(time):
-    return getattr(time, 'index', None) == 'Init'
+    return getattr(time, "index", None) == "Init"

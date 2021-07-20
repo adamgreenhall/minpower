@@ -17,17 +17,20 @@ import pandas as pd
 from pandas import DataFrame, Series, date_range
 
 from pprint import pprint
+
 try:  # for development
     from ipdb import set_trace  # pudb
     import IPython
     from IPython.frontend.terminal.embed import InteractiveShellEmbed
-#    from IPython.config.loader import Config
-#
-#    cfg = Config()
-#    cfg.InteractiveShellEmbed.prompt_in1="myprompt [\\#]> "
-#    cfg.InteractiveShellEmbed.prompt_out="myprompt [\\#]: "
-#    cfg.InteractiveShellEmbed.profile=ipythonprofile
-    ipython_shell = InteractiveShellEmbed(
+
+    #    from IPython.config.loader import Config
+    #
+    #    cfg = Config()
+    #    cfg.InteractiveShellEmbed.prompt_in1="myprompt [\\#]> "
+    #    cfg.InteractiveShellEmbed.prompt_out="myprompt [\\#]: "
+    #    cfg.InteractiveShellEmbed.profile=ipythonprofile
+    ipython_shell = (
+        InteractiveShellEmbed()
     )  # config=cfg, user_ns=namespace, banner2=banner)
 except:
     from pdb import set_trace
@@ -42,7 +45,7 @@ class StreamToLogger(object):
     def __init__(self, logger=logging, log_level=logging.INFO):
         self.logger = logger
         self.log_level = log_level
-        self.linebuf = ''
+        self.linebuf = ""
 
     def write(self, buf):
         for line in buf.rstrip().splitlines():
@@ -84,9 +87,9 @@ def quiet():
 def gen_time_dataframe(generators, times, values=()):
     kwargs = dict(columns=[str(g) for g in generators])
     try:
-        kwargs['index'] = times.strings.index
+        kwargs["index"] = times.strings.index
     except AttributeError:
-        kwargs['index'] = times
+        kwargs["index"] = times
 
     if values:
         values = np.array(values)
@@ -96,14 +99,18 @@ def gen_time_dataframe(generators, times, values=()):
     else:
         df = DataFrame(**kwargs)
 
-    df.index.name = 'time'
+    df.index.name = "time"
     return df
 
 
-def ts_from_csv(filename, index_col=0, squeeze=True, timezone=None, is_df=True, **kwargs):
-    kwargs['header'] = 0 if is_df else None
+def ts_from_csv(
+    filename, index_col=0, squeeze=True, timezone=None, is_df=True, **kwargs
+):
+    kwargs["header"] = 0 if is_df else None
 
-    return pd.read_csv(filename, index_col=index_col, squeeze=squeeze, parse_dates=[0], **kwargs)
+    return pd.read_csv(
+        filename, index_col=index_col, squeeze=squeeze, parse_dates=[0], **kwargs
+    )
 
 
 def bool_to_int(x):
@@ -112,7 +119,7 @@ def bool_to_int(x):
 
 class DotDict(dict):
 
-    '''a dict with dot notation access'''
+    """a dict with dot notation access"""
 
     def __getattr__(self, attr):
         return self.get(attr)
@@ -122,6 +129,7 @@ class DotDict(dict):
 
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
+
 
 ###### matrix stuff #######
 
@@ -142,7 +150,7 @@ def transpose(listoflists):
 
 
 def flatten(listoflists):
-    '''Flatten one level of nesting'''
+    """Flatten one level of nesting"""
     return list(itertools.chain.from_iterable(listoflists))
 
 
@@ -167,14 +175,16 @@ def pairwise(iterable):
     next(b, None)
     return list(zip(a, b))
 
+
 ##### csv stuff #####
 
 
 def writeCSV(fields, data, filename):
-    with open(filename, 'w+') as f:
+    with open(filename, "w+") as f:
         writer = csv.writer(f)
         writer.writerow(fields)
         writer.writerows(data)
+
 
 #################### string stuff ##################
 
@@ -195,9 +205,9 @@ def indexCaseSpaceInsensitive(L, s):
 
 
 def drop_case_spaces(s):
-    '''get rid of spaces in a string and make lower case. will also work with list of strings'''
+    """get rid of spaces in a string and make lower case. will also work with list of strings"""
     try:
-        return s.lower().replace(' ', '').replace('_', '')
+        return s.lower().replace(" ", "").replace("_", "")
     except AttributeError:
         if s is None:
             return None
@@ -206,12 +216,12 @@ def drop_case_spaces(s):
 
 
 def to_percent(val, digits=0):
-    return '{p:.{d}%}'.format(p=val, d=digits)
+    return "{p:.{d}%}".format(p=val, d=digits)
 
 
 ##################### file stuff ###########################
 def splitFilename(fullPathFilenm):
-    '''split a filename into its directory, filename, and extension'''
+    """split a filename into its directory, filename, and extension"""
     (dirNm, fullFilenm) = os.path.split(fullPathFilenm)
     (fileNm, extNm) = os.path.splitext(fullFilenm)
     return dirNm, fileNm, extNm
@@ -219,6 +229,7 @@ def splitFilename(fullPathFilenm):
 
 def joindir(dir, file):
     return os.path.join(dir, file)
+
 
 ################### time stuff ###########################
 
@@ -229,15 +240,16 @@ def hours(t):
     except AttributeError:
         return datetime.timedelta(hours=t)  # t is a number
 
+
 ####################### class stuff #######################
 
 
-def getattrL(L, attribute='name'):
-    '''get the attribute of each class instance in a list'''
+def getattrL(L, attribute="name"):
+    """get the attribute of each class instance in a list"""
     return [getattr(item, attribute) for item in L]
 
 
-def update_attributes(instance, variables, exclude=['self'], include=None):
+def update_attributes(instance, variables, exclude=["self"], include=None):
     """Update instance attributes
 
     For example, update(self, locals())
@@ -250,18 +262,21 @@ def update_attributes(instance, variables, exclude=['self'], include=None):
     if include is not None:
         [setattr(instance, k, v) for k, v in list(variables.items()) if k in include]
     else:
-        if 'self' not in exclude:
-            exclude.append('self')
-        [setattr(
-            instance, k, v) for k, v in list(variables.items()) if k not in exclude]
+        if "self" not in exclude:
+            exclude.append("self")
+        [
+            setattr(instance, k, v)
+            for k, v in list(variables.items())
+            if k not in exclude
+        ]
 
 
 def debug_frame_unequal(left, right, tol=1e-5):
     diff = left - right
     different = diff[(diff < -tol) | (diff > tol)]
     cols = different.columns[different.any()]
-    idx = different.ix[different.any(axis=1)].index
+    idx = different.loc[different.any(axis=1)].index
 
-    print((left[cols].ix[idx]))
-    print((right[cols].ix[idx]))
+    print((left[cols].loc[idx]))
+    print((right[cols].loc[idx]))
     return cols, idx

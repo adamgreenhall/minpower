@@ -163,7 +163,7 @@ class Generator(OptimizationObject):
         if not self.is_controllable:
             return 0
 
-        end_status = stat.ix[stat.index[-1]]
+        end_status = stat.loc[stat.index[-1]]
 
         if (stat == end_status).all():
             intervals = len(stat)
@@ -175,7 +175,7 @@ class Generator(OptimizationObject):
             if len(noneq) == 0:
                 intervals = 0
             else:
-                intervals = len(stat.ix[noneq.index[-1]:]) - 1
+                intervals = len(stat.loc[noneq.index[-1]:]) - 1
 
             hrs = intervals * times.intervalhrs
 
@@ -542,7 +542,7 @@ class Generator_nonControllable(Generator):
         return sum(self.cost(time) for time in times)
 
     def get_scheduled_ouput(self, time):
-        return float(self.schedule.ix[time])
+        return float(self.schedule.loc[time])
 
     def set_power_to_observed(self, times):
         power = self.power_available()
@@ -595,7 +595,7 @@ class Generator_Stochastic(Generator_nonControllable):
         # with axes: day, scenario, {prob, [hours]}
         # the panel has items which are dates
         return self.scenario_values[times.Start.date()][
-            list(range(len(times)))].ix[s].dropna().values.tolist()
+            list(range(len(times)))].loc[s].dropna().values.tolist()
 
     def _get_scenario_probabilities(self, times):
         # if any of the scenario values are defined, we want them

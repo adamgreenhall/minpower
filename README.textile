@@ -12,12 +12,3 @@ h2. power systems optimization using python
 * "Full documentation and tutorials":http://adamgreenhall.github.io/minpower/
 
 Build Status !https://travis-ci.com/adamgreenhall/minpower.svg?branch=master!:https://travis-ci.com/adamgreenhall/minpower
-
-
-h1. installation
-
-python3 -m virtualenv venv
-source venv/bin/activate
-pip install -r requirements.txt
-brew install glpk
-

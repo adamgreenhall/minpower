@@ -33,7 +33,7 @@ def rolling():
     Pdt = [random.randrange(0, 200) for i in range(0, 72)]
     power_system, times = solve_problem(generators, **make_loads_times(Pdt=Pdt))
     load = power_system.loads()[0]
-    load_balanced = all(generators[0].power(t) == load.power(t) for t in times)
+    load_balanced = all(value(generators[0].power(t)) == load.power(t) for t in times)
     assert load_balanced
 
 

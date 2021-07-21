@@ -349,31 +349,21 @@ class OptimizationProblem(OptimizationObject):
             instances.append(self._stochastic_instance)
 
         for instance in instances:
-            #        piecewise models leak memory
+            # piecewise models leak memory
             # keep until Coopr release integrates:
             # https://software.sandia.gov/trac/coopr/changeset/5781
-            for pw in instance.component_objects(pyomo.Piecewise, active=True).values():
+            for pw in instance.component_objects(pyomo.Piecewise, active=True):
                 pw._constraints_dict = None
                 pw._vars_dict = None
                 pw._sets_dict = None
 
             # another memory leak
-            for key, var in instance.component_objects(
-                pyomo.Param, active=True
-            ).items():
+            for var in instance.component_objects(pyomo.Param, active=True):
                 var._index = None
-            for key, var in instance.component_objects(pyomo.Var, active=True).items():
-                var.reset()
+            for var in instance.component_objects(pyomo.Var, active=True):
                 var._index = None
                 var._data = None
-                # var._varval = None
-
-                # var = None
-                # if instance==self._stochastic_instance: debug()
-                delattr(instance, key)
-
-        #        debug()
-        # for stage in self._scenario_tree._stages
+                delattr(instance, var.name)
 
         if True and self.stochastic_formulation:
             # destroy scenario tree
@@ -567,8 +557,7 @@ class OptimizationProblem(OptimizationObject):
 
 def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
     """fix binary variables to their solved values to create an LP problem"""
-    active_vars = instance.component_objects(pyomo.Var, active=True)
-    for var in active_vars:
+    for var in instance.component_objects(pyomo.Var, active=True):
         if var.is_indexed():
             for ind_var in var.values():
                 if (
@@ -598,8 +587,7 @@ def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
 
 
 def _fix_variables(names, instance):
-    active_vars = instance.component_objects(pyomo.Var, active=True)
-    for var in list(active_vars.values()):
+    for var in instance.component_objects(pyomo.Var, active=True):
         if var.name in names:
             if var.is_indexed():
                 for key, ind_var in list(var.items()):

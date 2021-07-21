@@ -101,37 +101,20 @@ def run_opf():
 
 
 # just test that the visulizations all work
-# if matplotlib is installed
 @istest
 @with_setup(teardown=reset_config)
 def ed_visualization():
-    try:
-        import matplotlib
-    except ImportError:
-        raise nose.SkipTest("visualizations require matplotlib")
-
     run_case("ed", visualization=True)
 
 
 @istest
 @with_setup(teardown=reset_config)
 def opf_visualization():
-    try:
-        import matplotlib
-    except ImportError:
-        raise nose.SkipTest("visualizations require matplotlib")
-
     run_case("opf", visualization=True)
 
 
 @istest
 @with_setup(teardown=reset_config)
 def uc_visualization():
-    try:
-        import matplotlib
-    except ImportError:
-        raise nose.SkipTest("visualizations require matplotlib")
-
     duals = user_config.solver != "glpk"
-
     run_case("uc-rolling", visualization=True, duals=duals)

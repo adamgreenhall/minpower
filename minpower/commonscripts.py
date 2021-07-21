@@ -146,7 +146,7 @@ def elementwiseAdd(La, Lb):
 
 
 def transpose(listoflists):
-    return list(*listoflists)
+    return list(zip(*listoflists))
 
 
 def flatten(listoflists):

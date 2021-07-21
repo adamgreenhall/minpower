@@ -111,9 +111,10 @@ def three_buses():
     power_system, times = solve_problem(
         generators, do_reset_config=False, times=singletime, loads=loads, lines=lines
     )
-    num_lmps = len(set(b.price(times[0]) for b in power_system.buses))
     total_load = value(sum(b.Pload(times[0]) for b in power_system.buses))
-    assert total_load == sum(Pd) and num_lmps > 1
+    assert total_load == sum(Pd)
+    num_lmps = len(set(b.price(times[0]) for b in power_system.buses))
+    assert num_lmps > 1
 
 
 def test_config_cleared():

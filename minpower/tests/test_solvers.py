@@ -77,6 +77,13 @@ def glpk():
 
 
 @istest
+def cbc():
+    """Test the cbc solver on a simple problem"""
+    if "cbc" in config.available_solvers:
+        assert run_one_solver("cbc")
+
+
+@istest
 def gurobi():
     """Test the gurobi solver on a simple problem"""
     if "gurobi" in config.available_solvers:

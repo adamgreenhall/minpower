@@ -19,5 +19,5 @@ h1. installation
 python3 -m virtualenv venv
 source venv/bin/activate
 pip install -r requirements.txt
-brew install glpk
+brew install glpk cbc
 

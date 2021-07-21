@@ -18,6 +18,8 @@ default_config = user_config.copy()
 
 
 def get_duals():
+    # glpk has problems getting duals, so we're going to use cbc
+    user_config.solver = "cbc"
     user_config.duals = True
 
 

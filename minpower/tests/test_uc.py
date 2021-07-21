@@ -38,7 +38,7 @@ def rolling():
 
 
 @istest
-@with_setup(teardown=reset_config)
+@with_setup(get_duals, reset_config)
 def load_shedding():
     """
     Create a single generator with a high limit.
@@ -48,8 +48,6 @@ def load_shedding():
     * Pshedt1 = Pdt1 - pmax
     * pricet1 = cost of load shedding
     """
-
-    user_config.duals = True
     pmax = 100
     Pdt1 = 211
     generators = [make_cheap_gen(pmax=pmax)]

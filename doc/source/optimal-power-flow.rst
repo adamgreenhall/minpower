@@ -61,7 +61,7 @@ Example Solution
 
 The result is a plot (``powerflow.png``):
 
-    .. image:: ./_static/demos/powerflow/powerflow.png
+    .. image:: _static/demos/powerflow/powerflow.png
        :width: 500 px
 
 

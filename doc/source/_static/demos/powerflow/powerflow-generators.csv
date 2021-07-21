@@ -1,4 +1,4 @@
-generator name, u,    P,       IC
-cheap,          True,  0.667,   5.013334
-mid grade,      True, 57.6667,  8.153334
-expensive,      True, 41.6667, 10.833334
+generator name,u,P,IC
+cheap,1,4.49999999999931,5.0899999999999865
+mid grade,1,50.0,8.0
+expensive,1,45.5000000000003,10.910000000000005

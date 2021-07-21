@@ -10,7 +10,7 @@ Solver Choices
 * slow for large problems
 
 `CBC <https://projects.coin-or.org/Cbc>`_
--------------------------------------
+------------------------------------------
 
 * free
 * open source

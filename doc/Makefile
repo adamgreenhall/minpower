@@ -10,9 +10,21 @@ BUILDDIR      = _build
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 
-.PHONY: help clean html gh-pages dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest
+.PHONY: help clean html gh-pages dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest install
+
+source/creating-problems-table-generators.rst:
+	bash source/create-problems-tables.sh
+
+source/_static/demos/powerflow/powerflow.png:
+	minpower source/_static/demos/powerflow --visualization
+
+source/_static/demos/commitment/commitment.png:
+	minpower source/_static/demos/commitment --visualization
+
+../minpower/tests/uc-WW-5-2/commitment-power.csv:
+	minpower ../minpower/tests/uc-WW-5-2
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -36,7 +48,7 @@ help:
 clean:
 	-rm -rf $(BUILDDIR)/*
 
-html:
+html: source/creating-problems-table-generators.rst source/_static/demos/powerflow/powerflow.png ../minpower/tests/uc-WW-5-2/commitment-power.csv source/_static/demos/commitment/commitment.png
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
@@ -146,3 +158,10 @@ doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
+
+install:
+	brew install pandoc
+	pip install sphinx sphinx-rtd-theme
+
+server:
+	cd _build/html && python3 -m http.server

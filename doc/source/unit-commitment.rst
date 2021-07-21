@@ -72,9 +72,9 @@ For this example we have two generators, one named ``cheap`` (which produces ene
 But why doesn't the expensive generator turn back off at 6:00, when the load goes back down? It can't turn off that quickly - it has a minimum up time of 2hrs and a minimum output of 20MW. But why does the price go back down? It's complicated [#f1]_. 
 
 
-The data from the graph is also output in spreadsheet form (``commitment.csv``):
+The data from the graph is also output in spreadsheet form (``commitment-power.csv``):
 
-    .. literalinclude:: ../../minpower/tests/uc-WW-5-2/commitment.csv
+    .. literalinclude:: ../../minpower/tests/uc-WW-5-2/commitment-power.csv
 
 Unlike :doc:`ED <economic-dispatch>` and :doc:`OPF <optimal-power-flow>` results, this spreadsheet is not particularly easy to read. It is meant more for machines than for humans. The spreadsheet gives status and energy output for each generator, along with the system energy price, for each time.
 

@@ -58,11 +58,6 @@ Some recent talks and publications:
     unit-commitment
 
 .. toctree::
-    :maxdepth: 2
-
-    api/index
-
-.. toctree::
 
     collaborate
     about

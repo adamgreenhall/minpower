@@ -9,7 +9,7 @@ Installation
     #. `GLPK <http://www.gnu.org/s/glpk>`_ (`Win <http://gnuwin32.sourceforge.net/packages/glpk.htm>`_, `Mac <http://www.arnab-deka.com/posts/2010/02/installing-glpk-on-a-mac/>`_)
 
 1. Get Minpower
---------------
+----------------
 
 ``pip install minpower`` should work just fine, if you have python installed on your system (preferably python3).
 

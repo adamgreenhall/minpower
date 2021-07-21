@@ -14,7 +14,7 @@ What's good
     * is written in `Python <http://www.python.org/about/>`_
     * is :ref:`free <license>` and :ref:`open source <development>`
     * can use many :doc:`solvers <solvers>`
-    * has :abbr:`comparable solution times (For large problems optimization takes most of the solution time. Minpower farms out its optimization to CPLEX with little overhead. Test results coming soon.)` 
+    * has :abbr:`comparable solution times (For large problems optimization takes most of the solution time. Minpower farms out its optimization to CPLEX with little overhead.)` 
 
 
 Sounds great

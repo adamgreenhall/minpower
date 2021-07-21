@@ -100,7 +100,7 @@ Wishlist
 Collaboration 
 --------------
 
-For collaboration get in touch with Adam via `email <mailto:argreen@uw.edu>`_ or `@adamgreenhall <http://twitter.com/adamgreenhall>`_.
+For collaboration get in touch with Adam via `email <mailto:hello@adamgreenhall.com>`_.
 
 Help
 ------

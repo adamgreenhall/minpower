@@ -465,7 +465,6 @@ class Solution_OPF(Solution):
             node_size=1500,
             alpha=0.7,
             cmap=plot.cm.get_cmap("RdYlBu"),
-            fontsize=30,
         )
 
         # TODO: get colorbar label working again

@@ -460,7 +460,7 @@ class OptimizationProblem(OptimizationObject):
             logging.info("resolving fixed-integer LP for duals")
             _fix_binary_variables(instance)
 
-            results, elapsed = self._solve_instance(instance, get_duals=get_duals)
+            results, elapsed = self._solve_instance(instance, get_duals=True)
             self.solution_time += elapsed
             logging.debug("... LP problem solved")
 
@@ -539,8 +539,8 @@ class OptimizationProblem(OptimizationObject):
 
         return results, elapsed
 
-    def fix_binary_variables(self, fix_offs=True):
-        _fix_binary_variables(self._model, self.stochastic_formulation, fix_offs)
+    def fix_binary_variables(self):
+        _fix_binary_variables(self._model, self.stochastic_formulation)
 
     def _unfix_variables(self):
         _unfix_variables(self._model)
@@ -555,18 +555,13 @@ class OptimizationProblem(OptimizationObject):
             delattr(self._model, key)
 
 
-def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
+def _fix_binary_variables(instance, is_stochastic=False):
     """fix binary variables to their solved values to create an LP problem"""
     for var in instance.component_objects(pyomo.Var, active=True):
         if var.is_indexed():
             for ind_var in var.values():
-                if (
-                    (
-                        isinstance(ind_var.domain, pyomo.base.IntegerSet)
-                        or isinstance(ind_var.domain, pyomo.base.BooleanSet)
-                    )
-                    and fix_offs
-                    or (ind_var.value is not None and ind_var.value >= 1 - 1e-5)
+                if isinstance(ind_var.domain, pyomo.base.IntegerSet) or isinstance(
+                    ind_var.domain, pyomo.base.BooleanSet
                 ):
                     # not quite integer values can create strange
                     # and often infeasible resolve problems
@@ -575,8 +570,7 @@ def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
         elif isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(
             var.domain, pyomo.base.BooleanSet
         ):
-            if fix_offs or var.value == 1:
-                var.fixed = True
+            var.fixed = True
     if is_stochastic:
         for scenario_block in [
             blk

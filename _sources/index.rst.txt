@@ -1,3 +1,6 @@
+Minpower
+=========
+
 **Minpower** is an open source toolkit for
 :doc:`students<students>` and :doc:`researchers<researchers>` in power systems.
 It is designed to make working with :doc:`ED <economic-dispatch>`,
@@ -32,7 +35,7 @@ Some recent talks and publications:
 - `an introduction for the Wind Integration Research Lab <http://adamgreenhall.github.io/minpower/talk-2011-10-11-wirl/>`_
 
 
-
+More details:
 
 .. toctree::
     :maxdepth: 3

@@ -54,22 +54,13 @@ html: source/creating-problems-table-generators.rst source/_static/demos/powerfl
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 gh-pages: clean html
-	git checkout gh-pages
-	# git rm ../*.html
-	# git checkout HEAD
-	cp -r ./_build/html/* ..
-	# git add ../*.html
-	# git add ../_modules/*.html #recursive add module html files
-	# git add ../_modules/*/*.html # add module subdir html files
-	# git add ../api/*.html #add api html
-	# git add _static/default.css #add css
+	# this is probably easier if you have this branch checked out in a separate dir
+	cd ~/Documents/code/minpower-docs && git checkout gh-pages
+	# may want to remove things manually here
+	cp -r ~/Documents/code/minpower/_build/html/* .
+	# do your git add manually
 	git commit -m 'publishing'
-	rm -r ../_sources #get rid of sources folder
-	rm ../objects.inv #get rid of objects inventory
 	git push origin gh-pages
-	rm -r ../_static #get rid of static folder
-	@echo "to get back to work::: git checkout HEAD"
-	#git checkout master
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml

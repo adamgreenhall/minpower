@@ -5,15 +5,20 @@ Installation
 
     Basic full installation:
 
-    #. ``pip install minpower``
+    #. ``python3 -m pip install minpower``
     #. `GLPK <http://www.gnu.org/s/glpk>`_ (`Win <http://gnuwin32.sourceforge.net/packages/glpk.htm>`_, `Mac <http://www.arnab-deka.com/posts/2010/02/installing-glpk-on-a-mac/>`_)
 
-1. Get Minpower
+
+1. Get Python
+
+You'll need python3. Instructions for `Windows <https://docs.python-guide.org/starting/install3/win/>`_, `MacOS <https://docs.python-guide.org/starting/install3/osx/>`_, `Linux <https://docs.python-guide.org/starting/install3/linux/>`_ 
+
+2. Get Minpower
 ----------------
 
-``pip install minpower`` should work just fine, if you have python installed on your system (preferably python3).
+``python3 -m pip install minpower``
 
-3. Get a Solver
+2. Get a Solver
 ----------------
 
 Minpower has been tested with `GLPK <http://www.gnu.org/s/glpk>`_, `CBC <https://projects.coin-or.org/Cbc>`_, `Gurboi <http://gurobi.com>`_, and `CPLEX <http://www.ibm.com/software/integration/optimization/cplex-optimizer>`_.

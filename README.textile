@@ -18,4 +18,6 @@ h1. installation
 
 python3 -m virtualenv venv
 source venv/bin/activate
-pip install pyomo pandas
+pip install -r requirements.txt
+brew install glpk
+

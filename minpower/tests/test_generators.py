@@ -24,8 +24,8 @@ def power_maximum():
     pmax = 100
     Pd = 221
     generators = [make_cheap_gen(pmax=pmax), make_expensive_gen()]
-    power_system, times = solve_problem(generators, **make_loads_times(Pd))
-    assert generators[0].power(times[0]) == pmax
+    _, times = solve_problem(generators, **make_loads_times(Pd))
+    assert value(generators[0].power(times[0])) == pmax
 
 
 @istest
@@ -38,8 +38,8 @@ def power_minimum():
     pmin = 10
     Pd = 221
     generators = [make_cheap_gen(), make_expensive_gen(pmin=pmin)]
-    power_system, times = solve_problem(generators, **make_loads_times(Pd))
-    assert generators[1].power(times[0]) == pmin
+    _, times = solve_problem(generators, **make_loads_times(Pd))
+    assert value(generators[1].power(times[0])) == pmin
 
 
 @istest
@@ -56,7 +56,10 @@ def ramp_up():
         generators, gen_init=initial, **make_loads_times(Pdt=[250, 350])
     )
     print((generators[1]._parent_problem()))
-    assert generators[0].power(times[1]) - generators[0].power(times[0]) == ramp_limit
+    assert (
+        value(generators[0].power(times[1])) - value(generators[0].power(times[0]))
+        == ramp_limit
+    )
 
 
 @istest
@@ -92,7 +95,9 @@ def ramp_up_initial():
     _, times = solve_problem(
         generators, gen_init=initial, **make_loads_times(Pdt=[350, 350])
     )
-    ramp_rate = generators[0].power(times[0]) - generators[0].initial_power
+    ramp_rate = value(generators[0].power(times[0])) - value(
+        generators[0].initial_power
+    )
     assert ramp_rate == ramp_limit
 
 
@@ -110,7 +115,9 @@ def ramp_down_initial():
     _, times = solve_problem(
         generators, gen_init=initial, **make_loads_times(Pdt=[300, 300])
     )
-    ramp_rate = generators[1].power(times[0]) - generators[1].initial_power
+    ramp_rate = value(generators[1].power(times[0])) - value(
+        generators[1].initial_power
+    )
     assert ramp_rate == ramp_limit
 
 
@@ -184,7 +191,7 @@ def min_up_time():
     _, times = solve_problem(
         generators, gen_init=initial, **make_loads_times(Pdt=[85, 120, 80, 80])
     )
-    limgen_status = [generators[1].status(t) for t in times]
+    limgen_status = [value(generators[1].status(t)) for t in times]
     assert limgen_status == [0, 1, 1, 0] or limgen_status == [1, 1, 0, 0]
 
 
@@ -213,8 +220,8 @@ def min_down_time():
     _, times = solve_problem(
         generators, gen_init=initial, **make_loads_times(Pdt=[150, 10, 140, 140])
     )
-    limgen_status = [generators[1].status(t) for t in times]
-    expensive_status_t2 = generators[2].status(times[2])
+    limgen_status = [value(generators[1].status(t)) for t in times]
+    expensive_status_t2 = value(generators[2].status(times[2]))
     assert limgen_status == [1, 0, 0, 1] and expensive_status_t2 == 1
 
 
@@ -236,7 +243,7 @@ def start_up_cost():
     _, times = solve_problem(
         generators, gen_init=initial, **make_loads_times(Pdt=[80, 120])
     )
-    assert generators[1].cost_startup(times[1]) == startupcost
+    assert value(generators[1].cost_startup(times[1])) == startupcost
 
 
 @istest
@@ -257,7 +264,7 @@ def shut_down_cost():
     _, times = solve_problem(
         generators, gen_init=initial, **make_loads_times(Pdt=[150, 10])
     )
-    assert generators[1].cost_shutdown(times[1]) == shutdowncost
+    assert value(generators[1].cost_shutdown(times[1])) == shutdowncost
 
 
 @istest
@@ -277,7 +284,7 @@ def min_up_time_longer():
         gen_init=initial,
         **make_loads_times(Pdt=[85, 120, 80, 80, 70, 70, 70, 70, 80, 80])
     )
-    limgen_status = [generators[1].status(t) for t in times]
+    limgen_status = [value(generators[1].status(t)) for t in times]
     # logging.critical(limgen_status)
     # logging.critical([(generators[1].startup(t),generators[1].shutdown(t)) for t in times])
     # logging.critical(problem.constraints['minuptime_g1t01'])
@@ -309,10 +316,10 @@ def wind_shedding():
         make_expensive_gen(),
     ]
 
-    power_system, times = solve_problem(generators, **lts)
-    assert generators[0].power(times[2]) == 80
-    assert generators[0].power(times[3]) == 60
-    assert sum(generators[1].power(t).value for t in times) == 25 + 10 + 20
+    _, times = solve_problem(generators, **lts)
+    assert value(generators[0].power(times[2])) == 80
+    assert value(generators[0].power(times[3])) == 60
+    assert sum(value(generators[1].power(t)) for t in times) == 25 + 10 + 20
 
     # this should work for stochastic generators
     # TODO - a real stochastic test case
@@ -322,10 +329,10 @@ def wind_shedding():
         Generator_Stochastic(schedule=Pwind, sheddingallowed=True),
         make_expensive_gen(),
     ]
-    power_system, times = solve_problem(generators, **lts)
-    assert generators[0].power(times[2]) == 80
-    assert generators[0].power(times[3]) == 60
-    assert sum(generators[1].power(t).value for t in times) == 25 + 10 + 20
+    _, times = solve_problem(generators, **lts)
+    assert value(generators[0].power(times[2])) == 80
+    assert value(generators[0].power(times[3])) == 60
+    assert sum(value(generators[1].power(t)) for t in times) == 25 + 10 + 20
 
 
 @istest

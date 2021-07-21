@@ -71,7 +71,7 @@ def line_limit_low():
         lines=lines,
         **make_loads_times(Pd=225, bus="B")
     )
-    Pline = lines[0].power(times[0])
+    Pline = value(lines[0].power(times[0]))
     lmps = [b.price(times[0]) for b in power_system.buses]
     congestion_price = lines[0].price(times[0])
     assert Pline == pmin and congestion_price == -1 * (lmps[1] - lmps[0])

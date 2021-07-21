@@ -24,6 +24,9 @@ from .optimization import value
 from .config import user_config
 import matplotlib
 import matplotlib.pyplot as plot
+import logging
+
+logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 do_plotting = True
 

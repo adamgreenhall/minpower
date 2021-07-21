@@ -159,9 +159,7 @@ class OptimizationObject(object):
     def get_dual(self, cname, time=None):
         """get the dual of a constraint of an LP problem"""
         if user_config.duals:
-            return self._parent_problem()._model.dual.getValue(
-                self.get_constraint(cname, time)
-            )
+            return self._parent_problem()._model.dual[self.get_constraint(cname, time)]
         else:
             return None
 
@@ -420,13 +418,13 @@ class OptimizationProblem(OptimizationObject):
 
     def update_variables(self):
         """Replace the variables with their numeric value."""
-        for name, var in list(self._model.active_components(pyomo.Var).items()):
+        for var in self._model.active_components(pyomo.Var):
             try:
-                setattr(self._model, name, value(var))
+                setattr(self._model, var.name, value(var))
             except ValueError:
                 # for boolean sets this sometimes doesn't work due to rounding
                 if var.domain == pyomo.Boolean:
-                    setattr(self._model, name, round(value(var)))
+                    setattr(self._model, var.name, round(value(var)))
                 else:
                     raise
 
@@ -444,7 +442,7 @@ class OptimizationProblem(OptimizationObject):
         if self.stochastic_formulation:
             instance = self._stochastic_instance
         else:
-            instance = self._model.create()
+            instance = self._model
             logging.debug("... model created")
 
         results, elapsed = self._solve_instance(instance, solver)
@@ -462,8 +460,6 @@ class OptimizationProblem(OptimizationObject):
                     full_filename("unsolved-stochastic-instance.txt")
                 )
             raise OptimizationError("problem not solved")
-
-        instance.load(results, allow_consistent_values_for_fixed_vars=True)
         logging.debug("... solution loaded")
 
         if get_duals:
@@ -473,15 +469,13 @@ class OptimizationProblem(OptimizationObject):
 
             results, elapsed = self._solve_instance(instance, get_duals=get_duals)
             self.solution_time += elapsed
-
-            instance.load(results)
             logging.debug("... LP problem solved")
 
         if self.stochastic_formulation:
             self._scenario_tree.snapshotSolutionFromInstances(self._scenario_instances)
 
         self.objective = get_objective(
-            results, name="MASTER" if self.stochastic_formulation else "objective"
+            instance, name="MASTER" if self.stochastic_formulation else "objective"
         )
 
         # self.constraints = instance.active_components(pyomo.Constraint)
@@ -550,7 +544,7 @@ class OptimizationProblem(OptimizationObject):
             try:
                 self.mipgap = results.Solution[0]["Gap"]
                 logging.debug("solution gap={}".format(self.mipgap))
-            except AttributeError:
+            except (AttributeError, IndexError):
                 self.mipgap = None
 
         return results, elapsed
@@ -572,9 +566,11 @@ class OptimizationProblem(OptimizationObject):
 def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
     """fix binary variables to their solved values to create an LP problem"""
     active_vars = instance.active_components(pyomo.Var)
-    for var in list(active_vars.values()):
-        if isinstance(var.domain, pyomo.base.IntegerSet) or isinstance(
-            var.domain, pyomo.base.BooleanSet
+    for var in active_vars:
+        if (
+            var.is_indexed()
+            or isinstance(var.domain, pyomo.base.IntegerSet)
+            or isinstance(var.domain, pyomo.base.BooleanSet)
         ):
             if var.is_indexed():
                 for key, ind_var in list(var.items()):
@@ -593,8 +589,6 @@ def _fix_binary_variables(instance, is_stochastic=False, fix_offs=True):
             if type(blk) != pyomo.Piecewise
         ]:
             _fix_binary_variables(scenario_block)
-    # need to preprocess after fixing
-    instance.preprocess()
 
 
 def _fix_variables(names, instance):
@@ -606,7 +600,6 @@ def _fix_variables(names, instance):
                     ind_var.fixed = True
             else:
                 var.fixed = True
-    instance.preprocess()
 
 
 def _unfix_variables(instance):
@@ -653,14 +646,8 @@ def detect_status(results, solver):
     return success
 
 
-def get_objective(results, name="objective"):
-    value = 0
-    try:
-        value = results.Solution.objective[name].value
-    except AttributeError:
-        objs = list(results.Solution.objective.values())
-        value = [obj["Value"] for obj in objs if "Value" in obj][0]
-    return value
+def get_objective(instance, name="objective"):
+    return instance.objective.value
 
 
 class OptimizationError(Exception):

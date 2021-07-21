@@ -6,6 +6,7 @@ Also extract the time information and create all
     :class:`~schedule.Timelist` objects.
 """
 import pandas as pd
+import xarray as xr
 from pandas import DataFrame, Timestamp, read_csv
 from glob import glob
 from collections import OrderedDict
@@ -98,7 +99,7 @@ def parse_standalone(storage, times):
         scenario_values = storage["data_scenario_values"]
         gen.scenario_values = scenario_values
     else:
-        scenario_values = pd.Panel()
+        scenario_values = xr.DataArray()
 
     return power_system, times, scenario_values
 
@@ -499,7 +500,7 @@ def _parse_scenario_day(filename):
 def setup_scenarios(gen_data, generators, times):
 
     col = "scenariosdirectory"
-    scenario_values = pd.Panel()
+    scenario_values = xr.DataArray()
     if (
         user_config.deterministic_solve
         or user_config.perfect_solve
@@ -536,8 +537,9 @@ def setup_scenarios(gen_data, generators, times):
     # TODO - assumes one hour intervals!!
     hrs = user_config.hours_commitment + user_config.hours_overlap
 
-    # make scenarios into a pd.Panel with axes: day, scenario, {prob, [hours]}
-    scenario_values = pd.Panel(
+    # make scenarios into a xarray with axes: day, scenario, {prob, [hours]}
+    # FIXME: make this work
+    scenario_values = xr.DataArray(
         items=list(alldata.keys()),
         major_axis=list(range(max([len(dat) for dat in list(alldata.values())]))),
         minor_axis=["probability"] + list(range(hrs)),
@@ -565,6 +567,7 @@ def setup_scenarios(gen_data, generators, times):
         scenario_values[day] = scenarios
 
     if user_config.wind_multiplier != 1.0:
+        # FIXME: make this work
         scenario_values *= user_config.wind_multiplier
         svt = scenario_values.transpose(2, 1, 0)
         svt["probability"] *= 1 / user_config.wind_multiplier

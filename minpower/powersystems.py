@@ -500,7 +500,7 @@ class PowerSystem(OptimizationProblem):
 
     def resolve_stochastic_with_observed(self, instance, sln):
         s = sln.scenarios[0]
-        self._model = instance.active_components(Block)[s]
+        self._model = instance.component_objects(Block, active=True)[s]
         self.is_stochastic = False
         self.stochastic_formulation = False
 

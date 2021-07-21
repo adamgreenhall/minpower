@@ -190,10 +190,12 @@ def get_scenario_based_costs(scenario_tree, scenario_instances):
 
 def update_variables(power_system, times):
     """Convert all variables into dictionaries of their solved values, keyed by scenario"""
-    variable_names = list(power_system._model.active_components(Var).keys())
+    variable_names = list(
+        power_system._model.component_objects(Var, active=True).keys()
+    )
     values = dict([(nm, {}) for nm in variable_names])
     for s, scenario in list(power_system._scenario_instances.items()):
-        for var_name, var in list(scenario.active_components(Var).items()):
+        for var_name, var in list(scenario.component_objects(Var, active=True).items()):
             if var.is_indexed():
                 values[var_name][s] = dict(
                     [(idx, var_val.value) for idx, var_val in list(var.items())]

@@ -5,7 +5,7 @@ the unit tests don't pick up.
 import os
 import nose
 from nose.tools import istest
-from pandas.util.testing import assert_frame_equal, assert_series_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 
 from minpower.solve import solve_problem as solve_dir
 from minpower.config import user_config

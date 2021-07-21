@@ -25,7 +25,14 @@ setup(
         "minpower.configuration": ["minpower.cfg"],
         "minpower.tests": ["*.csv", "*/*.csv", "*/*/*.csv"],
     },
-    install_requires=["pandas", "pyomo", "matplotlib"],
+    install_requires=[
+        "pandas>=1.3",
+        "pyomo>=6.0",
+        "matplotlib>=3.4",
+    ],
+    dependency_links=[
+        "http://github.com/Pyomo/pysp/tarball/v6.0#egg=pysp-1.0",
+    ],
     tests_require=["nose", "coverage", "objgraph"],
     # it helps to have seed if you are going to make releases
     # but it is not required for setup

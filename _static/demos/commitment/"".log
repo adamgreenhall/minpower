@@ -1,0 +1,12 @@
+2021-07-21 14:45:57 INFO: Solving with glpk
+2021-07-21 14:45:57 INFO: Problem solved in 0.024497032165527344s.
+2021-07-21 14:45:57 INFO: 
+2021-07-21 14:45:57 INFO: Solution information
+2021-07-21 14:45:57 INFO: ----------
+2021-07-21 14:45:57 INFO: 
+2021-07-21 14:45:57 INFO: objective cost=26475.0
+2021-07-21 14:45:57 INFO: total cost of generation=26475.0
+2021-07-21 14:45:57 INFO: linearized fuel cost of generation=26475.0
+2021-07-21 14:45:57 INFO: polynomial fuel cost of generation=26475.0
+2021-07-21 14:45:57 INFO: percentage difference		=0.00%
+2021-07-21 14:45:57 INFO: total time: 0.5236167907714844s

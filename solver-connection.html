@@ -1,32 +1,21 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Solver Connection &mdash; minpower</title>
-    
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solver Connection &#8212; minpower  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
-    <link rel="top" title="minpower" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
  
 <script type="text/javascript">
   var _gaq = _gaq || [];
@@ -34,14 +23,13 @@
   _gaq.push(['_trackPageview']);
 </script>
 
-  </head>
-  <body>  
+  </head><body>  
 
     <div class="document">
 
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="solver-connection">
 <h1>Solver Connection<a class="headerlink" href="#solver-connection" title="Permalink to this headline">¶</a></h1>
@@ -49,10 +37,10 @@
 <div class="section" id="mac">
 <h2>Mac<a class="headerlink" href="#mac" title="Permalink to this headline">¶</a></h2>
 <ul>
-<li><p class="first">Use a text editor to open <tt class="docutils literal"><span class="pre">~/.bash_profile</span></tt></p>
-</li>
-<li><p class="first">Add your solver&#8217;s <tt class="docutils literal"><span class="pre">/bin</span></tt> directory to the path, e.g.:</p>
-<div class="highlight-python"><pre>export PATH=$PATH:/Library/gurobi452/mac64/bin/</pre>
+<li><p>Use a text editor to open <code class="docutils literal notranslate"><span class="pre">~/.bash_profile</span></code></p></li>
+<li><p>Add your solver’s <code class="docutils literal notranslate"><span class="pre">/bin</span></code> directory to the path, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>export PATH=$PATH:/Library/gurobi452/mac64/bin/
+</pre></div>
 </div>
 </li>
 </ul>
@@ -60,14 +48,12 @@
 <div class="section" id="windows">
 <h2>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
 <ul>
-<li><p class="first">open Control Panel, System and Security, System, and click <a class="reference external" href="_static/controlpanel.png">Advanced System Settings</a></p>
-</li>
-<li><p class="first">open the Advanced tab, and click <a class="reference external" href="_static/systemproperties.png">Environment Variables</a></p>
-</li>
-<li><p class="first"><a class="reference external" href="_static/environmentvars.png">select PATH</a> in the User Variables list and click <strong>Edit</strong></p>
-</li>
-<li><p class="first">add your solver install directory to the end of the <a class="reference external" href="_static/editpath_glpk.png">Variable value</a>, e.g. here is the GLPK path location on my machine:</p>
-<div class="highlight-python"><pre>;C:\Program Files (x86)\GnuWin32\bin</pre>
+<li><p>open Control Panel, System and Security, System, and click <a class="reference external" href="_static/controlpanel.png">Advanced System Settings</a></p></li>
+<li><p>open the Advanced tab, and click <a class="reference external" href="_static/systemproperties.png">Environment Variables</a></p></li>
+<li><p><a class="reference external" href="_static/environmentvars.png">select PATH</a> in the User Variables list and click <strong>Edit</strong></p></li>
+<li><p>add your solver install directory to the end of the <a class="reference external" href="_static/editpath_glpk.png">Variable value</a>, e.g. here is the GLPK path location on my machine:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">;</span><span class="n">C</span><span class="p">:</span>\<span class="n">Program</span> <span class="n">Files</span> <span class="p">(</span><span class="n">x86</span><span class="p">)</span>\<span class="n">GnuWin32</span>\<span class="nb">bin</span>
+</pre></div>
 </div>
 </li>
 </ul>
@@ -75,10 +61,10 @@
 <div class="section" id="linux">
 <h2>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h2>
 <ul>
-<li><p class="first">Use a text editor to open <tt class="docutils literal"><span class="pre">~/.bashrc</span></tt></p>
-</li>
-<li><p class="first">Add your solver&#8217;s <tt class="docutils literal"><span class="pre">/bin</span></tt> directory to the path, e.g.:</p>
-<div class="highlight-python"><pre>export PATH=$PATH:/opt/gurobi452/linux64/bin/</pre>
+<li><p>Use a text editor to open <code class="docutils literal notranslate"><span class="pre">~/.bashrc</span></code></p></li>
+<li><p>Add your solver’s <code class="docutils literal notranslate"><span class="pre">/bin</span></code> directory to the path, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>export PATH=$PATH:/opt/gurobi452/linux64/bin/
+</pre></div>
 </div>
 </li>
 </ul>
@@ -87,22 +73,23 @@
 <h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ol class="arabic simple">
-<li>Check that you set your solver-to-Python connection correctly (by the instructions above)</li>
-<li>Call the solvers from the command line. After following the solver-to-Python directions above
-CPLEX should be called by <tt class="docutils literal"><span class="pre">cplex</span></tt>, GLPK by <tt class="docutils literal"><span class="pre">glpsol</span></tt>, Gurobi by <tt class="docutils literal"><span class="pre">gurobi</span></tt>.
-If this doesn&#8217;t work check your Path variable and <strong>reopen the command prompt</strong>.</li>
-<li>If you are still having trouble, make sure your solver is installed correctly (and exactly where you think it should be), or consider trying a different solver first.</li>
+<li><p>Check that you set your solver-to-Python connection correctly (by the instructions above)</p></li>
+<li><p>Call the solvers from the command line. After following the solver-to-Python directions above
+CPLEX should be called by <code class="docutils literal notranslate"><span class="pre">cplex</span></code>, GLPK by <code class="docutils literal notranslate"><span class="pre">glpsol</span></code>, Gurobi by <code class="docutils literal notranslate"><span class="pre">gurobi</span></code>.
+If this doesn’t work check your Path variable and <strong>reopen the command prompt</strong>.</p></li>
+<li><p>If you are still having trouble, make sure your solver is installed correctly (and exactly where you think it should be), or consider trying a different solver first.</p></li>
 </ol>
 </div></blockquote>
 </div>
 </div>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
 
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">minpower</a></h3>
 <ul>
@@ -123,8 +110,6 @@ If this doesn&#8217;t work check your Path variable and <strong>reopen the comma
 <li class="toctree-l1"><a class="reference internal" href="optimal-power-flow.html">Optimal Power Flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="unit-commitment.html">Unit Commitment</a></li>
 </ul>
-<ul class="simple">
-</ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About minpower</a></li>
@@ -144,9 +129,6 @@ If this doesn&#8217;t work check your Path variable and <strong>reopen the comma
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-<!--<div class="social">-->
-<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
-<!--</div>-->
         </div>
       </div>
       <div class="clearer"></div>

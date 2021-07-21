@@ -1,32 +1,21 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Solver Choices &mdash; minpower</title>
-    
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solver Choices &#8212; minpower  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
-    <link rel="top" title="minpower" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
  
 <script type="text/javascript">
   var _gaq = _gaq || [];
@@ -34,49 +23,58 @@
   _gaq.push(['_trackPageview']);
 </script>
 
-  </head>
-  <body>  
+  </head><body>  
 
     <div class="document">
 
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="solver-choices">
 <h1>Solver Choices<a class="headerlink" href="#solver-choices" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id1">
 <h2><a class="reference external" href="http://www.gnu.org/s/glpk">GLPK</a><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>free</li>
-<li>open source</li>
-<li>slow for large problems</li>
+<li><p>free</p></li>
+<li><p>open source</p></li>
+<li><p>easy to install</p></li>
+<li><p>slow for large problems</p></li>
 </ul>
 </div>
 <div class="section" id="id2">
-<h2><a class="reference external" href="http://gurobi.com">Gurobi</a><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<h2><a class="reference external" href="https://projects.coin-or.org/Cbc">CBC</a><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>free with <a class="reference external" href="http://gurobi.com/html/academic.html">academic license</a></li>
-<li>easy to <a class="reference external" href="http://gurobi.com/doc/45/quickstart/">install</a></li>
-<li>billing itself as &#8216;the next CPLEX&#8217;</li>
+<li><p>free</p></li>
+<li><p>open source</p></li>
+<li><p>faster than GLPK for large problems</p></li>
 </ul>
 </div>
 <div class="section" id="id3">
-<h2><a class="reference external" href="http://www.ibm.com/software/integration/optimization/cplex-optimizer">CPLEX</a><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<h2><a class="reference external" href="http://gurobi.com">Gurobi</a><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>free with <a class="reference external" href="http://www-01.ibm.com/software/websphere/products/optimization/academic-initiative/">IBM academic license</a></li>
-<li>difficult to install</li>
-<li>industry standard for large problems</li>
+<li><p>free with <a class="reference external" href="http://gurobi.com/html/academic.html">academic license</a></p></li>
+<li><p>easy to <a class="reference external" href="http://gurobi.com/doc/45/quickstart/">install</a></p></li>
+<li><p>usually <a class="reference external" href="http://plato.asu.edu/bench.html">ranks</a> as the fastest available MIP solver</p></li>
+</ul>
+</div>
+<div class="section" id="id4">
+<h2><a class="reference external" href="http://www.ibm.com/software/integration/optimization/cplex-optimizer">CPLEX</a><a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>free with <a class="reference external" href="http://www-01.ibm.com/software/websphere/products/optimization/academic-initiative/">IBM academic license</a></p></li>
+<li><p>difficult to install</p></li>
+<li><p>industry standard for large problems</p></li>
 </ul>
 </div>
 </div>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
 
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">minpower</a></h3>
 <ul>
@@ -97,8 +95,6 @@
 <li class="toctree-l1"><a class="reference internal" href="optimal-power-flow.html">Optimal Power Flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="unit-commitment.html">Unit Commitment</a></li>
 </ul>
-<ul class="simple">
-</ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About minpower</a></li>
@@ -118,9 +114,6 @@
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-<!--<div class="social">-->
-<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
-<!--</div>-->
         </div>
       </div>
       <div class="clearer"></div>

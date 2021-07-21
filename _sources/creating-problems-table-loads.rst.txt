@@ -1,0 +1,18 @@
++-------------------+----------------------+------------+-------+
+| Column Name       | Description          | Default    | Units |
++-------------------+----------------------+------------+-------+
+| name              | load name            |            |       |
++-------------------+----------------------+------------+-------+
+| power             | load power (a single |            | MW    |
+|                   | number for ED        |            |       |
+|                   | problems or base     |            |       |
+|                   | load)                |            |       |
++-------------------+----------------------+------------+-------+
+| schedule filename | spreadsheet filename |            |       |
+|                   | describing the       |            |       |
+|                   | predicted load power |            |       |
+|                   | over time            |            |       |
++-------------------+----------------------+------------+-------+
+| bus               | name of bus where    | single bus |       |
+|                   | load is connected    |            |       |
++-------------------+----------------------+------------+-------+

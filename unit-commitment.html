@@ -1,32 +1,22 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Unit Commitment &mdash; minpower</title>
-    
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unit Commitment &#8212; minpower  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
-    <link rel="top" title="minpower" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Collaborate" href="collaborate.html" />
     <link rel="prev" title="Optimal Power Flow" href="optimal-power-flow.html" />
  
@@ -36,115 +26,117 @@
   _gaq.push(['_trackPageview']);
 </script>
 
-  </head>
-  <body>  
+  </head><body>  
 
     <div class="document">
 
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="unit-commitment">
 <h1>Unit Commitment<a class="headerlink" href="#unit-commitment" title="Permalink to this headline">¶</a></h1>
 <p><abbr title="Unit Commitment">UC</abbr> tries to schedule generation to meet the system load for the next <abbr title="generally 12 or 24hrs">several hours</abbr> at lowest cost. <abbr title="Unit Commitment">UC</abbr>  adds a dimension of time to the <abbr title="Economic Dispatch">ED</abbr> problem, with the additional choice of turning generators on or off. The classic text is <a class="reference external" href="http://amzn.to/wood-wollenburg">Wood &amp; Wollenburg</a>.</p>
 <div class="section" id="the-problem">
 <h2>The problem<a class="headerlink" href="#the-problem" title="Permalink to this headline">¶</a></h2>
-<div class="optimizationproblem container">
-<p><span class="math">\(\min \sum_t \sum_g C_g(P_{t,g}) + C_{\mathrm{su} (g)}(u_{t,g})\)</span></p>
-<p><span class="math">\(\mathrm{s.t.} \; P_{\min (g)} \leq P_{t,g} \leq P_{\max (g)}  \; \forall  \; t,g  \; \mathrm{where}  \; u_{t,g}=1\)</span></p>
-<p><span class="math">\(\mathrm{s.t.} \; \sum_g P_{t,g}= P_{\mathrm{load}(t)}  \; \forall  \; t\)</span></p>
-<p><span class="math">\(\mathrm{s.t.} \; P_{\mathrm{ramp min} (g)} \leq P_{t,g}-P_{t-1,g} \leq P_{\mathrm{ramp max} (g)}    \; \forall  \; t,g\)</span></p>
+<div class="optimizationproblem docutils container">
+<p><span class="math notranslate nohighlight">\(\min \sum_t \sum_g C_g(P_{t,g}) + C_{\mathrm{su} (g)}(u_{t,g})\)</span></p>
+<p><span class="math notranslate nohighlight">\(\mathrm{s.t.} \; P_{\min (g)} \leq P_{t,g} \leq P_{\max (g)}  \; \forall  \; t,g  \; \mathrm{where}  \; u_{t,g}=1\)</span></p>
+<p><span class="math notranslate nohighlight">\(\mathrm{s.t.} \; \sum_g P_{t,g}= P_{\mathrm{load}(t)}  \; \forall  \; t\)</span></p>
+<p><span class="math notranslate nohighlight">\(\mathrm{s.t.} \; P_{\mathrm{ramp min} (g)} \leq P_{t,g}-P_{t-1,g} \leq P_{\mathrm{ramp max} (g)}    \; \forall  \; t,g\)</span></p>
 </div>
-<p>In this mathematical formulation generators are indexed by <span class="math">\(g\)</span> and time is indexed by <span class="math">\(t\)</span>. <span class="math">\(P_{t,g}\)</span> is a generator’s power output at time <span class="math">\(t\)</span> and <span class="math">\(u_{t,g}\)</span> is its operation status (on/off). <span class="math">\(C_g()\)</span> is the generator&#8217;s production cost function and <span class="math">\(C_{\mathrm{su} (g)}()\)</span> is its startup/shutdown cost. The objective is to minimize the total cost. The constraints are:</p>
+<p>In this mathematical formulation generators are indexed by <span class="math notranslate nohighlight">\(g\)</span> and time is indexed by <span class="math notranslate nohighlight">\(t\)</span>. <span class="math notranslate nohighlight">\(P_{t,g}\)</span> is a generator’s power output at time <span class="math notranslate nohighlight">\(t\)</span> and <span class="math notranslate nohighlight">\(u_{t,g}\)</span> is its operation status (on/off). <span class="math notranslate nohighlight">\(C_g()\)</span> is the generator’s production cost function and <span class="math notranslate nohighlight">\(C_{\mathrm{su} (g)}()\)</span> is its startup/shutdown cost. The objective is to minimize the total cost. The constraints are:</p>
 <ul class="simple">
-<li>each generator must be within its real power limits</li>
-<li>total power generated must equal the power consumed by the load</li>
-<li>each generator must be within its real power <abbr title="think acceleration in a car - you can't go from 0-60mph in one second. Similarly most generators cannot change their power output too quickly.">ramping</abbr> limits</li>
-<li>each generator must be within its <abbr title="Nuclear and coal plants generally have especially long power up and cool down time constraints.">up/down time limits</abbr></li>
+<li><p>each generator must be within its real power limits</p></li>
+<li><p>total power generated must equal the power consumed by the load</p></li>
+<li><p>each generator must be within its real power <abbr title="think acceleration in a car - you can't go from 0-60mph in one second. Similarly most generators cannot change their power output too quickly.">ramping</abbr> limits</p></li>
+<li><p>each generator must be within its <abbr title="Nuclear and coal plants generally have especially long power up and cool down time constraints.">up/down time limits</abbr></p></li>
 </ul>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The last constraint is not shown in the formulation above <abbr title="it is a pain to show mathematically and is confusing to read. If you are interested, see the formulation used in the code.">due to complexity</abbr>. For the actual formulation in use, see <tt class="xref py py-meth docutils literal"><span class="pre">powersystems.Generator.create_constraints()</span></tt>.</p>
+<p class="admonition-title">Note</p>
+<p>The last constraint is not shown in the formulation above <abbr title="it is a pain to show mathematically and is confusing to read. If you are interested, see the formulation used in the code.">due to complexity</abbr>. For the actual formulation in use, see <code class="xref py py-meth docutils literal notranslate"><span class="pre">powersystems.Generator.create_constraints()</span></code>.</p>
 </div>
 </div>
 <div class="section" id="example-problem">
 <h2>Example Problem<a class="headerlink" href="#example-problem" title="Permalink to this headline">¶</a></h2>
 <p>To define a simple <abbr title="Unit Commitment">UC</abbr> problem, <strong>Minpower</strong> requires at least three spreadsheets. The first describes the generator parameters (<a class="reference external" href="https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/uc-WW-5-2/generators.csv">generators.csv</a>):</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;name&quot;</span><span class="p">;</span><span class="s">&quot;Pmin&quot;</span><span class="p">;</span><span class="s">&quot;Pmax&quot;</span><span class="p">;</span><span class="s">&quot;heat rate equation&quot;</span><span class="p">;</span><span class="s">&quot;fuel cost&quot;</span><span class="p">;</span><span class="s">&quot;start up cost&quot;</span><span class="p">;</span><span class="s">&quot;min up time&quot;</span><span class="p">;</span><span class="s">&quot;min down time&quot;</span>
-<span class="s">&quot;g1&quot;</span><span class="p">;</span><span class="mi">50</span><span class="p">;</span><span class="mi">200</span><span class="p">;</span><span class="s">&quot;220+9.9P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">560</span><span class="p">;</span><span class="mi">8</span><span class="p">;</span><span class="mi">8</span>
-<span class="s">&quot;g2&quot;</span><span class="p">;</span><span class="mi">15</span><span class="p">;</span><span class="mi">60</span><span class="p">;</span><span class="s">&quot;80+10.1P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">210</span><span class="p">;</span><span class="mi">8</span><span class="p">;</span><span class="mi">8</span>
-<span class="s">&quot;g3&quot;</span><span class="p">;</span><span class="mi">15</span><span class="p">;</span><span class="mi">50</span><span class="p">;</span><span class="s">&quot;60+10.8P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">147</span><span class="p">;</span><span class="mi">4</span><span class="p">;</span><span class="mi">4</span>
-<span class="s">&quot;g4&quot;</span><span class="p">;</span><span class="mi">5</span><span class="p">;</span><span class="mi">40</span><span class="p">;</span><span class="s">&quot;40+11.9P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">0</span><span class="p">;</span><span class="mi">4</span><span class="p">;</span><span class="mi">4</span>
-<span class="s">&quot;g5&quot;</span><span class="p">;</span><span class="mi">5</span><span class="p">;</span><span class="mi">25</span><span class="p">;</span><span class="s">&quot;34+12.14P&quot;</span><span class="p">;</span><span class="mf">1.4</span><span class="p">;</span><span class="mi">0</span><span class="p">;</span><span class="mi">4</span><span class="p">;</span><span class="mi">4</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">,</span><span class="n">Pmin</span><span class="p">,</span><span class="n">Pmax</span><span class="p">,</span><span class="n">heat</span> <span class="n">rate</span> <span class="n">equation</span><span class="p">,</span><span class="n">fuel</span> <span class="n">cost</span><span class="p">,</span><span class="n">start</span> <span class="n">up</span> <span class="n">cost</span><span class="p">,</span><span class="nb">min</span> <span class="n">up</span> <span class="n">time</span><span class="p">,</span><span class="nb">min</span> <span class="n">down</span> <span class="n">time</span>
+<span class="n">g1</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="mi">220</span><span class="o">+</span><span class="mf">9.9</span><span class="n">P</span><span class="p">,</span><span class="mf">1.4</span><span class="p">,</span><span class="mi">560</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span>
+<span class="n">g2</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">60</span><span class="p">,</span><span class="mi">80</span><span class="o">+</span><span class="mf">10.1</span><span class="n">P</span><span class="p">,</span><span class="mf">1.4</span><span class="p">,</span><span class="mi">210</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span>
+<span class="n">g3</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="mi">60</span><span class="o">+</span><span class="mf">10.8</span><span class="n">P</span><span class="p">,</span><span class="mf">1.4</span><span class="p">,</span><span class="mi">147</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span>
+<span class="n">g4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">40</span><span class="p">,</span><span class="mi">40</span><span class="o">+</span><span class="mf">11.9</span><span class="n">P</span><span class="p">,</span><span class="mf">1.4</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span>
+<span class="n">g5</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">34</span><span class="o">+</span><span class="mf">12.14</span><span class="n">P</span><span class="p">,</span><span class="mf">1.4</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span>
 </pre></div>
 </div>
 <p>The second simply describes which loads exist on the system and where there schedule files are (<a class="reference external" href="https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/uc-WW-5-2/loads.csv">loads.csv</a>):</p>
-<div class="highlight-python"><pre>name,schedule filename
-example,load-pattern.csv
-</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">,</span><span class="n">schedule</span> <span class="n">filename</span>
+<span class="n">example</span><span class="p">,</span><span class="n">load</span><span class="o">-</span><span class="n">pattern</span><span class="o">.</span><span class="n">csv</span>
+</pre></div>
 </div>
 <p>The other spreadsheets describe the load (or non-controllable generation) energy schedules. In this case (<a class="reference external" href="https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/uc-WW-5-2/load-pattern.csv">load-pattern.csv</a>):</p>
-<div class="highlight-python"><pre>time,power
-0:00,250
-2:00,320
-4:00,110
-6:00,75</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">time</span><span class="p">,</span><span class="n">power</span>
+<span class="mi">0</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="mi">250</span>
+<span class="mi">2</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="mi">320</span>
+<span class="mi">4</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="mi">110</span>
+<span class="mi">6</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="mi">75</span>
+</pre></div>
 </div>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">For more information about what options you can specify in each spreadsheet see: <a class="reference internal" href="creating-problems.html"><em>Creating a Problem</em></a>.</p>
+<p class="admonition-title">Note</p>
+<p>For more information about what options you can specify in each spreadsheet see: <a class="reference internal" href="creating-problems.html"><span class="doc">Creating a Problem</span></a>.</p>
 </div>
 </div>
 <div class="section" id="solving">
 <h2>Solving<a class="headerlink" href="#solving" title="Permalink to this headline">¶</a></h2>
-<p>Save the two spreadsheets above into into a folder (call it <tt class="docutils literal"><span class="pre">mycommitment</span></tt>) and run:</p>
-<div class="highlight-python"><pre>minpower mycommitment</pre>
+<p>Save the two spreadsheets above into into a folder (call it <code class="docutils literal notranslate"><span class="pre">mycommitment</span></code>) and run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">minpower</span> <span class="n">mycommitment</span>
+</pre></div>
 </div>
-<p>This particular problem is also <strong>Minpower</strong> built-in test case (based on <a class="reference external" href="http://amzn.to/wood-wollenburg">Wood &amp; Wollenburg</a> Problem 5.2), so if you haven&#8217;t been following along, to solve it, call:</p>
-<div class="highlight-python"><pre>minpower uc-WW-5-2</pre>
+<p>This particular problem is also <strong>Minpower</strong> built-in test case (based on <a class="reference external" href="http://amzn.to/wood-wollenburg">Wood &amp; Wollenburg</a> Problem 5.2), so if you haven’t been following along, to solve it, call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">minpower</span> <span class="n">uc</span><span class="o">-</span><span class="n">WW</span><span class="o">-</span><span class="mi">5</span><span class="o">-</span><span class="mi">2</span>
+</pre></div>
 </div>
 </div>
 <div class="section" id="example-solution">
 <h2>Example Solution<a class="headerlink" href="#example-solution" title="Permalink to this headline">¶</a></h2>
-<p>The result is a plot (<tt class="docutils literal"><span class="pre">commitment.png</span></tt>):</p>
+<p>The result is a plot (<code class="docutils literal notranslate"><span class="pre">commitment.png</span></code>):</p>
 <blockquote>
-<div><img alt="./_static/demos/commitment/commitment.png" src="./_static/demos/commitment/commitment.png" style="width: 500px;" />
+<div><a class="reference internal image-reference" href="_images/commitment.png"><img alt="_images/commitment.png" src="_images/commitment.png" style="width: 500px;" /></a>
 </div></blockquote>
 <p>This figure has two axes that share the same time axis. The top axes shows the <abbr title="The system price is generally determined by the dual of the energy constraint in the optimization problem and is in $/MWh.">price of energy</abbr> for the system. The bottom axes shows the energy that each generator produces.</p>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">For only a few generators, <tt class="xref py py-meth docutils literal"><span class="pre">results.Solution_UC.vizualization()</span></tt> displays a stack plot showing power for each generator. For more generators, the display is grouped by <tt class="xref py py-attr docutils literal"><span class="pre">kind</span></tt> (so that all the coal plants as one color, all the wind as another color, ...).</p>
+<p class="admonition-title">Note</p>
+<p>For only a few generators, <code class="xref py py-meth docutils literal notranslate"><span class="pre">results.Solution_UC.vizualization()</span></code> displays a stack plot showing power for each generator. For more generators, the display is grouped by <code class="xref py py-attr docutils literal notranslate"><span class="pre">kind</span></code> (so that all the coal plants as one color, all the wind as another color, …).</p>
 </div>
-<p>For this example we have two generators, one named <tt class="docutils literal"><span class="pre">cheap</span></tt> (which produces energy for $45/MWh) and one named <tt class="docutils literal"><span class="pre">expensive</span></tt> (which produces energy for $150/MWh). Obviously we only turn on the expensive generator after we can&#8217;t use the cheaper any more (its limit is 100MW for this example). So as the load goes up and over 100MW, the expensive generator is committed.</p>
-<p>But why doesn&#8217;t the expensive generator turn back off at 6:00, when the load goes back down? It can&#8217;t turn off that quickly - it has a minimum up time of 2hrs and a minimum output of 20MW. But why does the price go back down? It&#8217;s complicated <a class="footnote-reference" href="#f1" id="id2">[1]</a>.</p>
-<p>The data from the graph is also output in spreadsheet form (<tt class="docutils literal"><span class="pre">commitment.csv</span></tt>):</p>
+<p>For this example we have two generators, one named <code class="docutils literal notranslate"><span class="pre">cheap</span></code> (which produces energy for $45/MWh) and one named <code class="docutils literal notranslate"><span class="pre">expensive</span></code> (which produces energy for $150/MWh). Obviously we only turn on the expensive generator after we can’t use the cheaper any more (its limit is 100MW for this example). So as the load goes up and over 100MW, the expensive generator is committed.</p>
+<p>But why doesn’t the expensive generator turn back off at 6:00, when the load goes back down? It can’t turn off that quickly - it has a minimum up time of 2hrs and a minimum output of 20MW. But why does the price go back down? It’s complicated <a class="footnote-reference brackets" href="#f1" id="id2">1</a>.</p>
+<p>The data from the graph is also output in spreadsheet form (<code class="docutils literal notranslate"><span class="pre">commitment-power.csv</span></code>):</p>
 <blockquote>
-<div><div class="highlight-python"><pre>times,prices,status: g1,power: g1,status: g2,power: g2,status: g3,power: g3,status: g4,power: g4,status: g5,power: g5,load power: example
-2012-09-12 00:00:00,14.14,True,200.0,True,50.0,False,0.0,False,0.0,False,0.0,250
-2012-09-12 02:00:00,16.996,True,200.0,True,60.0,False,0.0,True,40.0,True,20.0,320
-2012-09-12 04:00:00,16.996,False,0.0,True,60.0,False,0.0,True,40.0,True,10.0,110
-2012-09-12 06:00:00,16.996,False,0.0,True,60.0,False,0.0,False,0.0,True,15.0,75
-</pre>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">time</span><span class="p">,</span><span class="n">g0</span><span class="p">,</span><span class="n">g1</span><span class="p">,</span><span class="n">g2</span><span class="p">,</span><span class="n">g3</span><span class="p">,</span><span class="n">g4</span>
+<span class="mi">2021</span><span class="o">-</span><span class="mi">07</span><span class="o">-</span><span class="mi">21</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="mf">200.0</span><span class="p">,</span><span class="mf">50.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span>
+<span class="mi">2021</span><span class="o">-</span><span class="mi">07</span><span class="o">-</span><span class="mi">21</span> <span class="mi">02</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="mf">200.0</span><span class="p">,</span><span class="mf">60.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">40.0</span><span class="p">,</span><span class="mf">20.0</span>
+<span class="mi">2021</span><span class="o">-</span><span class="mi">07</span><span class="o">-</span><span class="mi">21</span> <span class="mi">04</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">60.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">40.0</span><span class="p">,</span><span class="mf">10.0</span>
+<span class="mi">2021</span><span class="o">-</span><span class="mi">07</span><span class="o">-</span><span class="mi">21</span> <span class="mi">06</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">60.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">15.0</span>
+</pre></div>
 </div>
 </div></blockquote>
-<p>Unlike <a class="reference internal" href="economic-dispatch.html"><em>ED</em></a> and <a class="reference internal" href="optimal-power-flow.html"><em>OPF</em></a> results, this spreadsheet is not particularly easy to read. It is meant more for machines than for humans. The spreadsheet gives status and energy output for each generator, along with the system energy price, for each time.</p>
+<p>Unlike <a class="reference internal" href="economic-dispatch.html"><span class="doc">ED</span></a> and <a class="reference internal" href="optimal-power-flow.html"><span class="doc">OPF</span></a> results, this spreadsheet is not particularly easy to read. It is meant more for machines than for humans. The spreadsheet gives status and energy output for each generator, along with the system energy price, for each time.</p>
 <p class="rubric">Footnotes</p>
-<table class="docutils footnote" frame="void" id="f1" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[1]</a></td><td>Generators at their limits can&#8217;t set the price. In the real world the monetary differences are dealt with via a system called &#8220;side payments&#8221;. In the example above a side payment of $105/MWh would be made to the more expensive generator for its second hour to make sure that it recovers its cost of operating for that hour.</td></tr>
-</tbody>
-</table>
+<dl class="footnote brackets">
+<dt class="label" id="f1"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
+<dd><p>Generators at their limits can’t set the price. In the real world the monetary differences are dealt with via a system called “side payments”. In the example above a side payment of $105/MWh would be made to the more expensive generator for its second hour to make sure that it recovers its cost of operating for that hour.</p>
+</dd>
+</dl>
 </div>
 </div>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
 
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">minpower</a></h3>
 <ul>
@@ -163,15 +155,13 @@ example,load-pattern.csv
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="economic-dispatch.html">Economic Dispatch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optimal-power-flow.html">Optimal Power Flow</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Unit Commitment</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Unit Commitment</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#the-problem">The problem</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#example-problem">Example Problem</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#solving">Solving</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#example-solution">Example Solution</a></li>
 </ul>
 </li>
-</ul>
-<ul class="simple">
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>
@@ -192,9 +182,6 @@ example,load-pattern.csv
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-<!--<div class="social">-->
-<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
-<!--</div>-->
         </div>
       </div>
       <div class="clearer"></div>

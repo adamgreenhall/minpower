@@ -1,32 +1,21 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Creating a Problem &mdash; minpower</title>
-    
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Creating a Problem &#8212; minpower  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
-    <link rel="top" title="minpower" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Configuration" href="configuration.html" />
     <link rel="prev" title="Basic Use" href="basic-use.html" />
  
@@ -36,33 +25,172 @@
   _gaq.push(['_trackPageview']);
 </script>
 
-  </head>
-  <body>  
+  </head><body>  
 
     <div class="document">
 
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="creating-a-problem">
 <h1>Creating a Problem<a class="headerlink" href="#creating-a-problem" title="Permalink to this headline">¶</a></h1>
-<p>Minpower solves problems that are defined in spreadsheets. The most basic <abbr title="Economic Dispatch">ED</abbr> problem only has two files: <tt class="docutils literal"><span class="pre">generators.csv</span></tt> and <tt class="docutils literal"><span class="pre">loads.csv</span></tt>. If you are solving an <abbr title="Unit Commitment">UC</abbr> then you need to define the initial conditions for your generation in <tt class="docutils literal"><span class="pre">initial.csv</span></tt>. Scheduled or predicted energy amounts (e.g. predicted wind farm output or predicted load demand) over a series of times can be specified in a file defined by the <tt class="docutils literal"><span class="pre">schedule</span> <span class="pre">file</span> <span class="pre">name</span></tt> column of the component. If you are solving an <abbr title="Optimal Power Flow">OPF</abbr>, then you also need to define your transmission lines in <tt class="docutils literal"><span class="pre">lines.csv</span></tt>.</p>
+<p>Minpower solves problems that are defined in spreadsheets. The most basic <abbr title="Economic Dispatch">ED</abbr> problem only has two files: <code class="docutils literal notranslate"><span class="pre">generators.csv</span></code> and <code class="docutils literal notranslate"><span class="pre">loads.csv</span></code>. If you are solving an <abbr title="Unit Commitment">UC</abbr> then you need to define the initial conditions for your generation in <code class="docutils literal notranslate"><span class="pre">initial.csv</span></code>. Scheduled or predicted energy amounts (e.g. predicted wind farm output or predicted load demand) over a series of times can be specified in a file defined by the <code class="docutils literal notranslate"><span class="pre">schedule</span> <span class="pre">file</span> <span class="pre">name</span></code> column of the component. If you are solving an <abbr title="Optimal Power Flow">OPF</abbr>, then you also need to define your transmission lines in <code class="docutils literal notranslate"><span class="pre">lines.csv</span></code>.</p>
 <p>The following tables give details on how to describe each component using spreadsheet columns. (Column order does not matter. Capitalization, underscores, and spaces are all ignored in the header row column names.) Examples spreadsheets are given after each table.</p>
 <div class="section" id="generators">
 <h2>Generators<a class="headerlink" href="#generators" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><pre>name,Pmin,Pmax,heat rate equation,fuel cost,start up cost,min up time,min down time
-g1,50,200,220+9.9P,1.4,560,8,8
-g2,15,60,80+10.1P,1.4,210,8,8
-g3,15,50,60+10.8P,1.4,147,4,4
-g4,5,40,40+11.9P,1.4,0,4,4
-g5,5,25,34+12.14P,1.4,0,4,4
-</pre>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 32%" />
+<col style="width: 32%" />
+<col style="width: 19%" />
+<col style="width: 17%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Column Name</p></td>
+<td><p>Description</p></td>
+<td><p>Default</p></td>
+<td><p>Units</p></td>
+</tr>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>generator name</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>P min</p></td>
+<td><p>min. power output</p></td>
+<td><p>0</p></td>
+<td><p>MW</p></td>
+</tr>
+<tr class="row-even"><td><p>P max</p></td>
+<td><p>max. power output</p></td>
+<td><p>500</p></td>
+<td><p>MW</p></td>
+</tr>
+<tr class="row-odd"><td><p>cost curve
+equation</p></td>
+<td><p>polynomial for the
+cost of fuel given
+a power output</p></td>
+<td></td>
+<td><p>$/MWh</p></td>
+</tr>
+<tr class="row-even"><td><p>heat rate equation</p></td>
+<td><p>heat rate
+polynomial</p></td>
+<td></td>
+<td><p>MMBtu/MWh</p></td>
+</tr>
+<tr class="row-odd"><td><p>fuel cost</p></td>
+<td><p>(if using a heat
+rate equation)</p></td>
+<td><p>1</p></td>
+<td><p>$/MMBtu</p></td>
+</tr>
+<tr class="row-even"><td><p>start up cost</p></td>
+<td></td>
+<td><p>0</p></td>
+<td><p>$</p></td>
+</tr>
+<tr class="row-odd"><td><p>shut down cost</p></td>
+<td></td>
+<td><p>0</p></td>
+<td><p>$</p></td>
+</tr>
+<tr class="row-even"><td><p>ramp rate min</p></td>
+<td></td>
+<td></td>
+<td><p>MW/h</p></td>
+</tr>
+<tr class="row-odd"><td><p>ramp rate max</p></td>
+<td></td>
+<td></td>
+<td><p>MW/h</p></td>
+</tr>
+<tr class="row-even"><td><p>min up time</p></td>
+<td></td>
+<td><p>0</p></td>
+<td><p>hours</p></td>
+</tr>
+<tr class="row-odd"><td><p>min down time</p></td>
+<td></td>
+<td><p>0</p></td>
+<td><p>hours</p></td>
+</tr>
+<tr class="row-even"><td><p>must run</p></td>
+<td><p>unit status must
+remain ON</p></td>
+<td><p>0</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>fast start</p></td>
+<td><p>unit has the
+ability to start
+up without having
+been committed if
+needed to avoid
+load shedding
+(when minpower is
+run using the
+faststart option)</p></td>
+<td><p>False</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>bus</p></td>
+<td><p>name of bus where
+gen. is connected</p></td>
+<td><p>single bus</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">,</span><span class="n">Pmin</span><span class="p">,</span><span class="n">Pmax</span><span class="p">,</span><span class="n">heat</span> <span class="n">rate</span> <span class="n">equation</span><span class="p">,</span><span class="n">fuel</span> <span class="n">cost</span><span class="p">,</span><span class="n">start</span> <span class="n">up</span> <span class="n">cost</span><span class="p">,</span><span class="nb">min</span> <span class="n">up</span> <span class="n">time</span><span class="p">,</span><span class="nb">min</span> <span class="n">down</span> <span class="n">time</span>
+<span class="n">g1</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="mi">220</span><span class="o">+</span><span class="mf">9.9</span><span class="n">P</span><span class="p">,</span><span class="mf">1.4</span><span class="p">,</span><span class="mi">560</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span>
+<span class="n">g2</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">60</span><span class="p">,</span><span class="mi">80</span><span class="o">+</span><span class="mf">10.1</span><span class="n">P</span><span class="p">,</span><span class="mf">1.4</span><span class="p">,</span><span class="mi">210</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span>
+<span class="n">g3</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="mi">60</span><span class="o">+</span><span class="mf">10.8</span><span class="n">P</span><span class="p">,</span><span class="mf">1.4</span><span class="p">,</span><span class="mi">147</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span>
+<span class="n">g4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">40</span><span class="p">,</span><span class="mi">40</span><span class="o">+</span><span class="mf">11.9</span><span class="n">P</span><span class="p">,</span><span class="mf">1.4</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span>
+<span class="n">g5</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">34</span><span class="o">+</span><span class="mf">12.14</span><span class="n">P</span><span class="p">,</span><span class="mf">1.4</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span>
+</pre></div>
 </div>
 </div>
 <div class="section" id="initial-conditions">
 <h2>Initial Conditions<a class="headerlink" href="#initial-conditions" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><div class="highlight"><pre><span class="s">&quot;name&quot;</span><span class="p">,</span><span class="s">&quot;power&quot;</span><span class="p">,</span><span class="s">&quot;status&quot;</span><span class="p">,</span><span class="s">&quot;hours in status&quot;</span>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 48%" />
+<col style="width: 20%" />
+<col style="width: 8%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Column Name</p></td>
+<td><p>Description</p></td>
+<td><p>Default</p></td>
+<td><p>Units</p></td>
+</tr>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>generator name</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>power</p></td>
+<td><p>output at initial time</p></td>
+<td><p>(Pmax-Pmin)/2</p></td>
+<td><p>MW</p></td>
+</tr>
+<tr class="row-even"><td><p>status</p></td>
+<td><p>status (1 or 0) at initial time</p></td>
+<td><p>1</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>hours in status</p></td>
+<td></td>
+<td><p>100</p></td>
+<td><p>hrs</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;name&quot;</span><span class="p">,</span><span class="s2">&quot;power&quot;</span><span class="p">,</span><span class="s2">&quot;status&quot;</span><span class="p">,</span><span class="s2">&quot;hours in status&quot;</span>
 <span class="n">g1</span><span class="p">,</span><span class="mi">250</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span>
 <span class="n">g2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">8</span>
 <span class="n">g3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">8</span>
@@ -73,37 +201,148 @@ g5,5,25,34+12.14P,1.4,0,4,4
 </div>
 <div class="section" id="loads">
 <h2>Loads<a class="headerlink" href="#loads" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">name</span><span class="p">,</span><span class="n">schedulefilename</span>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 32%" />
+<col style="width: 37%" />
+<col style="width: 20%" />
+<col style="width: 12%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Column Name</p></td>
+<td><p>Description</p></td>
+<td><p>Default</p></td>
+<td><p>Units</p></td>
+</tr>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>load name</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>power</p></td>
+<td><p>load power (a single
+number for ED
+problems or base
+load)</p></td>
+<td></td>
+<td><p>MW</p></td>
+</tr>
+<tr class="row-even"><td><p>schedule filename</p></td>
+<td><p>spreadsheet filename
+describing the
+predicted load power
+over time</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>bus</p></td>
+<td><p>name of bus where
+load is connected</p></td>
+<td><p>single bus</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">,</span><span class="n">schedulefilename</span>
 <span class="n">Ireland</span><span class="p">,</span><span class="n">ireland_load_fewdays</span><span class="o">.</span><span class="n">csv</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="lines">
 <h2>Lines<a class="headerlink" href="#lines" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><pre>from bus,to bus,Pmax
-Seattle,Tacoma,3
-Olympia,Tacoma,10000
-Olympia,Seattle,10000
-</pre>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 60%" />
+<col style="width: 12%" />
+<col style="width: 9%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Column Name</p></td>
+<td><p>Description</p></td>
+<td><p>Default</p></td>
+<td><p>Units</p></td>
+</tr>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>line name</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>to</p></td>
+<td><p>name of bus where line originates</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>from</p></td>
+<td><p>name of bus where line terminates</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>reactance</p></td>
+<td><p>total electrical reactance of line</p></td>
+<td><p>0.05</p></td>
+<td><p>p.u.</p></td>
+</tr>
+<tr class="row-even"><td><p>P max</p></td>
+<td><p>maximum power limit of line</p></td>
+<td></td>
+<td><p>MW</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bus</span><span class="p">,</span><span class="n">to</span> <span class="n">bus</span><span class="p">,</span><span class="n">Pmax</span>
+<span class="n">Seattle</span><span class="p">,</span><span class="n">Tacoma</span><span class="p">,</span><span class="mi">3</span>
+<span class="n">Olympia</span><span class="p">,</span><span class="n">Tacoma</span><span class="p">,</span><span class="mi">10000</span>
+<span class="n">Olympia</span><span class="p">,</span><span class="n">Seattle</span><span class="p">,</span><span class="mi">10000</span>
+</pre></div>
 </div>
 </div>
 <div class="section" id="schedules">
 <h2>Schedules<a class="headerlink" href="#schedules" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><pre>time,power
-0:00,250
-2:00,320
-4:00,110
-6:00,75</pre>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 55%" />
+<col style="width: 14%" />
+<col style="width: 11%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Column Name</p></td>
+<td><p>Description</p></td>
+<td><p>Default</p></td>
+<td><p>Units</p></td>
+</tr>
+<tr class="row-even"><td><p>time</p></td>
+<td><p>time and date (if applicable) for
+the start of the period</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>power</p></td>
+<td><p>energy scheduled (or predicted)
+for the period</p></td>
+<td></td>
+<td><p>MWh</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">time</span><span class="p">,</span><span class="n">power</span>
+<span class="mi">0</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="mi">250</span>
+<span class="mi">2</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="mi">320</span>
+<span class="mi">4</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="mi">110</span>
+<span class="mi">6</span><span class="p">:</span><span class="mi">00</span><span class="p">,</span><span class="mi">75</span>
+</pre></div>
 </div>
 </div>
 </div>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
 
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">minpower</a></h3>
 <ul>
@@ -112,7 +351,7 @@ Olympia,Seattle,10000
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="basic-use.html">Basic Use</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Creating a Problem</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Creating a Problem</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#generators">Generators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#initial-conditions">Initial Conditions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#loads">Loads</a></li>
@@ -130,8 +369,6 @@ Olympia,Seattle,10000
 <li class="toctree-l1"><a class="reference internal" href="economic-dispatch.html">Economic Dispatch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optimal-power-flow.html">Optimal Power Flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="unit-commitment.html">Unit Commitment</a></li>
-</ul>
-<ul class="simple">
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>
@@ -152,9 +389,6 @@ Olympia,Seattle,10000
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-<!--<div class="social">-->
-<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
-<!--</div>-->
         </div>
       </div>
       <div class="clearer"></div>

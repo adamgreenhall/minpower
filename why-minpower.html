@@ -1,34 +1,23 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Why Minpower &mdash; minpower</title>
-    
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Why Minpower &#8212; minpower  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
-    <link rel="top" title="minpower" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Installation" href="install.html" />
-    <link rel="prev" title="power systems tools made beautiful" href="index.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="index.html" />
  
 <script type="text/javascript">
   var _gaq = _gaq || [];
@@ -36,54 +25,54 @@
   _gaq.push(['_trackPageview']);
 </script>
 
-  </head>
-  <body>  
+  </head><body>  
 
     <div class="document">
 
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="why-minpower">
 <h1>Why Minpower<a class="headerlink" href="#why-minpower" title="Permalink to this headline">¶</a></h1>
-<p><strong>Minpower</strong> is designed to make solving <a class="reference internal" href="economic-dispatch.html"><em>ED</em></a>, <a class="reference internal" href="optimal-power-flow.html"><em>OPF</em></a>, and <a class="reference internal" href="unit-commitment.html"><em>UC</em></a> problems simple and intuitive. Traditional approaches to solving these problems are limited by:</p>
+<p><strong>Minpower</strong> is designed to make solving <a class="reference internal" href="economic-dispatch.html"><span class="doc">ED</span></a>, <a class="reference internal" href="optimal-power-flow.html"><span class="doc">OPF</span></a>, and <a class="reference internal" href="unit-commitment.html"><span class="doc">UC</span></a> problems simple and intuitive. Traditional approaches to solving these problems are limited by:</p>
 <blockquote>
 <div><ul class="simple">
-<li><abbr title="e.g. C++ or GMPL">low level</abbr> languages</li>
-<li><abbr title="e.g. CPLEX, GAMMS, AMPL, and AIMMS">expensive</abbr> software</li>
-<li>being <abbr title="e.g. only CPLEX or only GLPK">solver dependent</abbr></li>
+<li><p><abbr title="e.g. C++ or GMPL">low level</abbr> languages</p></li>
+<li><p><abbr title="e.g. CPLEX, GAMMS, AMPL, and AIMMS">expensive</abbr> software</p></li>
+<li><p>being <abbr title="e.g. only CPLEX or only GLPK">solver dependent</abbr></p></li>
 </ul>
 </div></blockquote>
 <div class="section" id="what-s-good">
-<h2>What&#8217;s good<a class="headerlink" href="#what-s-good" title="Permalink to this headline">¶</a></h2>
+<h2>What’s good<a class="headerlink" href="#what-s-good" title="Permalink to this headline">¶</a></h2>
 <p><strong>Minpower</strong></p>
 <blockquote>
 <div><ul class="simple">
-<li>is written in <a class="reference external" href="http://www.python.org/about/">Python</a></li>
-<li>is <a class="reference internal" href="about.html#license"><em>free</em></a> and <a class="reference internal" href="about.html#development"><em>open source</em></a></li>
-<li>can use many <a class="reference internal" href="solvers.html"><em>solvers</em></a></li>
-<li>has <abbr title="For large problems optimization takes most of the solution time. Minpower farms out its optimization to CPLEX with little overhead. Test results coming soon.">comparable solution times</abbr></li>
+<li><p>is written in <a class="reference external" href="http://www.python.org/about/">Python</a></p></li>
+<li><p>is <a class="reference internal" href="about.html#license"><span class="std std-ref">free</span></a> and <a class="reference internal" href="about.html#development"><span class="std std-ref">open source</span></a></p></li>
+<li><p>can use many <a class="reference internal" href="solvers.html"><span class="doc">solvers</span></a></p></li>
+<li><p>has <abbr title="For large problems optimization takes most of the solution time. Minpower farms out its optimization to CPLEX with little overhead.">comparable solution times</abbr></p></li>
 </ul>
 </div></blockquote>
 </div>
 <div class="section" id="sounds-great">
 <h2>Sounds great<a class="headerlink" href="#sounds-great" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="install.html"><em>Install Minpower</em></a> and try it out.</p>
+<p><a class="reference internal" href="install.html"><span class="doc">Install Minpower</span></a> and try it out.</p>
 </div>
 </div>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
 
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">minpower</a></h3>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="">Why Minpower</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#what-s-good">What&#8217;s good</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Why Minpower</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#what-s-good">What’s good</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#sounds-great">Sounds great</a></li>
 </ul>
 </li>
@@ -102,8 +91,6 @@
 <li class="toctree-l1"><a class="reference internal" href="economic-dispatch.html">Economic Dispatch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optimal-power-flow.html">Optimal Power Flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="unit-commitment.html">Unit Commitment</a></li>
-</ul>
-<ul class="simple">
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>
@@ -124,9 +111,6 @@
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-<!--<div class="social">-->
-<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
-<!--</div>-->
         </div>
       </div>
       <div class="clearer"></div>

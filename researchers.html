@@ -1,32 +1,21 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>For Researchers &mdash; minpower</title>
-    
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>For Researchers &#8212; minpower  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
-    <link rel="top" title="minpower" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Economic Dispatch" href="economic-dispatch.html" />
     <link rel="prev" title="For Students" href="students.html" />
  
@@ -36,77 +25,76 @@
   _gaq.push(['_trackPageview']);
 </script>
 
-  </head>
-  <body>  
+  </head><body>  
 
     <div class="document">
 
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="for-researchers">
 <h1>For Researchers<a class="headerlink" href="#for-researchers" title="Permalink to this headline">¶</a></h1>
-<p>You&#8217;re probably a researcher or grad student interested in power system optimization.</p>
-<p><strong>Minpower</strong> is a powerful tool even if you just want to use it as a <a class="reference external" href="http://en.wikipedia.org/wiki/Black_box">black box</a> for solving <a class="reference internal" href="economic-dispatch.html"><em>ED</em></a>, <a class="reference internal" href="optimal-power-flow.html"><em>OPF</em></a>, or <a class="reference internal" href="unit-commitment.html"><em>UC</em></a> problems. Some great built in features include:</p>
+<p>You’re probably a researcher or grad student interested in power system optimization.</p>
+<p><strong>Minpower</strong> is a powerful tool even if you just want to use it as a <a class="reference external" href="http://en.wikipedia.org/wiki/Black_box">black box</a> for solving <a class="reference internal" href="economic-dispatch.html"><span class="doc">ED</span></a>, <a class="reference internal" href="optimal-power-flow.html"><span class="doc">OPF</span></a>, or <a class="reference internal" href="unit-commitment.html"><span class="doc">UC</span></a> problems. Some great built in features include:</p>
 <ul class="simple">
-<li>polynomial cost or bid curves</li>
-<li>rolling unit commitments</li>
-<li>great visualizations</li>
+<li><p>polynomial cost or bid curves</p></li>
+<li><p>rolling unit commitments</p></li>
+<li><p>great visualizations</p></li>
 </ul>
-<p>But where <strong>Minpower</strong> really shines is when you want to <a class="reference internal" href="#add-constraint"><em>add a constraint</em></a> like load shedding, or even <a class="reference internal" href="#add-model"><em>add a model</em></a> of an electric vehicle aggregator. Or run a wind farm profitability study where <a class="reference internal" href="unit-commitment.html"><em>UC</em></a> is just another <a class="reference internal" href="#procedure"><em>procedure</em></a> that you need in a long chain of analysis. When you want to do research.</p>
+<p>But where <strong>Minpower</strong> really shines is when you want to <a class="reference internal" href="#add-constraint"><span class="std std-ref">add a constraint</span></a> like load shedding, or even <a class="reference internal" href="#add-model"><span class="std std-ref">add a model</span></a> of an electric vehicle aggregator. Or run a wind farm profitability study where <a class="reference internal" href="unit-commitment.html"><span class="doc">UC</span></a> is just another <a class="reference internal" href="#procedure"><span class="std std-ref">procedure</span></a> that you need in a long chain of analysis. When you want to do research.</p>
 <p>Because <strong>Minpower</strong> is written in Python, the code is easy to read and write. Because <strong>Minpower</strong> is open source you can use models other people have written and create your own.</p>
 <div class="section" id="calling-a-procedure">
 <span id="procedure"></span><h2>Calling a procedure<a class="headerlink" href="#calling-a-procedure" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<div><p>Minpower doesn&#8217;t have a true API - it has been developed primarily as a research tool. But that doesn&#8217;t mean you can&#8217;t take only the pieces you need out of it. You can import any function (or class) into your own script, e.g.:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">minpower.solve</span> <span class="kn">import</span> <span class="n">create_problem</span>
+<div><p>Minpower doesn’t have a true API - it has been developed primarily as a research tool. But that doesn’t mean you can’t take only the pieces you need out of it. You can import any function (or class) into your own script, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">minpower.solve</span> <span class="kn">import</span> <span class="n">create_problem</span>
 </pre></div>
 </div>
 <p>and then call it, e.g.:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">create_problem</span><span class="p">(</span><span class="n">power_system</span><span class="o">=</span><span class="n">my_ERCOT_iso_model</span><span class="p">,</span> <span class="n">times</span><span class="o">=</span><span class="n">year_2010_hourly_times</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">create_problem</span><span class="p">(</span><span class="n">power_system</span><span class="o">=</span><span class="n">my_ERCOT_iso_model</span><span class="p">,</span> <span class="n">times</span><span class="o">=</span><span class="n">year_2010_hourly_times</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Checking out how Minpower&#8217;s <a class="reference external" href="https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/">testing utilities</a> work is one way to see how you can programmatically create/change/solve/test problems.</p>
+<p>Checking out how Minpower’s <a class="reference external" href="https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/">testing utilities</a> work is one way to see how you can programmatically create/change/solve/test problems.</p>
 </div></blockquote>
 </div>
 <div class="section" id="adding-a-constraint">
 <span id="add-constraint"></span><h2>Adding a constraint<a class="headerlink" href="#adding-a-constraint" title="Permalink to this headline">¶</a></h2>
-<p>Constraints can be added to existing power system components with a very simple syntax. Within the <tt class="xref py py-meth docutils literal"><span class="pre">create_constraints()</span></tt> method (e.g. <tt class="xref py py-meth docutils literal"><span class="pre">create_constraints()</span></tt>), simply call <tt class="xref py py-meth docutils literal"><span class="pre">add_constraint()</span></tt>. This method takes a name for the constraint, a time the constraint is in reference to (if applicable), and an expression. As an example, the maximum power limit is set for a generator by</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">Generator</span><span class="p">(</span><span class="n">OptimizationObject</span><span class="p">):</span>
-    <span class="c">#other methods here</span>
+<p>Constraints can be added to existing power system components with a very simple syntax. Within the <code class="xref py py-meth docutils literal notranslate"><span class="pre">create_constraints()</span></code> method (e.g. <code class="xref py py-meth docutils literal notranslate"><span class="pre">create_constraints()</span></code>), simply call <code class="xref py py-meth docutils literal notranslate"><span class="pre">add_constraint()</span></code>. This method takes a name for the constraint, a time the constraint is in reference to (if applicable), and an expression. As an example, the maximum power limit is set for a generator by</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Generator</span><span class="p">(</span><span class="n">OptimizationObject</span><span class="p">):</span>
+    <span class="c1">#other methods here</span>
     <span class="k">def</span> <span class="nf">create_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">times</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="n">times</span><span class="p">:</span>
-            <span class="c">#add other constraints here</span>
+            <span class="c1">#add other constraints here</span>
             <span class="n">expression</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">time</span><span class="p">)</span><span class="o">&lt;=</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="n">time</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">Pmax</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">add_constraint</span><span class="p">(</span><span class="s">&#39;max gen power&#39;</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_constraint</span><span class="p">(</span><span class="s1">&#39;max gen power&#39;</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_constraints</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="adding-a-component">
 <span id="add-model"></span><h2>Adding a component<a class="headerlink" href="#adding-a-component" title="Permalink to this headline">¶</a></h2>
-<p>The power system components in <strong>Minpower</strong> are <a class="reference internal" href="python-intro.html#object-oriented"><em>object oriented</em></a> models and are also all <tt class="xref py py-class docutils literal"> <span class="pre">Check</span> <span class="pre">out</span> <span class="pre">:mod:`powersystems</span></tt> for examples of existing models. To define your own, simply inherit the <tt class="xref py py-class docutils literal"><span class="pre">OptimizationObject</span></tt> class and follow its template:</p>
+<p>The power system components in <strong>Minpower</strong> are <a class="reference internal" href="python-intro.html#object-oriented"><span class="std std-ref">object oriented</span></a> models and are also all <code class="xref py py-class docutils literal notranslate"> <span class="pre">Check</span> <span class="pre">out</span> <span class="pre">:mod:`powersystems</span></code> for examples of existing models. To define your own, simply inherit the <code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationObject</span></code> class and follow its template:</p>
 <blockquote>
 <div><ul class="simple">
-<li><tt class="xref py py-meth docutils literal"><span class="pre">__init__()</span></tt> creates a new object of that class and sets its parameters</li>
-<li><tt class="xref py py-meth docutils literal"><span class="pre">init_optimization()</span></tt> is called within <tt class="xref py py-meth docutils literal"><span class="pre">__init__()</span></tt> and sets up an empty structure for optimization variables, constraints, and objective components</li>
-<li><tt class="xref py py-meth docutils literal"><span class="pre">create_variables()</span></tt> sets up the optimization variables</li>
-<li><tt class="xref py py-meth docutils literal"><span class="pre">create_constraints()</span></tt> sets up the optimization constraints</li>
-<li><tt class="xref py py-meth docutils literal"><span class="pre">create_objective()</span></tt> defines a objective cost component (if any)</li>
-<li><tt class="xref py py-meth docutils literal"><span class="pre">__str__()</span></tt> defines a <abbr title="for use in creating variables and constraints, which must have unique names">unique string</abbr> representing the object</li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">__init__()</span></code> creates a new object of that class and sets its parameters</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">init_optimization()</span></code> is called within <code class="xref py py-meth docutils literal notranslate"><span class="pre">__init__()</span></code> and sets up an empty structure for optimization variables, constraints, and objective components</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_variables()</span></code> sets up the optimization variables</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_constraints()</span></code> sets up the optimization constraints</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_objective()</span></code> defines a objective cost component (if any)</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">__str__()</span></code> defines a <abbr title="for use in creating variables and constraints, which must have unique names">unique string</abbr> representing the object</p></li>
 </ul>
 </div></blockquote>
 <p>Below is an example of the basic structure for an EV aggregator model:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">EV_aggregator</span><span class="p">(</span><span class="n">OptimizationObject</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">EV_aggregator</span><span class="p">(</span><span class="n">OptimizationObject</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;an example model of an electric vehicle aggregator&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">number_cars</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
         <span class="n">per_car_capacity</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
-        <span class="n">index</span><span class="o">=</span><span class="bp">None</span>  <span class="p">):</span>
+        <span class="n">index</span><span class="o">=</span><span class="kc">None</span>  <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;create a new aggregator object&quot;&quot;&quot;</span>
-        <span class="n">update_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">locals</span><span class="p">())</span> <span class="c">#load in inputs</span>
+        <span class="n">update_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="nb">locals</span><span class="p">())</span> <span class="c1">#load in inputs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">init_optimization</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">create_variables</span><span class="p">(</span><span class="n">times</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;create the aggregator&#39;s optimization</span>
@@ -119,39 +107,40 @@
         <span class="sd">&quot;&quot;&quot;define the aggregator&#39;s optimization</span>
 <span class="sd">           constraints here&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_constraint</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
-    <span class="c">#some more methods for the aggregator</span>
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="c1">#some more methods for the aggregator</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;a unique identifier for the aggregator&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s">&#39;agg_&#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span>
+        <span class="k">return</span> <span class="s1">&#39;agg_&#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span>
 </pre></div>
 </div>
 <div class="section" id="wishlist">
 <h3>Wishlist<a class="headerlink" href="#wishlist" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li>demand response</li>
-<li>storage</li>
-<li>cascading hydro-systems</li>
+<li><p>demand response</p></li>
+<li><p>storage</p></li>
+<li><p>cascading hydro-systems</p></li>
 </ul>
 </div>
 </div>
 <div class="section" id="collaboration">
 <h2>Collaboration<a class="headerlink" href="#collaboration" title="Permalink to this headline">¶</a></h2>
-<p>For collaboration get in touch with Adam via <a class="reference external" href="mailto:argreen&#37;&#52;&#48;uw&#46;edu">email</a> or <a class="reference external" href="http://twitter.com/adamgreenhall">&#64;adamgreenhall</a>.</p>
+<p>For collaboration get in touch with Adam via <a class="reference external" href="mailto:hello&#37;&#52;&#48;adamgreenhall&#46;com">email</a>.</p>
 </div>
 <div class="section" id="help">
 <h2>Help<a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h2>
-<p>Perhaps you are unfamiliar with Python? Check out <a class="reference internal" href="python-intro.html"><em>Intro to Python</em></a> to get up to speed.</p>
+<p>Perhaps you are unfamiliar with Python? Check out <a class="reference internal" href="python-intro.html"><span class="doc">Intro to Python</span></a> to get up to speed.</p>
 <p>Check out <a class="reference external" href="http://stackoverflow.com/questions/tagged/python">Stackoverflow</a> for general Python help.</p>
 <p>If you find a bug, please report it on the <a class="reference external" href="https://github.com/adamgreenhall/minpower/issues">GitHub issue tracker</a>.</p>
 </div>
 </div>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
 
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">minpower</a></h3>
 <ul>
@@ -165,7 +154,7 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="students.html">For Students</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">For Researchers</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">For Researchers</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#calling-a-procedure">Calling a procedure</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#adding-a-constraint">Adding a constraint</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#adding-a-component">Adding a component</a><ul>
@@ -181,8 +170,6 @@
 <li class="toctree-l1"><a class="reference internal" href="economic-dispatch.html">Economic Dispatch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optimal-power-flow.html">Optimal Power Flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="unit-commitment.html">Unit Commitment</a></li>
-</ul>
-<ul class="simple">
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>
@@ -203,9 +190,6 @@
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-<!--<div class="social">-->
-<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
-<!--</div>-->
         </div>
       </div>
       <div class="clearer"></div>

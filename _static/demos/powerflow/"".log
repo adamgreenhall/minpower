@@ -1,0 +1,78 @@
+2021-07-21 14:40:54 INFO: Solving with glpk
+2021-07-21 14:40:54 INFO: Problem solved in 0.017696619033813477s.
+2021-07-21 14:40:54 INFO: 
+2021-07-21 14:40:54 INFO: Solution information
+2021-07-21 14:40:54 INFO: ----------
+2021-07-21 14:40:54 INFO: 
+2021-07-21 14:40:54 INFO: Status
+2021-07-21 14:40:54 INFO:             g0  g1  g2
+2021-07-21 14:40:54 INFO: time
+2021-07-21 14:40:54 INFO: 2021-07-21   1   1   1
+2021-07-21 14:40:54 INFO: Power
+2021-07-21 14:40:54 INFO:              g0    g1    g2
+2021-07-21 14:40:54 INFO: time
+2021-07-21 14:40:54 INFO: 2021-07-21  4.5  50.0  45.5
+2021-07-21 14:40:54 INFO: IC
+2021-07-21 14:40:54 INFO:               g0   g1     g2
+2021-07-21 14:40:54 INFO: time
+2021-07-21 14:40:54 INFO: 2021-07-21  5.09  8.0  10.91
+2021-07-21 14:40:54 INFO: 
+2021-07-21 14:40:54 INFO: load info:
+2021-07-21 14:40:54 INFO: bus=['Tacoma', 'Olympia', 'Seattle']
+2021-07-21 14:40:54 INFO: name=['papermill', 'smelter', 'UW']
+2021-07-21 14:40:54 INFO: Pd=[0.0, 50.0, 50.0]
+2021-07-21 14:40:54 INFO: bus info:
+2021-07-21 14:40:54 INFO: name=['Tacoma', 'Olympia', 'Seattle']
+2021-07-21 14:40:54 INFO: Pinj=[4.49999999999931, 0.0, -4.499999999999702]
+2021-07-21 14:40:54 INFO: angle=[0.0, -0.0749999999999318, -0.15]
+2021-07-21 14:40:54 INFO: LMP=[None, None, None]
+2021-07-21 14:40:54 INFO: line info:
+2021-07-21 14:40:54 INFO: connecting=[('Seattle', 'Tacoma'), ('Olympia', 'Tacoma'), ('Olympia', 'Seattle')]
+2021-07-21 14:40:54 INFO: Pk=[-3.0, -1.49999999999864, 1.50000000000136]
+2021-07-21 14:40:54 INFO: price=[None, None, None]
+2021-07-21 14:40:54 INFO: 
+2021-07-21 14:40:54 INFO: objective cost=877.499999999999
+2021-07-21 14:40:54 INFO: total cost of generation=877.4999999999991
+2021-07-21 14:40:54 INFO: linearized fuel cost of generation=877.4999999999991
+2021-07-21 14:40:54 INFO: polynomial fuel cost of generation=873.4049999999997
+2021-07-21 14:40:54 INFO: percentage difference		=0.47%
+2021-07-21 14:40:54 INFO: total time: 0.09315705299377441s
+2021-07-21 14:42:04 INFO: Solving with glpk
+2021-07-21 14:42:04 INFO: Problem solved in 0.017606735229492188s.
+2021-07-21 14:42:04 INFO: 
+2021-07-21 14:42:04 INFO: Solution information
+2021-07-21 14:42:04 INFO: ----------
+2021-07-21 14:42:04 INFO: 
+2021-07-21 14:42:04 INFO: Status
+2021-07-21 14:42:04 INFO:             g0  g1  g2
+2021-07-21 14:42:04 INFO: time
+2021-07-21 14:42:04 INFO: 2021-07-21   1   1   1
+2021-07-21 14:42:04 INFO: Power
+2021-07-21 14:42:04 INFO:              g0    g1    g2
+2021-07-21 14:42:04 INFO: time
+2021-07-21 14:42:04 INFO: 2021-07-21  4.5  50.0  45.5
+2021-07-21 14:42:04 INFO: IC
+2021-07-21 14:42:04 INFO:               g0   g1     g2
+2021-07-21 14:42:04 INFO: time
+2021-07-21 14:42:04 INFO: 2021-07-21  5.09  8.0  10.91
+2021-07-21 14:42:04 INFO: 
+2021-07-21 14:42:04 INFO: load info:
+2021-07-21 14:42:04 INFO: bus=['Tacoma', 'Olympia', 'Seattle']
+2021-07-21 14:42:04 INFO: name=['papermill', 'smelter', 'UW']
+2021-07-21 14:42:04 INFO: Pd=[0.0, 50.0, 50.0]
+2021-07-21 14:42:04 INFO: bus info:
+2021-07-21 14:42:04 INFO: name=['Tacoma', 'Olympia', 'Seattle']
+2021-07-21 14:42:04 INFO: Pinj=[4.49999999999931, 0.0, -4.499999999999702]
+2021-07-21 14:42:04 INFO: angle=[0.0, -0.0749999999999318, -0.15]
+2021-07-21 14:42:04 INFO: LMP=[None, None, None]
+2021-07-21 14:42:04 INFO: line info:
+2021-07-21 14:42:04 INFO: connecting=[('Seattle', 'Tacoma'), ('Olympia', 'Tacoma'), ('Olympia', 'Seattle')]
+2021-07-21 14:42:04 INFO: Pk=[-3.0, -1.49999999999864, 1.50000000000136]
+2021-07-21 14:42:04 INFO: price=[None, None, None]
+2021-07-21 14:42:04 INFO: 
+2021-07-21 14:42:04 INFO: objective cost=877.499999999999
+2021-07-21 14:42:04 INFO: total cost of generation=877.4999999999991
+2021-07-21 14:42:04 INFO: linearized fuel cost of generation=877.4999999999991
+2021-07-21 14:42:04 INFO: polynomial fuel cost of generation=873.4049999999997
+2021-07-21 14:42:04 INFO: percentage difference		=0.47%
+2021-07-21 14:42:05 INFO: total time: 0.8030581474304199s

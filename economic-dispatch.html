@@ -1,32 +1,22 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>Economic Dispatch &mdash; minpower</title>
-    
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Economic Dispatch &#8212; minpower  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
-    <link rel="top" title="minpower" href="index.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Optimal Power Flow" href="optimal-power-flow.html" />
     <link rel="prev" title="For Researchers" href="researchers.html" />
  
@@ -36,87 +26,89 @@
   _gaq.push(['_trackPageview']);
 </script>
 
-  </head>
-  <body>  
+  </head><body>  
 
     <div class="document">
 
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="economic-dispatch">
 <h1>Economic Dispatch<a class="headerlink" href="#economic-dispatch" title="Permalink to this headline">¶</a></h1>
 <p><abbr title="Economic Dispatch">ED</abbr> tries to allocate available generation to meet the current system load at lowest cost. The classic text is <a class="reference external" href="http://amzn.to/wood-wollenburg">Wood &amp; Wollenburg</a>.</p>
 <div class="section" id="the-problem">
 <h2>The problem<a class="headerlink" href="#the-problem" title="Permalink to this headline">¶</a></h2>
-<div class="optimizationproblem container">
-<p><span class="math">\(\min \sum_g C_g(P_g)\)</span></p>
-<p><span class="math">\(\mathrm{s.t.}  P_{\min (g)} \leq P_g \leq P_{\max (g)}   \forall   \mathrm{generators} (g)\)</span></p>
-<p><span class="math">\(\mathrm{s.t.}  \sum_g P_{g}= P_{\mathrm{load}}\)</span></p>
+<div class="optimizationproblem docutils container">
+<p><span class="math notranslate nohighlight">\(\min \sum_g C_g(P_g)\)</span></p>
+<p><span class="math notranslate nohighlight">\(\mathrm{s.t.}  P_{\min (g)} \leq P_g \leq P_{\max (g)}   \forall   \mathrm{generators} (g)\)</span></p>
+<p><span class="math notranslate nohighlight">\(\mathrm{s.t.}  \sum_g P_{g}= P_{\mathrm{load}}\)</span></p>
 </div>
-<p>In this mathematical formulation generators are indexed by <span class="math">\(g\)</span>. <span class="math">\(P_g\)</span> is a generator’s power output and <span class="math">\(C_g()\)</span> is its cost function. The objective is to minimize the total cost. There are two constraints:</p>
+<p>In this mathematical formulation generators are indexed by <span class="math notranslate nohighlight">\(g\)</span>. <span class="math notranslate nohighlight">\(P_g\)</span> is a generator’s power output and <span class="math notranslate nohighlight">\(C_g()\)</span> is its cost function. The objective is to minimize the total cost. There are two constraints:</p>
 <ul class="simple">
-<li>each generator must be within its real power limits and</li>
-<li>total power generated must equal the power consumed by the load.</li>
+<li><p>each generator must be within its real power limits and</p></li>
+<li><p>total power generated must equal the power consumed by the load.</p></li>
 </ul>
 </div>
 <div class="section" id="example-problem">
 <h2>Example Problem<a class="headerlink" href="#example-problem" title="Permalink to this headline">¶</a></h2>
 <p>To define a simple <abbr title="Economic Dispatch">ED</abbr> problem, <strong>Minpower</strong> requires two spreadsheets. The first describes the generator parameters (<a class="reference external" href="https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/ed-WW-3-7/generators.csv">generators.csv</a>):</p>
-<div class="highlight-python"><pre>heat rate equation,P min,P max,fuel cost
-225+8.4P+0.0025P^2,45,450,0.8
-729+6.3P+0.0081P^2,45,350,1.02
-400+7.5P+0.0025P^2,47.5,450,0.9
-</pre>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">heat</span> <span class="n">rate</span> <span class="n">equation</span><span class="p">,</span><span class="n">P</span> <span class="nb">min</span><span class="p">,</span><span class="n">P</span> <span class="nb">max</span><span class="p">,</span><span class="n">fuel</span> <span class="n">cost</span>
+<span class="mi">225</span><span class="o">+</span><span class="mf">8.4</span><span class="n">P</span><span class="o">+</span><span class="mf">0.0025</span><span class="n">P</span><span class="o">^</span><span class="mi">2</span><span class="p">,</span><span class="mi">45</span><span class="p">,</span><span class="mi">450</span><span class="p">,</span><span class="mf">0.8</span>
+<span class="mi">729</span><span class="o">+</span><span class="mf">6.3</span><span class="n">P</span><span class="o">+</span><span class="mf">0.0081</span><span class="n">P</span><span class="o">^</span><span class="mi">2</span><span class="p">,</span><span class="mi">45</span><span class="p">,</span><span class="mi">350</span><span class="p">,</span><span class="mf">1.02</span>
+<span class="mi">400</span><span class="o">+</span><span class="mf">7.5</span><span class="n">P</span><span class="o">+</span><span class="mf">0.0025</span><span class="n">P</span><span class="o">^</span><span class="mi">2</span><span class="p">,</span><span class="mf">47.5</span><span class="p">,</span><span class="mi">450</span><span class="p">,</span><span class="mf">0.9</span>
+</pre></div>
 </div>
 <p>The second simply describes the load (<a class="reference external" href="https://github.com/adamgreenhall/minpower/blob/master/minpower/tests/ed-WW-3-7/loads.csv">loads.csv</a>):</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">name</span><span class="p">,</span><span class="n">power</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">,</span><span class="n">power</span>
 <span class="n">load</span><span class="p">,</span><span class="mi">500</span>
 </pre></div>
 </div>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">For more information about what options you can specify in each spreadsheet see: <a class="reference internal" href="creating-problems.html"><em>Creating a Problem</em></a>.</p>
+<p class="admonition-title">Note</p>
+<p>For more information about what options you can specify in each spreadsheet see: <a class="reference internal" href="creating-problems.html"><span class="doc">Creating a Problem</span></a>.</p>
 </div>
 </div>
 <div class="section" id="solving">
 <h2>Solving<a class="headerlink" href="#solving" title="Permalink to this headline">¶</a></h2>
-<p>Save the two spreadsheets above into into a folder (call it <tt class="docutils literal"><span class="pre">mydispatch</span></tt>) and run:</p>
-<div class="highlight-python"><pre>minpower mydispatch</pre>
+<p>Save the two spreadsheets above into into a folder (call it <code class="docutils literal notranslate"><span class="pre">mydispatch</span></code>) and run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">minpower</span> <span class="n">mydispatch</span>
+</pre></div>
 </div>
-<p>This particular problem is also <strong>Minpower</strong> built-in test case (based on <a class="reference external" href="http://amzn.to/wood-wollenburg">Wood &amp; Wollenburg</a> Problem 3.7), so if you haven&#8217;t been following along, to solve it, call:</p>
-<div class="highlight-python"><pre>minpower ed-WW-3-7</pre>
+<p>This particular problem is also <strong>Minpower</strong> built-in test case (based on <a class="reference external" href="http://amzn.to/wood-wollenburg">Wood &amp; Wollenburg</a> Problem 3.7), so if you haven’t been following along, to solve it, call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">minpower</span> <span class="n">ed</span><span class="o">-</span><span class="n">WW</span><span class="o">-</span><span class="mi">3</span><span class="o">-</span><span class="mi">7</span>
+</pre></div>
 </div>
 </div>
 <div class="section" id="example-solution">
 <h2>Example Solution<a class="headerlink" href="#example-solution" title="Permalink to this headline">¶</a></h2>
-<p>The result is a plot (<tt class="docutils literal"><span class="pre">dispatch.png</span></tt>):</p>
+<p>The result is a plot (<code class="docutils literal notranslate"><span class="pre">dispatch.png</span></code>):</p>
 <blockquote>
-<div><img alt="_images/dispatch-demo.png" src="_images/dispatch-demo.png" style="width: 500px;" />
+<div><a class="reference internal image-reference" href="_images/dispatch-demo.png"><img alt="_images/dispatch-demo.png" src="_images/dispatch-demo.png" style="width: 500px;" /></a>
 </div></blockquote>
-<p>and a spreadsheet (<tt class="docutils literal"><span class="pre">dispatch.csv</span></tt>):</p>
+<p>and a spreadsheet (<code class="docutils literal notranslate"><span class="pre">dispatch.csv</span></code>):</p>
 <blockquote>
-<div><div class="highlight-python"><div class="highlight"><pre><span class="n">name</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">P</span><span class="p">,</span><span class="n">IC</span>
-<span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">229.090484849</span><span class="p">,</span><span class="mf">7.6363619394</span>
-<span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">72.7273448801</span><span class="p">,</span><span class="mf">7.6277466468</span>
-<span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">198.182170271</span><span class="p">,</span><span class="mf">7.64181976622</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">name</span><span class="p">,</span><span class="n">power</span><span class="p">,</span><span class="n">IC</span>
+<span class="mi">1</span><span class="p">,</span><span class="mf">216.000000000001</span><span class="p">,</span><span class="mf">7.584000000000005</span>
+<span class="mi">2</span><span class="p">,</span><span class="mf">75.4999999999998</span><span class="p">,</span><span class="mf">7.673561999999997</span>
+<span class="mi">3</span><span class="p">,</span><span class="mf">208.499999999999</span><span class="p">,</span><span class="mf">7.688249999999996</span>
 </pre></div>
 </div>
 </div></blockquote>
-<p>These outputs show that the problem&#8217;s two generators (named <tt class="docutils literal"><span class="pre">cheap</span></tt> and <tt class="docutils literal"><span class="pre">expensive</span></tt>) are being
-dispatched so that their incremental costs (the vertical axis in the plot and <tt class="docutils literal"><span class="pre">IC</span></tt> in the spreadsheet) are near equal.
-Each generator&#8217;s linearized incremental cost is shown in the plot, with a dot on its current real power output (<tt class="docutils literal"><span class="pre">P</span></tt>).
-Because this is a dispatch each generator is on (<tt class="docutils literal"><span class="pre">u=True</span></tt>) unless specified in the input spreadsheet.</p>
+<p>These outputs show that the problem’s two generators (named <code class="docutils literal notranslate"><span class="pre">cheap</span></code> and <code class="docutils literal notranslate"><span class="pre">expensive</span></code>) are being
+dispatched so that their incremental costs (the vertical axis in the plot and <code class="docutils literal notranslate"><span class="pre">IC</span></code> in the spreadsheet) are near equal.
+Each generator’s linearized incremental cost is shown in the plot, with a dot on its current real power output (<code class="docutils literal notranslate"><span class="pre">P</span></code>).
+Because this is a dispatch each generator is on (<code class="docutils literal notranslate"><span class="pre">u=True</span></code>) unless specified in the input spreadsheet.</p>
 </div>
 </div>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
 
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">minpower</a></h3>
 <ul>
@@ -133,7 +125,7 @@ Because this is a dispatch each generator is on (<tt class="docutils literal"><s
 <li class="toctree-l1"><a class="reference internal" href="researchers.html">For Researchers</a></li>
 </ul>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="">Economic Dispatch</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Economic Dispatch</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#the-problem">The problem</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#example-problem">Example Problem</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#solving">Solving</a></li>
@@ -142,8 +134,6 @@ Because this is a dispatch each generator is on (<tt class="docutils literal"><s
 </li>
 <li class="toctree-l1"><a class="reference internal" href="optimal-power-flow.html">Optimal Power Flow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="unit-commitment.html">Unit Commitment</a></li>
-</ul>
-<ul class="simple">
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="collaborate.html">Collaborate</a></li>
@@ -164,9 +154,6 @@ Because this is a dispatch each generator is on (<tt class="docutils literal"><s
     </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-<!--<div class="social">-->
-<!--<div class="twitter"><a href="https://twitter.com/share" class="twitter-share-button" data-url="minpowertoolkit.com" data-count="none" data-via="adamgreenhall">Tweet</a><script type="text/javascript" src="//platform.twitter.com/widgets.js"></script></div>-->
-<!--</div>-->
         </div>
       </div>
       <div class="clearer"></div>

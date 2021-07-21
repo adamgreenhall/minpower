@@ -14,7 +14,7 @@ def test_pyomo_duals():
     model.OBJ = pyo.Objective(expr=2 * model.x[1] + 3 * model.x[2])
     model.Constraint1 = pyo.Constraint(expr=3 * model.x[1] + 4 * model.x[2] >= 1)
 
-    opt = SolverFactory("cbc")
+    opt = SolverFactory("glpk")
     opt.solve(model)
 
     # make sure the dual is non-zero (constraint is binding)
@@ -36,7 +36,7 @@ def test_duals_mip():
     model.Constraint2 = pyo.Constraint(expr=model.y[2] <= 80 * model.x[2])
     model.Constraint3 = pyo.Constraint(expr=model.y[1] + model.y[2] == 100)
 
-    opt = SolverFactory("cbc")
+    opt = SolverFactory("glpk")
     opt.solve(model)
 
     # make sure the solution is what we'd expect (both gen need to run)

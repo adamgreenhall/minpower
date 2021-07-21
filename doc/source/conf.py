@@ -108,8 +108,8 @@ htmlhelp_basename = 'minpower'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'minpower.tex', u'minpower documentation',
-   u'Adam Greenhall', 'manual'),
+  ('index', 'minpower.tex', 'minpower documentation',
+   'Adam Greenhall', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -141,6 +141,6 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'minpower', u'minpower documentation',
-     [u'Adam Greenhall'], 1)
+    ('index', 'minpower', 'minpower documentation',
+     ['Adam Greenhall'], 1)
 ]

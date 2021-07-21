@@ -6,14 +6,22 @@ Solver Choices
 
 * free
 * open source
+* easy to install
 * slow for large problems
+
+`CBC <https://projects.coin-or.org/Cbc>`_
+-------------------------------------
+
+* free
+* open source
+* faster than GLPK for large problems
 
 `Gurobi <http://gurobi.com>`_
 -------------------------------
 
 * free with `academic license <http://gurobi.com/html/academic.html>`_
 * easy to `install <http://gurobi.com/doc/45/quickstart/>`_
-* billing itself as 'the next CPLEX'
+* usually `ranks <http://plato.asu.edu/bench.html>`_ as the fastest available MIP solver
 
 
 `CPLEX <http://www.ibm.com/software/integration/optimization/cplex-optimizer>`_

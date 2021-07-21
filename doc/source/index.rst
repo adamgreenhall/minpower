@@ -1,6 +1,3 @@
-power systems tools made beautiful
-====================================
-
 **Minpower** is an open source toolkit for
 :doc:`students<students>` and :doc:`researchers<researchers>` in power systems.
 It is designed to make working with :doc:`ED <economic-dispatch>`,

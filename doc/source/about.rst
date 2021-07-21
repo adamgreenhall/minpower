@@ -4,7 +4,7 @@ About minpower
 **Minpower** is an :ref:`open source<license>` toolkit for :doc:`students<students>` and :doc:`researchers<researchers>` in power systems. It is designed to make working with :doc:`ED <economic-dispatch>`, :doc:`OPF <optimal-power-flow>`, and :doc:`UC <unit-commitment>` problems :doc:`simple and intuitive<why-minpower>`. The goal is to foster :doc:`collaboration<collaborate>` with other :doc:`researchers<researchers>` and to make learning easier for :doc:`students<students>`.
 
 
-**Minpower** is currently :ref:`under development <development>`.
+**Minpower** was actively :ref:`developed <development>` until 2013. It is not currently being developed, but feel free to use it as is or create projects based on it.
 
 
 .. _authors:
@@ -33,7 +33,7 @@ Authors and Collaborators
         :align: left
     ..  container:: halfwidth
 
-        `Sandia National Labs <https://software.sandia.gov/trac/coopr>`_ makes the ``coopr`` package which is the engine for the optimization that goes on in minpower.
+        `Sandia National Labs <http://www.pyomo.org/>`_ makes the ``pyomo`` package which is the engine for the optimization that goes on in minpower.
 
 
 .. _development:

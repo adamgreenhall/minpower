@@ -5,14 +5,14 @@ Intro to Python
 
 Syntax
 --------
-Readability is critical, so no curly braces ``{}`` are used in Python. Instead code is :abbr:`indented (using 4 spaces per indent)` to show loops, functions, ...
+Readability is prioritized, so no curly braces ``{}`` are used in Python. Instead code is :abbr:`indented (using 4 spaces per indent)` to show loops, functions, ...
 
 List comprehension
 ------------------
 Lists are basically arrays, but smarter::
 
     >>> timesL=['1:00','2:00','3:00']
-    >>> for time in timesL: print time
+    >>> for time in timesL: print(time)
     1:00
     2:00
     3:00
@@ -23,19 +23,19 @@ Dictionaries
 Dictionaries create one-to-one mappings, just what you would expect from the name::
 
     >>> alphabetD=dict(a=1,b=2,c=3)
-    >>> print alphabetD['a']
+    >>> print(alphabetD['a'])
     1
-    >>> print alphabetD['b']
+    >>> print(alphabetD['b'])
     2
 
 
 
 Key Word Arguments
 --------------------
-Order does not matter. Defaults can be set. This can be really beautiful::
+Order does not matter. Defaults can be set: ::
 
     >>> def f(a=0,b=2): return a+b
-    >>> print f(), f(a=4), f(b=3), f(a=-1,b=2), f(b=3,a=4)
+    >>> print(f(), f(a=4), f(b=3), f(a=-1,b=2), f(b=3,a=4))
     2 6 3 1 7
 
 .. _object-oriented:
@@ -58,7 +58,7 @@ Classes basically create a fixed set of ``attributes`` (properties) and ``method
 So in practice this would look like::
 
     >>> plantA = Generator(Pmin=10,Pmax=100)
-    >>> print plantA.Pmin, plantA.kind, plantA.operating_range()
+    >>> print(plantA.Pmin, plantA.kind, plantA.operating_range())
     10 'coal' 90
 
 .. _Python: http://python.org

@@ -10,6 +10,7 @@ Installation
 
 
 1. Get Python
+----------------
 
 You'll need python3. Instructions for `Windows <https://docs.python-guide.org/starting/install3/win/>`_, `MacOS <https://docs.python-guide.org/starting/install3/osx/>`_, `Linux <https://docs.python-guide.org/starting/install3/linux/>`_ 
 
@@ -18,7 +19,7 @@ You'll need python3. Instructions for `Windows <https://docs.python-guide.org/st
 
 ``python3 -m pip install minpower``
 
-2. Get a Solver
+3. Get a Solver
 ----------------
 
 Minpower has been tested with `GLPK <http://www.gnu.org/s/glpk>`_, `CBC <https://projects.coin-or.org/Cbc>`_, `Gurboi <http://gurobi.com>`_, and `CPLEX <http://www.ibm.com/software/integration/optimization/cplex-optimizer>`_.

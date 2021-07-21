@@ -5,6 +5,7 @@ python:
 install:
     - bash .travis_install.sh
     - pip install coverage objgraph
+    - pip freeze
 
 script:
     - nosetests --with-coverage --cover-package=minpower

@@ -3,6 +3,7 @@ python:
   - 3.9
 
 install:
+    - sudo apt-get update -y
     - bash .travis_install.sh
     - pip install coverage objgraph
     - pip freeze

@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.CRITICAL, format="%(levelname)s: %(message)s")
 import pandas as pd
 import numpy as np
 
-from pandas.util.testing import assert_series_equal
+from pandas.testing import assert_series_equal
 from minpower.generators import Generator_nonControllable, Generator_Stochastic
 from minpower.optimization import value
 from minpower.schedule import TimeIndex

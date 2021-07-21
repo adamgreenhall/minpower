@@ -29,6 +29,7 @@ setup(
         "pandas>=1.3",
         "pyomo>=6.0",
         "matplotlib>=3.4",
+        "xarray>=0.18",
         "PySP @ http://github.com/Pyomo/pysp/tarball/v6.0#egg=pysp-1.0",
     ],
     tests_require=["nose", "coverage", "objgraph"],

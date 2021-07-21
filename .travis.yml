@@ -1,6 +1,6 @@
 language: python
 python:
-  - 3.9.6
+  - 3.9
 
 install:
     - bash .travis_install.sh

@@ -2,8 +2,11 @@ language: python
 python:
   - 3.9
 
+addons:
+  apt:
+    update: true
+
 install:
-    - sudo apt-get update -y
     - bash .travis_install.sh
     - pip install coverage objgraph
     - pip freeze

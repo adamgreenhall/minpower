@@ -1,4 +1,2 @@
-sudo apt-get install -y glpk
+sudo apt-get install -y glpk-utils
 pip install .
-mkdir -p ~/.config/matplotlib/
-echo "backend : Agg" > ~/.config/matplotlib/matplotlibrc

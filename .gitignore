@@ -32,6 +32,8 @@ addons/*.py
 *.so
 *.pyc
 doc/source/*.rst
+build/
+dist/
 
 # Packages #
 ############

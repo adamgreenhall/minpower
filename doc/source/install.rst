@@ -34,3 +34,9 @@ Go ahead and download  `the basic unit commitment test case <https://github.com/
     minpower uc
 
 If you get an error about the problem not being solved - Python probably doesn't know where your solver is. To fix this here's a :doc:`guide to solver-to-Python connection<solver-connection>`. 
+
+
+Stochastic UC
+---------------
+
+For stochastic problems you will need to install `PySP <https://github.com/Pyomo/pysp>`_ via ``pip install http://github.com/Pyomo/pysp/tarball/v6.0#egg=pysp-1.0``

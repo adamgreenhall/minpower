@@ -2,8 +2,6 @@
 Stochastic scenario models for schedules.
 """
 from pyomo.environ import AbstractModel, Set, Param, Boolean, Var
-from pysp.scenariotree import ScenarioTree
-from pysp.ef import create_ef_instance
 from .config import user_config
 import gc
 import logging
@@ -100,6 +98,9 @@ def define_stage_variables(power_system, times):
 
 
 def create_problem_with_scenarios(power_system, times):
+    from pysp.scenariotree import ScenarioTree
+    from pysp.ef import create_ef_instance
+
     logging.debug("constructing scenario tree")
 
     scenario_tree = ScenarioTree(

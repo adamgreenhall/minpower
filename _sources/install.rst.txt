@@ -35,9 +35,9 @@ For a quick and easy solver installation on MacOS, run: ``brew install glpk``
 Test it out
 ------------
 
-Go ahead and download  `the basic unit commitment test case <https://github.com/downloads/adamgreenhall/minpower/uc.zip>`_ and try and solve it first, using the terminal::
+Go ahead and download  `the basic unit commitment test case <https://github.com/adamgreenhall/minpower/files/6865521/uc.zip>`_, unzip it, and try and solve it first, using the terminal::
 
-    minpower uc
+    minpower ~/Downloads/uc
 
 If you get an error about the problem not being solved - Python probably doesn't know where your solver is. To fix this here's a :doc:`guide to solver-to-Python connection<solver-connection>`. 
 
